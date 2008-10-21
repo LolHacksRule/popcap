@@ -1,0 +1,15 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+import os
+import sys
+
+env = Environment()
+Export('env')
+
+sconscripts = [os.path.join('ImageLib', 'SConscript')]
+sconscripts += [os.path.join('PakLib', 'SConscript')]
+for sconscript in sconscripts:
+  SConscript(sconscript)
+

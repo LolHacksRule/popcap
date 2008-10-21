@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+import os
+import sys
+
+Import('env')
+srcs = ['PakInterface.cpp']
+imagelib = env.Library('Pak', srcs)
