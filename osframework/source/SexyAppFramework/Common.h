@@ -39,6 +39,7 @@ typedef int BOOL;
 #define _stricmp(x, y) strcasecmp((x), (y))
 #define stricmp(x, y) strcasecmp((x), (y))
 #define ZeroMemory(p, s) memset((p), 0, (s))
+#define Sleep(s) usleep(s)
 #endif
 #include "ModVal.h"
 

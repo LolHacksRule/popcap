@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include "ModVal.h"
 #include "Common.h"
 #include <fstream>
@@ -667,3 +668,5 @@ bool Sexy::ReparseModValues()
 
 	return true;
 }
+
+#endif

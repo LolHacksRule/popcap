@@ -351,7 +351,7 @@ bool ResourceManager::ParseImageResource(XMLElement &theElement)
 	aRes->mAnimInfo.mAnimType = anAnimType;
 	if (anAnimType != AnimType_None)
 	{
-		int aNumCels = max(aRes->mRows,aRes->mCols);
+		int aNumCels = std::max(aRes->mRows,aRes->mCols);
 		int aBeginDelay = 0, anEndDelay = 0;
 
 		anItr = theElement.mAttributes.find(_S("framedelay"));
@@ -751,15 +751,17 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 
 		aDDImage->CommitBits();
 
+#ifdef WIN32
 		if (!aDDImage->mHasAlpha)
 		{
 			aDDImage->mWantDDSurface = true;
 			aDDImage->mPurgeBits = true;
 		}
-
+#endif
 		SEXY_PERF_END("ResourceManager:DDSurface");
 	}
 
+#ifdef WIN32
 	if (theRes->mPalletize)
 	{
 		SEXY_PERF_BEGIN("ResourceManager:Palletize");
@@ -769,7 +771,9 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 			aDDImage->mWantPal = true;
 		SEXY_PERF_END("ResourceManager:Palletize");
 	}
+#endif
 
+#ifdef WIN32
 	if (theRes->mA4R4G4B4)
 		aDDImage->mD3DFlags |= D3DImageFlag_UseA4R4G4B4;
 
@@ -781,7 +785,7 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 
 	if (theRes->mAnimInfo.mAnimType != AnimType_None)
 		aDDImage->mAnimInfo = new AnimInfo(theRes->mAnimInfo);
-
+#endif
 	aDDImage->mNumRows = theRes->mRows;
 	aDDImage->mNumCols = theRes->mCols;
 
@@ -808,7 +812,7 @@ SharedImageRef ResourceManager::LoadImage(const std::string &theName)
 		return NULL;
 
 	ImageRes *aRes = (ImageRes*)anItr->second;
-	if ((DDImage*) aRes->mImage != NULL)
+	if ((Image *)aRes->mImage)
 		return aRes->mImage;
 
 	if (aRes->mFromProgram)
@@ -972,7 +976,7 @@ bool ResourceManager::LoadNextResource()
 			case ResType_Image: 
 			{
 				ImageRes *anImageRes = (ImageRes*)aRes;
-				if ((DDImage*)anImageRes->mImage!=NULL)
+				if ((Image*)anImageRes->mImage!=NULL)
 					continue;
 
 				return DoLoadImage(anImageRes); 

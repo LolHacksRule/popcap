@@ -1,7 +1,10 @@
 #ifndef __SOUNDMANAGER_H__
 #define __SOUNDMANAGER_H__
 
+#ifdef WIN32
 #include <windows.h>
+#endif
+
 #include "Common.h"
 
 namespace Sexy

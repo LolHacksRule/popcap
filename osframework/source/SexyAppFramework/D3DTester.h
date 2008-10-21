@@ -1,5 +1,6 @@
 #ifndef __D3DTESTER_H__
 #define __D3DTESTER_H__
+#ifdef WIN32
 #include <d3d.h>
 #include <exception>
 #include <string>
@@ -125,5 +126,5 @@ public:
 
 } // namespace Sexy
 
-
+#endif //WIN32
 #endif

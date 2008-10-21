@@ -65,7 +65,7 @@ protected:
 		bool mPurgeBits;
 		bool mMinimizeSubdivisions;
 		int mRows;
-		int mCols;	
+		int mCols;
 		DWORD mAlphaColor;
 		AnimInfo mAnimInfo;
 

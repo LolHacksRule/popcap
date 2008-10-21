@@ -85,8 +85,8 @@ MemoryImage* SharedImageRef::operator->()
 
 
 SharedImageRef::operator Image*()
-{	
-	return (MemoryImage*) *this;
+{
+	return (Image*) *this;
 }
 
 SharedImageRef::operator MemoryImage*()

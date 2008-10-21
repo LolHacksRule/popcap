@@ -1,7 +1,7 @@
 #ifndef __SCROLLBUTTONWIDGET_H__
 #define __SCROLLBUTTONWIDGET_H__
 
-#include "..\SexyAppFramework\ButtonWidget.h"
+#include "ButtonWidget.h"
 
 namespace Sexy 
 {
