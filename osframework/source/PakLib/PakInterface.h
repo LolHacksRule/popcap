@@ -21,7 +21,15 @@ typedef LPWIN32_FIND_DATA PakFindDataPtr;
 typedef uint64_t PakFileTime;
 typedef void * PakHandle;
 typedef char * PakFileNamePtr;
-typedef void * PakFindDataPtr;
+#define FILE_ATTRIBUTE_DIRECTORY 0x01
+typedef struct {
+    unsigned dwFileAttributes;
+    unsigned long nFileSizeLow;
+    PakFileTime ftCreationTime;
+    PakFileTime ftLastWriteTime;
+    PakFileTime ftLastAccessTime;
+    char cFileName[1024];
+} PakFindData, * PakFindDataPtr;
 #endif
 
 class PakRecord
@@ -87,7 +95,7 @@ public:
 	PakRecordMap			mPakRecordMap;
 
 public:
-	bool					PFindNext(PFindData* theFindData, PakFindDataPtr* lpFindFileData);
+	bool					PFindNext(PFindData* theFindData, PakFindDataPtr lpFindFileData);
 
 public:
 	PakInterface();
