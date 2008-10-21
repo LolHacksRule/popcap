@@ -8,6 +8,7 @@
 #include "DialogListener.h"
 #include "Buffer.h"
 #include "CritSect.h"
+#include "NativeDisplay.h"
 #include "SharedImage.h"
 #include "Ratio.h"
 
@@ -44,7 +45,9 @@ typedef std::list<WidgetSafeDeleteInfo> WidgetSafeDeleteList;
 typedef std::set<MemoryImage*> MemoryImageSet;
 typedef std::map<int, Dialog*> DialogMap;
 typedef std::list<Dialog*> DialogList;
+#ifdef WIN32
 typedef std::list<MSG> WindowsMessageList;
+#endif
 typedef std::vector<std::string> StringVector;
 //typedef std::basic_string<TCHAR> tstring; // string of TCHARs
 
@@ -117,7 +120,9 @@ enum
 	UPDATESTATE_PROCESS_DONE
 };
 
+#ifdef WIN32
 typedef std::map<HANDLE, int> HandleToIntMap;
+#endif
 
 class SexyAppBase : public ButtonListener, public DialogListener
 {
@@ -149,7 +154,9 @@ public:
 	bool					mStandardWordWrap;
 	bool					mbAllowExtendedChars;
 
+#ifdef WIN32
 	HANDLE					mMutex;
+#endif
 	bool					mOnlyAllowOneCopyToRun;
 	UINT					mNotifyGameMessage;
 	CritSect				mCritSect;	
@@ -174,18 +181,22 @@ public:
 	HWND					mInvisHWnd;
 	bool					mIsScreenSaver;
 	bool					mAllowMonitorPowersave;
+#ifdef WIN32
 	WindowsMessageList		mDeferredMessages;
+#endif
 	bool					mNoDefer;	
 	bool					mFullScreenPageFlip;	
 	bool					mTabletPC;
-	DDInterface*			mDDInterface;
+	NativeDisplay*			mDDInterface;
 	bool					mAlphaDisabled;
 	MusicInterface*			mMusicInterface;	
 	bool					mReadFromRegistry;
 	std::string				mRegisterLink;
 	std::string				mProductVersion;	
 	Image*					mCursorImages[NUM_CURSORS];
+#ifdef WIN32
 	HCURSOR					mOverrideCursor;
+#endif
 	bool					mIsOpeningURL;
 	bool					mShutdownOnURLOpen;
 	std::string				mOpeningURL;
@@ -230,8 +241,10 @@ public:
 
 	int						mCursorNum;
 	SoundManager*			mSoundManager;
+#ifdef WIN32
 	HCURSOR					mHandCursor;
 	HCURSOR					mDraggingCursor;
+#endif
 	WidgetSafeDeleteList	mSafeDeleteList;
 	bool					mMouseIn;	
 	bool					mRunning;
@@ -282,7 +295,9 @@ public:
 	int						mDemoCmdOrder;
 	int						mDemoCmdBitPos;
 	bool					mDemoLoadingComplete;
+#ifdef WIN32
 	HandleToIntMap			mHandleToIntMap; // For waiting on handles
+#endif
 	int						mCurHandleNum;
 
 	typedef std::pair<std::string, int> DemoMarker;
@@ -324,7 +339,9 @@ public:
 	uint					mZylomGameId;
 #endif
 
+#ifdef WIN32
 	LONG					mOldWndProc;
+#endif
 
 protected:	
 	void					RehupFocus();
@@ -360,9 +377,11 @@ protected:
 	void					ShowMemoryUsage();			
 
 	// Registry helpers
+#ifdef WIN32
 	bool					RegistryRead(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength);
 	bool					RegistryReadKey(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength, HKEY theMainKey = HKEY_CURRENT_USER);
 	bool					RegistryWrite(const std::string& theValueName, ulong theType, const uchar* theValue, ulong theLength);
+#endif
 
 	// Demo recording helpers	
 	void					ProcessDemo();
@@ -385,8 +404,10 @@ public:
 	// Public methods
 	virtual void			BeginPopup();
 	virtual void			EndPopup();
+#ifdef WIN32
 	virtual int				MsgBox(const std::string &theText, const std::string &theTitle = "Message", int theFlags = MB_OK);
 	virtual int				MsgBox(const std::wstring &theText, const std::wstring &theTitle = L"Message", int theFlags = MB_OK);
+#endif
 	virtual void			Popup(const std::string& theString);
 	virtual void			Popup(const std::wstring& theString);
 	virtual void			LogScreenSaverError(const std::string &theError);
@@ -445,11 +466,11 @@ public:
 	void					PrecacheNative(MemoryImage* theImage);
 	void					SetCursorImage(int theCursorNum, Image* theImage);
 
-	DDImage*				CreateCrossfadeImage(Image* theImage1, const Rect& theRect1, Image* theImage2, const Rect& theRect2, double theFadeFactor);
+	Image*				        CreateCrossfadeImage(Image* theImage1, const Rect& theRect1, Image* theImage2, const Rect& theRect2, double theFadeFactor);
 	void					ColorizeImage(Image* theImage, const Color& theColor);
-	DDImage*				CreateColorizedImage(Image* theImage, const Color& theColor);
-	DDImage*				CopyImage(Image* theImage, const Rect& theRect);
-	DDImage*				CopyImage(Image* theImage);
+	Image*				        CreateColorizedImage(Image* theImage, const Color& theColor);
+	Image*				        CopyImage(Image* theImage, const Rect& theRect);
+	Image*				        CopyImage(Image* theImage);
 	void					MirrorImage(Image* theImage);
 	void					FlipImage(Image* theImage);
 	void					RotateImageHue(Sexy::MemoryImage *theImage, int theDelta);
@@ -481,7 +502,9 @@ public:
 
 	virtual void			GotFocus();
 	virtual void			LostFocus();	
+#ifdef WIN32
 	virtual bool			IsAltKeyUsed(WPARAM wParam);
+#endif
 	virtual bool			DebugKeyDown(int theKey);	
 	virtual bool			DebugKeyDownAsync(int theKey, bool ctrlDown, bool altDown);
 	virtual void			CloseRequestAsync();
@@ -534,10 +557,11 @@ public:
 	void					DemoAssertStringEqual(const std::string& theString);
 	void					DemoAssertIntEqual(int theInt);
 	void					DemoAddMarker(const std::string& theString);
+#ifdef WIN32
 	void					DemoRegisterHandle(HANDLE theHandle);
 	void					DemoWaitForHandle(HANDLE theHandle);
 	bool					DemoCheckHandle(HANDLE theHandle);
-	
+#endif
 
 	// Registry access methods
 	bool					RegistryGetSubKeys(const std::string& theKeyName, StringVector* theSubKeys);
@@ -567,7 +591,9 @@ public:
 	void					ClearUpdateBacklog(bool relaxForASecond = false);
 	bool					IsScreenSaver();
 	virtual bool			AppCanRestore();
-	static LRESULT CALLBACK	WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);		
+#ifdef WIN32
+	static LRESULT CALLBACK	WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#endif
 };
 
 extern SexyAppBase* gSexyAppBase;

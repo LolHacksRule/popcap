@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include "DDImage.h"
 #include <Math.h>
 #include "DDInterface.h"
@@ -3275,3 +3276,5 @@ void DDImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const 
 	UnlockSurface();
 	DeleteAllNonSurfaceData();
 }
+
+#endif

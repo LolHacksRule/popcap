@@ -1,6 +1,7 @@
 #ifndef __DDINTERFACE_H__
 #define __DDINTERFACE_H__
 
+#ifdef WIN32
 #include "Common.h"
 #include "CritSect.h"
 #include "NativeDisplay.h"
@@ -132,5 +133,6 @@ public:
 
 }
 
+#endif //WIN32
 #endif //__DDINTERFACE_H__
 

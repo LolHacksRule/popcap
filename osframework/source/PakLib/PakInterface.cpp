@@ -1,6 +1,8 @@
 #include "PakInterface.h"
+#ifdef WIN32
 #include <windows.h>
 #include <direct.h>
+#endif
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;

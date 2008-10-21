@@ -1,3 +1,4 @@
+#ifdef WIN32
 #define INITGUID
 
 #include "DDInterface.h"
@@ -1430,3 +1431,5 @@ void DDInterface::SetCursorPos(int theCursorX, int theCursorY)
 		DrawCursorTo(mPrimarySurface, true);		
 	}
 }
+
+#endif

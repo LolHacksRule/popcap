@@ -19,10 +19,27 @@
 #include <list>
 #include <algorithm>
 #include <cstdlib>
+#include <wctype.h>
 
+#ifdef WIN32
 #include <windows.h>
 #include <shellapi.h> 
 #include <mmsystem.h>
+#else
+#include <stdint.h>
+#include <string.h>
+
+typedef unsigned char  BYTE;
+typedef unsigned int DWORD;
+typedef unsigned int UINT;
+typedef void * HWND;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define _stricmp(x, y) strcasecmp((x), (y))
+#define stricmp(x, y) strcasecmp((x), (y))
+#define ZeroMemory(p, s) memset((p), 0, (s))
+#endif
 #include "ModVal.h"
 
 #ifdef _USE_WIDE_STRING
@@ -98,7 +115,12 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
+typedef unsigned int uint32;
+#ifdef _MSC_VER
 typedef __int64 int64;
+#else
+typedef int64_t int64;
+#endif
 
 typedef std::map<std::string, std::string>		DefinesMap;
 typedef std::map<std::wstring, std::wstring>	WStringWStringMap;
@@ -111,7 +133,9 @@ namespace Sexy
 const ulong SEXY_RAND_MAX = 0x7FFFFFFF;
 
 extern bool			gDebug;
+#ifdef WIN32
 extern HINSTANCE	gHInstance;
+#endif
 
 int					Rand();
 int					Rand(int range);
@@ -187,7 +211,7 @@ inline void			inlineUpper(std::wstring &theData)
 	int aStrLen = (int) theData.length();
 	for (int i = 0; i < aStrLen; i++)
 	{
-		theData[i] = towupper(theData[i]);
+            theData[i] = toupper(theData[i]);
 	}
 }
 

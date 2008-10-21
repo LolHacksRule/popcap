@@ -1,6 +1,7 @@
 #ifndef __DDIMAGE_H__
 #define __DDIMAGE_H__
 
+#ifdef WIN32
 #include "MemoryImage.h"
 #include <ddraw.h>
 
@@ -96,4 +97,5 @@ public:
 
 }
 
+#endif //WIN32
 #endif //__DDIMAGE_H__

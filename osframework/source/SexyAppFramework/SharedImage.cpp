@@ -15,7 +15,7 @@ SharedImageRef::SharedImageRef(const SharedImageRef& theSharedImageRef)
 	mSharedImage = theSharedImageRef.mSharedImage;
 	if (mSharedImage != NULL)
 		mSharedImage->mRefCount++;
-	mUnsharedImage = theSharedImageRef.mUnsharedImage;	
+	mUnsharedImage = theSharedImageRef.mUnsharedImage;
 	mOwnsUnshared = false;
 }
 
@@ -94,9 +94,10 @@ SharedImageRef::operator MemoryImage*()
 	if (mUnsharedImage != NULL)
 		return mUnsharedImage;
 	else
-		return (DDImage*) *this;
+		return (MemoryImage*) *this;
 }
 
+#ifdef WIN32
 SharedImageRef::operator DDImage*()
 {
 	if (mSharedImage != NULL)
@@ -104,3 +105,4 @@ SharedImageRef::operator DDImage*()
 	else
 		return NULL;
 }
+#endif

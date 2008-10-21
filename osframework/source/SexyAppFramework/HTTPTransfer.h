@@ -2,6 +2,9 @@
 #define __HTTPTRANSFER_H__
 
 #include "Common.h"
+#ifndef WIN32
+#include <pthread.h>
+#endif
 
 namespace Sexy
 {
@@ -76,7 +79,12 @@ public:
 	void					Abort();
 	void					WaitFor();
 	int						GetResultCode();
-	std::string				GetContent();	
+	std::string				GetContent();
+
+ private:
+#ifndef WIN32
+        pthread_t                               mThread;
+#endif
 };
 
 };

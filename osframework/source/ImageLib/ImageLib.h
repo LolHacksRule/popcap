@@ -11,7 +11,7 @@ class Image
 public:
 	int						mWidth;
 	int						mHeight;
-	unsigned long*			mBits;
+	unsigned int *			mBits;
 
 public:
 	Image();

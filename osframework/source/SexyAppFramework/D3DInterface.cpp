@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include "D3DInterface.h"
 #include "DDInterface.h"
 #include "Graphics.h"
@@ -2205,4 +2206,6 @@ void D3DInterface::Flush()
 		mErrorString.erase();
 	}
 }
+
+#endif
 

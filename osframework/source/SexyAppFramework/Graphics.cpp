@@ -9,6 +9,8 @@
 #include <math.h>
 
 using namespace Sexy;
+using std::min;
+using std::max;
 
 Image GraphicsState::mStaticImage;
 const Point* Graphics::mPFPoints;
@@ -65,7 +67,11 @@ Graphics::Graphics(Image* theDestImage)
 	}
 	else
 	{
+#ifdef WIN32
 		mIs3D = DDImage::Check3D(theDestImage);
+#else
+		mIs3D = false;
+#endif
 	}
 
 	mClipRect = Rect(0, 0, mDestImage->GetWidth(), mDestImage->GetHeight());
@@ -294,8 +300,8 @@ void Graphics::PolyFill(const Point *theVertexList, int theNumVertices, bool con
 
     mPFNumActiveEdges = 0;				/* start with empty active list */
     k = 0;				/* ind[k] is next vertex to process */
-    y0 = (int) max(aMinY, ceil(mPFPoints[ind[0]].mY-0.5 + mTransY));		/* ymin of polygon */
-    y1 = (int) min(aMaxY, floor(mPFPoints[ind[mPFNumVertices-1]].mY-0.5 + mTransY));	/* ymax of polygon */
+    y0 = (int) max(aMinY, (int)ceil(mPFPoints[ind[0]].mY-0.5 + mTransY));		/* ymin of polygon */
+    y1 = (int) min(aMaxY, (int)floor(mPFPoints[ind[mPFNumVertices-1]].mY-0.5 + mTransY));	/* ymax of polygon */
 
     for (y=y0; y<=y1; y++) 
 	{
@@ -419,8 +425,8 @@ void Graphics::PolyFillAA(const Point *theVertexList, int theNumVertices, bool c
 
     mPFNumActiveEdges = 0;				/* start with empty active list */
     k = 0;				/* ind[k] is next vertex to process */
-    y0 = (int) max(aMinY, ceil(mPFPoints[ind[0]].mY-0.5 + mTransY));		/* ymin of polygon */
-    y1 = (int) min(aMaxY, floor(mPFPoints[ind[mPFNumVertices-1]].mY-0.5 + mTransY));	/* ymax of polygon */
+    y0 = (int) max(aMinY, (int)ceil(mPFPoints[ind[0]].mY-0.5 + mTransY));		/* ymin of polygon */
+    y1 = (int) min(aMaxY, (int)floor(mPFPoints[ind[mPFNumVertices-1]].mY-0.5 + mTransY));	/* ymax of polygon */
 
     for (y=y0; y<=y1; y++) 
 	{
@@ -842,7 +848,13 @@ void Graphics::DrawImageMatrix(Image* theImage, const SexyMatrix3 &theMatrix, co
 
 void Graphics::DrawImageTransformHelper(Image* theImage, const Transform &theTransform, const Rect &theSrcRect, float x, float y, bool useFloat)
 {
-	if (theTransform.mComplex || (DDImage::Check3D(mDestImage) && useFloat))
+	bool is3D;
+#ifdef WIN32
+	is3D = DDImage::Check3D(mDestImage);
+#else
+	is3D = false;
+#endif
+	if (theTransform.mComplex || (is3D && useFloat))
 	{
 		DrawImageMatrix(theImage,theTransform.GetMatrix(),theSrcRect,x,y);
 		return;

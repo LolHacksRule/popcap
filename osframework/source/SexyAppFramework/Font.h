@@ -35,7 +35,7 @@ public:
 
 	virtual void			DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect);
 
-	virtual Font*			Duplicate() = NULL;
+	virtual Font*			Duplicate() = 0;
 };
 
 }

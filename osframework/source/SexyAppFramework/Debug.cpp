@@ -5,6 +5,7 @@
 #include "CritSect.h"
 
 #include <time.h>
+#include <stdarg.h>
 
 #include "memmgr.h"
 
@@ -19,10 +20,17 @@ using namespace Sexy;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+
+#ifndef WIN32
+#define OutputDebugString(x)
+#endif
 struct SEXY_ALLOC_INFO
 {
 	int		size;
-	char	file[_MAX_PATH+1];
+	char	file[PATH_MAX+1];
 	int		line;
 };
 static bool gShowLeaks = false;
@@ -241,6 +249,10 @@ void OutputDebug(const SexyChar* fmt ...)
     std::string result = SexyStringToStringFast(vformat(fmt, argList));
     va_end(argList);
 
+#ifdef WIN32
 	OutputDebugStringA(result.c_str());
+#else
+	fprintf(stderr, "%s\n", result.c_str());
+#endif
 }
 

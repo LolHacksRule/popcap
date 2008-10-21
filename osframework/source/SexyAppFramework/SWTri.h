@@ -39,7 +39,11 @@ public:
 		unsigned int		a, r, g, b;
 	};
 
+#ifdef _MSC_VER
 	typedef	__int64	signed64;
+#else
+        typedef int64_t signed64;
+#endif
 
 public:
 	// For drawing

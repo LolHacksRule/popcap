@@ -1,6 +1,7 @@
 #ifndef __SEHCATHER_H__
 #define __SEHCATHER_H__
 
+#ifdef WIN32
 #include "Common.h"
 #include "HTTPTransfer.h"
 #include <imagehlp.h>
@@ -93,5 +94,7 @@ public:
 extern SEHCatcher gSEHCatcher;
 
 }
+
+#endif
 
 #endif 

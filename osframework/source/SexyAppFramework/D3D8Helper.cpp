@@ -1,4 +1,5 @@
 // This has to be its own file because d3d8.h and d3d.h conflict
+#ifdef WIN32
 #undef DIRECT3D_VERSION
 #include <windows.h>
 
@@ -274,3 +275,5 @@ bool Sexy::GetD3D8AdapterInfo(GUID &theGUID, std::string &theDriver, std::string
 
 	return aResult;
 }
+
+#endif

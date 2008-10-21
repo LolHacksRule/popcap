@@ -1,6 +1,7 @@
 #ifndef __D3DINTERFACE_H__
 #define __D3DINTERFACE_H__
 
+#ifdef WIN32
 #include "Common.h"
 #include "MemoryImage.h"
 #include "SexyMatrix.h"
@@ -150,5 +151,7 @@ public:
 };
 
 }
+
+#endif //WIN32
 
 #endif //__D3DINTERFACE_H__

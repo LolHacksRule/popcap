@@ -142,8 +142,8 @@ protected:
 	void					DeleteMap(ResMap &theMap);
 	virtual void			DeleteResources(ResMap &theMap, const std::string &theGroup);
 
-	bool					LoadAlphaGridImage(ImageRes *theRes, DDImage *theImage);
-	bool					LoadAlphaImage(ImageRes *theRes, DDImage *theImage);
+	bool					LoadAlphaGridImage(ImageRes *theRes, MemoryImage *theImage);
+	bool					LoadAlphaImage(ImageRes *theRes, MemoryImage *theImage);
 	virtual bool			DoLoadImage(ImageRes *theRes);
 	virtual bool			DoLoadFont(FontRes* theRes);
 	virtual bool			DoLoadSound(SoundRes* theRes);
@@ -209,7 +209,8 @@ public:
 struct ResourceManagerException : public std::exception
 {
 	std::string what;
-	ResourceManagerException(const std::string &theWhat) : what(theWhat) { }
+	ResourceManagerException(const std::string &theWhat) : what(theWhat) { };
+        ~ResourceManagerException() throw() {};
 };
 
 }

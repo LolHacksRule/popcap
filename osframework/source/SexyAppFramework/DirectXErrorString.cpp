@@ -1,5 +1,6 @@
 #include "DirectXErrorString.h"
 
+#ifdef WIN32
 #include <d3d.h>
 #include <ddraw.h>
 #include "dsoundversion.h"
@@ -218,3 +219,5 @@ std::string Sexy::GetDirectXErrorString(HRESULT theResult)
 	sprintf(aBuf,"%x",theResult);
 	return aBuf;
 }
+
+#endif

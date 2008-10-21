@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include "D3D8Helper.h"
 #include "D3DTester.h"
 #include "DirectXErrorString.h"
@@ -1190,4 +1191,4 @@ void D3DTester::TestD3D(HWND theHWND, LPDIRECTDRAW7 theDDraw)
 	gSexyAppBase->DemoSyncBool(&mResultsChanged);
 }
 
-
+#endif

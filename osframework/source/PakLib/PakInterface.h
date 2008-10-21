@@ -5,17 +5,31 @@
 #include <list>
 #include <string>
 
+#ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
 
 class PakCollection;
+
+#ifdef WIN32
+typedef FILTIME PakFileTime;
+typedef HANDLE PakHandle;
+typedef LPCTSTR PakFileNamePtr;
+typedef LPWIN32_FIND_DATA PakFindDataPtr;
+#else
+typedef uint64_t PakFileTime;
+typedef void * PakHandle;
+typedef char * PakFileNamePtr;
+typedef void * PakFindDataPtr;
+#endif
 
 class PakRecord
 {
 public:
 	PakCollection*			mCollection;
 	std::string				mFileName;
-	FILETIME				mFileTime;
+	PakFileTime				mFileTime;
 	int						mStartPos;
 	int						mSize;	
 };
@@ -25,8 +39,8 @@ typedef std::map<std::string, PakRecord> PakRecordMap;
 class PakCollection
 {
 public:
-	HANDLE					mFileHandle;
-	HANDLE					mMappingHandle;
+	PakHandle				mFileHandle;
+	PakHandle				mMappingHandle;
 	void*					mDataPtr;
 };
 
@@ -41,7 +55,7 @@ struct PFILE
 
 struct PFindData
 {
-	HANDLE					mWHandle;
+	PakHandle				mWHandle;
 	std::string				mLastFind;
 	std::string				mFindCriteria;
 };
@@ -61,9 +75,9 @@ public:
 	virtual wchar_t*		FGetS(wchar_t* thePtr, int theSize, PFILE* theFile) { return thePtr; }
 	virtual int				FEof(PFILE* theFile) = 0;
 
-	virtual HANDLE			FindFirstFile(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData) = 0;	
-	virtual BOOL			FindNextFile(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData) = 0;
-	virtual BOOL			FindClose(HANDLE hFindFile) = 0;
+	virtual PakHandle			FindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr lpFindFileData) = 0;	
+	virtual bool			FindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFileData) = 0;
+	virtual bool			FindClose(PakHandle hFindFile) = 0;
 };
 
 class PakInterface : public PakInterfaceBase
@@ -73,7 +87,7 @@ public:
 	PakRecordMap			mPakRecordMap;
 
 public:
-	bool					PFindNext(PFindData* theFindData, LPWIN32_FIND_DATA lpFindFileData);
+	bool					PFindNext(PFindData* theFindData, PakFindDataPtr* lpFindFileData);
 
 public:
 	PakInterface();
@@ -90,18 +104,19 @@ public:
 	char*					FGetS(char* thePtr, int theSize, PFILE* theFile);
 	int						FEof(PFILE* theFile);
 
-	HANDLE					FindFirstFile(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData);
-	BOOL					FindNextFile(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData);
-	BOOL					FindClose(HANDLE hFindFile);
+	PakHandle					FindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr lpFindFileData);
+	bool					FindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFileData);
+	bool					FindClose(PakHandle hFindFile);
 };
 
 extern PakInterface* gPakInterface;
 
-static HANDLE gPakFileMapping = NULL;
+static PakHandle gPakFileMapping = NULL;
 static PakInterfaceBase** gPakInterfaceP = NULL;
 
 static PakInterfaceBase* GetPakPtr()
 {
+#ifdef WIN32
 	if (gPakFileMapping == NULL)
 	{
 		char aName[256];
@@ -109,7 +124,19 @@ static PakInterfaceBase* GetPakPtr()
 		gPakFileMapping = ::CreateFileMappingA((HANDLE)INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(PakInterface*), aName);
 		gPakInterfaceP = (PakInterfaceBase**) MapViewOfFile(gPakFileMapping, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(PakInterface*));		
 	}
+#endif
 	return *gPakInterfaceP;
+}
+
+static char * p_wcstombs(const wchar_t * theString)
+{
+        char * aString;
+        size_t length = wcstombs( NULL, theString, 0 );
+
+        aString = new char[length + 1];
+        wcstombs( aString, theString, length + 1 );
+
+        return aString;
 }
 
 static PFILE* p_fopen(const char* theFileName, const char* theAccess) 
@@ -129,8 +156,18 @@ static PFILE* p_fopen(const char* theFileName, const char* theAccess)
 static PFILE* p_fopen(const wchar_t* theFileName, const wchar_t* theAccess) 
 {
 	if (GetPakPtr() != NULL)
-		return (*gPakInterfaceP)->FOpen(theFileName, theAccess);	
+		return (*gPakInterfaceP)->FOpen(theFileName, theAccess);
+#ifdef WIN32
 	FILE* aFP = _wfopen(theFileName, theAccess);
+#else
+        FILE* aFP;
+        char * aFileName = p_wcstombs( theFileName );
+        char * aAccess = p_wcstombs( theAccess );
+
+        aFP = fopen(aFileName, aAccess);
+        delete [] aFileName;
+        delete [] aAccess;
+#endif
 	if (aFP == NULL)
 		return NULL;
 	PFILE* aPFile = new PFILE();
@@ -212,25 +249,36 @@ static int p_feof(PFILE* theFile)
 	return feof(theFile->mFP);
 }
 
-static HANDLE p_FindFirstFile(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
+static PakHandle p_FindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr lpFindFileData)
 {
 	if (GetPakPtr() != NULL)
 		return (*gPakInterfaceP)->FindFirstFile(lpFileName, lpFindFileData);
+#ifdef WIN32
 	return FindFirstFile(lpFileName, lpFindFileData);
+#else
+        return 0;
+#endif
 }
 
-static BOOL p_FindNextFile(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
+static bool p_FindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFileData)
 {
 	if (GetPakPtr() != NULL)
 		return (*gPakInterfaceP)->FindNextFile(hFindFile, lpFindFileData);
+#ifdef WIN32
 	return FindNextFile(hFindFile, lpFindFileData);
+#else
+        return false;
+#endif
 }
 
-static BOOL p_FindClose(HANDLE hFindFile)
+static bool p_FindClose(PakHandle hFindFile)
 {
 	if (GetPakPtr() != NULL)
 		return (*gPakInterfaceP)->FindClose(hFindFile);
+#ifdef WIN32
 	return FindClose(hFindFile);
+#endif
+        return false;
 }
 
 

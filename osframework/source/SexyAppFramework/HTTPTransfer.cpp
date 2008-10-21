@@ -1,8 +1,27 @@
 #include "HTTPTransfer.h"
 #include "SexyAppBase.h"
+#ifdef WIN32
 #include <process.h>
 #include <winsock.h>
+#else
+#include <sys/types.h>          /* See NOTES */
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
 
+#define Sleep(t) usleep(t)
+#define TIMEVAL struct timeval
+#define HOSTENT struct hostent
+#define SOCKADDR_IN struct sockaddr_in
+#define SOCKET_ERROR -1
+#define WSAGetLastError() errno
+#define WSAEWOULDBLOCK EWOULDBLOCK
+#define closesocket(s) close(s)
+#endif
 using namespace Sexy;
 
 static int gCurTransferId = 1;
@@ -20,7 +39,7 @@ HTTPTransfer::~HTTPTransfer()
 {
 	Abort();
 	while (mThreadRunning)
-	{		
+	{
 		Sleep(20);
 	}
 }
@@ -121,22 +140,28 @@ bool HTTPTransfer::SocketWait(bool checkRead, bool checkWrite)
 
 void HTTPTransfer::GetThreadProc()
 {
+#ifdef WIN32
 	WSADATA aDat;
 	WSAStartup(MAKEWORD(1,1),&aDat);
-	
+#endif
 	mSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (mSocket == 0)	
+	if (mSocket == 0)
 		Fail(RESULT_SOCKET_ERROR);
 
 	// Set non-blocking
 	ulong anIoctlVal = 1;
+#ifdef WIN32
 	ioctlsocket(mSocket, FIONBIO, &anIoctlVal);
+#else
+	anIoctlVal = fcntl(mSocket, F_GETFL);
+	fcntl(mSocket, F_SETFL, anIoctlVal | O_NONBLOCK);
+#endif
 
 	if (!mExiting)
 	{
 		unsigned long anAddr = inet_addr(mHost.c_str());
 		if (anAddr == INADDR_NONE)
-		{		
+		{
 			HOSTENT *aHostEnt = gethostbyname(mHost.c_str());
 			if (aHostEnt != NULL) 
 				memcpy(&anAddr, aHostEnt->h_addr_list[0], 4);
@@ -153,7 +178,7 @@ void HTTPTransfer::GetThreadProc()
 			aSockAddrIn.sin_family      = AF_INET;
 			aSockAddrIn.sin_addr.s_addr = anAddr;
 			aSockAddrIn.sin_port        = htons(mPort);
-			
+
 			if (::connect(mSocket, (sockaddr*) &aSockAddrIn, sizeof(SOCKADDR_IN)) != 0)
 			{
 				if (WSAGetLastError() != WSAEWOULDBLOCK)
@@ -162,7 +187,7 @@ void HTTPTransfer::GetThreadProc()
 				// Wait for socket to become writable to know we connected
 				if (!SocketWait(false, true))
 					Fail(RESULT_CONNECT_FAIL);
-			}		
+			}
 
 			while ((mSendStr.length() > 0) && (!mExiting))
 			{
@@ -175,10 +200,10 @@ void HTTPTransfer::GetThreadProc()
 				}
 				else 
 				{
-					int anError = WSAGetLastError();					
+					int anError = WSAGetLastError();
 					Fail(RESULT_DISCONNECTED);
 				}
-			}			
+			}
 
 			bool chunked = false;
 			bool gotHeader = false;
@@ -205,10 +230,10 @@ void HTTPTransfer::GetThreadProc()
 					}
 					else
 					{
-						int anError = WSAGetLastError();						
+						int anError = WSAGetLastError();
 						break;
 					}
-				}				
+				}
 
 				aLastPos = aPos;
 
@@ -279,7 +304,7 @@ void HTTPTransfer::GetThreadProc()
 						}
 
 						// Chunk it in
-						int aCopyLen = min(aChunkLengthLeft, (int)aRecvStr.length() - aPos);
+						int aCopyLen = std::min(aChunkLengthLeft, (int)aRecvStr.length() - aPos);
 						if (aCopyLen > 0)
 						{
 							mContent += aRecvStr.substr(aPos, aCopyLen);
@@ -295,7 +320,7 @@ void HTTPTransfer::GetThreadProc()
 					{
 						if (aContentLengthLeft > 0)
 						{
-							int aCopyLen = min(aContentLengthLeft, (int)aRecvStr.length() - aPos);
+							int aCopyLen = std::min(aContentLengthLeft, (int)aRecvStr.length() - aPos);
 							mContent += aRecvStr.substr(aPos, aCopyLen);
 							aPos += aCopyLen;
 							aContentLengthLeft -= aCopyLen;
@@ -319,8 +344,10 @@ void HTTPTransfer::GetThreadProc()
 	}
 
 	closesocket(mSocket);
-	mSocket = NULL;
+	mSocket = -1;
+#ifdef WIN32
 	WSACleanup();
+#endif
 
 	if (mAborted)
 		Fail(RESULT_ABORTED);
@@ -388,7 +415,11 @@ void HTTPTransfer::StartTransfer()
 		return;
 
 	mThreadRunning = true;
+#ifdef WIN32
 	_beginthread(GetThreadProcStub, 0, this);
+#else
+	pthread_create(&mThread, NULL, (void* (*)(void*))GetThreadProcStub, this);
+#endif
 }
 
 void HTTPTransfer::GetHelper(const std::string& theURL)
@@ -496,7 +527,7 @@ void HTTPTransfer::UpdateStatus()
 	{
 		if (gSexyAppBase->mPlayingDemoBuffer)
 		{
-			// We only need to try to get the result if we think we are waiting for one			
+			// We only need to try to get the result if we think we are waiting for one
 			if (gSexyAppBase->PrepareDemoCommand(false))
 			{
 				if ((!gSexyAppBase->mDemoIsShortCmd) && (gSexyAppBase->mDemoCmdNum == DEMO_HTTP_RESULT))
@@ -506,7 +537,7 @@ void HTTPTransfer::UpdateStatus()
 					// Since we don't require a demo result entry to be here, we must verify
 					//  that this is referring to us
 					int aTransferId = gSexyAppBase->mDemoBuffer.ReadLong();
-					
+
 					if (aTransferId == mTransferId)
 					{
 						// We finally got our result!
@@ -556,6 +587,9 @@ void HTTPTransfer::WaitFor()
 		UpdateStatus();
 		Sleep(20);
 	}
+#ifndef WIN32
+	pthread_join (mThread, NULL);
+#endif
 }
 
 int HTTPTransfer::GetResultCode()

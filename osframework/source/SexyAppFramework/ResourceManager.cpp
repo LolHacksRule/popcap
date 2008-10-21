@@ -2,6 +2,8 @@
 #include "ResourceManager.h"
 #include "XMLParser.h"
 #include "SoundManager.h"
+#include "MemoryImage.h"
+#include "SharedImage.h"
 #include "DDImage.h"
 #include "D3DInterface.h"
 #include "ImageFont.h"
@@ -625,7 +627,7 @@ bool ResourceManager::ReparseResourcesFile(const std::string& theFilename)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool ResourceManager::LoadAlphaGridImage(ImageRes *theRes, DDImage *theImage)
+bool ResourceManager::LoadAlphaGridImage(ImageRes *theRes, MemoryImage *theImage)
 {	
 	ImageLib::Image* anAlphaImage = ImageLib::GetImage(theRes->mAlphaGridImage,true);	
 	if (anAlphaImage==NULL)
@@ -643,17 +645,17 @@ bool ResourceManager::LoadAlphaGridImage(ImageRes *theRes, DDImage *theImage)
 	if (anAlphaImage->mWidth!=aCelWidth || anAlphaImage->mHeight!=aCelHeight)
 		return Fail(StrFormat("GridAlphaImage size mismatch between %s and %s",theRes->mPath.c_str(),theRes->mAlphaGridImage.c_str()));
 
-	unsigned long *aMasterRowPtr = theImage->mBits;
+	uint32 *aMasterRowPtr = theImage->mBits;
 	for (int i=0; i < aNumRows; i++)
 	{
-		unsigned long *aMasterColPtr = aMasterRowPtr;
+		uint32 *aMasterColPtr = aMasterRowPtr;
 		for (int j=0; j < aNumCols; j++)
 		{
-			unsigned long* aRowPtr = aMasterColPtr;
-			unsigned long* anAlphaBits = anAlphaImage->mBits;
+			uint32* aRowPtr = aMasterColPtr;
+			uint32* anAlphaBits = anAlphaImage->mBits;
 			for (int y=0; y<aCelHeight; y++)
 			{
-				unsigned long *aDestPtr = aRowPtr;
+				uint32 *aDestPtr = aRowPtr;
 				for (int x=0; x<aCelWidth; x++)
 				{
 					*aDestPtr = (*aDestPtr & 0x00FFFFFF) | ((*anAlphaBits & 0xFF) << 24);
@@ -674,7 +676,7 @@ bool ResourceManager::LoadAlphaGridImage(ImageRes *theRes, DDImage *theImage)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool ResourceManager::LoadAlphaImage(ImageRes *theRes, DDImage *theImage)
+bool ResourceManager::LoadAlphaImage(ImageRes *theRes, MemoryImage *theImage)
 {
 	SEXY_PERF_BEGIN("ResourceManager::GetImage");
 	ImageLib::Image* anAlphaImage = ImageLib::GetImage(theRes->mAlphaImage,true);
@@ -688,8 +690,8 @@ bool ResourceManager::LoadAlphaImage(ImageRes *theRes, DDImage *theImage)
 	if (anAlphaImage->mWidth!=theImage->mWidth || anAlphaImage->mHeight!=theImage->mHeight)
 		return Fail(StrFormat("AlphaImage size mismatch between %s and %s",theRes->mPath.c_str(),theRes->mAlphaImage.c_str()));
 
-	unsigned long* aBits1 = theImage->mBits;
-	unsigned long* aBits2 = anAlphaImage->mBits;
+	uint32* aBits1 = theImage->mBits;
+	uint32* aBits2 = anAlphaImage->mBits;
 	int aSize = theImage->mWidth*theImage->mHeight;
 
 	for (int i = 0; i < aSize; i++)
@@ -719,8 +721,8 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 	SharedImageRef aSharedImageRef = gSexyAppBase->GetSharedImage(theRes->mPath, theRes->mVariant, &isNew);
 	ImageLib::gAlphaComposeColor = 0xFFFFFF;
 
-	DDImage* aDDImage = (DDImage*) aSharedImageRef;
-	
+	MemoryImage* aDDImage = (MemoryImage*) aSharedImageRef;
+
 	if (aDDImage == NULL)
 		return Fail(StrFormat("Failed to load image: %s",theRes->mPath.c_str()));
 
@@ -731,14 +733,14 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 			if (!LoadAlphaImage(theRes, aSharedImageRef))
 				return false;
 		}
-		
+
 		if (!theRes->mAlphaGridImage.empty())
 		{
 			if (!LoadAlphaGridImage(theRes, aSharedImageRef))
 				return false;
 		}
 	}
-	
+
 	aDDImage->CommitBits();
 	theRes->mImage = aSharedImageRef;
 	aDDImage->mPurgeBits = theRes->mPurgeBits;
@@ -748,15 +750,15 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 		SEXY_PERF_BEGIN("ResourceManager:DDSurface");
 
 		aDDImage->CommitBits();
-				
+
 		if (!aDDImage->mHasAlpha)
 		{
 			aDDImage->mWantDDSurface = true;
-			aDDImage->mPurgeBits = true;			
+			aDDImage->mPurgeBits = true;
 		}
 
 		SEXY_PERF_END("ResourceManager:DDSurface");
-	}	
+	}
 
 	if (theRes->mPalletize)
 	{

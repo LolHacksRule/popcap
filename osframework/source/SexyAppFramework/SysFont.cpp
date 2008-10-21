@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include "SysFont.h"
 #include "DDImage.h"
 #include "SexyAppBase.h"
@@ -316,3 +317,5 @@ Font* SysFont::Duplicate()
 {
 	return new SysFont(*this);
 }
+
+#endif

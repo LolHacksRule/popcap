@@ -3,6 +3,11 @@
 
 #include "Font.h"
 
+#ifndef WIN32
+#define ANSI_CHARSET 0
+typedef void * HFONT;
+#endif
+
 namespace Sexy
 {
 

@@ -5,6 +5,8 @@
 #include "EditListener.h"
 
 using namespace Sexy;
+using std::min;
+using std::max;
 
 static int gEditWidgetColors[][3] = 
 {{255, 255, 255},
@@ -137,10 +139,10 @@ void EditWidget::Draw(Graphics* g) // Already translated
 			if (!mShowingCursor)
 				aCursorX += 2;								
 			
-			aCursorX = min(max(0, aCursorX), mWidth-8);
-			aHiliteX = min(max(0, aHiliteX), mWidth-8);
+			aCursorX = std::min(std::max(0, aCursorX), mWidth-8);
+			aHiliteX = std::min(std::max(0, aHiliteX), mWidth-8);
 			
-			aClipG->ClipRect(4 + min(aCursorX, aHiliteX), (mHeight - mFont->GetHeight())/2, abs(aHiliteX - aCursorX), mFont->GetHeight());
+			aClipG->ClipRect(4 + std::min(aCursorX, aHiliteX), (mHeight - mFont->GetHeight())/2, abs(aHiliteX - aCursorX), mFont->GetHeight());
 		}
 		else
 			aClipG->ClipRect(4, 0, mWidth-8, mHeight);			
@@ -176,7 +178,9 @@ void EditWidget::UpdateCaretPos()
 	if (aPoint.mY<10) aPoint.mY = 10;
 	else if (aPoint.mY>anApp->mHeight-10) aPoint.mY = anApp->mHeight-10;
 
+#ifdef WIN32
 	SetCaretPos(aPoint.mX,aPoint.mY);
+#endif
 }
 
 void EditWidget::GotFocus()
@@ -186,9 +190,11 @@ void EditWidget::GotFocus()
 	{
 		SexyAppBase *anApp = mWidgetManager->mApp;
 
+#ifdef WIN32
 		CreateCaret(anApp->mHWnd,NULL,0,0);
 		UpdateCaretPos();
 		ShowCaret(anApp->mHWnd);
+#endif
 	}
 	
 	mShowingCursor = true;
@@ -202,8 +208,10 @@ void EditWidget::LostFocus()
 
 	if (mWidgetManager && mWidgetManager->mApp->mTabletPC)
 	{
+#ifdef WIN32
 		HideCaret(mWidgetManager->mApp->mHWnd);
 		DestroyCaret();
+#endif
 	}
 
 	mShowingCursor = false;	
@@ -263,7 +271,7 @@ bool EditWidget::IsPartOfWord(SexyChar theChar)
 	return (((theChar >= _S('A')) && (theChar <= _S('Z'))) ||
 			((theChar >= _S('a')) && (theChar <= _S('z'))) ||
 			((theChar >= _S('0')) && (theChar <= _S('9'))) ||
-			(((unsigned int)theChar >= (unsigned int)(L'À')) && ((unsigned int)theChar <= (unsigned int)(L'ÿ'))) ||
+			(((unsigned int)theChar >= 0xc0) && ((unsigned int)theChar <= 0xff)) ||
 			(theChar == _S('_')));
 }
 

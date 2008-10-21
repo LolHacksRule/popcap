@@ -1,16 +1,23 @@
 #include "Common.h"
 #include "MTRand.h"
 #include "Debug.h"
-#include <direct.h>
-#include <io.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdarg.h>
+#ifdef WIN32
 #include <aclapi.h>
+#include <direct.h>
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 #include "PerfTimer.h"
 
+#ifdef WIN32
 HINSTANCE Sexy::gHInstance;
+#endif
 bool Sexy::gDebug = false;
 static Sexy::MTRand gMTRand;
 namespace Sexy
@@ -43,6 +50,7 @@ bool Sexy::CheckFor98Mill()
 	static bool needOsCheck = true;
 	static bool is98Mill = false;
 
+#ifdef WIN32
 	if (needOsCheck)
 	{
 		bool invalid = false;
@@ -60,7 +68,7 @@ bool Sexy::CheckFor98Mill()
 		needOsCheck = false;
 		is98Mill = osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS; // let's check Win95, 98, *AND* ME.
 	}
-
+#endif
 	return is98Mill;
 }
 
@@ -69,6 +77,7 @@ bool Sexy::CheckForVista()
 	static bool needOsCheck = true;
 	static bool isVista = false;
 
+#ifdef WIN32
 	if (needOsCheck)
 	{
 		bool invalid = false;
@@ -86,7 +95,7 @@ bool Sexy::CheckForVista()
 		needOsCheck = false;
 		isVista = osvi.dwMajorVersion >= 6;
 	}
-
+#endif
 	return isVista;
 }
 
@@ -520,7 +529,11 @@ SexyString Sexy::CommaSeperate(int theValue)
 std::string Sexy::GetCurDir()
 {
 	char aDir[256];
+#ifdef WIN32
 	return _getcwd(aDir, sizeof(aDir));
+#else
+	return getcwd(aDir, sizeof(aDir));
+#endif
 }
 
 std::string Sexy::GetFullPath(const std::string& theRelPath)
@@ -628,6 +641,7 @@ std::string Sexy::GetPathFrom(const std::string& theRelPath, const std::string& 
 
 bool Sexy::AllowAllAccess(const std::string& theFileName)
 {
+#ifdef WIN32
 	HMODULE aLib = LoadLibraryA("advapi32.dll");
 	if (aLib == NULL)
 		return false;
@@ -711,12 +725,15 @@ bool Sexy::AllowAllAccess(const std::string& theFileName)
 
 	FreeLibrary(aLib);
 	return result;
+#else
+	return true;
+#endif
 }
 
 bool Sexy::Deltree(const std::string& thePath)
 {
 	bool success = true;
-
+#ifdef WIN32
 	std::string aSourceDir = thePath;
 	
 	if (aSourceDir.length() < 2)
@@ -756,12 +773,14 @@ bool Sexy::Deltree(const std::string& thePath)
 
 	if (rmdir(thePath.c_str()) == 0)
 		success = false;
-
+#else
+#endif
 	return success;
 }
 
 bool Sexy::FileExists(const std::string& theFileName)
 {
+#ifdef WIN32
 	WIN32_FIND_DATAA aFindData;
 	
 	HANDLE aFindHandle = FindFirstFileA(theFileName.c_str(), &aFindData); 
@@ -769,6 +788,9 @@ bool Sexy::FileExists(const std::string& theFileName)
 		return false;
 
 	FindClose(aFindHandle);
+#else
+	return access (theFileName.c_str(), F_OK) == 0;
+#endif
 	return true;
 }
 
@@ -782,20 +804,28 @@ void Sexy::MkDir(const std::string& theDir)
 		int aSlashPos = aPath.find_first_of("\\/", aCurPos);
 		if (aSlashPos == -1)
 		{
+#ifdef WIN32
 			_mkdir(aPath.c_str());
+#else
+			mkdir(aPath.c_str(), 0755);
+#endif
 			break;
 		}
 
 		aCurPos = aSlashPos+1;
 
 		std::string aCurPath = aPath.substr(0, aSlashPos);
+#ifdef WIN32
 		_mkdir(aCurPath.c_str());
+#else
+		mkdir(aCurPath.c_str(), 0755);
+#endif
 	}
 }
 
 std::string Sexy::GetFileName(const std::string& thePath, bool noExtension)
 {
-	int aLastSlash = max((int) thePath.rfind('\\'), (int) thePath.rfind('/'));
+	int aLastSlash = std::max((int) thePath.rfind('\\'), (int) thePath.rfind('/'));
 
 	if (noExtension)
 	{
@@ -812,7 +842,7 @@ std::string Sexy::GetFileName(const std::string& thePath, bool noExtension)
 
 std::string Sexy::GetFileDir(const std::string& thePath, bool withSlash)
 {
-	int aLastSlash = max((int) thePath.rfind('\\'), (int) thePath.rfind('/'));
+	int aLastSlash = std::max((int) thePath.rfind('\\'), (int) thePath.rfind('/'));
 
 	if (aLastSlash == -1)
 		return "";
@@ -853,7 +883,7 @@ std::string	Sexy::AddTrailingSlash(const std::string& theDirectory, bool backSla
 time_t Sexy::GetFileDate(const std::string& theFileName)
 {
 	time_t aFileDate = 0;
-
+#if WIN32
 	WIN32_FIND_DATAA aFindData;
 	HANDLE aFindHandle = ::FindFirstFileA(theFileName.c_str(), &aFindData);
 
@@ -869,7 +899,8 @@ time_t Sexy::GetFileDate(const std::string& theFileName)
 
 		FindClose(aFindHandle);
 	}
-
+#else
+#endif
 	return aFileDate;
 }
 
@@ -956,7 +987,7 @@ std::wstring Sexy::vformat(const wchar_t* fmt, va_list argPtr)
 #ifdef _WIN32
 	numChars = _vsnwprintf(stackBuffer, attemptedSize, fmt, argPtr);
 #else
-	numChars = vsnwprintf(stackBuffer, attemptedSize, fmt, argPtr);
+	numChars = vswprintf(stackBuffer, attemptedSize, fmt, argPtr);
 #endif
 
 	//cout << "NumChars: " << numChars << endl;
@@ -982,7 +1013,7 @@ std::wstring Sexy::vformat(const wchar_t* fmt, va_list argPtr)
 #ifdef _WIN32
 		numChars = _vsnwprintf(heapBuffer, attemptedSize, fmt, argPtr);
 #else
-		numChars = vsnwprintf(heapBuffer, attemptedSize, fmt, argPtr);
+		numChars = vswprintf(heapBuffer, attemptedSize, fmt, argPtr);
 #endif
     }
 

@@ -9,8 +9,13 @@ namespace Sexy
 
 class AutoCrit
 {
+#ifdef WIN32
 	LPCRITICAL_SECTION		mCritSec;
+#else
+        pthread_mutex_t                * mMutex;
+#endif
 public:
+#ifdef WIN32
 	AutoCrit(LPCRITICAL_SECTION theCritSec) : 
 		mCritSec(theCritSec)
 	{ 
@@ -22,10 +27,27 @@ public:
 	{ 
 		EnterCriticalSection(mCritSec); 
 	}
+#else
+	AutoCrit(pthread_mutex_t * theMutex) : 
+		mMutex(theMutex)
+	{ 
+		pthread_mutex_lock(mMutex);
+	}
+
+	AutoCrit(const CritSect& theCritSect) : 
+		mMutex((pthread_mutex_t *)&theCritSect.mMutex)
+	{ 
+		pthread_mutex_lock(mMutex);
+	}
+#endif
 
 	~AutoCrit()
-	{ 
-		LeaveCriticalSection(mCritSec); 
+	{
+#ifdef WIN32
+		LeaveCriticalSection(mCritSec);
+#else
+                pthread_mutex_lock(mMutex);
+#endif
 	}
 };
 
