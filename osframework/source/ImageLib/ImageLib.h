@@ -19,7 +19,7 @@ public:
 
 	int						GetWidth();
 	int						GetHeight();
-	unsigned long*			GetBits();
+	unsigned int*			GetBits();
 };
 
 bool WriteJPEGImage(const std::string& theFileName, Image* theImage);

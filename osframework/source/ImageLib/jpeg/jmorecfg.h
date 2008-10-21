@@ -184,9 +184,7 @@ typedef unsigned int JDIMENSION;
 /* a function used only in its module: */
 #define LOCAL(type)		static type
 
-#if !defined(_VISUALC_)
-#	error Something is very very wrong. This header must only be used under Visual C++.
-#endif
+#if defined(_VISUALC_)
 /**
  * Under VISUALC we have single threaded static libraries, or
  * mutli-threaded DLLs using the multithreaded runtime DLLs.
@@ -217,7 +215,10 @@ typedef unsigned int JDIMENSION;
 #pragma warning(disable : 4018)
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4142)
-
+#else
+#define EXTERN(type) extern type
+#define GLOBAL(type) type
+#endif
 
 /* This macro is used to declare a "method", that is, a function pointer.
  * We want to supply prototype parameters if the compiler can cope.

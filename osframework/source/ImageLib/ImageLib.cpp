@@ -1,21 +1,32 @@
 #define XMD_H
 
+#ifdef WIN32
 #include <windows.h>
+#endif
 #include "ImageLib.h"
-#include "png\png.h"
+#include "png/png.h"
 #include <math.h>
+#include <string.h>
+#ifdef WIN32
 #include <tchar.h>
-#include "..\PakLib\PakInterface.h"
+#endif
+#include "../PakLib/PakInterface.h"
 
 extern "C"
 {
-#include "jpeg\jpeglib.h"
-#include "jpeg\jerror.h"
+#include "jpeg/jpeglib.h"
+#include "jpeg/jerror.h"
 }
 
 //#include "jpeg2000/jasper.h"
 
 using namespace ImageLib;
+
+#ifndef WIN32
+#define BYTE unsigned char
+#define WORD unsigned short
+#define stricmp(x, y) strcasecmp(x, y)
+#endif
 
 Image::Image()
 {
@@ -39,7 +50,7 @@ int	Image::GetHeight()
 	return mHeight;
 }
 
-unsigned long* Image::GetBits()
+unsigned int* Image::GetBits()
 {
 	return mBits;
 }
@@ -124,8 +135,8 @@ Image* GetPNGImage(const std::string& theFileName)
 	png_set_bgr(png_ptr);
 
 //	int aNumBytes = png_get_rowbytes(png_ptr, info_ptr) * height / 4;
-	unsigned long* aBits = new unsigned long[width*height];
-	unsigned long* anAddr = aBits;
+	unsigned int* aBits = new unsigned int[width*height];
+	unsigned int* anAddr = aBits;
 	for (int i = 0; i < height; i++)
 	{
 		png_read_rows(png_ptr, (png_bytepp) &anAddr, NULL, 1);
@@ -202,7 +213,7 @@ Image* GetTGAImage(const std::string& theFileName)
 
 	anImage->mWidth = anImageWidth;
 	anImage->mHeight = anImageHeight;
-	anImage->mBits = new unsigned long[anImageWidth*anImageHeight];
+	anImage->mBits = new unsigned int[anImageWidth*anImageHeight];
 
 	p_fread(anImage->mBits, 4, anImage->mWidth*anImage->mHeight, aTGAFile);
 
@@ -575,7 +586,7 @@ Image* GetGIFImage(const std::string& theFileName)
 		pass=0;
 		top_stack=pixel_stack;
 
-		unsigned long* aBits = new unsigned long[width*height];
+		unsigned int* aBits = new unsigned int[width*height];
 
 		register unsigned char *c = NULL;
 
@@ -586,7 +597,7 @@ Image* GetGIFImage(const std::string& theFileName)
 			//break;
 			//indexes=GetIndexes(image);
 
-			unsigned long* q = aBits + offset*width;
+			unsigned int* q = aBits + offset*width;
 
 
 
@@ -833,7 +844,7 @@ bool ImageLib::WriteJPEGImage(const std::string& theFileName, Image* theImage)
 
 	unsigned char* aTempBuffer = new unsigned char[row_stride];
 
-	unsigned long* aSrcPtr = theImage->mBits;
+	unsigned int* aSrcPtr = theImage->mBits;
 
 	for (int aRow = 0; aRow < theImage->mHeight; aRow++)
 	{
@@ -994,6 +1005,7 @@ bool ImageLib::WriteTGAImage(const std::string& theFileName, Image* theImage)
 
 bool ImageLib::WriteBMPImage(const std::string& theFileName, Image* theImage)
 {
+#ifdef WIN32
 	FILE* aFile = fopen(theFileName.c_str(), "wb");
 	if (aFile == NULL)
 		return false;
@@ -1026,6 +1038,9 @@ bool ImageLib::WriteBMPImage(const std::string& theFileName, Image* theImage)
 
 	fclose(aFile);
 	return true;
+#else
+	return false;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////// 
@@ -1158,8 +1173,8 @@ Image* GetJPEGImage(const std::string& theFileName)
 	unsigned char** buffer = (*cinfo.mem->alloc_sarray)
 		((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-	unsigned long* aBits = new unsigned long[cinfo.output_width*cinfo.output_height];
-	unsigned long* q = aBits;
+	unsigned int* aBits = new unsigned int[cinfo.output_width*cinfo.output_height];
+	unsigned int* q = aBits;
 
 	if (cinfo.output_components==1)
 	{
@@ -1383,46 +1398,53 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 }
 #else
 
-#include "j2k-codec\j2k-codec.h"
-
-HMODULE gJ2KCodec = NULL;
-std::string gJ2KCodecKey = "Your registration here";
+//HMODULE gJ2KCodec = NULL;
+//std::string gJ2KCodecKey = "Your registration here";
 
 void ImageLib::InitJPEG2000()
 {
+#if 0
 	gJ2KCodec = ::LoadLibrary(_T("j2k-codec.dll"));
+#endif
 }
 
 void ImageLib::CloseJPEG2000()
 {
+#if 0
 	if (gJ2KCodec != NULL)
 	{
-		::FreeLibrary(gJ2KCodec);
+		///::FreeLibrary(gJ2KCodec);
 		gJ2KCodec = NULL;
 	}
+#endif
 }
 
 void ImageLib::SetJ2KCodecKey(const std::string& theKey)
 {
+#if 0
 	gJ2KCodecKey = theKey;
+#endif
 }
 
-int __stdcall Pak_seek(void *data_source, int offset)
+#if 0
+static int __stdcall Pak_seek(void *data_source, int offset)
 {
 	return p_fseek((PFILE*) data_source, offset, SEEK_SET);
 }
 
-int __stdcall Pak_read(void *ptr, int size, void *data_source)
+static int __stdcall Pak_read(void *ptr, int size, void *data_source)
 {
 	return p_fread(ptr, 1, size, (PFILE*) data_source);
 }
 
-void __stdcall Pak_close(void *data_source)
+static void __stdcall Pak_close(void *data_source)
 {	
 }
+#endif
 
 Image* GetJPEG2000Image(const std::string& theFileName)
 {
+#if 0
 	if (gJ2KCodec != NULL)
 	{
 		PFILE* aFP = p_fopen(theFileName.c_str(), "rb");
@@ -1541,6 +1563,7 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 
 		return anImage;
 	}
+#endif
 	return NULL;
 }
 
@@ -1557,7 +1580,7 @@ Image* ImageLib::GetImage(const std::string& theFilename, bool lookForAlphaImage
 		lookForAlphaImage = false;
 
 	int aLastDotPos = theFilename.rfind('.');
-	int aLastSlashPos = max((int)theFilename.rfind('\\'), (int)theFilename.rfind('/'));
+	int aLastSlashPos = std::max((int)theFilename.rfind('\\'), (int)theFilename.rfind('/'));
 
 	std::string anExt;
 	std::string aFilename;
@@ -1613,8 +1636,8 @@ Image* ImageLib::GetImage(const std::string& theFilename, bool lookForAlphaImage
 			if ((anImage->mWidth == anAlphaImage->mWidth) &&
 				(anImage->mHeight == anAlphaImage->mHeight))
 			{
-				unsigned long* aBits1 = anImage->mBits;
-				unsigned long* aBits2 = anAlphaImage->mBits;
+				unsigned int* aBits1 = anImage->mBits;
+				unsigned int* aBits2 = anAlphaImage->mBits;
 				int aSize = anImage->mWidth*anImage->mHeight;
 
 				for (int i = 0; i < aSize; i++)
@@ -1631,7 +1654,7 @@ Image* ImageLib::GetImage(const std::string& theFilename, bool lookForAlphaImage
 		{
 			anImage = anAlphaImage;
 
-			unsigned long* aBits1 = anImage->mBits;
+			unsigned int* aBits1 = anImage->mBits;
 
 			int aSize = anImage->mWidth*anImage->mHeight;
 			for (int i = 0; i < aSize; i++)
@@ -1645,7 +1668,7 @@ Image* ImageLib::GetImage(const std::string& theFilename, bool lookForAlphaImage
 			const int aColor = gAlphaComposeColor;
 			anImage = anAlphaImage;
 
-			unsigned long* aBits1 = anImage->mBits;
+			unsigned int* aBits1 = anImage->mBits;
 
 			int aSize = anImage->mWidth*anImage->mHeight;
 			for (int i = 0; i < aSize; i++)
