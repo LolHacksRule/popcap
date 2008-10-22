@@ -28,6 +28,12 @@ NativeDisplay::~NativeDisplay()
 {
 }
 
+int NativeDisplay::Init()
+{
+	return -1;
+}
+
+
 Font * NativeDisplay::CreateFont(SexyAppBase * theApp,
 				 const std::string theFace,
 				 int thePointSize,
