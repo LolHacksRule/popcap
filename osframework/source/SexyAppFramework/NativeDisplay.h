@@ -7,6 +7,8 @@ namespace Sexy
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+class Font;
+class SexyAppBase;
 class NativeDisplay
 {
 public:
@@ -24,6 +26,14 @@ public:
 public:
 	NativeDisplay();
 	virtual ~NativeDisplay();
+
+ public:
+        virtual Font *                             CreateFont(SexyAppBase * theApp,
+                                                              const std::string theFace,
+                                                              int thePointSize,
+                                                              bool bold = false,
+                                                              bool italics = false,
+                                                              bool underline = false);
 };
 
 };

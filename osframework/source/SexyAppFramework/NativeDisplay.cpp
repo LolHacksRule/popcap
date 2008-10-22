@@ -1,4 +1,5 @@
 #include "NativeDisplay.h"
+#include "Font.h"
 
 using namespace Sexy;
 
@@ -25,4 +26,14 @@ NativeDisplay::NativeDisplay()
 ///////////////////////////////////////////////////////////////////////////////
 NativeDisplay::~NativeDisplay()
 {
+}
+
+Font * NativeDisplay::CreateFont(SexyAppBase * theApp,
+				 const std::string theFace,
+				 int thePointSize,
+				 bool bold,
+				 bool italics,
+				 bool underline)
+{
+	return 0;
 }
