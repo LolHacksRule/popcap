@@ -288,3 +288,8 @@ void Image::StretchBltMirror(Image* theImage, const Rect& theDestRect, const Rec
 {
 }
 
+bool Image::Palletize()
+{
+	return false;
+}
+
