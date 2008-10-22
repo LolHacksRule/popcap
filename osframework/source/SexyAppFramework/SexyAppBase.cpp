@@ -190,8 +190,8 @@ SexyAppBase::SexyAppBase()
 	mCursorThreadRunning = false;
 	mNumLoadingThreadTasks = 0;
 	mCompletedLoadingThreadTasks = 0;
-	//mLastDrawTick = GetTickCount();
-	//mNextDrawTick = GetTickCount();
+	mLastDrawTick = GetTickCount();
+	mNextDrawTick = GetTickCount();
 	mSysCursor = true;
 	mForceFullscreen = false;
 	mForceWindowed = false;
@@ -1220,36 +1220,21 @@ int SexyAppBase::MsgBox(const std::wstring& theText, const std::wstring& theTitl
 	return aResult;
 }
 #endif
+
 void SexyAppBase::Popup(const std::string& theString)
 {
-#if 0
-	if (IsScreenSaver())
-	{
-		LogScreenSaverError(theString);
-		return;
-	}
-
 	BeginPopup();
 	if (!mShutdown)
-		::MessageBoxA(mHWnd, theString.c_str(), SexyStringToString(GetString("FATAL_ERROR", _S("FATAL ERROR"))).c_str(), MB_APPLMODAL | MB_ICONSTOP);
+		std::cout<<"popup:"<<theString<<std::endl;
 	EndPopup();
-#endif
 }
 
 void SexyAppBase::Popup(const std::wstring& theString)
 {
-#if 0
-	if (IsScreenSaver())
-	{
-		LogScreenSaverError(WStringToString(theString));
-		return;
-	}
-
 	BeginPopup();
 	if (!mShutdown)
-		::MessageBoxW(mHWnd, theString.c_str(), SexyStringToWString(GetString("FATAL_ERROR", _S("FATAL ERROR"))).c_str(), MB_APPLMODAL | MB_ICONSTOP);
+		std::wcout<<"popup:"<<theString<<std::endl;
 	EndPopup();
-#endif
 }
 
 void SexyAppBase::SafeDeleteWidget(Widget* theWidget)
@@ -1625,7 +1610,8 @@ void SexyAppBase::LoadingThreadProcStub(void *theArg)
 
 	aSexyApp->LoadingThreadProc();
 
-	fprintf(stderr, "Resource Loading Time: %d\r\n", (GetTickCount() - aSexyApp->mTimeLoaded));
+	fprintf(stderr, "Resource Loading Time: %ud\r\n",
+		(GetTickCount() - aSexyApp->mTimeLoaded));
 
 	aSexyApp->mLoadingThreadCompleted = true;
 }
@@ -1636,7 +1622,14 @@ void SexyAppBase::StartLoadingThread()
 	{
 		mYieldMainThread = true;
 		mLoadingThreadStarted = true;
-		//_beginthread(LoadingThreadProcStub, 0, this);
+#ifdef WIN32
+		_beginthread(LoadingThreadProcStub, 0, this);
+#else
+		pthread_t thread;
+		pthread_create(&thread, NULL,
+			       (void *(*)(void*))LoadingThreadProcStub,
+			       this);
+#endif
 	}
 }
 void SexyAppBase::CursorThreadProc()
