@@ -46,7 +46,7 @@ public:
 #ifdef WIN32
 		LeaveCriticalSection(mCritSec);
 #else
-                pthread_mutex_lock(mMutex);
+                pthread_mutex_unlock(mMutex);
 #endif
 	}
 };
