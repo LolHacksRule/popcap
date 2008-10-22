@@ -13,3 +13,7 @@ env.AppendUnique(CPPPATH = ['..', os.path.join ('..', 'SexyAppFramework')],
 env.Program('demo1', [os.path.join ('Demo1', 'Board.cpp'),
                       os.path.join ('Demo1', 'GameApp.cpp'),
                       os.path.join ('Demo1', 'main.cpp')])
+
+env.Program('demo2', [os.path.join ('Demo2', 'Board.cpp'),
+                      os.path.join ('Demo2', 'GameApp.cpp'),
+                      os.path.join ('Demo2', 'main.cpp')])

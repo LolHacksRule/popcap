@@ -22,13 +22,18 @@
 // having to prefix everything with Sexy::
 using namespace Sexy;
 
+#ifdef WIN32
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{	
+#else
+int main(int argc, char ** argv)
+#endif
+{
 
 	// Make sure to set this. Some classes, like the exception handler and custom cursors
 	// will need to use it.
+#ifdef WIN32
 	gHInstance = hInstance;
-
+#endif
 	// Create and initialize our game application.
 	GameApp* anApp = new GameApp();
 	anApp->Init();

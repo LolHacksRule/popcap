@@ -130,7 +130,7 @@ void GameApp::LoadingThreadProc()
 	//	underscore instead of ending with it, it matters not, and again,
 	//	is automatically loaded in by the image loading code.
 	//	You need to clean up the memory allocated by these functions yourself.
-	mOpaqueBeamImg = (DDImage*) GetImage("images/beam_opaque");
+	mOpaqueBeamImg = (Image*) GetImage("images/beam_opaque");
 
 	// If the file was not found or couldn't be loaded (i.e. due to an
 	// incompatible file format) the returned value will be NULL.
@@ -150,7 +150,7 @@ void GameApp::LoadingThreadProc()
 	}
 
 	// Now load the other two images
-	mMoonImg = (DDImage*) GetImage("images/moon");
+	mMoonImg = (Image*) GetImage("images/moon");
 	if (mMoonImg == NULL)
 	{
 		Popup("There was an error loading the file: images/moon");
@@ -158,7 +158,7 @@ void GameApp::LoadingThreadProc()
 		return;
 	}
 
-	mTurbotImg = (DDImage*) GetImage("images/turbot_worry");
+	mTurbotImg = (Image*) GetImage("images/turbot_worry");
 	if (mTurbotImg == NULL)
 	{
 		Popup("There was an error loading the file: images/turbot_worry");
@@ -184,9 +184,9 @@ void GameApp::LoadingThreadProc()
 	// Palletize() method on an image, you potentially can reduce the
 	// amount of RAM it consumes by 4 times. The Palletize method
 	// returns a boolean indicating if it could or couldn't be palletized.
-	((DDImage*)mOpaqueBeamImg)->Palletize();
-	((DDImage*)mMoonImg)->Palletize();
-	((DDImage*)mTurbotImg)->Palletize();
+	((Image*)mOpaqueBeamImg)->Palletize();
+	((Image*)mMoonImg)->Palletize();
+	((Image*)mTurbotImg)->Palletize();
 
 	// Now let's load and create some fonts. A font consists of an 
 	// image and a text file. The image works on the same principles
