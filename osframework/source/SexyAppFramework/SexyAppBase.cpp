@@ -1557,6 +1557,8 @@ void SexyAppBase::MakeWindow()
 {
 	mDDInterface = new DFBInterface(this);
 	InitDDInterface();
+	mWidgetManager->mImage =
+		dynamic_cast<MemoryImage*>(mDDInterface->GetScreenImage());
 }
 
 void SexyAppBase::DeleteNativeImageData()
@@ -3225,7 +3227,7 @@ DWORD SexyAppBase::GetTickCount()
 
 	clock_gettime(CLOCK_MONOTONIC, &now);
 	ticks = now.tv_sec * 1000L +
-		now.tv_nsec * 1000000L;
+		now.tv_nsec / 1000000L;
 	return ticks;
 #endif
 }
