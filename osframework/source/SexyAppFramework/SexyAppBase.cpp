@@ -989,116 +989,17 @@ static bool gForceDisplay = false;
 static void CalculateFPS()
 {
 	gFrameCount++;
-
-#if 0
-	static SysFont aFont(gSexyAppBase,"Tahoma",8);
-	if (gFPSImage==NULL)
-	{
-		gFPSImage = new DDImage(gSexyAppBase->mDDInterface);
-		gFPSImage->Create(50,aFont.GetHeight()+4);
-		gFPSImage->SetImageMode(false,false);
-		gFPSImage->SetVolatile(true);
-		gFPSImage->mPurgeBits = false;
-		gFPSImage->mWantDDSurface = true;
-		gFPSImage->PurgeBits();
-	}
-
-	if (gFPSTimer.GetDuration() >= 1000 || gForceDisplay)
-	{
-		gFPSTimer.Stop();
-		if (!gForceDisplay)
-			gFPSDisplay = (int)(gFrameCount*1000/gFPSTimer.GetDuration() + 0.5f);
-		else
-		{
-			gForceDisplay = false;
-			gFPSDisplay = 0;
-		}
-
-		gFPSTimer.Start();
-		gFrameCount = 0;
-
-		Graphics aDrawG(gFPSImage);
-		aDrawG.SetFont(&aFont);
-		SexyString aFPS = StrFormat(_S("FPS: %d"), gFPSDisplay);
-		aDrawG.SetColor(0x000000);
-		aDrawG.FillRect(0,0,gFPSImage->GetWidth(),gFPSImage->GetHeight());
-		aDrawG.SetColor(0xFFFFFF);
-		aDrawG.DrawString(aFPS,2,aFont.GetAscent());
-		//gFPSImage->mKeepBits = false;
-		//gFPSImage->GenerateDDSurface();
-		gFPSImage->mBitsChangedCount++;
-	}
-#endif
 }
 
 ///////////////////////////// FPS Stuff to draw mouse coords
 static void FPSDrawCoords(int theX, int theY)
 {
-#if 0
-	static SysFont aFont(gSexyAppBase,"Tahoma",8);
-	if (gFPSImage==NULL)
-	{
-		gFPSImage = new DDImage(gSexyAppBase->mDDInterface);
-		gFPSImage->Create(50,aFont.GetHeight()+4);
-		gFPSImage->SetImageMode(false,false);
-		gFPSImage->SetVolatile(true);
-		gFPSImage->mPurgeBits = false;
-		gFPSImage->mWantDDSurface = true;
-		gFPSImage->PurgeBits();
-	}
-
-	Graphics aDrawG(gFPSImage);
-	aDrawG.SetFont(&aFont);
-	SexyString aFPS = StrFormat(_S("%d,%d"),theX,theY);
-	aDrawG.SetColor(0x000000);
-	aDrawG.FillRect(0,0,gFPSImage->GetWidth(),gFPSImage->GetHeight());
-	aDrawG.SetColor(0xFFFFFF);
-	aDrawG.DrawString(aFPS,2,aFont.GetAscent());
-	gFPSImage->mBitsChangedCount++;
-#endif
 }
 
 ///////////////////////////// Demo TimeLeft Stuff
 //static DDImage* gDemoTimeLeftImage = NULL;
 static void CalculateDemoTimeLeft()
 {
-#if 0
-	static SysFont aFont(gSexyAppBase,"Tahoma",8);
-	static DWORD aLastTick = 0;
-
-	if (gDemoTimeLeftImage==NULL)
-	{
-		gDemoTimeLeftImage = new DDImage(gSexyAppBase->mDDInterface);
-		gDemoTimeLeftImage->Create(50,aFont.GetHeight()+4);
-		gDemoTimeLeftImage->SetImageMode(false,false);
-		gDemoTimeLeftImage->SetVolatile(true);
-		gDemoTimeLeftImage->mPurgeBits = false;
-		gDemoTimeLeftImage->mWantDDSurface = true;
-		gDemoTimeLeftImage->PurgeBits();
-	}
-
-	DWORD aTick = GetTickCount();
-	if (aTick - aLastTick < 1000/gSexyAppBase->mUpdateMultiplier)
-		return;
-
-	aLastTick = aTick;
-
-	int aNumUpdatesLeft = gSexyAppBase->mDemoLength - gSexyAppBase->mUpdateCount;
-	Graphics aDrawG(gDemoTimeLeftImage);
-	aDrawG.SetFont(&aFont);
-
-	int aTotalSeconds = aNumUpdatesLeft*gSexyAppBase->mFrameTime/1000;
-	int aSeconds = aTotalSeconds%60;
-	int aMinutes = (aTotalSeconds/60)%60;
-	int anHours = (aTotalSeconds/3600);
-
-	SexyString aFPS = StrFormat(_S("%02d:%02d:%02d"), anHours,aMinutes,aSeconds);
-	aDrawG.SetColor(0x000000);
-	aDrawG.FillRect(0,0,gDemoTimeLeftImage->GetWidth(),gDemoTimeLeftImage->GetHeight());
-	aDrawG.SetColor(0xFFFFFF);
-	aDrawG.DrawString(aFPS,2,aFont.GetAscent());
-	gDemoTimeLeftImage->mBitsChangedCount++;
-#endif
 }
 
 static void UpdateScreenSaverInfo(DWORD theTick)
