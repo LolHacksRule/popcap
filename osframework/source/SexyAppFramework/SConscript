@@ -10,19 +10,20 @@ env = env.Clone()
 srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "CritSect.cpp", "CursorWidget.cpp", "Debug.cpp", "DescParser.cpp",
         "DialogButton.cpp", "Dialog.cpp", "EditWidget.cpp", "Flags.cpp",
-        "Font.cpp", "Color.cpp", "Graphics.cpp", "HTTPTransfer.cpp",
+        "Font.cpp", "NativeFont.cpp", "Color.cpp", "Graphics.cpp", "HTTPTransfer.cpp",
         "HyperlinkWidget.cpp", "Image.cpp", "ImageFont.cpp", "Insets.cpp",
         "KeyCodes.cpp", "ListWidget.cpp", "MemoryImage.cpp", "ModVal.cpp",
         "MTRand.cpp", "MusicInterface.cpp", "NativeDisplay.cpp", "PerfTimer.cpp",
         "PropertiesParser.cpp", "Quantize.cpp", "Ratio.cpp", "ResourceManager.cpp",
         "ScrollbarWidget.cpp", "ScrollbuttonWidget.cpp", "SEHCatcher.cpp",
         "SexyAppBase.cpp", "SexyMatrix.cpp", "SharedImage.cpp", "Slider.cpp",
-        "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp", "WidgetManager.cpp",
-        "XMLParser.cpp"]
+        "SWTri.cpp", "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp",
+        "WidgetManager.cpp", "XMLParser.cpp"]
 env.AppendUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                             os.path.join('..', 'PakLib')],
                  LIBPATH = [os.path.join('..', 'ImageLib'),
                             os.path.join('..', 'PakLib')],
                  LIBS = ['PakLib', 'ImageLib', 'rt'])
 
-imagelib = env.SharedLibrary('SexyAppFramework', srcs)
+#env.Library('SexyAppFramework', srcs)
+env.SharedLibrary('SexyAppFramework', srcs)

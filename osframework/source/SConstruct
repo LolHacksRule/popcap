@@ -37,7 +37,7 @@ env = Environment()
 createConvenienceLibBuilder(env)
 env.AppendUnique(CFLAGS = ['-pthread'],
                  LINKFALGS = ['-pthread'])
-env.AppendUnique(CFLAGS = ['-g'])
+env.AppendUnique(CFLAGS = ['-g'], CXXFLAGS = ['-g'], LINKFLAGS = ['-g'])
 Export('env')
 
 sconscripts = [os.path.join('ImageLib', 'SConscript')]

@@ -97,5 +97,5 @@ zlib/trees.c
 zlib/uncompr.c
 zlib/zutil.c""".split()
 srcs += ['ImageLib.cpp']
-imagelib = env.ConvenienceLibrary('ImageLib', srcs)
+env.ConvenienceLibrary('ImageLib', srcs)
 
