@@ -30,7 +30,7 @@
 #include "PerfTimer.h"
 #include "MTRand.h"
 #include "ModVal.h"
-#include <iostream.h>
+#include <iostream>
 #include <fstream>
 #include <time.h>
 #include <math.h>
