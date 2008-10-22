@@ -919,7 +919,8 @@ void SexyAppBase::UpdateFrames()
 			++mFPSDirtyCount;
 	}
 
-	mMusicInterface->Update();
+	if (mMusicInterface)
+		mMusicInterface->Update();
 	CleanSharedImages();
 }
 
@@ -1063,6 +1064,7 @@ bool SexyAppBase::DrawDirtyStuff()
 	bool drewScreen = mWidgetManager->DrawScreen();
 	mIsDrawing = false;
 
+	printf ("drewscreen %d\n", (int)drewScreen);
 	if ((drewScreen || (aStartTime - mLastDrawTick >= 1000) || (mCustomCursorDirty)) &&
 		((int) (aStartTime - mNextDrawTick) >= 0))
 	{
@@ -3231,6 +3233,6 @@ DWORD SexyAppBase::GetTickCount()
 	clock_gettime(CLOCK_MONOTONIC, &now);
 	ticks = now.tv_sec * 1000L +
 		now.tv_nsec * 1000000L;
-	return 0;
+	return ticks;
 #endif
 }
