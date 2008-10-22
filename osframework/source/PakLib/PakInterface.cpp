@@ -41,7 +41,7 @@ static std::string StringToUpper(const std::string& theString)
 PakInterface::PakInterface()
 {
 	if (GetPakPtr() == NULL)
-		*gPakInterfaceP = this;
+		gPakInterfaceP = this;
 }
 
 PakInterface::~PakInterface()
