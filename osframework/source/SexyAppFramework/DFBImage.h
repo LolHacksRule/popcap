@@ -54,6 +54,7 @@ public:
 
 public:
 	DFBImage();
+        DFBImage(IDirectFBSurface * theSurface, DFBInterface* theInterface);
 	DFBImage(DFBInterface* theInterface);
 	virtual ~DFBImage();
 

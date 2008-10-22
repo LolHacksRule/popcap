@@ -12,9 +12,18 @@ using namespace Sexy;
 
 DFBImage::DFBImage(DFBInterface* theInterface) :
 	MemoryImage(theInterface->mApp),
-	mSurface(0)
+	mSurface(0),
+	mInterface(theInterface)
 {
-	mInterface = theInterface;
+	Init();
+}
+
+DFBImage::DFBImage(IDirectFBSurface * theSurface,
+		   DFBInterface* theInterface) :
+	MemoryImage(theInterface->mApp),
+	mSurface(theSurface),
+	mInterface(theInterface)
+{
 	Init();
 }
 
@@ -29,6 +38,8 @@ DFBImage::~DFBImage()
 {
 	mInterface->RemoveImage(this);
 
+	if (mSurface)
+		mSurface->Release(mSurface);
 	DBG_ASSERTE(mLockCount == 0);
 }
 

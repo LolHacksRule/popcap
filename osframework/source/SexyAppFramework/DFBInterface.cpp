@@ -7,6 +7,8 @@
 #include "Debug.h"
 #include "MemoryImage.h"
 
+#include <cstdio>
+
 using namespace Sexy;
 
 DFBInterface::DFBInterface(SexyAppBase* theApp)
@@ -94,6 +96,7 @@ int DFBInterface::Init(void)
 	mWidth = width;
 	mHeight = height;
 
+	mScreenImage = new DFBImage(surface, this);
 	mInitCount++;
 	mInitialized = true;
 
@@ -123,14 +126,14 @@ ulong DFBInterface::GetColorRef(ulong theRGB)
 
 void DFBInterface::AddImage(Image* theImage)
 {
-	AutoCrit anAutoCrit(mCritSect);
+	//AutoCrit anAutoCrit(mCritSect);
 
 	mImageSet.insert((DFBImage*)theImage);
 }
 
 void DFBInterface::RemoveImage(Image* theImage)
 {
-	AutoCrit anAutoCrit(mCritSect);
+	//AutoCrit anAutoCrit(mCritSect);
 
 	DFBImageSet::iterator anItr = mImageSet.find((DFBImage*)theImage);
 	if (anItr != mImageSet.end())
@@ -166,7 +169,8 @@ void DFBInterface::Cleanup()
 	}
 
 	if (mPrimarySurface)
-		mPrimarySurface->Release(mPrimarySurface);
+		mPrimarySurface = NULL;
+
 	if (mDFB)
 		mDFB->Release(mDFB);
 }
@@ -178,6 +182,7 @@ bool DFBInterface::Redraw(Rect* theClipRect)
 	if (!mInitialized)
 		return false;
 
+	printf ("in redraw\n");
 	return true;
 }
 
