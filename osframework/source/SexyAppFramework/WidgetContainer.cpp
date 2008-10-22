@@ -625,3 +625,4 @@ void WidgetContainer::DisableWidget(Widget* theWidget)
 void WidgetContainer::SetFocus(Widget* theWidget)
 {
 }
+
