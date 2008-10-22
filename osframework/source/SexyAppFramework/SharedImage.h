@@ -13,7 +13,7 @@ class MemoryImage;
 class SharedImage
 {
 public:
-	DDImage*				mImage;
+	Image*				mImage;
 	int						mRefCount;
 
 	SharedImage();
