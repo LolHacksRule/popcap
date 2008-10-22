@@ -16,6 +16,10 @@
 #include "DSoundManager.h"
 #include "DSoundInstance.h"
 #include "BassMusicInterface.h"
+#else
+#include "DFBInterface.h"
+#include "DFBInterface.h"
+#include "DFBImage.h"
 #endif
 #include "SoundManager.h"
 #include "SoundInstance.h"
@@ -978,7 +982,8 @@ void SexyAppBase::Redraw(Rect* theClipRect)
 	if (gScreenSaverActive)
 		return;
 
-	//mDDInterface->Redraw(theClipRect);
+	if (mDDInterface)
+		mDDInterface->Redraw(theClipRect);
 	mFPSFlipCount++;
 }
 
@@ -1563,6 +1568,8 @@ std::string	SexyAppBase::NotifyCrashHook()
 
 void SexyAppBase::MakeWindow()
 {
+	mDDInterface = new DFBInterface(this);
+	InitDDInterface();
 }
 
 void SexyAppBase::DeleteNativeImageData()
@@ -2101,24 +2108,16 @@ bool SexyAppBase::UpdateApp()
 
 int SexyAppBase::InitDDInterface()
 {
+	if (!mDDInterface)
+		return -1;
+
 	PreDDInterfaceInitHook();
 	DeleteNativeImageData();
-#if 0
-	int aResult = mDDInterface->Init(mHWnd, mIsPhysWindowed);
+
+	mDDInterface->Init();
 	DemoSyncRefreshRate();
-	if ( DDInterface::RESULT_OK == aResult )
-	{
-		mScreenBounds.mX = ( mWidth - mDDInterface->mWidth ) / 2;
-		mScreenBounds.mY = ( mHeight - mDDInterface->mHeight ) / 2;
-		mScreenBounds.mWidth = mDDInterface->mWidth;
-		mScreenBounds.mHeight = mDDInterface->mHeight;
-		mWidgetManager->Resize(mScreenBounds, mDDInterface->mPresentationRect);
-		PostDDInterfaceInitHook();
-	}
-	return aResult;
-#else
+	PostDDInterfaceInitHook();
 	return 0;
-#endif
 }
 
 void SexyAppBase::PreTerminate()

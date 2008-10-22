@@ -12,6 +12,7 @@ using namespace Sexy;
 DFBInterface::DFBInterface(SexyAppBase* theApp)
 {
 	mApp = theApp;
+	mDFB = NULL;
 	mScreenImage = NULL;
 	mRedAddTable = NULL;
 	mGreenAddTable = NULL;
@@ -35,7 +36,7 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 	mOldCursorAreaImage = NULL;
 	mInitCount = 0;
 	mRefreshRate = 60;
-	mMillisecondsPerFrame = 1000/mRefreshRate;
+	mMillisecondsPerFrame = 1000 / mRefreshRate;
 }
 
 DFBInterface::~DFBInterface()
@@ -45,6 +46,9 @@ DFBInterface::~DFBInterface()
 	delete [] mBlueAddTable;
 
 	Cleanup();
+
+	if (mDFB)
+		mDFB->Release(mDFB);
 }
 
 std::string DFBInterface::ResultToString(int theResult)
@@ -59,10 +63,37 @@ Image* DFBInterface::GetScreenImage()
 
 int DFBInterface::Init(void)
 {
-	AutoCrit anAutoCrit(mCritSect);
-
-	mInitialized = false;
 	Cleanup();
+
+	AutoCrit anAutoCrit(mCritSect);
+	mInitialized = false;
+
+	if (!mDFB) {
+		DirectFBInit(NULL, NULL);
+		DirectFBCreate(&mDFB);
+		mDFB->SetCooperativeLevel(mDFB, DFSCL_FULLSCREEN);
+	}
+
+	IDirectFBSurface * surface;
+	DFBSurfaceDescription surface_desc;
+	int width, height;
+	int ret;
+
+	surface_desc.flags = DSDESC_CAPS;
+	surface_desc.caps =
+		(DFBSurfaceCapabilities)(DSCAPS_PRIMARY | DSCAPS_VIDEOONLY | DSCAPS_DOUBLE);
+	ret = mDFB->CreateSurface(mDFB, &surface_desc, &surface);
+	if (ret != DFB_OK) {
+		surface_desc.caps =
+			(DFBSurfaceCapabilities)(surface_desc.caps  & ~DSCAPS_DOUBLE);
+		ret = mDFB->CreateSurface(mDFB, &surface_desc, &surface);
+		DBG_ASSERT (ret == DFB_OK);
+	}
+	surface->GetSize (surface, &width, &height);
+	mPrimarySurface = surface;
+	mWidth = width;
+	mHeight = height;
+
 	mInitCount++;
 	mInitialized = true;
 
@@ -133,6 +164,11 @@ void DFBInterface::Cleanup()
 		delete mScreenImage;
 		mScreenImage = NULL;
 	}
+
+	if (mPrimarySurface)
+		mPrimarySurface->Release(mPrimarySurface);
+	if (mDFB)
+		mDFB->Release(mDFB);
 }
 
 bool DFBInterface::Redraw(Rect* theClipRect)

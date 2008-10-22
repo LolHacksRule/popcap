@@ -7,6 +7,8 @@
 #include "Rect.h"
 #include "Ratio.h"
 
+#include <directfb.h>
+
 namespace Sexy
 {
 
@@ -20,20 +22,24 @@ typedef std::set<DFBImage*> DFBImageSet;
 class DFBInterface : public NativeDisplay
 {
 public:
-	SexyAppBase*			mApp;
+	SexyAppBase*			        mApp;
+
+        IDirectFB                             * mDFB;
+	IDirectFBSurface                      * mPrimarySurface;
+
 	bool					mIs3D;
 
 	CritSect				mCritSect;
 	bool					mInRedraw;
-	int						mWidth;
-	int						mHeight;
+	int					mWidth;
+	int					mHeight;
 	Ratio					mAspect;
-	int						mDesktopWidth;
-	int						mDesktopHeight;
+	int					mDesktopWidth;
+	int					mDesktopHeight;
 	Ratio					mDesktopAspect;
 	bool					mIsWidescreen;
-	int						mDisplayWidth;
-	int						mDisplayHeight;
+	int					mDisplayWidth;
+	int					mDisplayHeight;
 	Ratio					mDisplayAspect;
 
 	Rect					mPresentationRect;

@@ -11,7 +11,8 @@
 using namespace Sexy;
 
 DFBImage::DFBImage(DFBInterface* theInterface) :
-	MemoryImage(theInterface->mApp)
+	MemoryImage(theInterface->mApp),
+	mSurface(0)
 {
 	mInterface = theInterface;
 	Init();

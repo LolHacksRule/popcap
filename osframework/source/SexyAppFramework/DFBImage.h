@@ -2,6 +2,7 @@
 #define __DFBIMAGE_H__
 
 #include "MemoryImage.h"
+#include <directfb.h>
 
 namespace Sexy
 {
@@ -17,6 +18,7 @@ protected:
 
 public:
 	DFBInterface*			mInterface;
+        IDirectFBSurface*               mSurface;
 	bool				mSurfaceSet;
 	bool				mNoLock;
 	bool					mVideoMemory;

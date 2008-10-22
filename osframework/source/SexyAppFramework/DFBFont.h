@@ -2,6 +2,7 @@
 #define __DFBFONT_H__
 
 #include "Font.h"
+#include <directfb.h>
 
 namespace Sexy
 {
