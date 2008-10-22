@@ -1,8 +1,9 @@
 #include "ButtonWidget.h"
 #include "Image.h"
-#include "SysFont.h"
+#include "NativeFont.h"
 #include "WidgetManager.h"
 #include "ButtonListener.h"
+#include "SexyAppBase.h"
 
 using namespace Sexy;
 
@@ -14,7 +15,7 @@ static int gButtonWidgetColors[][3] = {
 	{132, 132, 132},
 	{212, 212, 212}};
 
-ButtonWidget::ButtonWidget(int theId, ButtonListener* theButtonListener)	
+ButtonWidget::ButtonWidget(int theId, ButtonListener* theButtonListener)
 {
 	mId = theId;
 	mFont = NULL;
@@ -71,7 +72,8 @@ void ButtonWidget::Draw(Graphics* g)
 		return;
 
 	if ((mFont == NULL) && (mLabel.length() > 0))
-		mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 10);
+		mFont = mWidgetManager->mApp->mDDInterface->CreateFont
+			(mWidgetManager->mApp, "Arial Unicode MS", 10);
 
 	bool isDown = mIsDown && mIsOver && !mDisabled;
 	isDown ^= mInverted;

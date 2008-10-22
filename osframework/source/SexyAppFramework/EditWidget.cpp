@@ -1,5 +1,5 @@
 #include "EditWidget.h"
-#include "SysFont.h"
+#include "NativeFont.h"
 #include "WidgetManager.h"
 #include "SexyAppBase.h"
 #include "EditListener.h"
@@ -117,7 +117,8 @@ void EditWidget::SetFont(Font* theFont, Font* theWidthCheckFont)
 void EditWidget::Draw(Graphics* g) // Already translated
 {	
 	if (mFont == NULL)
-		mFont = new SysFont(mWidgetManager->mApp, "Arial Unicode MS", 10, false);
+		mFont = mWidgetManager->mApp->mDDInterface->CreateFont
+			(mWidgetManager->mApp, "Arial Unicode MS", 10, false);
 
 	SexyString &aString = GetDisplayString();
 

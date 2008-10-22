@@ -30,11 +30,12 @@
 #include "PerfTimer.h"
 #include "MTRand.h"
 #include "ModVal.h"
+
 #include <iostream>
 #include <fstream>
 #include <time.h>
 #include <math.h>
-#include "SysFont.h"
+
 #include "ResourceManager.h"
 #include "AutoCrit.h"
 #include "Debug.h"

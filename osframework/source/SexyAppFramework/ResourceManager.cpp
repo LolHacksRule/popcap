@@ -7,7 +7,7 @@
 #include "DDImage.h"
 #include "D3DInterface.h"
 #include "ImageFont.h"
-#include "SysFont.h"
+#include "NativeFont.h"
 #include "../ImageLib/ImageLib.h"
 
 //#define SEXY_PERF_ENABLED
@@ -862,17 +862,19 @@ bool ResourceManager::DoLoadFont(FontRes* theRes)
 	if (theRes->mSysFont)
 	{
 		bool bold = theRes->mBold, simulateBold = false;
-		if (Sexy::CheckFor98Mill())
-		{
-			simulateBold = bold;
-			bold = false;
-		}
-		aFont = new SysFont(theRes->mPath,theRes->mSize,bold,theRes->mItalic,theRes->mUnderline);
-		SysFont* aSysFont = (SysFont*)aFont;
-		aSysFont->mDrawShadow = theRes->mShadow;
-		aSysFont->mSimulateBold = simulateBold;
+		// if (Sexy::CheckFor98Mill())
+		// {
+		// 	simulateBold = bold;
+		// 	bold = false;
+		// }
+		aFont = mApp->mDDInterface->CreateFont
+			(mApp, theRes->mPath,theRes->mSize,bold,theRes->mItalic,
+			 theRes->mUnderline);
+		//NativeFont* aNativeFont = (NativeFont*)aFont;
+		//aNativeFont->mDrawShadow = theRes->mShadow;
+		//aNativeFont->mSimulateBold = simulateBold;
 	}
-	else if (theRes->mImagePath.empty())	
+	else if (theRes->mImagePath.empty())
 	{
 		if (strncmp(theRes->mPath.c_str(),"!ref:",5)==0)
 		{

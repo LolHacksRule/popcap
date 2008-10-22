@@ -3,7 +3,7 @@
 #include "DialogButton.h"
 #include "SexyAppBase.h"
 #include "WidgetManager.h"
-#include "SysFont.h"
+#include "NativeFont.h"
 #include "ImageFont.h"
 
 using namespace Sexy;
@@ -151,9 +151,11 @@ void Dialog::SetLinesFont(Font* theFont)
 void Dialog::EnsureFonts()
 {
 	if (mHeaderFont == NULL)
-		mHeaderFont = new SysFont(gSexyAppBase, "Arial Unicode MS", 14);
+		mHeaderFont = mWidgetManager->mApp->mDDInterface->CreateFont
+			(gSexyAppBase, "Arial Unicode MS", 14);
 	if (mLinesFont == NULL)
-		mLinesFont = new SysFont(gSexyAppBase, "Arial Unicode MS", 12);
+		mLinesFont = mWidgetManager->mApp->mDDInterface->CreateFont
+			(gSexyAppBase, "Arial Unicode MS", 12);
 }
 
 int	Dialog::GetPreferredHeight(int theWidth)
