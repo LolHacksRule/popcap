@@ -43,6 +43,7 @@ Export('env')
 sconscripts = [os.path.join('ImageLib', 'SConscript')]
 sconscripts += [os.path.join('PakLib', 'SConscript')]
 sconscripts += [os.path.join('SexyAppFramework', 'SConscript')]
+sconscripts += [os.path.join('demos', 'SConscript')]
 
 for sconscript in sconscripts:
   SConscript(sconscript)
