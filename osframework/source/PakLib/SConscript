@@ -7,4 +7,4 @@ import sys
 
 Import('env')
 srcs = ['PakInterface.cpp']
-imagelib = env.Library('Pak', srcs)
+imagelib = env.ConvenienceLibrary('PakLib', srcs)
