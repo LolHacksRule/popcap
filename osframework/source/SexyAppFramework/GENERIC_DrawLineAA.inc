@@ -1,10 +1,10 @@
 {
 	PIXEL_TYPE* aDestPixels = &aBits[aY0*STRIDE + aX0];
-	uint32 anErrAcc = (ulong)(fabs(theStartX - aX0)*fabs(theStartY - aY0) * 0x10000);
+	uint32 anErrAcc = (uint32)(fabs(theStartX - aX0)*fabs(theStartY - aY0) * 0x10000);
 	if (dx >= dy) // mostly horizontal
 	{ 
-		//ulong anErrAdj = (((ulong)dy << 16) / (ulong)dx);
-		uint32 anErrAdj = (ulong)(dyd / dxd * 0x10000);
+		//uint32 anErrAdj = (((uint32)dy << 16) / (uint32)dx);
+		uint32 anErrAdj = (uint32)(dyd / dxd * 0x10000);
 
 		uchar aWeight = 255 - (uchar)(anErrAcc >> 8);
 		uchar aWeight2 = (aWeight ^ 0xFF);
@@ -43,8 +43,8 @@
 	}
 	else // mostly vertical
 	{
-		//ulong anErrAdj = (ulong)(((ulong)dx << 16) / (ulong)dy);
-		ulong anErrAdj = (ulong)(dxd / dyd * 0x10000);
+		//uint32 anErrAdj = (uint32)(((uint32)dx << 16) / (uint32)dy);
+		uint32 anErrAdj = (uint32)(dxd / dyd * 0x10000);
 
 		uchar aWeight = 255 - (uchar)(anErrAcc >> 8);
 		uchar aWeight2 = (aWeight ^ 0xFF);

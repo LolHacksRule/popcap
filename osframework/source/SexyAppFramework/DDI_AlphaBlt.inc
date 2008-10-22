@@ -3,13 +3,13 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 	ushort* aDestPixelsRow = ((ushort*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/2) + theX;	
 	uchar* aRLAlphaDataRow = aSrcRLAlphaData + (theSrcRect.mY * theImage->mWidth) + theSrcRect.mX;
 
-	ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-	ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-	ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+	uint32 aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+	uint32 aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+	uint32 aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-	ulong aRRoundAdd = aRMask >> 1;
-	ulong aGRoundAdd = aGMask >> 1;
-	ulong aBRoundAdd = aBMask >> 1;
+	uint32 aRRoundAdd = aRMask >> 1;
+	uint32 aGRoundAdd = aGMask >> 1;
+	uint32 aBRoundAdd = aBMask >> 1;
 
 	if (theColor == Color::White)
 	{
@@ -25,7 +25,7 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32 src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAlphaData;
 					
 					if (rl > aSpanLeft)
@@ -48,14 +48,14 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 					{
 						oma >>= 3;
 						aSrcPixels++;
-						ulong dest = (((*aDestPixels | (*aDestPixels << 16)) & 0x7E0F81F) * oma >> 5) & 0x7E0F81F;
+						uint32 dest = (((*aDestPixels | (*aDestPixels << 16)) & 0x7E0F81F) * oma >> 5) & 0x7E0F81F;
 						*(aDestPixels _PLUSPLUS) = src + (dest | (dest >> 16));
 
 						for (int i = 1; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 							int oma = (256 - (src >> 24)) >> 3;
-							ulong dest = (((*aDestPixels | (*aDestPixels << 16)) & 0x7E0F81F) * oma >> 5) & 0x7E0F81F;
+							uint32 dest = (((*aDestPixels | (*aDestPixels << 16)) & 0x7E0F81F) * oma >> 5) & 0x7E0F81F;
 							*(aDestPixels _PLUSPLUS) = src + (dest | (dest >> 16));
 						}
 					}
@@ -80,7 +80,7 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32 src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAlphaData;
 					
 					if (rl > aSpanLeft)
@@ -103,14 +103,14 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 					{
 						oma >>= 3;
 						aSrcPixels++;
-						ulong dest = (((*aDestPixels | (*aDestPixels << 16)) & 0x3E07C1F) * oma >> 5) & 0x3E07C1F;
+						uint32 dest = (((*aDestPixels | (*aDestPixels << 16)) & 0x3E07C1F) * oma >> 5) & 0x3E07C1F;
 						*(aDestPixels _PLUSPLUS) = src + (dest | (dest >> 16));
 
 						for (int i = 1; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 							int oma = (256 - (src >> 24)) >> 3;
-							ulong dest = (((*aDestPixels | (*aDestPixels << 16)) & 0x3E07C1F) * oma >> 5) & 0x3E07C1F;
+							uint32 dest = (((*aDestPixels | (*aDestPixels << 16)) & 0x3E07C1F) * oma >> 5) & 0x3E07C1F;
 							*(aDestPixels _PLUSPLUS) = src + (dest | (dest >> 16));
 						}
 					}
@@ -136,7 +136,7 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32 src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAlphaData;
 					
 					if (rl > aSpanLeft)
@@ -157,7 +157,7 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 					else // Partially transparent
 					{
 						aSrcPixels++;
-						ulong dest = *aDestPixels;
+						uint32 dest = *aDestPixels;
 						*(aDestPixels _PLUSPLUS) = src + 
 							(((((dest & aRMask) * oma) ) >> 8) & aRMask) +
 							(((((dest & aGMask) * oma) ) >> 8) & aGMask) +
@@ -165,10 +165,10 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 
 						for (int i = 1; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 							int oma = 256 - (src >> 24);
 
-							ulong dest = *aDestPixels;
+							uint32 dest = *aDestPixels;
 							*(aDestPixels _PLUSPLUS) = src + 
 								(((((dest & aRMask) * oma) ) >> 8) & aRMask) +
 								(((((dest & aGMask) * oma) ) >> 8) & aGMask) +
@@ -211,7 +211,7 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 
 					for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 					{
-						ulong src = PEEK_SRC_COLOR;
+						uint32 src = PEEK_SRC_COLOR;
 						uchar rl = *aRLAlphaData;
 						
 						if (rl > aSpanLeft)
@@ -223,8 +223,8 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 						{
 							for (int i = 0; i < rl; i++)
 							{
-								ulong src = NEXT_SRC_COLOR;
-								ulong dest = (((( (src & 0xFFFF) | (src << 16)) & 0x7E0F81F) * cr) >> 5) & 0x7E0F81F;
+								uint32 src = NEXT_SRC_COLOR;
+								uint32 dest = (((( (src & 0xFFFF) | (src << 16)) & 0x7E0F81F) * cr) >> 5) & 0x7E0F81F;
 								*(aDestPixels _PLUSPLUS) = dest | (dest >> 16);
 							}
 						}
@@ -237,12 +237,12 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 						{																	
 							for (int i = 0; i < rl; i++)
 							{
-								ulong src = NEXT_SRC_COLOR;
+								uint32 src = NEXT_SRC_COLOR;
 
 								a = ((src >> 24) * ca) / 255;
 								int oma = (256 - a) >> 3;
 
-								ulong dest = (*aDestPixels | (*aDestPixels << 16)) & 0x7E0F81F;
+								uint32 dest = (*aDestPixels | (*aDestPixels << 16)) & 0x7E0F81F;
 								src &= 0xFFFF;
 								src = ( (src & 0xFFFF) | (src << 16)) & 0x7E0F81F;
 								dest = ((dest * oma + src * cr) >> 5) & 0x7E0F81F;
@@ -273,7 +273,7 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 
 					for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 					{
-						ulong src = PEEK_SRC_COLOR;
+						uint32 src = PEEK_SRC_COLOR;
 						uchar rl = *aRLAlphaData;
 						
 						if (rl > aSpanLeft)
@@ -285,8 +285,8 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 						{
 							for (int i = 0; i < rl; i++)
 							{
-								ulong src = NEXT_SRC_COLOR;
-								ulong dest = (((( (src & 0xFFFF) | (src << 16)) & 0x3E07C1F) * cr) >> 5) & 0x3E07C1F;
+								uint32 src = NEXT_SRC_COLOR;
+								uint32 dest = (((( (src & 0xFFFF) | (src << 16)) & 0x3E07C1F) * cr) >> 5) & 0x3E07C1F;
 								*(aDestPixels _PLUSPLUS) = dest | (dest >> 16);
 							}
 						}
@@ -299,12 +299,12 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 						{																	
 							for (int i = 0; i < rl; i++)
 							{
-								ulong src = NEXT_SRC_COLOR;
+								uint32 src = NEXT_SRC_COLOR;
 
 								a = ((src >> 24) * ca) / 255;
 								int oma = (256 - a) >> 3;
 
-								ulong dest = (*aDestPixels | (*aDestPixels << 16)) & 0x3E07C1F;
+								uint32 dest = (*aDestPixels | (*aDestPixels << 16)) & 0x3E07C1F;
 								src &= 0xFFFF;
 								src = ( (src & 0xFFFF) | (src << 16)) & 0x3E07C1F;
 								dest = ((dest * oma + src * cr) >> 5) & 0x3E07C1F;
@@ -334,7 +334,7 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32 src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAlphaData;
 					
 					if (rl > aSpanLeft)
@@ -346,7 +346,7 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 					{
 						for (int i = 0; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 							*(aDestPixels _PLUSPLUS) = 
 								(((((src & aRMask) * cr) ) >> 8) & aRMask) +
 								(((((src & aGMask) * cg) ) >> 8) & aGMask) +
@@ -362,12 +362,12 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 					{																	
 						for (int i = 0; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 
 							a = ((src >> 24) * ca) / 255;
 							int oma = 256 - a;									
 
-							ulong dest = *aDestPixels;
+							uint32 dest = *aDestPixels;
 							*(aDestPixels _PLUSPLUS) = 
 								(((((dest & aRMask) * oma) + ((src & aRMask) * cr) ) >> 8) & aRMask) +
 								(((((dest & aGMask) * oma) + ((src & aGMask) * cg) ) >> 8) & aGMask) +
@@ -388,29 +388,29 @@ if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 }
 else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 {
-	ulong* aDestPixelsRow = ((ulong*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/4) + theX;	
+	uint32* aDestPixelsRow = ((uint32*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/4) + theX;	
 	uchar* aRLAlphaDataRow = aSrcRLAlphaData + (theSrcRect.mY * theImage->mWidth) + theSrcRect.mX;
 
-	ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-	ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-	ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+	uint32 aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+	uint32 aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+	uint32 aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-	ulong aRRoundAdd = aRMask >> 1;
-	ulong aGRoundAdd = aGMask >> 1;
-	ulong aBRoundAdd = aBMask >> 1;
+	uint32 aRRoundAdd = aRMask >> 1;
+	uint32 aGRoundAdd = aGMask >> 1;
+	uint32 aBRoundAdd = aBMask >> 1;
 
 	if (theColor == Color::White)
 	{
 		for (int y = 0; y < theSrcRect.mHeight; y++)
 		{
-			ulong* aDestPixels = aDestPixelsRow;			
+			uint32* aDestPixels = aDestPixelsRow;			
 			uchar* aRLAlphaData = aRLAlphaDataRow;
 			
 			aSrcPixels = aSrcPixelsRow;
 
 			for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 			{						
-				ulong src = PEEK_SRC_COLOR;
+				uint32 src = PEEK_SRC_COLOR;
 				uchar rl = *aRLAlphaData;
 				
 				if (rl > aSpanLeft)
@@ -434,7 +434,7 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 					aSrcPixels++;
 
 					int oma = 256 - (src >> 24);
-					ulong dest = *aDestPixels;
+					uint32 dest = *aDestPixels;
 
 					*(aDestPixels _PLUSPLUS) = src +
 						((((dest & 0xFF00FF) * oma) >> 8) & 0xFF00FF) +
@@ -442,9 +442,9 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 
 					for (int i = 1; i < rl; i++)
 					{
-						ulong src = NEXT_SRC_COLOR;
+						uint32 src = NEXT_SRC_COLOR;
 						int oma = 256 - (src >> 24);
-						ulong dest = *aDestPixels;
+						uint32 dest = *aDestPixels;
 
 						*(aDestPixels _PLUSPLUS) = src +
 							((((dest & 0xFF00FF) * oma) >> 8) & 0xFF00FF) +
@@ -452,7 +452,7 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 					}
 #else
 					aSrcPixels++;
-					ulong dest = *aDestPixels;
+					uint32 dest = *aDestPixels;
 					*(aDestPixels _PLUSPLUS) = src + 
 						(((((dest & aRMask) * oma)) >> 8) & aRMask) +
 						(((((dest & aGMask) * oma)) >> 8) & aGMask) +
@@ -460,10 +460,10 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 
 					for (int i = 1; i < rl; i++)
 					{
-						ulong src = NEXT_SRC_COLOR;
+						uint32 src = NEXT_SRC_COLOR;
 						int oma = 256 - (src >> 24);
 
-						ulong dest = *aDestPixels;
+						uint32 dest = *aDestPixels;
 						*(aDestPixels _PLUSPLUS) = src + 
 							(((((dest & aRMask) * oma)) >> 8) & aRMask) +
 							(((((dest & aGMask) * oma)) >> 8) & aGMask) +
@@ -495,14 +495,14 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 			performNormalBlit = false;
 			for (int y = 0; y < theSrcRect.mHeight; y++)
 			{
-				ulong* aDestPixels = aDestPixelsRow;			
+				uint32* aDestPixels = aDestPixelsRow;			
 				uchar* aRLAlphaData = aRLAlphaDataRow;
 				
 				aSrcPixels = aSrcPixelsRow;
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32 src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAlphaData;
 					
 					if (rl > aSpanLeft)
@@ -514,7 +514,7 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 					{
 						for (int i = 0; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 							*(aDestPixels _PLUSPLUS) = 
 								((((src & 0xFF00FF) * cr) >> 8) & 0xFF00FF) +
 								((((src & 0x00FF00) * cr) >> 8) & 0x00FF00);
@@ -529,12 +529,12 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 					{
 						for (int i = 0; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 
 							a = ((src >> 24) * ca) / 255;
 							int oma = 256 - a;									
 
-							ulong dest = *aDestPixels;
+							uint32 dest = *aDestPixels;
 							*(aDestPixels _PLUSPLUS) = 
 								((((dest & 0xFF00FF) * oma + (src & 0xFF00FF) * cr) >> 8) & 0xFF00FF) +
 								((((dest & 0x00FF00) * oma + (src & 0x00FF00) * cr) >> 8) & 0x00FF00);
@@ -555,14 +555,14 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 		{
 			for (int y = 0; y < theSrcRect.mHeight; y++)
 			{
-				ulong* aDestPixels = aDestPixelsRow;			
+				uint32* aDestPixels = aDestPixelsRow;			
 				uchar* aRLAlphaData = aRLAlphaDataRow;
 				
 				aSrcPixels = aSrcPixelsRow;
 
 				for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 				{
-					ulong src = PEEK_SRC_COLOR;
+					uint32 src = PEEK_SRC_COLOR;
 					uchar rl = *aRLAlphaData;
 					
 					if (rl > aSpanLeft)
@@ -574,7 +574,7 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 					{
 						for (int i = 0; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 							*(aDestPixels _PLUSPLUS) = 
 								(((((src & aRMask) * cr)) >> 8) & aRMask) +
 								(((((src & aGMask) * cg)) >> 8) & aGMask) +
@@ -590,12 +590,12 @@ else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 					{
 						for (int i = 0; i < rl; i++)
 						{
-							ulong src = NEXT_SRC_COLOR;
+							uint32 src = NEXT_SRC_COLOR;
 
 							a = ((src >> 24) * ca) / 255;
 							int oma = 256 - a;									
 
-							ulong dest = *aDestPixels;
+							uint32 dest = *aDestPixels;
 							*(aDestPixels _PLUSPLUS) = 
 								(((((dest & aRMask) * oma) + ((src & aRMask) * cr)) >> 8) & aRMask) +
 								(((((dest & aGMask) * oma) + ((src & aGMask) * cg)) >> 8) & aGMask) +

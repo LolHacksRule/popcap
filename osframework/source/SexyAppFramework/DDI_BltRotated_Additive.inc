@@ -25,13 +25,13 @@
 	int aGreenRightShift = 24 - mDDInterface->mGreenBits;
 	int aBlueRightShift = 16 - mDDInterface->mBlueBits;
 
-	ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-	ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-	ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+	uint32 aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+	uint32 aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+	uint32 aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-	ulong aRRoundAdd = aRMask >> 1;
-	ulong aGRoundAdd = aGMask >> 1;
-	ulong aBRoundAdd = aBMask >> 1;
+	uint32 aRRoundAdd = aRMask >> 1;
+	uint32 aGRoundAdd = aGMask >> 1;
+	uint32 aBRoundAdd = aBMask >> 1;
 	
 	if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 16)
 	{
@@ -83,7 +83,7 @@
 	}
 	else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 	{			
-		ulong* aDestPixelsRow = ((ulong*) mLockedSurfaceDesc.lpSurface) + ((int)aDestRect.mY * mLockedSurfaceDesc.lPitch/4) + (int)aDestRect.mX;		
+		uint32* aDestPixelsRow = ((uint32*) mLockedSurfaceDesc.lpSurface) + ((int)aDestRect.mY * mLockedSurfaceDesc.lPitch/4) + (int)aDestRect.mX;		
 		int aDestPixelsPitch = mLockedSurfaceDesc.lPitch/4;
 
 		//if (theColor == Color::White)				
@@ -94,10 +94,10 @@
 			int cb = (theColor.mBlue * ca) / 255;
 		
 				
-			#define DEST_PIXEL_TYPE ulong
+			#define DEST_PIXEL_TYPE uint32
 			#define WRITE_PIXEL\
 			{\
-				ulong dest = *aDestPixels;\
+				uint32 dest = *aDestPixels;\
 				\
 				int r = aMaxRedTable[((dest & aRMask)>>aRedShift) + \
 					((((((src1 & 0xFF0000) * a1) + \

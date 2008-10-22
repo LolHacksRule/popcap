@@ -245,7 +245,7 @@ void SysFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theS
 		bih.biBitCount = 32;
 		bih.biSize = sizeof(BITMAPINFOHEADER);
 
-		ulong* whiteBits, * blackBits;
+		uint32* whiteBits, * blackBits;
 		HBITMAP whiteBitmap = (HBITMAP)CreateDIBSection(aDC, (BITMAPINFO*)&bih, DIB_RGB_COLORS, (void**)&whiteBits, NULL, 0);
 		HBITMAP blackBitmap = (HBITMAP)CreateDIBSection(aDC, (BITMAPINFO*)&bih, DIB_RGB_COLORS, (void**)&blackBits, NULL, 0);
 
@@ -281,7 +281,7 @@ void SysFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theS
 		aTempImage.Create(aWidth, aHeight);
 
 		int aCount = aHeight*aWidth;
-		ulong* ptr1 = whiteBits, *ptr2 = blackBits;
+		uint32* ptr1 = whiteBits, *ptr2 = blackBits;
 		while (aCount > 0)
 		{
 			if (*ptr1 == *ptr2)
@@ -304,7 +304,7 @@ void SysFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theS
 			--aCount;
 		}
 
-		memcpy(aTempImage.GetBits(), whiteBits, aWidth*aHeight*sizeof(ulong));
+		memcpy(aTempImage.GetBits(), whiteBits, aWidth*aHeight*sizeof(uint32));
 		g->DrawImage(&aTempImage, theX, theY - mAscent);
 
 		DeleteObject(whiteBitmap);

@@ -21,13 +21,13 @@
 		{
 			ushort* aDestPixelsRow = ((ushort*) mLockedSurfaceDesc.lpSurface) + (theDestRect.mY * mLockedSurfaceDesc.lPitch/2) + theDestRect.mX;
 
-			ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-			ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-			ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+			uint32 aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+			uint32 aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+			uint32 aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-			ulong aRRoundAdd = aRMask >> 1;
-			ulong aGRoundAdd = aGMask >> 1;
-			ulong aBRoundAdd = aBMask >> 1;					
+			uint32 aRRoundAdd = aRMask >> 1;
+			uint32 aGRoundAdd = aGMask >> 1;
+			uint32 aBRoundAdd = aBMask >> 1;					
 	
 			for (int y = 0; y < theDestRect.mHeight; y++)
 			{
@@ -40,8 +40,8 @@
 				{
 					SRC_TYPE* aSrcPixels = aSrcPixelsRow + (aFPSrcX >> 16);
 					
-					ulong src = READ_COLOR(aSrcPixels);
-					ulong dest = *aDestPixels;										
+					uint32 src = READ_COLOR(aSrcPixels);
+					uint32 dest = *aDestPixels;										
 					
 					if (src != 0)
 					{											
@@ -66,29 +66,29 @@
 		}
 		else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 		{
-			ulong* aDestPixelsRow = ((ulong*) mLockedSurfaceDesc.lpSurface) + (theDestRect.mY * mLockedSurfaceDesc.lPitch/4) + theDestRect.mX;
+			uint32* aDestPixelsRow = ((uint32*) mLockedSurfaceDesc.lpSurface) + (theDestRect.mY * mLockedSurfaceDesc.lPitch/4) + theDestRect.mX;
 
-			ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-			ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-			ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+			uint32 aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+			uint32 aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+			uint32 aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-			ulong aRRoundAdd = aRMask >> 1;
-			ulong aGRoundAdd = aGMask >> 1;
-			ulong aBRoundAdd = aBMask >> 1;					
+			uint32 aRRoundAdd = aRMask >> 1;
+			uint32 aGRoundAdd = aGMask >> 1;
+			uint32 aBRoundAdd = aBMask >> 1;					
 	
 			for (int y = 0; y < theDestRect.mHeight; y++)
 			{
 				int aFPSrcX = theSrcRect.mX * 0x10000;
 
-				ulong* aDestPixels = aDestPixelsRow;
+				uint32* aDestPixels = aDestPixelsRow;
 				SRC_TYPE* aSrcPixelsRow = aSrcBits + (aSrcMemoryImage->mWidth * (aFPSrcY >> 16));
 
 				for (int x = 0; x < theDestRect.mWidth; x++)
 				{
 					SRC_TYPE* aSrcPixels = aSrcPixelsRow + (aFPSrcX >> 16);
 					
-					ulong src = READ_COLOR(aSrcPixels);
-					ulong dest = *aDestPixels;
+					uint32 src = READ_COLOR(aSrcPixels);
+					uint32 dest = *aDestPixels;
 															
 					if (src != 0)
 					{
@@ -123,13 +123,13 @@
 		{
 			ushort* aDestPixelsRow = ((ushort*) mLockedSurfaceDesc.lpSurface) + (theDestRect.mY * mLockedSurfaceDesc.lPitch/2) + theDestRect.mX;
 
-			ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-			ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-			ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+			uint32 aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+			uint32 aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+			uint32 aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-			ulong aRRoundAdd = aRMask >> 1;
-			ulong aGRoundAdd = aGMask >> 1;
-			ulong aBRoundAdd = aBMask >> 1;					
+			uint32 aRRoundAdd = aRMask >> 1;
+			uint32 aGRoundAdd = aGMask >> 1;
+			uint32 aBRoundAdd = aBMask >> 1;					
 	
 			for (int y = 0; y < theDestRect.mHeight; y++)
 			{
@@ -142,8 +142,8 @@
 				{
 					SRC_TYPE* aSrcPixels = aSrcPixelsRow + (aFPSrcX >> 16);
 					
-					ulong src = READ_COLOR(aSrcPixels);
-					ulong dest = *aDestPixels;										
+					uint32 src = READ_COLOR(aSrcPixels);
+					uint32 dest = *aDestPixels;										
 					
 					if (src != 0)
 					{
@@ -168,29 +168,29 @@
 		}
 		else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 		{
-			ulong* aDestPixelsRow = ((ulong*) mLockedSurfaceDesc.lpSurface) + (theDestRect.mY * mLockedSurfaceDesc.lPitch/4) + theDestRect.mX;
+			uint32* aDestPixelsRow = ((uint32*) mLockedSurfaceDesc.lpSurface) + (theDestRect.mY * mLockedSurfaceDesc.lPitch/4) + theDestRect.mX;
 
-			ulong aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
-			ulong aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
-			ulong aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
+			uint32 aRMask = mLockedSurfaceDesc.ddpfPixelFormat.dwRBitMask;
+			uint32 aGMask = mLockedSurfaceDesc.ddpfPixelFormat.dwGBitMask;
+			uint32 aBMask = mLockedSurfaceDesc.ddpfPixelFormat.dwBBitMask;
 
-			ulong aRRoundAdd = aRMask >> 1;
-			ulong aGRoundAdd = aGMask >> 1;
-			ulong aBRoundAdd = aBMask >> 1;					
+			uint32 aRRoundAdd = aRMask >> 1;
+			uint32 aGRoundAdd = aGMask >> 1;
+			uint32 aBRoundAdd = aBMask >> 1;					
 	
 			for (int y = 0; y < theDestRect.mHeight; y++)
 			{
 				int aFPSrcX = theSrcRect.mX * 0x10000;
 
-				ulong* aDestPixels = aDestPixelsRow;
+				uint32* aDestPixels = aDestPixelsRow;
 				SRC_TYPE* aSrcPixelsRow = aSrcBits + (aSrcMemoryImage->mWidth * (aFPSrcY >> 16));
 
 				for (int x = 0; x < theDestRect.mWidth; x++)
 				{
 					SRC_TYPE* aSrcPixels = aSrcPixelsRow + (aFPSrcX >> 16);
 					
-					ulong src = READ_COLOR(aSrcPixels);
-					ulong dest = *aDestPixels;					
+					uint32 src = READ_COLOR(aSrcPixels);
+					uint32 dest = *aDestPixels;					
 					
 					if (src != 0)
 					{

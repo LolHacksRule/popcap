@@ -13,7 +13,7 @@
 
 				for (int x = 0; x < theSrcRect.mWidth; x++)
 				{
-					ulong aSrc = NEXT_SRC_COLOR;
+					uint32 aSrc = NEXT_SRC_COLOR;
 
 					if (aSrc>>24 != 0)
 						*(aDestPixels++) = (ushort) aSrc;
@@ -45,19 +45,19 @@
 	}
 	else if (mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 	{
-		ulong* aDestPixelsRow = ((ulong*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/4) + theX;		
+		uint32* aDestPixelsRow = ((uint32*) mLockedSurfaceDesc.lpSurface) + (theY * mLockedSurfaceDesc.lPitch/4) + theX;		
 
 		if (aMemoryImage->mHasTrans)
 		{
 			for (int y = 0; y < theSrcRect.mHeight; y++)
 			{
-				ulong* aDestPixels = aDestPixelsRow;
+				uint32* aDestPixels = aDestPixelsRow;
 				
 				aSrcPixels = aSrcPixelsRow;
 
 				for (int x = 0; x < theSrcRect.mWidth; x++)
 				{
-					ulong aSrc = NEXT_SRC_COLOR;
+					uint32 aSrc = NEXT_SRC_COLOR;
 
 					if (aSrc>>24 != 0)
 						*(aDestPixels++) = aSrc;
@@ -73,7 +73,7 @@
 		{
 			for (int y = 0; y < theSrcRect.mHeight; y++)
 			{
-				ulong* aDestPixels = aDestPixelsRow;
+				uint32* aDestPixels = aDestPixelsRow;
 				
 				aSrcPixels = aSrcPixelsRow;
 
