@@ -1,8 +1,10 @@
 #ifndef __SEXYAPPFRAMEWORK_COMMON_H__
 #define __SEXYAPPFRAMEWORK_COMMON_H__
 
+#ifdef _MSC_VER
 #pragma warning(disable:4786)
 #pragma warning(disable:4503)
+#endif
 
 #undef _WIN32_WINNT
 #undef WIN32_LEAN_AND_MEAN
