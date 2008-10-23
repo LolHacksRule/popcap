@@ -37,7 +37,7 @@ Image::Image()
 
 Image::~Image()
 {
-	delete mBits;
+	delete [] mBits;
 }
 
 int	Image::GetWidth()
@@ -423,7 +423,7 @@ Image* GetGIFImage(const std::string& theFileName)
 		p_fread(&flag, sizeof(char), 1, fp);
 
 		colors=!BitSet(flag,0x80) ? global_colors : 1 << ((flag & 0x07)+1);
-		unsigned long* colortable = new unsigned long[colors];
+		unsigned int* colortable = new unsigned int[colors];
 
 		interlaced = BitSet(flag,0x40);
 
@@ -753,12 +753,12 @@ Image* GetGIFImage(const std::string& theFileName)
 			if (QuantumTick(y,image->rows))
 			MagickMonitor(LoadImageText,y,image->rows);*/
 		}
-		delete pixel_stack;
-		delete suffix;
-		delete prefix;
-		delete packet;
+		delete [] pixel_stack;
+		delete [] suffix;
+		delete [] prefix;
+		delete [] packet;
 
-		delete colortable;
+		delete [] colortable;
 
 		//if (y < image->rows)
 		//failed = true;
@@ -852,7 +852,7 @@ bool ImageLib::WriteJPEGImage(const std::string& theFileName, Image* theImage)
 
 		for (int aCol = 0; aCol < theImage->mWidth; aCol++)
 		{
-			unsigned long src = *(aSrcPtr++);
+			unsigned int src = *(aSrcPtr++);
 
 			*aDest++ = (src >> 16) & 0xFF;
 			*aDest++ = (src >>  8) & 0xFF;
@@ -1287,7 +1287,7 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 	Image *anImage = new Image;
 	anImage->mWidth = aMaxWidth;
 	anImage->mHeight = aMaxHeight;
-	anImage->mBits = new unsigned long[aMaxWidth * aMaxHeight];
+	anImage->mBits = new unsigned int[aMaxWidth * aMaxHeight];
 	memset(anImage->mBits,0,aMaxWidth * aMaxHeight*4);
 
 	int aColorModel = jas_image_clrspc(aJasImage);
@@ -1323,7 +1323,7 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 			return NULL;
 		}
 
-		unsigned long* destRow = anImage->mBits + yorig*numVSteps*anImage->GetWidth() + xorig*numHSteps;
+		unsigned int* destRow = anImage->mBits + yorig*numVSteps*anImage->GetWidth() + xorig*numHSteps;
 
 		// color model
 		int aComponentType = jas_image_cmpttype(aJasImage,i);
@@ -1349,7 +1349,7 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 				return NULL;			
 			}
 
-			unsigned long* dest = destRow;
+			unsigned int* dest = destRow;
 			for (int x=0; x<numHSteps; x++)
 			{
 				int aVal = jas_matrix_getv(aMatrix,x);
@@ -1358,10 +1358,10 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 
 				aVal <<= aShift;
 
-				unsigned long *destRowWriter = dest;
+				unsigned int *destRowWriter = dest;
 				for (int j=0; j<vstep; j++)
 				{
-					unsigned long *destWriter = destRowWriter;
+					unsigned int *destWriter = destRowWriter;
 					for (int k=0; k<hstep; k++)
 						*destWriter++ |= aVal;
 
@@ -1386,7 +1386,7 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 	if (aNumComponents < 4) // add 255 alpha
 	{
 		int aSize = anImage->GetWidth()*anImage->GetHeight();
-		unsigned long *dest = anImage->mBits;
+		unsigned int *dest = anImage->mBits;
 		for (i=0; i<aSize; i++)
 			*dest++ |= 0xff000000;
 	}
@@ -1527,7 +1527,7 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 
 		(*fJ2K_GetResolutionDimensions)(aJ2KImage, 0, &aWidth, &aHeight);
 		
-		unsigned long* aBuffer = new unsigned long[aWidth*aHeight];
+		unsigned int* aBuffer = new unsigned int[aWidth*aHeight];
 		if (aBuffer == NULL)
 		{
 			(*fJ2K_Close)(aJ2KImage);
