@@ -24,23 +24,23 @@ public:
 	void*					mD3DData;
 	DWORD					mD3DFlags;	// see D3DInterface.h for possible values
 
-	uint32*					mColorTable;	
+	uint32*					mColorTable;
 	uchar*					mColorIndices;
-	
+
 	bool					mForcedMode;
 	bool					mHasTrans;
 	bool					mHasAlpha;
 	bool					mIsVolatile;
 	bool					mPurgeBits;
 	bool					mWantPal;
-	
+
 	uint32*					mNativeAlphaData;
 	uchar*					mRLAlphaData;
-	uchar*					mRLAdditiveData;	
+	uchar*					mRLAdditiveData;
 
 	bool					mBitsChanged;
 	SexyAppBase*			mApp;
-	
+
 private:
 	void					Init();
 
@@ -50,14 +50,14 @@ public:
 	virtual uchar*			GetRLAdditiveData(NativeDisplay *theNative);
 	virtual void			PurgeBits();
 	virtual void			DeleteSWBuffers();
-	virtual void			Delete3DBuffers();	
+	virtual void			Delete3DBuffers();
 	virtual void			DeleteExtraBuffers();
 	virtual void			ReInit();
 
 	virtual void			BitsChanged();
 	virtual void			CommitBits();
-	
-	virtual void			DeleteNativeData();	
+
+	virtual void			DeleteNativeData();
 
 	void					NormalBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor);
 	void					AdditiveBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor);
@@ -82,14 +82,14 @@ public:
 public:
 	MemoryImage();
 	MemoryImage(SexyAppBase* theApp);
-	MemoryImage(const MemoryImage& theMemoryImage);	
+	MemoryImage(const MemoryImage& theMemoryImage);
 	virtual ~MemoryImage();
 
 	virtual void			Clear();
 	virtual void			SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits = true);
 	virtual void			Create(int theWidth, int theHeight);
-	virtual uint32*			GetBits();	
-	
+	virtual uint32*			GetBits();
+
 	virtual void			FillRect(const Rect& theRect, const Color& theColor, int theDrawMode);
 	virtual void			ClearRect(const Rect& theRect);
 	virtual void			DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode);
@@ -103,7 +103,7 @@ public:
 	virtual void			BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3], int theNumTriangles, const Rect& theClipRect, const Color &theColor, int theDrawMode, float tx, float ty, bool blend);
 
 	virtual void			SetImageMode(bool hasTrans, bool hasAlpha);
-	virtual void			SetVolatile(bool isVolatile);	
+	virtual void			SetVolatile(bool isVolatile);
 
 	virtual bool			Palletize();
 };
