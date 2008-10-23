@@ -1,5 +1,5 @@
 #include "SharedImage.h"
-#include "DDImage.h"
+#include "MemoryImage.h"
 #include "SexyAppBase.h"
 
 using namespace Sexy;
@@ -42,7 +42,7 @@ SharedImageRef::~SharedImageRef()
 }
 
 void SharedImageRef::Release()
-{	
+{
 	if (mOwnsUnshared)
 		delete mUnsharedImage;
 	mUnsharedImage = NULL;
@@ -74,7 +74,7 @@ SharedImageRef&	SharedImageRef::operator=(SharedImage* theSharedImage)
 SharedImageRef& SharedImageRef::operator=(MemoryImage* theUnsharedImage)
 {
 	Release();
-	mUnsharedImage = theUnsharedImage;	
+	mUnsharedImage = theUnsharedImage;
 	return *this;
 }
 
@@ -86,23 +86,15 @@ MemoryImage* SharedImageRef::operator->()
 
 SharedImageRef::operator Image*()
 {
-	return (Image*) *this;
+	if (mSharedImage != NULL)
+		return mSharedImage->mImage;
+	else
+		return NULL;
 }
 
 SharedImageRef::operator MemoryImage*()
 {
 	if (mUnsharedImage != NULL)
 		return mUnsharedImage;
-	else
-		return (MemoryImage*) *this;
+	return dynamic_cast<MemoryImage*>(mSharedImage->mImage);
 }
-
-#ifdef WIN32
-SharedImageRef::operator DDImage*()
-{
-	if (mSharedImage != NULL)
-		return mSharedImage->mImage;
-	else
-		return NULL;
-}
-#endif

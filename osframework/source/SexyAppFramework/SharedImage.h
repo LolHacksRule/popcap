@@ -42,9 +42,6 @@ public:
 	MemoryImage*			operator->();
 	operator Image*();
 	operator MemoryImage*();
-#ifdef WIN32
-	operator DDImage*();
-#endif
 };
 
 }
