@@ -24,6 +24,7 @@
 #include "SoundManager.h"
 #include "SoundInstance.h"
 #include "MusicInterface.h"
+#include "DummySoundManager.h"
 #include "MemoryImage.h"
 #include "HTTPTransfer.h"
 #include "Dialog.h"
@@ -1064,7 +1065,6 @@ bool SexyAppBase::DrawDirtyStuff()
 	bool drewScreen = mWidgetManager->DrawScreen();
 	mIsDrawing = false;
 
-	printf ("drewscreen %d\n", (int)drewScreen);
 	if ((drewScreen || (aStartTime - mLastDrawTick >= 1000) || (mCustomCursorDirty)) &&
 		((int) (aStartTime - mNextDrawTick) >= 0))
 	{
@@ -1612,7 +1612,7 @@ void SexyAppBase::LoadingThreadProcStub(void *theArg)
 
 	aSexyApp->LoadingThreadProc();
 
-	fprintf(stderr, "Resource Loading Time: %ud\r\n",
+	fprintf(stderr, "Resource Loading Time: %u\r\n",
 		(GetTickCount() - aSexyApp->mTimeLoaded));
 
 	aSexyApp->mLoadingThreadCompleted = true;
@@ -2499,6 +2499,9 @@ void SexyAppBase::Init()
 
 	MakeWindow();
 
+	if (mSoundManager == NULL)
+		mSoundManager = new DummySoundManager();
+
 	InitHook();
 
 	mInitialized = true;
@@ -2546,17 +2549,17 @@ Sexy::Image* SexyAppBase::GetImage(const std::string& theFileName, bool commitBi
 	if (aLoadedImage == NULL)
 		return NULL;
 
-#ifdef WIN32
-	DDImage* anImage = new DDImage(mDDInterface);
-	anImage->mFilePath = theFileName;
+	Image* anImage = mDDInterface->CreateImage(this,
+						   aLoadedImage->GetWidth(),
+						   aLoadedImage->GetHeight());
+	if (anImage == NULL)
+	{
+		delete aLoadedImage;
+		return NULL;
+	}
 	anImage->SetBits(aLoadedImage->GetBits(), aLoadedImage->GetWidth(), aLoadedImage->GetHeight(), commitBits);
-	anImage->mFilePath = theFileName;
 	delete aLoadedImage;
-
 	return anImage;
-#else
-	return NULL;
-#endif
 }
 
 Sexy::Image* SexyAppBase::CreateCrossfadeImage(Sexy::Image* theImage1, const Rect& theRect1, Sexy::Image* theImage2, const Rect& theRect2, double theFadeFactor)
@@ -3164,13 +3167,15 @@ SharedImageRef SexyAppBase::GetSharedImage(const std::string& theFileName, const
 	std::string anUpperFileName = StringToUpper(theFileName);
 	std::string anUpperVariant = StringToUpper(theVariant);
 
+	std::cout<<"GetSharedImage:"<<theFileName<<std::endl;
 	std::pair<SharedImageMap::iterator, bool> aResultPair;
 	SharedImageRef aSharedImageRef;
 
-#if 0
 	{
 		AutoCrit anAutoCrit(mDDInterface->mCritSect);
-		aResultPair = mSharedImageMap.insert(SharedImageMap::value_type(SharedImageMap::key_type(anUpperFileName, anUpperVariant), SharedImage()));
+		aResultPair = mSharedImageMap.insert(SharedImageMap::value_type(SharedImageMap::key_type(anUpperFileName,
+													 anUpperVariant),
+										SharedImage()));
 		aSharedImageRef = &aResultPair.first->second;
 	}
 
@@ -3181,11 +3186,11 @@ SharedImageRef SexyAppBase::GetSharedImage(const std::string& theFileName, const
 	{
 		// Pass in a '!' as the first char of the file name to create a new image
 		if ((theFileName.length() > 0) && (theFileName[0] == '!'))
-			aSharedImageRef.mSharedImage->mImage = new DDImage(mDDInterface);
+			aSharedImageRef.mSharedImage->mImage =
+				mDDInterface->CreateImage(this, 0, 0);
 		else
 			aSharedImageRef.mSharedImage->mImage = GetImage(theFileName,false);
 	}
-#endif
 
 	return aSharedImageRef;
 }
