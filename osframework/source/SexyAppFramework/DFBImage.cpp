@@ -9,6 +9,7 @@
 #include "PerfTimer.h"
 
 using namespace Sexy;
+#define HERE() printf ("%s:%d\n", __FUNCTION__, __LINE__)
 
 DFBImage::DFBImage(DFBInterface* theInterface) :
 	MemoryImage(theInterface->mApp),
@@ -46,6 +47,13 @@ DFBImage::~DFBImage()
 void DFBImage::Init()
 {
 	mInterface->AddImage(this);
+
+	if (mSurface) {
+		int width, height;
+		mSurface->GetSize(mSurface, &width, &height);
+		mWidth = width;
+		mHeight = height;
+	}
 
 	mNoLock = false;
 	mVideoMemory = false;
@@ -154,39 +162,63 @@ void DFBImage::RehupFirstPixelTrans()
 
 bool DFBImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty, bool convex)
 {
+	HERE();
+	return false;
 }
 
 void DFBImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
 {
+	if (!mSurface)
+		return;
+	mSurface->SetDrawingFlags(mSurface, DSDRAW_BLEND);
+	mSurface->SetColor(mSurface,
+			   theColor.GetRed(), theColor.GetGreen(),
+			   theColor.GetBlue(), theColor.GetAlpha());
+	mSurface->FillRectangle(mSurface, theRect.mX, theRect.mY, theRect.mWidth, theRect.mHeight);
 }
 
 void DFBImage::NormalDrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
 {
+	HERE();
 }
 
 void DFBImage::AdditiveDrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
 {
+	HERE();
 }
 
 void DFBImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
+	if (!mSurface)
+		return;
+	mSurface->SetDrawingFlags(mSurface, DSDRAW_BLEND);
+	mSurface->SetColor(mSurface,
+			   theColor.GetRed(), theColor.GetGreen(),
+			   theColor.GetBlue(), theColor.GetAlpha());
+	mSurface->DrawLine(mSurface, floor(theStartX), floor(theStartY),
+			   ceil(theEndX), ceil(theEndY));
 }
 
 void DFBImage::NormalDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
 {
+	HERE();
 }
 
 void DFBImage::AdditiveDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
 {
+	HERE();
 }
 
 void DFBImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
+	HERE();
 }
 
 void DFBImage::CommitBits()
 {
 	MemoryImage::CommitBits();
+	if (!mSurface)
+		return;
 }
 
 void DFBImage::Create(int theWidth, int theHeight)
@@ -213,50 +245,125 @@ uint32* DFBImage::GetBits()
 
 void DFBImage::NormalFillRect(const Rect& theRect, const Color& theColor)
 {
+	if (!mSurface)
+		return;
+	mSurface->SetDrawingFlags(mSurface, DSDRAW_BLEND);
+	mSurface->SetColor(mSurface,
+			   theColor.GetRed(), theColor.GetGreen(),
+			   theColor.GetBlue(), theColor.GetAlpha());
+	mSurface->FillRectangle(mSurface, theRect.mX, theRect.mY, theRect.mWidth, theRect.mHeight);
 }
 
 void DFBImage::AdditiveFillRect(const Rect& theRect, const Color& theColor)
 {
+	HERE();
 }
 
 void DFBImage::NormalBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
 {
+	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
+	IDirectFBSurface * src, * dst;
+
+	src = srcImage->EnsureSurface();
+	dst = EnsureSurface();
+	if (src == NULL || dst == NULL)
+		return;
+
+	DFBRectangle src_rect;
+	src_rect.x = theSrcRect.mX;
+	src_rect.y = theSrcRect.mY;
+	src_rect.w = theSrcRect.mWidth;
+	src_rect.h = theSrcRect.mHeight;
+
+	DFBSurfaceBlittingFlags flags;
+	flags = DSBLIT_BLEND_ALPHACHANNEL;
+	if (theColor != Color::White) {
+		if (theColor.GetRed() == 0xff &&
+		    theColor.GetGreen() == 0xff &&
+		    theColor.GetBlue() == 0xff)
+			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_BLEND_COLORALPHA);
+		else
+			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE);
+	} else {
+		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE);
+	}
+	dst->SetBlittingFlags(src, flags);
+	dst->Blit(dst, src, &src_rect, theX, theY);
 }
 
 void DFBImage::NormalBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
 {
+	HERE();
 }
 
 void DFBImage::AdditiveBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
 {
+	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
+	IDirectFBSurface * src, * dst;
+
+	src = srcImage->EnsureSurface();
+	dst = EnsureSurface();
+	if (src == NULL || dst == NULL)
+		return;
+
+	DFBRectangle src_rect;
+	src_rect.x = theSrcRect.mX;
+	src_rect.y = theSrcRect.mY;
+	src_rect.w = theSrcRect.mWidth;
+	src_rect.h = theSrcRect.mHeight;
+
+	dst->SetBlittingFlags(src, DSBLIT_BLEND_ALPHACHANNEL);
+	dst->Blit(dst, src, &src_rect, theX, theY);
 }
 
 void DFBImage::AdditiveBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
 {
+	HERE();
 }
 
 void DFBImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
 {
+	theImage->mDrawn = true;
+
+	DBG_ASSERTE((theColor.mRed >= 0) && (theColor.mRed <= 255));
+	DBG_ASSERTE((theColor.mGreen >= 0) && (theColor.mGreen <= 255));
+	DBG_ASSERTE((theColor.mBlue >= 0) && (theColor.mBlue <= 255));
+	DBG_ASSERTE((theColor.mAlpha >= 0) && (theColor.mAlpha <= 255));
+
+	switch (theDrawMode)
+	{
+	case Graphics::DRAWMODE_NORMAL:
+		NormalBlt(theImage, theX, theY, theSrcRect, theColor);
+		break;
+	case Graphics::DRAWMODE_ADDITIVE:
+		AdditiveBlt(theImage, theX, theY, theSrcRect, theColor);
+		break;
+	}
 }
 
 void DFBImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
 {
+	HERE();
 }
 
 void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect, const Color& theColor, int theDrawMode)
 {
+	HERE();
 }
 
 void DFBImage::BltRotated(Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
 {
+	HERE();
 }
 
 void DFBImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRectOrig, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
 {
+	HERE();
 }
 
 void DFBImage::StretchBltMirror(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRectOrig, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
 {
+	HERE();
 }
 
 void DFBImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix, const Rect& theClipRect, const Color& theColor, int theDrawMode, const Rect &theSrcRect, bool blend)
@@ -302,4 +409,59 @@ void DFBImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const
 
 	UnlockSurface();
 	DeleteAllNonSurfaceData();
+}
+
+void DFBImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits)
+{
+	if (!mSurface) {
+		GetBits();
+		MemoryImage::SetBits(theBits, theWidth, theHeight, commitBits);
+	} else {
+		DFBResult ret;
+		unsigned char * addr;
+		int i, pitch;
+		unsigned char * dst, * src;
+
+		ret = mSurface->Lock(mSurface, DSLF_WRITE, (void **)&addr, &pitch);
+		if (ret != DFB_OK)
+			return;
+		src = (unsigned char*)theBits;
+		dst = (unsigned char*)addr;
+		for (i = 0; i < mHeight; i++) {
+			memcpy (dst, src, theWidth * 4);
+			src += theWidth * 4;
+			dst += pitch;
+		}
+		mSurface->Unlock(mSurface);
+	}
+}
+
+IDirectFBSurface* DFBImage::EnsureSurface()
+{
+	if (mSurface)
+		return mSurface;
+
+	if (!mWidth || !mHeight)
+		return 0;
+
+	mSurface = mInterface->CreateDFBSurface(mWidth, mHeight);
+
+	DFBResult ret;
+        unsigned char * addr;
+	int i, pitch;
+	unsigned char * dst, * src;
+
+	ret = mSurface->Lock(mSurface, DSLF_WRITE, (void **)&addr, &pitch);
+	if (ret != DFB_OK)
+		return mSurface;
+	src = (unsigned char*)mBits;
+	dst = (unsigned char*)addr;
+	for (i = 0; i < mHeight; i++) {
+		memcpy (dst, src, mWidth * 4);
+		src += mWidth * 4;
+		dst += pitch;
+	}
+	mSurface->Unlock(mSurface);
+	HERE();
+	return mSurface;
 }

@@ -21,6 +21,7 @@ typedef std::set<DFBImage*> DFBImageSet;
 
 class DFBInterface : public NativeDisplay
 {
+        friend class DFBImage;
 public:
 	SexyAppBase*			        mApp;
 
@@ -29,7 +30,6 @@ public:
 
 	bool					mIs3D;
 
-	CritSect				mCritSect;
 	bool					mInRedraw;
 	int					mWidth;
 	int					mHeight;
@@ -98,6 +98,12 @@ public:
 
 	bool					SetCursorImage(Image* theImage);
 	void					SetCursorPos(int theCursorX, int theCursorY);
+
+        virtual Image*                          CreateImage(SexyAppBase * theApp,
+                                                            int width, int height);
+
+ private:
+        IDirectFBSurface*                       CreateDFBSurface(int width, int height);
 };
 
 }

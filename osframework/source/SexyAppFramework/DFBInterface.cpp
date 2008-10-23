@@ -92,6 +92,7 @@ int DFBInterface::Init(void)
 		DBG_ASSERT (ret == DFB_OK);
 	}
 	surface->GetSize (surface, &width, &height);
+	surface->Clear (surface, 0, 0, 0, 0);
 	mPrimarySurface = surface;
 	mWidth = width;
 	mHeight = height;
@@ -182,7 +183,9 @@ bool DFBInterface::Redraw(Rect* theClipRect)
 	if (!mInitialized)
 		return false;
 
-	printf ("in redraw\n");
+	if (mPrimarySurface)
+		mPrimarySurface->Flip(mPrimarySurface, 0, DSFLIP_NONE);
+
 	return true;
 }
 
@@ -219,4 +222,61 @@ void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 		mCursorX = theCursorX;
 		mCursorY = theCursorY;
 	}
+}
+
+IDirectFBSurface* DFBInterface::CreateDFBSurface(int width, int height)
+{
+	IDirectFBSurface * aSurface;
+
+	if (!mInitialized)
+	{
+		return 0;
+	}
+	else if (width && height)
+	{
+		AutoCrit anAutoCrit(mCritSect);
+
+		DFBSurfaceDescription desc;
+
+		desc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_WIDTH |
+							  DSDESC_HEIGHT |
+							  DSDESC_PIXELFORMAT);
+		desc.width = width;
+		desc.height = height;
+		desc.pixelformat = DSPF_ARGB;
+		if (mDFB->CreateSurface(mDFB, &desc, &aSurface))
+			return 0;
+	} else {
+		aSurface = 0;
+	}
+	return aSurface;
+}
+
+Image* DFBInterface::CreateImage(SexyAppBase * theApp,
+				 int width, int height)
+{
+	IDirectFBSurface * aSurface;
+
+	if (!mInitialized)
+	{
+		return 0;
+	}
+	else if (width && height)
+	{
+		AutoCrit anAutoCrit(mCritSect);
+
+		DFBSurfaceDescription desc;
+
+		desc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_WIDTH |
+							  DSDESC_HEIGHT |
+							  DSDESC_PIXELFORMAT);
+		desc.width = width;
+		desc.height = height;
+		desc.pixelformat = DSPF_ARGB;
+		if (mDFB->CreateSurface(mDFB, &desc, &aSurface))
+			return 0;
+	} else {
+		aSurface = 0;
+	}
+	return new DFBImage(aSurface, this);
 }

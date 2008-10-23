@@ -64,6 +64,7 @@ public:
 	virtual bool			UnlockSurface();
 
 	virtual void			Create(int theWidth, int theHeight);
+	virtual void			SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits = true);
 	virtual uint32*			GetBits();
 
 	virtual bool			PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty, bool comvex);
@@ -84,6 +85,9 @@ public:
 	virtual void			PurgeBits();
 	virtual void			DeleteNativeData();
 	virtual void			DeleteExtraBuffers();
+
+ private:
+        IDirectFBSurface*               EnsureSurface();
 };
 
 }
