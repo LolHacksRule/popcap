@@ -34,12 +34,18 @@ int NativeDisplay::Init()
 }
 
 
-Font * NativeDisplay::CreateFont(SexyAppBase * theApp,
+Font* NativeDisplay::CreateFont(SexyAppBase * theApp,
 				 const std::string theFace,
 				 int thePointSize,
 				 bool bold,
 				 bool italics,
 				 bool underline)
+{
+	return 0;
+}
+
+Image* NativeDisplay::CreateImage(SexyAppBase * theApp,
+				  int width, int height)
 {
 	return 0;
 }

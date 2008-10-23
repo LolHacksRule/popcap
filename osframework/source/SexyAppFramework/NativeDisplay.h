@@ -2,6 +2,7 @@
 #define __NATIVEDISPLAY_H__
 #include "Common.h"
 #include "Rect.h"
+#include "CritSect.h"
 
 namespace Sexy
 {
@@ -14,6 +15,8 @@ class SexyAppBase;
 class NativeDisplay
 {
 public:
+	CritSect				mCritSect;
+
 	int						mRGBBits;
 	ulong					mRedMask;
 	ulong					mGreenMask;
@@ -37,6 +40,8 @@ public:
                                                               bool bold = false,
                                                               bool italics = false,
                                                               bool underline = false);
+        virtual Image *                             CreateImage(SexyAppBase * theApp,
+                                                                int width, int height);
 
 	virtual Image*			            GetScreenImage() = 0;
 	virtual bool				    Redraw(Rect* theClipRect = 0) = 0;
