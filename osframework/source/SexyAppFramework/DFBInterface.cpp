@@ -342,12 +342,14 @@ bool DFBInterface::GetEvent(struct Event &event)
  	DFBEvent dfb_event;
 	mBuffer->GetEvent(mBuffer, &dfb_event);
 
+	printf ("clazz %d\n", (int)dfb_event.clazz);
 	switch (dfb_event.clazz) {
 	case DFEC_INPUT:
 		DFBInputEvent * e;
 
 		e = &dfb_event.input;
 		event.type = EVENT_NONE;
+		printf ("type %d\n", (int)e->type);
 		switch (e->type) {
 		case DIET_BUTTONPRESS:
 			event.x = mMouseX;
@@ -415,6 +417,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			const DFBInputDeviceKeyIdentifier id = e->key_id;
 			const DFBInputDeviceKeySymbol sym = e->key_symbol;
 
+			printf ("id = %d symbol = %d\n", id, sym);
 			if (e->type == DIET_KEYPRESS)
 				event.type = EVENT_KEY_DOWN;
 			else
@@ -428,13 +431,20 @@ bool DFBInterface::GetEvent(struct Event &event)
 			} else if (id == DIKI_RIGHT) {
 				event.keyCode = (int)KEYCODE_RIGHT;
 			} else if (id == DIKI_ENTER) {
-				event.keyCode = (int)KEYCODE_ACCEPT;
+				event.keyCode = (int)KEYCODE_RETURN;
 			} else if (id == DIKI_SPACE) {
 				event.keyCode = (int)KEYCODE_SPACE;
 			} else if (id == DIKI_BACKSPACE) {
 				event.keyCode = (int)KEYCODE_BACK;
 			} else if (id == DIKI_ESCAPE) {
-				event.keyCode = (int)KEYCODE_ESCAPE;
+				if (e->modifiers & (DIMM_SHIFT | DIMM_CONTROL) == (DIMM_SHIFT | DIMM_CONTROL))
+					event.type = EVENT_QUIT;
+				else
+					event.keyCode = (int)KEYCODE_ESCAPE;
+			} else if (id == DIKI_SHIFT_L || id == DIKI_SHIFT_R) {
+				event.keyCode = (int)KEYCODE_SHIFT;
+			} else if (id == DIKI_CONTROL_L || id == DIKI_CONTROL_R) {
+				event.keyCode = (int)KEYCODE_CONTROL;
 			} else if (id >= DIKI_A && id < DIKI_Z) {
 				event.keyCode = (int)('a' + id - DIKI_A);
 				event.keyChar = (int)sym;
