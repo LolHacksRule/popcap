@@ -588,14 +588,7 @@ void DFBImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][
 
 bool DFBImage::Palletize()
 {
-	if (MemoryImage::Palletize())
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	return false;
 }
 
 void DFBImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const Color& theColor, int theDrawMode, const BYTE* theCoverage, int theCoverX, int theCoverY, int theCoverWidth, int theCoverHeight)
