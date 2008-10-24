@@ -461,6 +461,7 @@ bool WidgetManager::DrawScreen()
 
 			++anItr;
 		}
+		aImage->Flip(FLIP_WAIT_SYNC);
 	}
 	
 	FlushDeferredOverlayWidgets(0x7FFFFFFF);
