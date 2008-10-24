@@ -1652,7 +1652,7 @@ void SexyAppBase::StartCursorThread()
 {
 	if (!mCursorThreadRunning)
 	{
-		mCursorThreadRunning = true;
+		//mCursorThreadRunning = true;
 		//_beginthread(CursorThreadProcStub, 0, this);
 	}
 }
