@@ -2221,12 +2221,12 @@ bool SexyAppBase::LoadProperties(const std::string& theFileName, bool required, 
 bool SexyAppBase::LoadProperties()
 {
 	// Load required language-file properties
-	return LoadProperties("properties\\default.xml", true, false);
+	return LoadProperties("properties/default.xml", true, false);
 }
 
 void SexyAppBase::LoadResourceManifest()
 {
-	if (!mResourceManager->ParseResourcesFile("properties\\resources.xml"))
+	if (!mResourceManager->ParseResourcesFile("properties/resources.xml"))
 		ShowResourceError(true);
 }
 
@@ -2501,6 +2501,8 @@ void SexyAppBase::Init()
 
 	if (mSoundManager == NULL)
 		mSoundManager = new DummySoundManager();
+	if (mMusicInterface == NULL)
+		mMusicInterface = new MusicInterface();
 
 	InitHook();
 
@@ -2774,20 +2776,14 @@ Image* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColor)
 
 Image* SexyAppBase::CopyImage(Image* theImage, const Rect& theRect)
 {
-#ifdef WIN32
-	DDImage* anImage = new DDImage(mDDInterface);
-
-	anImage->Create(theRect.mWidth, theRect.mHeight);
+	Image* anImage = mDDInterface->CreateImage(this, 0, 0);
+	anImage->SetBits(0, theRect.mWidth, theRect.mHeight);
 
 	Graphics g(anImage);
 	g.DrawImage(theImage, -theRect.mX, -theRect.mY);
-
 	anImage->CopyAttributes(theImage);
 
 	return anImage;
-#else
-	return NULL;
-#endif
 }
 
 Image* SexyAppBase::CopyImage(Image* theImage)
