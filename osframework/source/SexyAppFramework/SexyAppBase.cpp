@@ -2053,6 +2053,91 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 	//  condition has already been met by processing windows messages
 	if (mUpdateAppState == UPDATESTATE_MESSAGES)
 	{
+		Sexy::Event event;
+
+		while(mDDInterface && mDDInterface->GetEvent(event)) {
+			switch(event.type) {
+			case EVENT_QUIT:
+				Shutdown();
+				break;
+
+                        case EVENT_MOUSE_BUTTON_PRESS:
+				if (event.button == 1)
+					mWidgetManager->MouseDown(event.x, event.y, 1);
+				else if (event.button == 2)
+					mWidgetManager->MouseDown(event.x, event.y, -1);
+				else if (event.button == 3)
+					mWidgetManager->MouseDown(event.x, event.y, 3);
+				break;
+
+                        case EVENT_MOUSE_BUTTON_RELEASE:
+				if (event.button == 1)
+					mWidgetManager->MouseUp(event.x, event.y, 1);
+				else if (event.button == 2)
+					mWidgetManager->MouseUp(event.x, event.y, -1);
+				else if (event.button == 3)
+					mWidgetManager->MouseUp(event.x, event.y, 3);
+				break;
+
+                        case EVENT_KEY_DOWN:
+				mLastUserInputTick = mLastTimerTime;
+				mWidgetManager->KeyDown((KeyCode)event.keyCode);
+				//if (k >= SDLK_a && k <= SDLK_z)
+				//mWidgetManager->KeyChar((SexyChar)*SDL_GetKeyName(k));
+				//else
+				mWidgetManager->KeyDown((KeyCode)event.keyCode);
+
+				break;
+
+                        case EVENT_KEY_UP:
+				mLastUserInputTick = mLastTimerTime;
+				mWidgetManager->KeyUp((KeyCode)event.keyCode);
+				break;
+
+                        case EVENT_MOUSE_MOTION:
+				mDDInterface->mCursorX = event.x;
+				mDDInterface->mCursorY = event.y;
+				mWidgetManager->RemapMouse(mDDInterface->mCursorX, mDDInterface->mCursorY);
+
+				mLastUserInputTick = mLastTimerTime;
+
+				mWidgetManager->MouseMove(mDDInterface->mCursorX,mDDInterface->mCursorY);
+
+				if (!mMouseIn)
+				{
+					mMouseIn = true;
+					EnforceCursor();
+				}
+				break;
+
+                        case EVENT_ACTIVE:
+				if (event.active) {
+
+					mHasFocus = true;
+					GotFocus();
+
+					if (mMuteOnLostFocus)
+						Unmute(true);
+
+					mWidgetManager->MouseMove(mDDInterface->mCursorX, mDDInterface->mCursorY);
+
+				}
+				else {
+
+					mHasFocus = false;
+					LostFocus();
+
+					mWidgetManager->MouseExit(mDDInterface->mCursorX, mDDInterface->mCursorY);
+
+					if (mMuteOnLostFocus)
+						Mute(true);
+				}
+				break;
+			default:
+				break;
+			}
+		}
+
 		ProcessDemo();
 		if (!ProcessDeferredMessages(true))
 		{
