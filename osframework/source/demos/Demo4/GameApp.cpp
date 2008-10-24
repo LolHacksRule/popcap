@@ -7,7 +7,7 @@
 #include "SexyAppFramework/ResourceManager.h"
 
 // Required for playing music
-#include "SexyAppFramework/BassMusicInterface.h"
+#include "SexyAppFramework/MusicInterface.h"
 
 // Contains all the resources from the resources.xml file in our
 // properties directory. See that file for more information.
@@ -390,6 +390,6 @@ void GameApp::HandleCmdLineParam(const std::string& theParamName, const std::str
 	// We actually don't care to, in this. The purpose was to show you how you'd do it,
 	// and this function is the one you use to read those values. We'll just print the
 	// parameters out for now:
-	OutputDebugString(StrFormat("theParamName = \"%s\", theParamValue = \"%s\"", 
-		theParamName.c_str(), theParamValue.c_str()).c_str());
+	//OutputDebugString(StrFormat("theParamName = \"%s\", theParamValue = \"%s\"", 
+	//	theParamName.c_str(), theParamValue.c_str()).c_str());
 }

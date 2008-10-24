@@ -9,7 +9,7 @@
 // A DDImage is actually derived from MemoryImage, so where an Image or
 // MemoryImage is required, a DDImage will suffice as well. A DDImage
 // contains optimized code for use with DirectX 7+.
-#include "SexyAppFramework/DDImage.h"
+#include "SexyAppFramework/MemoryImage.h"
 
 // We're going to create a font for Board's button widget's label
 #include "SexyAppFramework/ImageFont.h"
@@ -131,7 +131,7 @@ void GameApp::LoadingThreadProc()
 	//	underscore instead of ending with it, it matters not, and again,
 	//	is automatically loaded in by the image loading code.
 	//	You need to clean up the memory allocated by these functions yourself.
-	mTurbotImg = (DDImage*) GetImage("images/turbot_worry");
+	mTurbotImg = (MemoryImage*) GetImage("images/turbot_worry");
 
 	// If the file was not found or couldn't be loaded (i.e. due to an
 	// incompatible file format) the returned value will be NULL.
@@ -150,7 +150,7 @@ void GameApp::LoadingThreadProc()
 		return;
 	}
 
-	mLightningImg = (DDImage*) GetImage("images/lightning");
+	mLightningImg = (MemoryImage*) GetImage("images/lightning");
 	if (mLightningImg == NULL)
 	{
 		mLoadingFailed = true;
@@ -254,20 +254,20 @@ void GameApp::LoadingThreadCompleted()
 
 	// 1. Let's make a copy of the image so we don't ruin the original.
 	// We should make sure to delete this when we're done.
-	mAlteredImg = (DDImage*) CopyImage(mTurbotImg);
+	mAlteredImg = (MemoryImage*) CopyImage(mTurbotImg);
 
 	// 2. Now we need to get the pixel data. The pixel data is stored as
 	// an unsigned long array, where each entry represents the RGBA value.
 	// The data is actually stored in ARGB format, where alpha is
 	// the leftmost byte and blue is the rightmost byte.
-	unsigned long* bits = mAlteredImg->GetBits();
+	unsigned int* bits = mAlteredImg->GetBits();
 
 	// 3. Now we will loop over each pixel in the image. The size of the bits array
 	// is simply the width times the height.
 	for (int i = 0; i < mAlteredImg->GetWidth() * mAlteredImg->GetHeight(); i++)
 	{
 		// 4. Get the ARGB color value for this pixel
-		unsigned long c = bits[i];
+		unsigned int c = bits[i];
 
 		// 5. To illustrate the ARGB storage format, we will assign each
 		// component to a variable, although we're actually only going to care
@@ -282,7 +282,7 @@ void GameApp::LoadingThreadCompleted()
 		// Let's alter these to produce a grayscale image using one of many
 		// conversion methods. This method uses 30% of the red value,
 		// 59% of the green value, and 11% of the blue value:
-		unsigned long gray = (unsigned long) ((float)red * 0.30f + (float)green * 0.59f + (float)blue * 0.11f);
+		unsigned int gray = (unsigned int) ((float)red * 0.30f + (float)green * 0.59f + (float)blue * 0.11f);
 
 		// 7. Now we need to put the pixel data back into the image's data.
 		// We do the opposite of how we extracted the ARGB values above and

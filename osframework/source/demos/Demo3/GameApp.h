@@ -53,9 +53,9 @@ class GameApp : public SexyAppBase
 		// GameApp.cpp for full information. We're going to
 		// make them public for easy accessing, since the point of this tutorial
 		// is to quickly get you up to speed on using the framework.
-		DDImage*	mTurbotImg;
-		DDImage*	mLightningImg;
-		DDImage*	mAlteredImg;		// Used in our example of modifying the image bits to make an altered version of an image.
+		MemoryImage*	mTurbotImg;
+		MemoryImage*	mLightningImg;
+		MemoryImage*	mAlteredImg;		// Used in our example of modifying the image bits to make an altered version of an image.
 
 		ImageFont*	mFont;				// The font we'll use for the label on our button in Board
 
