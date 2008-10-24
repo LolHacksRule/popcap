@@ -34,6 +34,8 @@ WidgetManager::WidgetManager(SexyAppBase* theApp)
 	mLastDownButtonId = 0;
 	mDownButtons = 0;
 	mActualDownButtons = 0;
+	mLastMouseX = 0;
+	mLastMouseY = 0;
 	mWidgetFlags = WIDGETFLAGS_UPDATE | WIDGETFLAGS_DRAW | WIDGETFLAGS_CLIP |
 		WIDGETFLAGS_ALLOW_MOUSE | WIDGETFLAGS_ALLOW_FOCUS;
 
