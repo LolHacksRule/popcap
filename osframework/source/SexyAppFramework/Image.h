@@ -80,6 +80,7 @@ public:
 	Graphics*				GetGraphics();
 
 	virtual void			SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits = true);
+        virtual uint32*                 GetBits();
 
 	virtual bool			PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty, bool convex);
 

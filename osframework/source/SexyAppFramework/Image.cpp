@@ -217,6 +217,11 @@ void Image::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBit
 {
 }
 
+uint32* Image::GetBits()
+{
+	return 0;
+}
+
 void Image::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
 {
 }
