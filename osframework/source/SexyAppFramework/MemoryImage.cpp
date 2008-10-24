@@ -1207,7 +1207,8 @@ void MemoryImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool com
 			mWidth = theWidth;
 			mHeight = theHeight;
 		}
-		memcpy(mBits, theBits, mWidth*mHeight*sizeof(uint32));
+		if (theBits)
+			memcpy(mBits, theBits, mWidth*mHeight*sizeof(uint32));
 		mBits[mWidth*mHeight] = MEMORYCHECK_ID;
 
 		BitsChanged();
