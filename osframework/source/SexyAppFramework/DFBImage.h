@@ -9,11 +9,14 @@ namespace Sexy
 
 class DFBInterface;
 class DFBFont;
+class DFBImageAutoFallback;
 
 class DFBImage : public MemoryImage
 {
 protected:
 	friend class			DFBFont;
+	friend class			DFBImageAutoFallback;
+
 	void				DeleteAllNonSurfaceData();
 
 public:
