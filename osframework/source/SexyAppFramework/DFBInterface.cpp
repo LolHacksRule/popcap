@@ -6,6 +6,7 @@
 #include "PerfTimer.h"
 #include "Debug.h"
 #include "MemoryImage.h"
+#include "KeyCodes.h"
 
 #include <cstdio>
 
@@ -39,6 +40,12 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 	mInitCount = 0;
 	mRefreshRate = 60;
 	mMillisecondsPerFrame = 1000 / mRefreshRate;
+
+	mInput = NULL;
+	mBuffer = NULL;
+	mMouseX = 0;
+	mMouseY = 0;
+	mLayer = NULL;
 }
 
 DFBInterface::~DFBInterface()
@@ -73,14 +80,29 @@ int DFBInterface::Init(void)
 	if (!mDFB) {
 		DirectFBInit(NULL, NULL);
 		DirectFBCreate(&mDFB);
-		mDFB->SetCooperativeLevel(mDFB, DFSCL_FULLSCREEN);
+		//mDFB->SetCooperativeLevel(mDFB, DFSCL_FULLSCREEN);
 	}
+
+        mDFB->GetDisplayLayer (mDFB, DLID_PRIMARY, &mLayer);
+
+	DFBDisplayLayerConfig layer_config;
+	mLayer->GetConfiguration (mLayer, &layer_config);
+
+	layer_config.flags = (DFBDisplayLayerConfigFlags)
+		(DLCONF_BUFFERMODE | DLCONF_OPTIONS);
+	layer_config.buffermode = DLBM_BACKVIDEO;
+	layer_config.options = DLOP_ALPHACHANNEL;
+
+	mLayer->SetConfiguration (mLayer, &layer_config);
+	mLayer->SetCooperativeLevel (mLayer, DLSCL_ADMINISTRATIVE);
+	mLayer->EnableCursor (mLayer, 1);
 
 	IDirectFBSurface * surface;
 	DFBSurfaceDescription surface_desc;
 	int width, height;
 	int ret;
 
+#if 0
 	surface_desc.flags = DSDESC_CAPS;
 	surface_desc.caps =
 		(DFBSurfaceCapabilities)(DSCAPS_PRIMARY | DSCAPS_VIDEOONLY | DSCAPS_DOUBLE);
@@ -91,6 +113,9 @@ int DFBInterface::Init(void)
 		ret = mDFB->CreateSurface(mDFB, &surface_desc, &surface);
 		DBG_ASSERT (ret == DFB_OK);
 	}
+#else
+	mLayer->GetSurface (mLayer, &surface);
+#endif
 	surface->GetSize (surface, &width, &height);
 	surface->Clear (surface, 0, 0, 0, 0);
 	mPrimarySurface = surface;
@@ -98,6 +123,18 @@ int DFBInterface::Init(void)
 	mHeight = height;
 
 	mScreenImage = new DFBImage(surface, this);
+
+#if 0
+	DFBInputDeviceID id = (DFBInputDeviceID)0xffffffff;
+	ret = mDFB->GetInputDevice (mDFB, id, &mInput);
+	DBG_ASSERT (ret == DFB_OK);
+	ret = mInput->CreateEventBuffer (mInput, &mBuffer);
+	DBG_ASSERT (ret == DFB_OK);
+#endif
+	ret = mDFB->CreateInputEventBuffer (mDFB, DICAPS_ALL, DFB_TRUE,
+					    &mBuffer);
+	DBG_ASSERT (ret == DFB_OK);
+
 	mInitCount++;
 	mInitialized = true;
 
@@ -151,6 +188,12 @@ void DFBInterface::Cleanup()
 
 	mInitialized = false;
 
+	if (mInput)
+		mInput->Release(mInput);
+
+	if (mBuffer)
+		mBuffer->Release(mBuffer);
+
 	if (mOldCursorAreaImage != NULL)
 	{
 		delete mOldCursorAreaImage;
@@ -172,8 +215,9 @@ void DFBInterface::Cleanup()
 	if (mPrimarySurface)
 		mPrimarySurface = NULL;
 
-	if (mDFB)
-		mDFB->Release(mDFB);
+	if (mLayer)
+		mLayer->Release(mLayer);
+	mLayer = NULL;
 }
 
 bool DFBInterface::Redraw(Rect* theClipRect)
@@ -184,7 +228,8 @@ bool DFBInterface::Redraw(Rect* theClipRect)
 		return false;
 
 	if (mPrimarySurface)
-		mPrimarySurface->Flip(mPrimarySurface, 0, DSFLIP_NONE);
+		mPrimarySurface->Flip (mPrimarySurface, 0,
+				       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
 
 	return true;
 }
@@ -279,4 +324,136 @@ Image* DFBInterface::CreateImage(SexyAppBase * theApp,
 		aSurface = 0;
 	}
 	return new DFBImage(aSurface, this);
+}
+
+bool DFBInterface::HasEvent()
+{
+	if (!mBuffer)
+		return false;
+
+	return 	mBuffer->HasEvent(mBuffer) == DFB_OK;
+}
+
+bool DFBInterface::GetEvent(struct Event &event)
+{
+	if (!HasEvent())
+		return false;
+
+ 	DFBEvent dfb_event;
+	mBuffer->GetEvent(mBuffer, &dfb_event);
+
+	switch (dfb_event.clazz) {
+	case DFEC_INPUT:
+		DFBInputEvent * e;
+
+		e = &dfb_event.input;
+		event.type = EVENT_NONE;
+		switch (e->type) {
+		case DIET_BUTTONPRESS:
+			event.x = mMouseX;
+			event.y = mMouseY;
+			event.type = EVENT_MOUSE_BUTTON_PRESS;
+			switch (e->button) {
+			case DIBI_LEFT:
+				event.button = 1;
+				break;
+			case DIBI_MIDDLE:
+				event.button = 3;
+				break;
+			case DIBI_RIGHT:
+				event.button = 2;
+				break;
+			default:
+				break;
+			}
+			break;
+		case DIET_BUTTONRELEASE:
+			event.x = mMouseX;
+			event.y = mMouseY;
+			event.type = EVENT_MOUSE_BUTTON_RELEASE;
+			switch (e->button) {
+			case DIBI_LEFT:
+				event.button = 1;
+				break;
+			case DIBI_MIDDLE:
+				event.button = 3;
+				break;
+			case DIBI_RIGHT:
+				event.button = 2;
+				break;
+			default:
+				break;
+			}
+			break;
+		case DIET_AXISMOTION:
+			switch (e->axis) {
+			case DIAI_X:
+				if (e->flags & DIEF_AXISABS)
+					mMouseX = e->axisabs;
+				else if (e->flags & DIEF_AXISREL)
+					mMouseX += e->axisrel;
+				break;
+			case DIAI_Y:
+				if (e->flags & DIEF_AXISABS)
+					mMouseY = e->axisabs;
+				else if (e->flags & DIEF_AXISREL)
+					mMouseY += e->axisrel;
+				break;
+			default:
+				break;
+			}
+
+			if (!(e->flags & DIEF_FOLLOW)) {
+				event.x = mMouseX;
+				event.y = mMouseY;
+				event.type = EVENT_MOUSE_MOTION;
+			}
+			break;
+		case DIET_KEYPRESS:
+		case DIET_KEYRELEASE:
+		{
+			const DFBInputDeviceKeyIdentifier id = e->key_id;
+			const DFBInputDeviceKeySymbol sym = e->key_symbol;
+
+			if (e->type == DIET_KEYPRESS)
+				event.type = EVENT_KEY_DOWN;
+			else
+				event.type = EVENT_KEY_UP;
+			if (id == DIKI_UP) {
+				event.keyCode = (int)KEYCODE_UP;
+			} else if(id ==  DIKI_DOWN) {
+				event.keyCode = (int)KEYCODE_DOWN;
+			} else if (id ==  DIKI_LEFT) {
+				event.keyCode = (int)KEYCODE_LEFT;
+			} else if (id == DIKI_RIGHT) {
+				event.keyCode = (int)KEYCODE_RIGHT;
+			} else if (id == DIKI_ENTER) {
+				event.keyCode = (int)KEYCODE_ACCEPT;
+			} else if (id == DIKI_SPACE) {
+				event.keyCode = (int)KEYCODE_SPACE;
+			} else if (id == DIKI_BACKSPACE) {
+				event.keyCode = (int)KEYCODE_BACK;
+			} else if (id == DIKI_ESCAPE) {
+				event.keyCode = (int)KEYCODE_ESCAPE;
+			} else if (id >= DIKI_A && id < DIKI_Z) {
+				event.keyCode = (int)('a' + id - DIKI_A);
+				event.keyChar = (int)sym;
+			} else if (id >= DIKI_0 && id < DIKI_9) {
+				event.keyCode = (int)('0' + id - DIKI_0);
+				event.keyChar = (int)sym;
+			} else {
+				event.type = EVENT_NONE;
+			}
+			break;
+		}
+		default:
+			break;
+		}
+		break;
+	case DIET_UNKNOWN:
+	default:
+		event.type = EVENT_NONE;
+		break;
+	}
+	return true;
 }

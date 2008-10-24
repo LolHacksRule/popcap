@@ -101,9 +101,19 @@ public:
 
         virtual Image*                          CreateImage(SexyAppBase * theApp,
                                                             int width, int height);
+        virtual bool                            HasEvent();
+        virtual bool                            GetEvent(struct Event &event);
 
  private:
         IDirectFBSurface*                       CreateDFBSurface(int width, int height);
+
+ private:
+        IDirectFBInputDevice                  * mInput;
+        IDirectFBEventBuffer                  * mBuffer;
+        int                                     mMouseX;
+        int                                     mMouseY;
+
+        IDirectFBDisplayLayer                 * mLayer;
 };
 
 }
