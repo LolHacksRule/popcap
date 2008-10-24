@@ -46,6 +46,13 @@ class SexyMatrix3;
 class SysFont;
 class TriVertex;
 
+enum FlipFlags {
+    FLIP_NONE      = 0,
+    FLIP_WAIT      = 1 << 0,
+    FLIP_ONSYNC    = 1 << 1,
+    FLIP_WAIT_SYNC = FLIP_WAIT | FLIP_ONSYNC
+};
+
 class Image
 {
 	friend class			Sexy::SysFont;
@@ -102,6 +109,8 @@ public:
 	virtual void			StretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch);
 
 	virtual bool			Palletize();
+
+        virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
 };
 
 }

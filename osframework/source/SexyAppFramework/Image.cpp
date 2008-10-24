@@ -301,3 +301,7 @@ bool Image::Palletize()
 {
 	return false;
 }
+
+void Image::Flip(enum FlipFlags flags)
+{
+}
