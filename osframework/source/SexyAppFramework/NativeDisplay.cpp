@@ -20,6 +20,9 @@ NativeDisplay::NativeDisplay()
 	mRedShift = 0;
 	mGreenShift = 0;
 	mBlueShift = 0;
+
+	mCursorX = 0;
+	mCursorY = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,4 +51,15 @@ Image* NativeDisplay::CreateImage(SexyAppBase * theApp,
 				  int width, int height)
 {
 	return 0;
+}
+
+bool  NativeDisplay::HasEvent()
+{
+	return false;
+}
+
+bool NativeDisplay::GetEvent(struct Event & event)
+{
+	event.type = EVENT_NONE;
+	return false;
 }
