@@ -2082,10 +2082,9 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
                         case EVENT_KEY_DOWN:
 				mLastUserInputTick = mLastTimerTime;
 				mWidgetManager->KeyDown((KeyCode)event.keyCode);
-				//if (k >= SDLK_a && k <= SDLK_z)
-				//mWidgetManager->KeyChar((SexyChar)*SDL_GetKeyName(k));
-				//else
-				mWidgetManager->KeyDown((KeyCode)event.keyCode);
+				if ((event.keyCode >= 'a' && event.keyCode <= 'z') ||
+				    (event.keyCode >= '0' && event.keyCode <= '9'))
+					mWidgetManager->KeyChar((SexyChar)event.keyCode);
 
 				break;
 
