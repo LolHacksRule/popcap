@@ -108,10 +108,20 @@ int DummySoundManager::LoadSound(const std::string& theFilename)
 
 void DummySoundManager::ReleaseSound(unsigned int theSfxID)
 {
+	if (mSourceFileNames[theSfxID].length() != 0)
+	{
+		mSourceFileNames[theSfxID] = "";
+	}
 }
 
 int DummySoundManager::GetFreeSoundId()
 {
+	int i;
+	for (i = MAX_SOURCE_SOUNDS - 1; i >= 0; i--)
+	{
+		if (mSourceFileNames[i].length() == 0)
+			return i;
+	}
 	return -1;
 }
 
@@ -197,6 +207,7 @@ void DummySoundManager::StopAllSounds()
 
 double DummySoundManager::GetMasterVolume()
 {
+	return 100.0;
 }
 
 void DummySoundManager::SetMasterVolume(double theVolume)
