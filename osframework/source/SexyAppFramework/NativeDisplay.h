@@ -29,6 +29,7 @@ enum EventType {
 struct Event {
     enum EventType type;
     int            keyCode;
+    int            keyChar;
     int            x;
     int            y;
     int            button;
