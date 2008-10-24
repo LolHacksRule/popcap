@@ -268,7 +268,7 @@ void DFBImage::BitsChanged()
 		int i, pitch;
 		unsigned char * dst, * src;
 
-		src = (unsigned char*)MemoryImage::GetBits();
+		src = (unsigned char*)mBits;
 		if (!src)
 			return;
 		ret = mSurface->Lock(mSurface, DSLF_WRITE, (void **)&dst, &pitch);
@@ -294,7 +294,7 @@ uint32* DFBImage::GetBits()
 		int i, pitch;
 		unsigned char * dst, * src;
 
-		ret = mSurface->Lock(mSurface, (DFBSurfaceLockFlags)(DSLF_READ | DSLF_WRITE), (void **)&src, &pitch);
+		ret = mSurface->Lock(mSurface, (DFBSurfaceLockFlags)(DSLF_READ/* | DSLF_WRITE */), (void **)&src, &pitch);
 		if (ret != DFB_OK)
 			return bits;
 		dst = (unsigned char*)bits;
@@ -306,6 +306,12 @@ uint32* DFBImage::GetBits()
 		mSurface->Unlock(mSurface);
 	}
 	return bits;
+}
+
+void DFBImage::Clear()
+{
+	HERE();
+	MemoryImage::Clear();
 }
 
 void DFBImage::NormalFillRect(const Rect& theRect, const Color& theColor)
@@ -370,39 +376,41 @@ void DFBImage::NormalBltMirror(Image* theImage, int theX, int theY, const Rect& 
 void DFBImage::AdditiveBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
 {
 	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
-	IDirectFBSurface * src, * dst;
-
 	if (!srcImage)
 		return;
 
-#if 0
-	src = srcImage->EnsureSurface();
-	dst = EnsureSurface();
-	if (src == NULL || dst == NULL)
-		return;
+	if (0) {
+		IDirectFBSurface * src, * dst;
 
-	DFBRectangle src_rect;
-	src_rect.x = theSrcRect.mX;
-	src_rect.y = theSrcRect.mY;
-	src_rect.w = theSrcRect.mWidth;
-	src_rect.h = theSrcRect.mHeight;
+		src = srcImage->EnsureSurface();
+		dst = EnsureSurface();
+		if (src == NULL || dst == NULL)
+			return;
 
-	DFBSurfaceBlittingFlags flags;
-	flags = DSBLIT_BLEND_ALPHACHANNEL;
-	if (theColor.GetRed() == 0xff &&
-	    theColor.GetGreen() == 0xff &&
-	    theColor.GetBlue() == 0xff) {
-		if (theColor.GetAlpha() != 0xff)
-			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_BLEND_COLORALPHA);
+		DFBRectangle src_rect;
+		src_rect.x = theSrcRect.mX;
+		src_rect.y = theSrcRect.mY;
+		src_rect.w = theSrcRect.mWidth;
+		src_rect.h = theSrcRect.mHeight;
+
+		DFBSurfaceBlittingFlags flags;
+		flags = DSBLIT_BLEND_ALPHACHANNEL;
+		if (theColor.GetRed() == 0xff &&
+		    theColor.GetGreen() == 0xff &&
+		    theColor.GetBlue() == 0xff) {
+			if (theColor.GetAlpha() != 0xff)
+				flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_BLEND_COLORALPHA);
+		} else {
+			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE);
+		}
+		dst->SetPorterDuff(dst, DSPD_ADD);
+		dst->SetBlittingFlags(dst, flags);
+		dst->Blit(dst, src, &src_rect, theX, theY);
+		dst->SetPorterDuff(dst, DSPD_NONE);
 	} else {
-		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE);
+		DFBImageAutoFallback fallback(this, srcImage);
+		MemoryImage::AdditiveBlt(theImage, theX, theY, theSrcRect, theColor);
 	}
-	dst->SetBlittingFlags(dst, flags);
-	dst->Blit(dst, src, &src_rect, theX, theY);
-#else
-	DFBImageAutoFallback fallback(this, srcImage);
-	MemoryImage::AdditiveBlt(theImage, theX, theY, theSrcRect, theColor);
-#endif
 }
 
 void DFBImage::AdditiveBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
@@ -449,7 +457,48 @@ void DFBImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrc
 
 void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect, const Color& theColor, int theDrawMode)
 {
-	HERE();
+	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
+	IDirectFBSurface * src, * dst;
+
+	src = srcImage->EnsureSurface();
+	dst = EnsureSurface();
+	if (src == NULL || dst == NULL) {
+		this->GetBits();
+		theImage->GetBits();
+		MemoryImage::NormalBlt(theImage, theX, theY, theSrcRect, theColor);
+		return;
+	}
+
+
+	DFBRectangle src_rect;
+	src_rect.x = theSrcRect.mX;
+	src_rect.y = theSrcRect.mY;
+	src_rect.w = theSrcRect.mWidth;
+	src_rect.h = theSrcRect.mHeight;
+
+	DFBRegion clip_reg;
+	clip_reg.x1 = theClipRect.mY;
+	clip_reg.y1 = theClipRect.mY;
+	clip_reg.x2 = clip_reg.x1 + theClipRect.mWidth;
+	clip_reg.y2 = clip_reg.y1 + theClipRect.mHeight;
+
+	DFBSurfaceBlittingFlags flags;
+	flags = DSBLIT_BLEND_ALPHACHANNEL;
+	if (theColor.GetRed() == 0xff &&
+	    theColor.GetGreen() == 0xff &&
+	    theColor.GetBlue() == 0xff) {
+		if (theColor.GetAlpha() != 0xff)
+			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_BLEND_COLORALPHA);
+	} else {
+		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE);
+	}
+	dst->SetBlittingFlags(dst, flags);
+	dst->SetColor(dst,
+		      theColor.GetRed(), theColor.GetGreen(),
+		      theColor.GetBlue(), theColor.GetAlpha());
+	dst->SetClip(dst, &clip_reg);
+	dst->Blit(dst, src, &src_rect, theX, theY);
+	dst->SetClip(dst, NULL);
 }
 
 void DFBImage::BltRotated(Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
@@ -524,8 +573,6 @@ void DFBImage::StretchBltMirror(Image* theImage, const Rect& theDestRectOrig, co
 
 void DFBImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix, const Rect& theClipRect, const Color& theColor, int theDrawMode, const Rect &theSrcRect, bool blend)
 {
-	theImage->mDrawn = true;
-
 	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
 	if (!srcImage)
 		return;
@@ -536,7 +583,6 @@ void DFBImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &t
 
 void DFBImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3], int theNumTriangles, const Rect& theClipRect, const Color &theColor, int theDrawMode, float tx, float ty, bool blend)
 {
-	theTexture->mDrawn = true;
 	HERE();
 }
 
@@ -615,4 +661,12 @@ IDirectFBSurface* DFBImage::EnsureSurface()
 	GetBits();
 #endif
 	return mSurface;
+}
+
+void DFBImage::Flip(enum FlipFlags flags)
+{
+	if (!mSurface)
+		return;
+
+	mSurface->Flip (mSurface, NULL, DSFLIP_NONE);
 }

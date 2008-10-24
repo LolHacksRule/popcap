@@ -69,6 +69,7 @@ public:
 	virtual void			Create(int theWidth, int theHeight);
 	virtual void			SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits = true);
 	virtual uint32*			GetBits();
+	virtual void			Clear();
 
 	virtual bool			PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty, bool comvex);
 	virtual void			FillRect(const Rect& theRect, const Color& theColor, int theDrawMode);
@@ -88,6 +89,8 @@ public:
 	virtual void			PurgeBits();
 	virtual void			DeleteNativeData();
 	virtual void			DeleteExtraBuffers();
+
+        virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
 
  private:
         IDirectFBSurface*               EnsureSurface();
