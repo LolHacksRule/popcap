@@ -10,6 +10,8 @@
 #include "NativeFont.h"
 #include "../ImageLib/ImageLib.h"
 
+#include <memory>
+
 //#define SEXY_PERF_ENABLED
 #include "PerfTimer.h"
 
