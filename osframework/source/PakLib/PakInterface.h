@@ -249,36 +249,32 @@ static inline int p_feof(PFILE* theFile)
 	return feof(theFile->mFP);
 }
 
+extern PakHandle PakFindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr lpFindFileData);
+extern bool PakFindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFileData);
+extern bool PakFindClose(PakHandle hFindFile);
+
 static inline PakHandle p_FindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr lpFindFileData)
 {
 	if (GetPakPtr() != NULL)
 		return (gPakInterfaceP)->FindFirstFile(lpFileName, lpFindFileData);
-#ifdef WIN32
-	return FindFirstFile(lpFileName, lpFindFileData);
-#else
-        return 0;
-#endif
+
+	return PakFindFirstFile(lpFileName, lpFindFileData);
 }
 
 static inline bool p_FindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFileData)
 {
 	if (GetPakPtr() != NULL)
 		return (gPakInterfaceP)->FindNextFile(hFindFile, lpFindFileData);
-#ifdef WIN32
-	return FindNextFile(hFindFile, lpFindFileData);
-#else
-        return false;
-#endif
+
+	return PakFindNextFile(hFindFile, lpFindFileData);
 }
 
 static inline bool p_FindClose(PakHandle hFindFile)
 {
 	if (GetPakPtr() != NULL)
 		return (gPakInterfaceP)->FindClose(hFindFile);
-#ifdef WIN32
-	return FindClose(hFindFile);
-#endif
-        return false;
+
+	return PakFindClose(hFindFile);
 }
 
 

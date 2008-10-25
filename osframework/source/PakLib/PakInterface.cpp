@@ -449,6 +449,67 @@ PakEmuFindNext(DIR * dir, PakFindDataPtr lpFindFileData)
 }
 #endif
 
+PakHandle PakFindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr lpFindFileData)
+{
+#ifdef WIN32
+	return ::FindFirstFile(lpFileName, lpFindFileData);
+#else
+	PFindData* aFindData = new PFindData;
+
+	aFindData->mFindCriteria = lpFileName;
+	aFindData->mWHandle = NULL;
+
+	aFindData->mWHandle = opendir(aFindData->mFindCriteria.c_str());
+	if (aFindData->mWHandle == NULL)
+		goto fail;
+
+	if (PakEmuFindNext((DIR *)aFindData->mWHandle, lpFindFileData))
+		return (PakHandle) aFindData;
+
+ fail:
+	delete aFindData;
+	return NULL;
+#endif
+}
+
+bool PakFindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFileData)
+{
+#ifdef WIN32
+	return ::FindNextFile(hFindFile, lpFindFileData);
+#else
+	PFindData* aFindData = (PFindData*) hFindFile;
+
+	if (aFindData->mWHandle == NULL)
+	{
+		aFindData->mWHandle = opendir(aFindData->mFindCriteria.c_str());
+		if (aFindData->mWHandle &&
+		    PakEmuFindNext((DIR *)aFindData->mWHandle, lpFindFileData))
+			return (PakHandle) aFindData;
+		return aFindData->mWHandle != NULL;
+	}
+
+	if (PakEmuFindNext((DIR *)aFindData->mWHandle, lpFindFileData))
+		return true;
+
+	delete aFindData;
+	return false;
+#endif
+}
+
+bool PakFindClose(PakHandle hFindFile)
+{
+#ifdef WIN32
+	::FindClose(hFindFile(hFileFile);
+#else
+	PFindData* aFindData = (PFindData*) hFindFile;
+
+	if (aFindData->mWHandle != NULL)
+		closedir((DIR*)aFindData->mWHandle);
+
+	delete aFindData;
+#endif
+}
+
 PakHandle PakInterface::FindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr lpFindFileData)
 {
 #ifdef WIN32
