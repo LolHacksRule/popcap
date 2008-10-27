@@ -26,3 +26,9 @@ env.Program('demo4', [os.path.join ('Demo4', 'Board.cpp'),
                       os.path.join ('Demo4', 'TitleScreen.cpp'),
                       os.path.join ('Demo4', 'Res.cpp'),
                       os.path.join ('Demo4', 'main.cpp')])
+env.Program('demo5', [os.path.join ('Demo5', 'Board.cpp'),
+                      os.path.join ('Demo5', 'GameApp.cpp'),
+                      os.path.join ('Demo5', 'DemoDialog.cpp'),
+                      os.path.join ('Demo5', 'TitleScreen.cpp'),
+                      os.path.join ('Demo5', 'Res.cpp'),
+                      os.path.join ('Demo5', 'main.cpp')])

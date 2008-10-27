@@ -19,7 +19,7 @@
 
 // And for our performance profiling example, we first have to define SEXY_PERF_ENABLED
 // before including PerfTimer.h:
-#define SEXY_PERF_ENABLED
+//#define SEXY_PERF_ENABLED
 #include "SexyAppFramework/PerfTimer.h"
 
 // Lastly, for our example of how to catch memory leaks, we first
@@ -29,7 +29,7 @@
 // OTHER FILE INCLUDES OR ELSE IT WILL CAUSE LINKER AND COMPILER ERRORS!
 // Memory leaks will automatically be dumped to "mem_leaks.txt" when
 // the app is closed. 
-#define SEXY_MEMTRACE
+//#define SEXY_MEMTRACE
 #include "SexyAppFramework/memmgr.h"
 
 // The SexyAppFramework resides in the "Sexy" namespace. As a convenience,

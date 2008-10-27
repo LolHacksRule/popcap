@@ -10,7 +10,7 @@
 #include "SexyAppFramework/ResourceManager.h"
 
 // Required for playing music
-#include "SexyAppFramework/BassMusicInterface.h"
+#include "SexyAppFramework/MusicInterface.h"
 
 // Contains all the resources from the resources.xml file in our
 // properties directory. See that file for more information.
