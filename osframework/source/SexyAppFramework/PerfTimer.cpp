@@ -1,13 +1,20 @@
 #include "PerfTimer.h"
 #include <map>
 
-using namespace Sexy;
+#include <sys/time.h>
 
-#ifdef WIN32
+using namespace Sexy;
+#ifndef _MSC_VER
+#define mutable
+#else
+#define int64_t __int64
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-inline int QueryCounters(__int64 *lpPerformanceCount)
+inline int QueryCounters(int64_t *lpPerformanceCount)
 {
+#ifdef WIN32
 	/* returns TSC only */
 	_asm
 	{
@@ -16,12 +23,19 @@ inline int QueryCounters(__int64 *lpPerformanceCount)
 			mov dword ptr [ebx], eax
 			mov dword ptr [ebx+4], edx
 	}
+#else
+	struct timeval now;
+
+	gettimeofday(&now, NULL);
+	*lpPerformanceCount = now.tv_sec * 1000 << 32 | now.tv_usec / 1000;
+#endif
 	return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-inline int DeltaCounters(__int64 *lpPerformanceCount)
+#ifdef WIN32
+inline int DeltaCounters(int64_t *lpPerformanceCount)
 {
 	_asm
 	{
@@ -37,12 +51,12 @@ inline int DeltaCounters(__int64 *lpPerformanceCount)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static __int64 CalcCPUSpeed()
+static int64_t CalcCPUSpeed()
 {
 	int aPriority = GetThreadPriority(GetCurrentThread());
 	SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_HIGHEST);
 	LARGE_INTEGER	goal, current, period;
-	__int64 Ticks;
+	int64_t Ticks;
 
 	if( !QueryPerformanceFrequency( &period ) ) return 0;
 
@@ -60,14 +74,20 @@ static __int64 CalcCPUSpeed()
 
 }
 
-static __int64 gCPUSpeed = 0;
+static int64_t gCPUSpeed = 0;
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 PerfTimer::PerfTimer()
 {
 	mDuration = 0;
+#ifdef WIN32
 	mStart.QuadPart = 0;
+#else
+	mStart.tv_sec = 0;
+	mStart.tv_usec = 0;
+#endif
 	mRunning = false;
 }
 
@@ -75,10 +95,17 @@ PerfTimer::PerfTimer()
 ///////////////////////////////////////////////////////////////////////////////
 void PerfTimer::CalcDuration()
 {
+#ifdef WIN32
 	LARGE_INTEGER anEnd, aFreq;
 	QueryPerformanceCounter(&anEnd);
 	QueryPerformanceFrequency(&aFreq);
 	mDuration = ((anEnd.QuadPart-mStart.QuadPart)*1000)/(double)aFreq.QuadPart;
+#else
+	struct timeval anEnd;
+	gettimeofday(&anEnd, NULL);
+	mDuration = (anEnd.tv_sec - mStart.tv_sec) * 1000;
+	mDuration += (anEnd.tv_usec - mStart.tv_usec) / 1000;
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -86,7 +113,11 @@ void PerfTimer::CalcDuration()
 void PerfTimer::Start()
 {
 	mRunning = true;
+#ifdef WIN32
 	QueryPerformanceCounter(&mStart);
+#else
+	gettimeofday(&mStart, NULL);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,7 +143,8 @@ double PerfTimer::GetDuration()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-__int64 PerfTimer::GetCPUSpeed()
+#ifdef WIN32
+int64_t PerfTimer::GetCPUSpeed()
 {
 	if(gCPUSpeed<=0)
 	{
@@ -130,14 +162,15 @@ int PerfTimer::GetCPUSpeedMHz()
 {
 	return (int)(gCPUSpeed/1000000);
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 struct PerfInfo
 {
 	const char *mPerfName;
-	mutable __int64 mStartTime;
-	mutable __int64 mDuration;
+	mutable int64_t mStartTime;
+	mutable int64_t mDuration;
 	mutable double mMillisecondDuration;
 	mutable double mLongestCall;
 	mutable int mStartCount;
@@ -153,8 +186,8 @@ struct PerfInfo
 typedef std::set<PerfInfo> PerfInfoSet;
 static PerfInfoSet gPerfInfoSet;
 static bool gPerfOn = false;
-static __int64 gStartTime;
-static __int64 gCollateTime;
+static int64_t gStartTime;
+static int64_t gCollateTime;
 double gDuration = 0;
 int gStartCount = 0;
 int gPerfRecordTop = 0;
@@ -164,7 +197,7 @@ int gPerfRecordTop = 0;
 struct PerfRecord
 {
 	const char *mName;
-	__int64 mTime;
+	int64_t mTime;
 	bool mStart;
 
 	PerfRecord() { }
@@ -180,23 +213,27 @@ static inline void InsertPerfRecord(PerfRecord &theRecord)
 	if(theRecord.mStart)
 	{
 		PerfInfoSet::iterator anItr = gPerfInfoSet.insert(PerfInfo(theRecord.mName)).first;
-		anItr->mCallCount++;
+		PerfInfo * anInfo = const_cast<PerfInfo*>(&(*anItr));
 
-		if ( ++anItr->mStartCount == 1)
-			anItr->mStartTime = theRecord.mTime;
+		anInfo->mCallCount++;
+
+		if ( ++anInfo->mStartCount == 1)
+			anInfo->mStartTime = theRecord.mTime;
 	}
 	else
 	{
 		PerfInfoSet::iterator anItr = gPerfInfoSet.find(theRecord.mName);
+		PerfInfo * anInfo = const_cast<PerfInfo*>(&(*anItr));
+
 		if(anItr != gPerfInfoSet.end())
 		{
-			if( --anItr->mStartCount == 0)
+			if( --anInfo->mStartCount == 0)
 			{
-				__int64 aDuration = theRecord.mTime - anItr->mStartTime;
-				anItr->mDuration += aDuration;
+				int64_t aDuration = theRecord.mTime - anInfo->mStartTime;
+				anInfo->mDuration += aDuration;
 
-				if (aDuration > anItr->mLongestCall)
-					anItr->mLongestCall = (double)aDuration;
+				if (aDuration > anInfo->mLongestCall)
+					anInfo->mLongestCall = (double)aDuration;
 			}
 		}
 	}
@@ -207,7 +244,7 @@ static inline void InsertPerfRecord(PerfRecord &theRecord)
 ///////////////////////////////////////////////////////////////////////////////
 static inline void CollatePerfRecords()
 {
-	__int64 aTime1,aTime2;
+	int64_t aTime1,aTime2;
 	QueryCounters(&aTime1);
 
 	for(int i=0; i<gPerfRecordTop; i++)
@@ -221,7 +258,7 @@ static inline void CollatePerfRecords()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static inline void PushPerfRecord(PerfRecord &theRecord)
+static inline void PushPerfRecord(const PerfRecord &theRecord)
 {
 	if(gPerfRecordTop >= (int)gPerfRecordVector.size())
 		gPerfRecordVector.push_back(theRecord);
@@ -257,20 +294,24 @@ void SexyPerf::BeginPerf(bool measurePerfOverhead)
 ///////////////////////////////////////////////////////////////////////////////
 void SexyPerf::EndPerf()
 {
-	__int64 anEndTime;
+	int64_t anEndTime;
 	QueryCounters(&anEndTime);
 
 	CollatePerfRecords();
 
 	gPerfOn = false;
 
-	__int64 aFreq = PerfTimer::GetCPUSpeed();
+#ifdef WIN32
+	int64_t aFreq = PerfTimer::GetCPUSpeed();
+#else
+	int64_t aFreq = 1;
+#endif
 
 	gDuration = ((double)(anEndTime - gStartTime - gCollateTime))*1000/aFreq;
 
 	for (PerfInfoSet::iterator anItr = gPerfInfoSet.begin(); anItr != gPerfInfoSet.end(); ++anItr)
 	{
-		const PerfInfo &anInfo = *anItr;
+		PerfInfo &anInfo = const_cast<PerfInfo&>(*anItr);
 		anInfo.mMillisecondDuration = (double)anInfo.mDuration*1000/aFreq;
 		anInfo.mLongestCall = anInfo.mLongestCall*1000/aFreq;
 	}
@@ -312,7 +353,9 @@ std::string SexyPerf::GetResults()
 	for (PerfInfoSet::iterator anItr = gPerfInfoSet.begin(); anItr != gPerfInfoSet.end(); ++anItr)
 	{
 		const PerfInfo &anInfo = *anItr;
-		sprintf(aBuf,"%s (%d calls, %%%.2f time): %.2f (%.2f avg, %.2f longest)\n",anInfo.mPerfName,anInfo.mCallCount,anInfo.mMillisecondDuration/gDuration*100,anInfo.mMillisecondDuration,anInfo.mMillisecondDuration/anInfo.mCallCount,anInfo.mLongestCall);
+		snprintf(aBuf, sizeof(aBuf), "%s (%d calls, %%%.2f time): %.2f (%.2f avg, %.2f longest)\n",
+			 anInfo.mPerfName,anInfo.mCallCount,anInfo.mMillisecondDuration/gDuration*100,
+			 anInfo.mMillisecondDuration,anInfo.mMillisecondDuration/anInfo.mCallCount,anInfo.mLongestCall);
 		aResult += aBuf;
 	}
 
@@ -320,5 +363,3 @@ std::string SexyPerf::GetResults()
 	return aResult;
 }
 
-
-#endif

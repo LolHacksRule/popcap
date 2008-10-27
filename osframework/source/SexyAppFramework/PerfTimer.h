@@ -6,13 +6,16 @@
 namespace Sexy
 {
 
-#ifdef WIN32
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 class PerfTimer 
 {
 protected:
+#ifdef WIN32
 	LARGE_INTEGER mStart;
+#else
+        struct timeval mStart;
+#endif
 	double mDuration;
 	bool mRunning;
 
@@ -25,8 +28,10 @@ public:
 
 	double GetDuration();
 
+#ifdef WIN32
 	static __int64 GetCPUSpeed(); // in Hz
-	static int GetCPUSpeedMHz(); 
+	static int GetCPUSpeedMHz();
+#endif
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -79,7 +84,6 @@ public:
 		}
 	}
 };
-#endif
 } // namespace Sexy
 
 #endif
