@@ -4,7 +4,7 @@
 #include "OptionsDialog.h"
 #include "SexyAppFramework/WidgetManager.h"
 #include "SexyAppFramework/ResourceManager.h"
-#include "SexyAppFramework/BassMusicInterface.h"
+#include "SexyAppFramework/MusicInterface.h"
 #include "SexyAppFramework/Dialog.h"
 #include "Res.h"
 

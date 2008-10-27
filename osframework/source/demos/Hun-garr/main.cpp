@@ -25,11 +25,17 @@
 
 using namespace Sexy;
 
+#ifdef WIN32
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{	
-
-
+#else
+int main(int argc, char **argv)
+#endif
+{
+#ifdef WIN32
+	// Make sure to set this. Some classes, like the exception handler and custom cursors
+	// will need to use it.
 	gHInstance = hInstance;
+#endif
 
 	GameApp* anApp = new GameApp();
 	anApp->Init();
