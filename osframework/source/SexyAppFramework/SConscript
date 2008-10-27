@@ -5,7 +5,7 @@
 import os
 import sys
 
-Import('env')
+Import(['env', 'gameenv'])
 env = env.Clone()
 srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "CritSect.cpp", "CursorWidget.cpp", "Debug.cpp", "DescParser.cpp",
@@ -27,6 +27,13 @@ env.AppendUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                  LIBPATH = [os.path.join('..', 'ImageLib'),
                             os.path.join('..', 'PakLib')],
                  LIBS = ['PakLib', 'ImageLib', 'rt'])
+if gameenv['BUILD_STATIC']:
+    gameenv.ParseConfig('pkg-config directfb --cflags --libs')
+    gameenv.AppendUnique(LIBPATH = [os.path.join('..', 'ImageLib'),
+                                    os.path.join('..', 'PakLib')],
+                         LIBS = ['PakLib', 'ImageLib', 'rt'])
 
-#env.Library('SexyAppFramework', srcs)
-env.SharedLibrary('SexyAppFramework', srcs)
+if gameenv['BUILD_STATIC']:
+    env.Library('SexyAppFramework', srcs)
+else:
+    env.SharedLibrary('SexyAppFramework', srcs)

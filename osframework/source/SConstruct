@@ -36,9 +36,11 @@ def createConvenienceLibBuilder(env):
 env = Environment()
 createConvenienceLibBuilder(env)
 env.AppendUnique(CFLAGS = ['-pthread'],
-                 LINKFALGS = ['-pthread'])
+                 LINKFLAGS = ['-pthread'])
 env.AppendUnique(CFLAGS = ['-g', '-Wall'], CXXFLAGS = ['-g', '-Wall'], LINKFLAGS = ['-g'])
-Export('env')
+env['BUILD_STATIC'] = True
+gameenv = env.Clone()
+Export(['env', 'gameenv'])
 
 sconscripts = [os.path.join('ImageLib', 'SConscript')]
 sconscripts += [os.path.join('PakLib', 'SConscript')]

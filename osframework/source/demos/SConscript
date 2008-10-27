@@ -5,11 +5,11 @@
 import os
 import sys
 
-Import('env')
-env = env.Clone()
-env.AppendUnique(CPPPATH = ['..', os.path.join ('..', 'SexyAppFramework')],
-                 LIBPATH = [os.path.join ('..', 'SexyAppFramework')],
-                 LIBS = ['SexyAppFramework'])
+Import('gameenv')
+env = gameenv.Clone()
+env.PrependUnique(CPPPATH = ['..', os.path.join ('..', 'SexyAppFramework')],
+                    LIBPATH = [os.path.join ('..', 'SexyAppFramework')],
+                    LIBS = ['SexyAppFramework'])
 env.Program('demo1', [os.path.join ('Demo1', 'Board.cpp'),
                       os.path.join ('Demo1', 'GameApp.cpp'),
                       os.path.join ('Demo1', 'main.cpp')])
