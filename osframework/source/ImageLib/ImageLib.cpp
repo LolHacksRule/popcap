@@ -3,13 +3,14 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
-#include "ImageLib.h"
-#include "png/png.h"
 #include <math.h>
 #include <string.h>
 #ifdef WIN32
 #include <tchar.h>
 #endif
+
+#include "ImageLib.h"
+#include "png/png.h"
 #include "../PakLib/PakInterface.h"
 
 extern "C"
@@ -74,6 +75,24 @@ static void png_pak_read_data(png_structp png_ptr, png_bytep data, png_size_t le
 	}
 }
 
+/* Converts RGBx bytes to native endian xRGB */
+static void
+convert_bytes_to_data (png_structp png, png_row_infop row_info, png_bytep data)
+{
+	unsigned int i;
+
+	for (i = 0; i < row_info->rowbytes; i += 4) {
+		uint8_t *base  = &data[i];
+		uint8_t  red   = base[0];
+		uint8_t  green = base[1];
+		uint8_t  blue  = base[2];
+		uint32_t pixel;
+
+		pixel = (0xff << 24) | (red << 16) | (green << 8) | (blue << 0);
+		memcpy (base, &pixel, sizeof (uint32_t));
+	}
+}
+
 Image* GetPNGImage(const std::string& theFileName)
 {
 	png_structp png_ptr;
@@ -126,6 +145,42 @@ Image* GetPNGImage(const std::string& theFileName)
 	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
        &interlace_type, NULL, NULL);
 
+	/* convert palette/gray image to rgb */
+	if (color_type == PNG_COLOR_TYPE_PALETTE)
+		png_set_palette_to_rgb (png_ptr);
+
+	/* expand gray bit depth if needed */
+	if (color_type == PNG_COLOR_TYPE_GRAY) {
+#if PNG_LIBPNG_VER >= 10209
+		png_set_expand_gray_1_2_4_to_8 (png_ptr);
+#else
+		png_set_gray_1_2_4_to_8 (png_ptr);
+#endif
+	}
+
+	if (color_type == PNG_COLOR_TYPE_RGB && 0)
+	    png_set_read_user_transform_fn (png_ptr, convert_bytes_to_data);
+
+	/* transform transparency to alpha */
+	if (png_get_valid (png_ptr, info_ptr, PNG_INFO_tRNS))
+		png_set_tRNS_to_alpha (png_ptr);
+
+	if (bit_depth == 16)
+		png_set_strip_16 (png_ptr);
+
+	if (bit_depth < 8)
+		png_set_packing (png_ptr);
+
+	/* convert grayscale to RGB */
+	if (color_type == PNG_COLOR_TYPE_GRAY ||
+	    color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+	{
+		png_set_gray_to_rgb (png_ptr);
+	}
+
+	if (interlace_type != PNG_INTERLACE_NONE)
+		png_set_interlace_handling (png_ptr);
+
 	/* Add filler (or alpha) byte (before/after each RGB triplet) */
 	png_set_expand(png_ptr);
 	png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER);
@@ -133,6 +188,12 @@ Image* GetPNGImage(const std::string& theFileName)
 	png_set_palette_to_rgb(png_ptr);
 	png_set_gray_to_rgb(png_ptr);
 	png_set_bgr(png_ptr);
+
+	/* recheck header after setting EXPAND options */
+	png_read_update_info (png_ptr, info_ptr);
+
+	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+       &interlace_type, NULL, NULL);
 
 //	int aNumBytes = png_get_rowbytes(png_ptr, info_ptr) * height / 4;
 	unsigned int* aBits = new unsigned int[width*height];
