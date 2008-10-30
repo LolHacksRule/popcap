@@ -31,6 +31,10 @@ void SexyMemRemoveTrack(void *addr);
 
 //Replacement for the standard "new" operator, records size of allocation and 
 //the file/line number it was on
+#ifndef _MSC_VER
+#define __cdecl
+#endif
+
 inline void* __cdecl operator new(unsigned int size, const char* file, int line)
 {
 	void* ptr = (void*)malloc(size);
