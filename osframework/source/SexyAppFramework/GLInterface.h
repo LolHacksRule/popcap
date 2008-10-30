@@ -7,6 +7,8 @@
 #include "Rect.h"
 #include "Ratio.h"
 
+#include <GL/gl.h>
+
 namespace Sexy
 {
 
@@ -47,6 +49,11 @@ public:
 
         GLImage*                                mScreenImage;
 
+        GLint                                   mMinTextureWidth;
+        GLint                                   mMinTextureHeight;
+        GLint                                   mMaxTextureWidth;
+        GLint                                   mMaxTextureHeight;
+
 public:
 	GLInterface(SexyAppBase* theApp);
 	virtual ~GLInterface();
@@ -54,6 +61,9 @@ public:
 	virtual Image*				GetScreenImage();
 	virtual int				Init();
 	virtual void				Cleanup();
+
+        virtual void                            SwapBuffers();
+        virtual void                            InitGL();
 
         virtual bool                            Redraw(Rect* theClipRect);
 };

@@ -21,6 +21,15 @@ using namespace Sexy;
 #define SURFACE_DIRTY (1 << 0)
 #define BITS_DIRTY    (1 << 1)
 
+typedef struct {
+  GLfloat  tu;
+  GLfloat  tv;
+  SexyRGBA color;
+  GLfloat  sx;
+  GLfloat  sy;
+  GLfloat  sz;
+} SexyGLVertex;
+
 namespace Sexy {
 class GLImageAutoFallback
 {
@@ -179,6 +188,34 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 
 void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
 {
+	glDisable(GL_TEXTURE_2D);
+
+	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	else
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+
+	SexyRGBA aColor = theColor.ToRGBA();
+	float x = theRect.mX;// - 0.5f;
+	float y = theRect.mY;// - 0.5f;
+	float aWidth = theRect.mWidth;
+	float aHeight = theRect.mHeight;
+
+	SexyGLVertex aVertex[4] =
+	{
+          { 0, 0, aColor, x,	      y,           0},
+          { 0, 0, aColor, x,	      y + aHeight, 0},
+          { 0, 0, aColor, x + aWidth, y,           0},
+          { 0, 0, aColor, x + aWidth, y + aHeight, 0}
+	};
+
+        glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+        glBegin (GL_TRIANGLE_STRIP);
+        glVertex2f (aVertex[0].sx, aVertex[0].sy);
+        glVertex2f (aVertex[1].sx, aVertex[1].sy);
+        glVertex2f (aVertex[2].sx, aVertex[2].sy);
+        glVertex2f (aVertex[3].sx, aVertex[3].sy);
+        glEnd ();
 }
 
 void GLImage::NormalDrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
@@ -193,6 +230,29 @@ void GLImage::AdditiveDrawLine(double theStartX, double theStartY, double theEnd
 
 void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
+        glDisable (GL_TEXTURE_2D);
+
+	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	else
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+
+	float x1, y1, x2, y2;
+	SexyRGBA aColor = theColor.ToRGBA ();
+
+	x1 = theStartX;
+	y1 = theStartY;
+	x2 = theEndX;
+	y2 = theEndY;
+
+        glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+
+        glBegin (GL_LINE_STRIP);
+
+        glVertex2f (x1, y1);
+        glVertex2f (x2, y2);
+
+        glEnd ();
 }
 
 void GLImage::NormalDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
@@ -354,4 +414,6 @@ void GLImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitB
 
 void GLImage::Flip(enum FlipFlags flags)
 {
+	if (mInterface->mScreenImage)
+		mInterface->SwapBuffers();
 }
