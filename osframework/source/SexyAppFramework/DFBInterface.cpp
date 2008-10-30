@@ -278,8 +278,6 @@ bool DFBInterface::Redraw(Rect* theClipRect)
 
 bool DFBInterface::EnableCursor(bool enable)
 {
-	printf ("EnableCursor: %s\n", enable ? "true" : "false");
-
 	if (mWindow)
 	{
 		mWindow->SetCursorShape (mWindow, NULL, 0, 0);
@@ -298,7 +296,6 @@ bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
 	AutoCrit anAutoCrit(mCritSect);
 
-	printf ("SetCursorImage: %p\n", theImage);
 	if (mCursorImage)
 		mCursorImage->Release(mCursorImage);
 	mCursorImage = NULL;
@@ -322,8 +319,6 @@ void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
 	mNextCursorX = theCursorX;
 	mNextCursorY = theCursorY;
-
-	printf ("SetCursorPos: (%d, %d)\n", theCursorX, theCursorY);
 
 	AutoCrit anAutoCrit(mCritSect);
 
