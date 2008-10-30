@@ -2717,9 +2717,9 @@ void SexyAppBase::Init()
 	// PreDisplayHook must call mWidgetManager->Resize if it changes mWidth or mHeight.
 	PreDisplayHook();
 
-	mWidgetManager->Resize(Rect(0, 0, mWidth, mHeight), Rect(0, 0, mWidth, mHeight));
-
 	MakeWindow();
+
+	mWidgetManager->Resize(Rect(0, 0, mWidth, mHeight), Rect(0, 0, mWidth, mHeight));
 
 	if (mSoundManager == NULL)
 		mSoundManager = new DummySoundManager();
