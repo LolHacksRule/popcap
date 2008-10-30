@@ -1,5 +1,10 @@
 {
-	uint32* aDestPixelsRow = ((uint32*) GetBits()) + (theY * mWidth) + theX;	
+	uint32* aDestPixelsRow = ((uint32*) GetBits()) + (theY * mWidth) + theX;
+
+#ifndef DST_NEXT
+#define DST_NEXT(x)             ((x)--)
+#define DST_NEXT_PIXELS(x, w)   (x) -= (w)
+#endif
 
 	if ((mHasAlpha) || (mHasTrans) || (theColor != Color::White))
 	{
@@ -14,9 +19,9 @@
 				{
 					uint32 src = NEXT_SRC_COLOR;
 					uint32 dest = *aDestPixels;
-					
-					int a = src >> 24;	
-					
+
+					int a = src >> 24;
+
 					if (a != 0)
 					{
 						int aDestAlpha = dest >> 24;
@@ -24,9 +29,9 @@
 						a = 255 * a / aNewDestAlpha;
 
 						int oma = 256 - a;
-						
+
 						// TODO: To avoid rounding problems for fully opaque pixels use (a+1) instead of a in the code below since we are dividing by 256
-						*(aDestPixels++) = (aNewDestAlpha << 24) |
+						*DST_NEXT(aDestPixels) = (aNewDestAlpha << 24) |
 #ifdef OPTIMIZE_SOFTWARE_DRAWING
 							((((dest & 0xFF00FF) * oma >> 8) + ((src & 0xFF00FF) * a >> 8)) & 0xFF00FF) |
 							((((dest & 0x00FF00) * oma >> 8) + ((src & 0x00FF00) * a >> 8)) & 0x00FF00);
@@ -37,7 +42,7 @@
 #endif
 					}
 					else
-						aDestPixels++;
+						DST_NEXT(aDestPixels);
 				}
 
 				aDestPixelsRow += mWidth;
@@ -45,7 +50,7 @@
 			}
 		}
 		else
-		{			
+		{
 			int ca = theColor.mAlpha;
 			int cr = theColor.mRed;
 			int cg = theColor.mGreen;
@@ -59,31 +64,31 @@
 				for (int y = 0; y < theSrcRect.mHeight; y++)
 				{
 					uint32* aDestPixels = aDestPixelsRow;
-					
+
 					EACH_ROW;
 
 					for (int x = 0; x < theSrcRect.mWidth; x++)
 					{
 						uint32 src = NEXT_SRC_COLOR;
 						uint32 dest = *aDestPixels;
-						
-						int a = ((src >> 24) * ca) / 255;	
-						
+
+						int a = ((src >> 24) * ca) / 255;
+
 						if (a != 0)
 						{
 							int aDestAlpha = dest >> 24;
 							int aNewDestAlpha = aDestAlpha + ((255 - aDestAlpha) * a) / 255;
-												
+
 							a = 255 * a / aNewDestAlpha;
 
 							int oma = 256 - a;
-							
-							*(aDestPixels++) = (aNewDestAlpha << 24) |
+
+							*DST_NEXT(aDestPixels) = (aNewDestAlpha << 24) |
 								((((dest & 0xFF00FF) * oma >> 8) + ((((src & 0xFF00FF) * cr >> 8) & 0xFF00FF) * a >> 8)) & 0xFF00FF) |
 								((((dest & 0x00FF00) * oma >> 8) + ((src & 0x00FF00) * cr * a >> 16)) & 0x00FF00);
 						}
 						else
-							aDestPixels++;
+							DST_NEXT(aDestPixels);
 					}
 
 					aDestPixelsRow += mWidth;
@@ -96,32 +101,32 @@
 				for (int y = 0; y < theSrcRect.mHeight; y++)
 				{
 					uint32* aDestPixels = aDestPixelsRow;
-					
+
 					EACH_ROW;
 
 					for (int x = 0; x < theSrcRect.mWidth; x++)
 					{
 						uint32 src = NEXT_SRC_COLOR;
 						uint32 dest = *aDestPixels;
-						
-						int a = ((src >> 24) * ca) / 255;	
-						
+
+						int a = ((src >> 24) * ca) / 255;
+
 						if (a != 0)
 						{
 							int aDestAlpha = dest >> 24;
 							int aNewDestAlpha = aDestAlpha + ((255 - aDestAlpha) * a) / 255;
-												
+
 							a = 255 * a / aNewDestAlpha;
 
 							int oma = 256 - a;
-							
-							*(aDestPixels++) = (aNewDestAlpha << 24) |
+
+							*DST_NEXT(aDestPixels) = (aNewDestAlpha << 24) |
 								((((dest & 0x0000FF) * oma) >> 8) + (((src & 0x0000FF) * a * cb) >> 16) & 0x0000FF) |
 								((((dest & 0x00FF00) * oma) >> 8) + (((src & 0x00FF00) * a * cg) >> 16) & 0x00FF00) |
 								((((dest & 0xFF0000) * oma) >> 8) + (((((src & 0xFF0000) * a) >> 8) * cr) >> 8) & 0xFF0000);
 						}
 						else
-							aDestPixels++;
+							DST_NEXT(aDestPixels);
 					}
 
 					aDestPixelsRow += mWidth;
@@ -138,16 +143,16 @@
 		for (int y = 0; y < theSrcRect.mHeight; y++)
 		{
 			uint32* aDestPixels = aDestPixelsRow;
-			
+
 			EACH_ROW;
-			
-			uchar* aRLAlphaData = aRLAlphaDataRow;					
+
+			uchar* aRLAlphaData = aRLAlphaDataRow;
 
 			for (int aSpanLeft = theSrcRect.mWidth; aSpanLeft > 0; )
 			{
 				uint32 src = READ_SRC_COLOR;
 				uchar rl = *aRLAlphaData;
-				
+
 				if (rl > aSpanLeft)
 					rl = aSpanLeft;
 
@@ -156,21 +161,21 @@
 				if (oma == 1) // Fully opaque
 				{
 					for (int i = 0; i < rl; i++)
-						*aDestPixels++ = NEXT_SRC_COLOR;
+						*DST_NEXT(aDestPixels) = NEXT_SRC_COLOR;
 				}
 				else if (oma == 256) // Fully transparent
 				{
-					aDestPixels += rl;							
+					DST_NEXT_PIXELS(aDestPixels, rl);
 					aSrcPtr += rl;
-				}						
+				}
 				else // Partially transparent
 				{
 #ifdef OPTIMIZE_SOFTWARE_DRAWING
 					int a = 256 - oma;
-				
+
 					aSrcPtr++;
 					uint32 dest = *aDestPixels;
-					*(aDestPixels++) = (0xFF000000) |
+					*DST_NEXT(aDestPixels) = (0xFF000000) |
 						((((dest & 0xFF00FF) * oma >> 8) + ((src & 0xFF00FF) * a >> 8)) & 0xFF00FF) |
 						((((dest & 0x00FF00) * oma >> 8) + ((src & 0x00FF00) * a >> 8)) & 0x00FF00);
 
@@ -181,16 +186,16 @@
 						int oma = 256 - a;
 
 						uint32 dest = *aDestPixels;
-						*(aDestPixels++) = (0xFF000000) |
+						*DST_NEXT(aDestPixels) = (0xFF000000) |
 							((((dest & 0xFF00FF) * oma >> 8) + ((src & 0xFF00FF) * a >> 8)) & 0xFF00FF) |
 							((((dest & 0x00FF00) * oma >> 8) + ((src & 0x00FF00) * a >> 8)) & 0x00FF00);
 					}
 #else
 					int a = 256 - oma;
-				
+
 					aSrcPtr++;
 					uint32 dest = *aDestPixels;
-					*(aDestPixels++) = (0xFF000000) |
+					*DST_NEXT(aDestPixels) = (0xFF000000) |
 						((((dest & 0x0000FF) * oma) >> 8) + (((src & 0x0000FF) * a) >> 8) & 0x0000FF) |
 						((((dest & 0x00FF00) * oma) >> 8) + (((src & 0x00FF00) * a) >> 8) & 0x00FF00) |
 						((((dest & 0xFF0000) * oma) >> 8) + (((src & 0xFF0000) * a) >> 8) & 0xFF0000);
@@ -202,14 +207,14 @@
 						int oma = 256 - a;
 
 						uint32 dest = *aDestPixels;
-						*(aDestPixels++) = (0xFF000000) |
+						*DST_NEXT(aDestPixels) = (0xFF000000) |
 							((((dest & 0x0000FF) * oma) >> 8) + (((src & 0x0000FF) * a) >> 8) & 0x0000FF) |
 							((((dest & 0x00FF00) * oma) >> 8) + (((src & 0x00FF00) * a) >> 8) & 0x00FF00) |
 							((((dest & 0xFF0000) * oma) >> 8) + (((src & 0xFF0000) * a) >> 8) & 0xFF0000);
 					}
 #endif
 				}
-				
+
 				aRLAlphaData += rl;
 				aSpanLeft -= rl;
 			}
@@ -219,4 +224,6 @@
 			aRLAlphaDataRow += theImage->mWidth;
 		}
 	}
+#undef DST_NEXT
+#undef DST_NEXT_PIXELS
 }

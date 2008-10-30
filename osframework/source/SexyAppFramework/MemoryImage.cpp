@@ -831,6 +831,8 @@ void MemoryImage::CommitBits()
 					mHasTrans = true;
 				else if (anAlpha != 255)
 					mHasAlpha = true;
+				if (mHasTrans && mHasAlpha)
+					break;
 			}
 		}
 		else if (mColorTable != NULL)
@@ -849,6 +851,8 @@ void MemoryImage::CommitBits()
 					mHasTrans = true;
 				else if (anAlpha != 255)
 					mHasAlpha = true;
+				if (mHasTrans && mHasAlpha)
+					break;
 			}
 		}
 		else
@@ -1421,6 +1425,59 @@ void MemoryImage::AdditiveBlt(Image* theImage, int theX, int theY, const Rect& t
 	}
 }
 
+void MemoryImage::AdditiveBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
+{
+	theImage->mDrawn = true;
+
+	Rect theSrcRect = theSrcRectOrig;
+	theX += theSrcRect.mWidth - 1;
+
+	MemoryImage* aSrcMemoryImage = dynamic_cast<MemoryImage*>(theImage);
+
+	uchar* aMaxTable = mApp->mAdd8BitMaxTable;
+
+	if (aSrcMemoryImage != NULL)
+	{
+		if (aSrcMemoryImage->mColorTable == NULL)
+		{
+			uint32* aSrcBits = aSrcMemoryImage->GetBits();
+
+			#define NEXT_SRC_COLOR		(*(aSrcPtr++))
+			#define SRC_TYPE			uint32
+
+                        #define DST_NEXT(x)             ((x)--)
+                        #define DST_NEXT_PIXELS(x, w)   (x) -= (w)
+
+			#include "MI_AdditiveBlt.inc"
+
+			#undef NEXT_SRC_COLOR
+			#undef SRC_TYPE
+			#undef DST_NEXT
+			#undef DST_NEXT_PIXELS
+		}
+		else
+		{
+			uint32* aColorTable = aSrcMemoryImage->mColorTable;
+			uchar* aSrcBits = aSrcMemoryImage->mColorIndices;
+
+			#define NEXT_SRC_COLOR		(aColorTable[*(aSrcPtr++)])
+			#define SRC_TYPE uchar
+
+                        #define DST_NEXT(x)             ((x)--)
+                        #define DST_NEXT_PIXELS(x, w)   (x) -= (w)
+
+			#include "MI_AdditiveBlt.inc"
+
+			#undef NEXT_SRC_COLOR
+			#undef SRC_TYPE
+			#undef DST_NEXT
+			#undef DST_NEXT_PIXELS
+		}
+
+		BitsChanged();
+	}
+}
+
 void MemoryImage::NormalBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
 {
 	theImage->mDrawn = true;
@@ -1457,6 +1514,60 @@ void MemoryImage::NormalBlt(Image* theImage, int theX, int theY, const Rect& the
 			#undef NEXT_SRC_COLOR
 			#undef READ_SRC_COLOR
 			#undef EACH_ROW
+		}
+
+		BitsChanged();
+	}
+}
+
+void MemoryImage::NormalBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
+{
+	theImage->mDrawn = true;
+
+	theX += theSrcRect.mWidth - 1;
+
+	MemoryImage* aSrcMemoryImage = dynamic_cast<MemoryImage*>(theImage);
+
+	if (aSrcMemoryImage != NULL)
+	{
+		if (aSrcMemoryImage->mColorTable == NULL)
+		{
+			uint32* aSrcPixelsRow = ((uint32*) aSrcMemoryImage->GetBits()) + (theSrcRect.mY * theImage->mWidth) + theSrcRect.mX;
+
+			#define NEXT_SRC_COLOR		(*(aSrcPtr++))
+			#define READ_SRC_COLOR		(*(aSrcPtr))
+			#define EACH_ROW			uint32* aSrcPtr = aSrcPixelsRow
+
+                        #define DST_NEXT(x)             ((x)--)
+                        #define DST_NEXT_PIXELS(x, w)   (x) -= (w)
+
+			#include "MI_NormalBlt.inc"
+
+			#undef NEXT_SRC_COLOR
+			#undef READ_SRC_COLOR
+			#undef EACH_ROW
+			#undef DST_NEXT
+                        #undef DST_NEXT_PIXELS
+		}
+		else
+		{
+			uint32* aColorTable = aSrcMemoryImage->mColorTable;
+			uchar* aSrcPixelsRow = aSrcMemoryImage->mColorIndices + (theSrcRect.mY * theImage->mWidth) + theSrcRect.mX;
+
+			#define NEXT_SRC_COLOR		(aColorTable[*(aSrcPtr++)])
+			#define READ_SRC_COLOR		(aColorTable[*(aSrcPtr)])
+			#define EACH_ROW			uchar* aSrcPtr = aSrcPixelsRow
+
+                        #define DST_NEXT(x)             ((x)--)
+                        #define DST_NEXT_PIXELS(x, w)   (x) -= (w)
+
+			#include "MI_NormalBlt.inc"
+
+			#undef NEXT_SRC_COLOR
+			#undef READ_SRC_COLOR
+			#undef EACH_ROW
+			#undef DST_NEXT
+                        #undef DST_NEXT_PIXELS
 		}
 
 		BitsChanged();
@@ -1886,6 +1997,54 @@ void MemoryImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices
 
 	BltTrianglesTexHelper(theTexture,theVertices,theNumTriangles,theClipRect,theColor,theDrawMode,aSurface,aPitch,aFormat,tx,ty,blend);
 	BitsChanged();
+}
+
+void MemoryImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
+{
+	theImage->mDrawn = true;
+
+	DBG_ASSERTE((theColor.mRed >= 0) && (theColor.mRed <= 255));
+	DBG_ASSERTE((theColor.mGreen >= 0) && (theColor.mGreen <= 255));
+	DBG_ASSERTE((theColor.mBlue >= 0) && (theColor.mBlue <= 255));
+	DBG_ASSERTE((theColor.mAlpha >= 0) && (theColor.mAlpha <= 255));
+
+	switch (theDrawMode)
+	{
+	case Graphics::DRAWMODE_NORMAL:
+		NormalBltMirror(theImage, theX, theY, theSrcRect, theColor);
+		break;
+	case Graphics::DRAWMODE_ADDITIVE:
+		AdditiveBltMirror(theImage, theX, theY, theSrcRect, theColor);
+		break;
+	}
+}
+
+void MemoryImage::NormalStretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, bool fastStretch)
+{
+}
+
+void MemoryImage::AdditiveStretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, bool fastStretch)
+{
+}
+
+void MemoryImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
+{
+	theImage->mDrawn = true;
+
+	DBG_ASSERTE((theColor.mRed >= 0) && (theColor.mRed <= 255));
+	DBG_ASSERTE((theColor.mGreen >= 0) && (theColor.mGreen <= 255));
+	DBG_ASSERTE((theColor.mBlue >= 0) && (theColor.mBlue <= 255));
+	DBG_ASSERTE((theColor.mAlpha >= 0) && (theColor.mAlpha <= 255));
+
+	switch (theDrawMode)
+	{
+	case Graphics::DRAWMODE_NORMAL:
+		NormalStretchBltMirror(theImage, theDestRect, theSrcRect, theClipRect, theColor, fastStretch);
+		break;
+	case Graphics::DRAWMODE_ADDITIVE:
+		AdditiveStretchBltMirror(theImage, theDestRect, theSrcRect, theClipRect, theColor, fastStretch);
+		break;
+	}
 }
 
 bool MemoryImage::Palletize()
