@@ -281,7 +281,12 @@ bool DFBInterface::Redraw(Rect* theClipRect)
 	return true;
 }
 
-bool DFBInterface::SetCursorImage(Image* theImage)
+bool DFBInterface::EnableCursor(bool enable)
+{
+	return false;
+}
+
+bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
 	AutoCrit anAutoCrit(mCritSect);
 

@@ -72,7 +72,7 @@ static bool gScreenSaverActive = false;
 
 //HotSpot: 11 4
 //Size: 32 32
-unsigned char gFingerCursorData[] = {
+static unsigned char gFingerCursorData[] = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	0xff, 0xff, 0xe7, 0xff, 0xff, 0xff, 0xc3, 0xff, 0xff, 0xff, 0xc3, 0xff, 0xff, 0xff, 0xc3,
 	0xff, 0xff, 0xff, 0xc3, 0xff, 0xff, 0xff, 0xc0, 0xff, 0xff, 0xff, 0xc0, 0x1f, 0xff, 0xff,
@@ -95,7 +95,7 @@ unsigned char gFingerCursorData[] = {
 
 //HotSpot: 15 10
 //Size: 32 32
-unsigned char gDraggingCursorData[] = {
+static unsigned char gDraggingCursorData[] = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	0xff, 0xff, 0xfe, 0x7f, 0xff, 0xff, 0xfc, 0x0f, 0xff, 0xff, 0xf0, 0x07, 0xff, 0xff, 0xe0,
 	0x01, 0xff, 0xff, 0xe0, 0x00, 0xff, 0xff, 0xe0, 0x00, 0xff, 0xff, 0xe0, 0x00, 0xff, 0xff,
@@ -115,10 +115,8 @@ unsigned char gDraggingCursorData[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00
 };
-static Image* gFPSImage = NULL;
 
 //////////////////////////////////////////////////////////////////////////
-
 SexyAppBase::SexyAppBase()
 {
 	gSexyAppBase = this;
@@ -199,6 +197,9 @@ SexyAppBase::SexyAppBase()
 	mHasFocus = true;
 	mCustomCursorsEnabled = false;
 	mCustomCursorDirty = false;
+	mHandCursor = 0;
+	mDraggingCursor = 0;
+	mArrowCursor = 0;
 	//mOverrideCursor = NULL;
 	mIsOpeningURL = false;
 	mInitialized = false;
@@ -318,8 +319,6 @@ SexyAppBase::~SexyAppBase()
 
 	delete mWidgetManager;
 	delete mResourceManager;
-	delete gFPSImage;
-	gFPSImage = NULL;
 
 	SharedImageMap::iterator aSharedImageItr = mSharedImageMap.begin();
 	while (aSharedImageItr != mSharedImageMap.end())
@@ -329,6 +328,10 @@ SexyAppBase::~SexyAppBase()
 		delete aSharedImage->mImage;
 		mSharedImageMap.erase(aSharedImageItr++);
 	}
+
+        delete mArrowCursor;
+	delete mHandCursor;
+	delete mDraggingCursor;
 
 	delete mDDInterface;
 	delete mMusicInterface;
@@ -1557,6 +1560,10 @@ void SexyAppBase::MakeWindow()
 	InitDDInterface();
 	mWidgetManager->mImage =
 		dynamic_cast<MemoryImage*>(mDDInterface->GetScreenImage());
+
+	mHandCursor = 0;
+	mDraggingCursor = 0;
+	mArrowCursor = 0;
 }
 
 void SexyAppBase::DeleteNativeImageData()
@@ -1682,6 +1689,57 @@ void SexyAppBase::EnforceCursor()
 {
 	if (!mDDInterface)
 		return;
+
+	bool wantSysCursor = true;
+
+	if (!mMouseIn)
+	{
+		mDDInterface->SetCursorImage(mArrowCursor);
+		mDDInterface->EnableCursor(true);
+
+		if (mDDInterface->SetCursorImage(NULL))
+			mCustomCursorDirty = true;
+	}
+	else
+	{
+		if ((mCursorImages[mCursorNum] == NULL) ||
+                    ((!mCustomCursorsEnabled) && (mCursorNum != CURSOR_CUSTOM)))
+		{
+
+			switch(mCursorNum) {
+			case CURSOR_POINTER:
+				mDDInterface->SetCursorImage(mArrowCursor);
+				mDDInterface->EnableCursor(true);
+				break;
+			case CURSOR_HAND:
+				mDDInterface->SetCursorImage(mHandCursor);
+				mDDInterface->EnableCursor(true);
+				break;
+			case CURSOR_DRAGGING:
+				mDDInterface->SetCursorImage(mDraggingCursor);
+				mDDInterface->EnableCursor(true);
+				break;
+			case CURSOR_NONE:
+				mDDInterface->EnableCursor(false);
+				break;
+			}
+
+			if (mDDInterface->SetCursorImage(NULL))
+				mCustomCursorDirty = true;
+		}
+		else
+		{
+			if (mDDInterface->SetCursorImage(mCursorImages[mCursorNum]))
+				mCustomCursorDirty = true;
+
+			mDDInterface->EnableCursor(true);
+
+			wantSysCursor = false;
+		}
+	}
+
+	if (wantSysCursor != mSysCursor)
+		mSysCursor = wantSysCursor;
 }
 
 void SexyAppBase::ProcessSafeDeleteList()

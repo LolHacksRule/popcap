@@ -53,6 +53,20 @@ Image* NativeDisplay::CreateImage(SexyAppBase * theApp,
 	return 0;
 }
 
+bool  NativeDisplay::EnableCursor(bool enable)
+{
+	return false;
+}
+
+bool  NativeDisplay::SetCursorImage(Image* theImage, int theHotX, int theHotY)
+{
+	return false;
+}
+
+void NativeDisplay::SetCursorPos(int theCursorX, int theCursorY)
+{
+}
+
 bool  NativeDisplay::HasEvent()
 {
 	return false;

@@ -74,8 +74,9 @@ public:
 	virtual bool				    Redraw(Rect* theClipRect = 0) = 0;
 	virtual void				    RemapMouse(int& theX, int& theY) = 0;
 
-	virtual bool				    SetCursorImage(Image* theImage)= 0;
-	virtual void				    SetCursorPos(int theCursorX, int theCursorY) = 0;
+        virtual bool                                EnableCursor(bool enable);
+	virtual bool				    SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
+	virtual void				    SetCursorPos(int theCursorX, int theCursorY);
 
  public:
         virtual bool                                HasEvent();

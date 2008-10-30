@@ -241,12 +241,12 @@ public:
 	int						mStepMode;  // 0 = off, 1 = step, 2 = waiting for step
 
 	int						mCursorNum;
-	SoundManager*			mSoundManager;
-#ifdef WIN32
-	HCURSOR					mHandCursor;
-	HCURSOR					mDraggingCursor;
-#endif
-	WidgetSafeDeleteList	mSafeDeleteList;
+	SoundManager*			        mSoundManager;
+        MemoryImage*                            mArrowCursor;
+	MemoryImage*				mHandCursor;
+	MemoryImage*			        mDraggingCursor;
+
+	WidgetSafeDeleteList	                mSafeDeleteList;
 	bool					mMouseIn;
 	bool					mRunning;
 	bool					mActive;
@@ -447,16 +447,16 @@ public:
 	virtual void			Unmute(bool autoMute = false);
 
 	void					StartLoadingThread();
-	virtual double			GetLoadingThreadProgress();
+	virtual double			        GetLoadingThreadProgress();
 
 	void					CopyToClipboard(const std::string& theString);
 	std::string				GetClipboard();
 
 	void					SetCursor(int theCursorNum);
-	int						GetCursor();
+	int				        GetCursor();
 	void					EnableCustomCursors(bool enabled);
-	virtual Image*		GetImage(const std::string& theFileName, bool commitBits = true);
-	virtual SharedImageRef	GetSharedImage(const std::string& theFileName, const std::string& theVariant = "", bool* isNew = NULL);
+	virtual Image*		                GetImage(const std::string& theFileName, bool commitBits = true);
+	virtual SharedImageRef	                GetSharedImage(const std::string& theFileName, const std::string& theVariant = "", bool* isNew = NULL);
 
 	void					CleanSharedImages();
 	void					PrecacheAdditive(MemoryImage* theImage);
