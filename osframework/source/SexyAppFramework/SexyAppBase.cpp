@@ -2783,15 +2783,21 @@ void SexyAppBase::ColorizeImage(Image* theImage, const Color& theColor)
 
 Image* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColor)
 {
-#ifdef WIN32
 	MemoryImage* aSrcMemoryImage = dynamic_cast<MemoryImage*>(theImage);
 
 	if (aSrcMemoryImage == NULL)
 		return NULL;
 
-	DDImage* anImage = new DDImage(mDDInterface);
-
-	anImage->Create(theImage->GetWidth(), theImage->GetHeight());
+	Image* anDImage = mDDInterface->CreateImage(this, theImage->GetWidth(),
+						    theImage->GetHeight());
+	if (!anDImage)
+		return NULL;
+	MemoryImage* anImage = dynamic_cast<MemoryImage*>(anDImage);
+	if (!anImage)
+	{
+		delete anDImage;
+		return NULL;
+	}
 
 	uint32* aSrcBits;
 	uint32* aDestBits;
@@ -2854,9 +2860,6 @@ Image* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColor)
 	anImage->BitsChanged();
 
 	return anImage;
-#else
-	return NULL;
-#endif
 }
 
 Image* SexyAppBase::CopyImage(Image* theImage, const Rect& theRect)

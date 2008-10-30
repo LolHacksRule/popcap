@@ -576,18 +576,15 @@ public:
 	bool					EraseFile(const std::string& theFileName);
 
 	// Misc methods
-	virtual void			DoMainLoop();
-	virtual bool			UpdateAppStep(bool* updated);
-	virtual bool			UpdateApp();
-	int						InitDDInterface();
+	virtual void				DoMainLoop();
+	virtual bool				UpdateAppStep(bool* updated);
+	virtual bool				UpdateApp();
+	int					InitDDInterface();
 	void					ClearUpdateBacklog(bool relaxForASecond = false);
 	bool					IsScreenSaver();
-	virtual bool			AppCanRestore();
+	virtual bool				AppCanRestore();
 
         static DWORD                            GetTickCount();
-#ifdef WIN32
-	static LRESULT CALLBACK	WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#endif
 };
 
 extern SexyAppBase* gSexyAppBase;
