@@ -18,6 +18,9 @@ protected:
 
 	void				DeleteAllNonSurfaceData();
 
+protected:
+	GLInterface*			mInterface;
+
 public:
         int                             mDirty;
 	bool				mSurfaceSet;
@@ -27,9 +30,6 @@ public:
 	bool				mWantDDSurface;
 	bool				mDrawToBits;
 	int				mLockCount;
-
-protected:
-	GLInterface*			mInterface;
 
 private:
 	void				Init();
