@@ -1747,7 +1747,7 @@ void MemoryImage::BltRotated(Image* theImage, float theX, float theY, const Rect
 	}
 }
 
-void MemoryImage::SlowStretchBlt(Image* theImage, const Rect& theDestRect, const FRect& theSrcRect, const Color& theColor, int theDrawMode)
+void MemoryImage::SlowStretchBlt(Image* theImage, const Rect& theDestRect, const FRect& theSrcRect, const Color& theColor, int theDrawMode, bool mirror)
 {
 	theImage->mDrawn = true;
 
@@ -1791,7 +1791,7 @@ void MemoryImage::SlowStretchBlt(Image* theImage, const Rect& theDestRect, const
 }
 
 //TODO: Make the special version
-void MemoryImage::FastStretchBlt(Image* theImage, const Rect& theDestRect, const FRect& theSrcRect, const Color& theColor, int theDrawMode)
+void MemoryImage::FastStretchBlt(Image* theImage, const Rect& theDestRect, const FRect& theSrcRect, const Color& theColor, int theDrawMode, bool mirror)
 {
 	theImage->mDrawn = true;
 
@@ -1801,6 +1801,9 @@ void MemoryImage::FastStretchBlt(Image* theImage, const Rect& theDestRect, const
 	{
 		uint32* aDestPixelsRow = ((uint32*) GetBits()) + (theDestRect.mY * mWidth) + theDestRect.mX;
 		uint32* aSrcPixelsRow = (uint32*) aSrcMemoryImage->GetBits();;
+
+		if (mirror)
+			aDestPixelsRow += theDestRect.mWidth - 1;
 
 		double aSrcY = theSrcRect.mY;
 
@@ -1835,11 +1838,13 @@ void MemoryImage::FastStretchBlt(Image* theImage, const Rect& theDestRect, const
 
 						int oma = 256 - a;
 
-						*(aDestPixels++) = (aNewDestAlpha << 24) |
+						*(aDestPixels) = (aNewDestAlpha << 24) |
 							((((dest & 0x0000FF) * oma) >> 8) + (((src & 0x0000FF) * a) >> 8) & 0x0000FF) |
 							((((dest & 0x00FF00) * oma) >> 8) + (((src & 0x00FF00) * a) >> 8) & 0x00FF00) |
 							((((dest & 0xFF0000) * oma) >> 8) + (((src & 0xFF0000) * a) >> 8) & 0xFF0000);
 					}
+					if (mirror)
+						aDestPixels--;
 					else
 						aDestPixels++;
 				}
@@ -2031,20 +2036,16 @@ void MemoryImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, con
 {
 	theImage->mDrawn = true;
 
-	DBG_ASSERTE((theColor.mRed >= 0) && (theColor.mRed <= 255));
-	DBG_ASSERTE((theColor.mGreen >= 0) && (theColor.mGreen <= 255));
-	DBG_ASSERTE((theColor.mBlue >= 0) && (theColor.mBlue <= 255));
-	DBG_ASSERTE((theColor.mAlpha >= 0) && (theColor.mAlpha <= 255));
+	Rect aDestRect;
+	FRect aSrcRect;
 
-	switch (theDrawMode)
-	{
-	case Graphics::DRAWMODE_NORMAL:
-		NormalStretchBltMirror(theImage, theDestRect, theSrcRect, theClipRect, theColor, fastStretch);
-		break;
-	case Graphics::DRAWMODE_ADDITIVE:
-		AdditiveStretchBltMirror(theImage, theDestRect, theSrcRect, theClipRect, theColor, fastStretch);
-		break;
-	}
+	if (!StretchBltClipHelper(theSrcRect, theClipRect, theDestRect, aSrcRect, aDestRect))
+		return;
+
+	if (fastStretch)
+		FastStretchBlt(theImage, aDestRect, aSrcRect, theColor, theDrawMode, true);
+	else
+		SlowStretchBlt(theImage, aDestRect, aSrcRect, theColor, theDrawMode, true);
 }
 
 bool MemoryImage::Palletize()
