@@ -19,8 +19,10 @@ class SexyAppBase;
 class MemoryImage : public Image
 {
 public:
+	SexyAppBase*			        mApp;
+
 	uint32*					mBits;
-	int						mBitsChangedCount;
+	int					mBitsChangedCount;
 	void*					mD3DData;
 	DWORD					mD3DFlags;	// see D3DInterface.h for possible values
 
@@ -39,7 +41,6 @@ public:
 	uchar*					mRLAdditiveData;
 
 	bool					mBitsChanged;
-	SexyAppBase*			mApp;
 
 private:
 	void					Init();
