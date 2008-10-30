@@ -22,6 +22,8 @@ protected:
 public:
 	DFBInterface*			mInterface;
         IDirectFBSurface*               mSurface;
+        DFBSurfaceCapabilities          mCaps;
+        int                             mDirty;
 	bool				mSurfaceSet;
 	bool				mNoLock;
 	bool					mVideoMemory;
