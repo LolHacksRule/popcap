@@ -22,6 +22,8 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
 srcs += ["DFBImage.cpp", "DFBFont.cpp", "DFBInterface.cpp"]
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
 env.ParseConfig('pkg-config directfb --cflags --libs')
+
+srcs += ["GLImage.cpp", "GLInterface.cpp"]
 env.AppendUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                             os.path.join('..', 'PakLib')],
                  LIBPATH = [os.path.join('..', 'ImageLib'),
