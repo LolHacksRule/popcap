@@ -50,6 +50,7 @@ enum FlipFlags {
     FLIP_NONE      = 0,
     FLIP_WAIT      = 1 << 0,
     FLIP_ONSYNC    = 1 << 1,
+    FLIP_BLIT      = 1 << 2,
     FLIP_WAIT_SYNC = FLIP_WAIT | FLIP_ONSYNC
 };
 
