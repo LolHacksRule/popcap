@@ -114,6 +114,7 @@ public:
         int                                     mMouseY;
 
         IDirectFBDisplayLayer                 * mLayer;
+        IDirectFBWindow                       * mWindow;
 };
 
 }

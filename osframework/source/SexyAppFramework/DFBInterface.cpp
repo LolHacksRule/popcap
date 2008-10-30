@@ -46,6 +46,7 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 	mMouseX = 0;
 	mMouseY = 0;
 	mLayer = NULL;
+	mWindow = NULL;
 }
 
 DFBInterface::~DFBInterface()
@@ -74,16 +75,20 @@ int DFBInterface::Init(void)
 {
 	Cleanup();
 
+	DFBResult ret;
 	AutoCrit anAutoCrit(mCritSect);
 	mInitialized = false;
 
 	if (!mDFB) {
 		DirectFBInit(NULL, NULL);
-		DirectFBCreate(&mDFB);
+		ret = DirectFBCreate(&mDFB);
+		DBG_ASSERT(ret == DFB_OK);
 		//mDFB->SetCooperativeLevel(mDFB, DFSCL_FULLSCREEN);
+		//mDFB->SetCooperativeLevel(mDFB, DFSCL_EXCLUSIVE);
 	}
 
-        mDFB->GetDisplayLayer (mDFB, DLID_PRIMARY, &mLayer);
+        ret = mDFB->GetDisplayLayer (mDFB, DLID_PRIMARY, &mLayer);
+	DBG_ASSERT (ret == DFB_OK);
 
 	DFBDisplayLayerConfig layer_config;
 	mLayer->GetConfiguration (mLayer, &layer_config);
@@ -93,14 +98,45 @@ int DFBInterface::Init(void)
 	layer_config.buffermode = DLBM_BACKVIDEO;
 	layer_config.options = DLOP_ALPHACHANNEL;
 
-	mLayer->SetConfiguration (mLayer, &layer_config);
-	mLayer->SetCooperativeLevel (mLayer, DLSCL_ADMINISTRATIVE);
-	mLayer->EnableCursor (mLayer, 1);
+	ret = mLayer->SetConfiguration (mLayer, &layer_config);
+	/* DBG_ASSERT (ret == DFB_OK); */
 
-	IDirectFBSurface * surface;
+	DFBDisplayLayerDescription layer_desc;
+	mLayer->GetDescription (mLayer, &layer_desc);
+	printf ("Display layer name: %s\n", layer_desc.name);
+	printf ("\t width = %d\n", layer_config.width);
+	printf ("\t height = %d\n", layer_config.height);
+
+	ret = mLayer->SetCooperativeLevel (mLayer, DLSCL_ADMINISTRATIVE);
+	DBG_ASSERT (ret == DFB_OK);
+	ret = mLayer->EnableCursor (mLayer, 1);
+
+	IDirectFBSurface * surface = 0;
+
+#if 1
+	DFBWindowDescription window_desc;
+
+	window_desc.flags =
+		(DFBWindowDescriptionFlags)(DWDESC_CAPS | DWDESC_WIDTH |  DWDESC_HEIGHT |
+					    DWDESC_POSX | DWDESC_POSY);
+	window_desc.caps = (DFBWindowCapabilities)(DWCAPS_ALPHACHANNEL | DWCAPS_DOUBLEBUFFER |
+						   DWCAPS_NODECORATION);
+	window_desc.width = layer_config.width;
+	window_desc.height = layer_config.height;
+	window_desc.posx = 0;
+	window_desc.posy = 0;
+
+	ret = mLayer->CreateWindow (mLayer, &window_desc, &mWindow);
+	DBG_ASSERT (ret == DFB_OK);
+	mWindow->SetOpacity (mWindow, 255);
+	mWindow->RaiseToTop (mWindow);
+
+	ret = mWindow->GetSurface (mWindow, &surface);
+	DBG_ASSERT (ret == DFB_OK);
+#endif
+
 	DFBSurfaceDescription surface_desc;
 	int width, height;
-	int ret;
 
 #if 0
 	surface_desc.flags = DSDESC_CAPS;
@@ -114,13 +150,17 @@ int DFBInterface::Init(void)
 		DBG_ASSERT (ret == DFB_OK);
 	}
 #else
-	mLayer->GetSurface (mLayer, &surface);
+	if (!surface)
+		ret = mLayer->GetSurface (mLayer, &surface);
+	DBG_ASSERT(surface != NULL);
 #endif
 	surface->GetSize (surface, &width, &height);
-	surface->Clear (surface, 0, 0, 0, 0);
+	//surface->Clear (surface, 0, 0, 0, 0);
 	mPrimarySurface = surface;
 	mWidth = width;
 	mHeight = height;
+	mApp->mWidth = width;
+	mApp->mHeight = height;
 
 	mScreenImage = new DFBImage(surface, this);
 
@@ -131,8 +171,11 @@ int DFBInterface::Init(void)
 	ret = mInput->CreateEventBuffer (mInput, &mBuffer);
 	DBG_ASSERT (ret == DFB_OK);
 #endif
-	ret = mDFB->CreateInputEventBuffer (mDFB, DICAPS_ALL, DFB_TRUE,
-					    &mBuffer);
+	if (mWindow)
+		ret = mWindow->CreateEventBuffer (mWindow, &mBuffer);
+	else
+		ret = mDFB->CreateInputEventBuffer (mDFB, DICAPS_ALL, DFB_TRUE,
+						    &mBuffer);
 	DBG_ASSERT (ret == DFB_OK);
 
 	mInitCount++;
@@ -215,8 +258,12 @@ void DFBInterface::Cleanup()
 	if (mPrimarySurface)
 		mPrimarySurface = NULL;
 
+	if (mWindow)
+		mWindow->Release (mWindow);
+	mWindow = NULL;
+
 	if (mLayer)
-		mLayer->Release(mLayer);
+		mLayer->Release (mLayer);
 	mLayer = NULL;
 }
 
@@ -238,6 +285,7 @@ bool DFBInterface::SetCursorImage(Image* theImage)
 {
 	AutoCrit anAutoCrit(mCritSect);
 
+	printf ("SetCursorImage: %p\n", theImage);
 	if (mCursorImage != theImage)
 	{
 		// Wait until next Redraw or cursor move to draw new cursor
@@ -252,6 +300,8 @@ void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
 	mNextCursorX = theCursorX;
 	mNextCursorY = theCursorY;
+
+	printf ("SetCursorPos: (%d, %d)\n", theCursorX, theCursorY);
 
 	if (mInRedraw)
 		return;
@@ -340,16 +390,17 @@ bool DFBInterface::GetEvent(struct Event &event)
 		return false;
 
  	DFBEvent dfb_event;
-	mBuffer->GetEvent(mBuffer, &dfb_event);
+	if (mBuffer->GetEvent(mBuffer, &dfb_event) != DFB_OK)
+		return false;
 
-	printf ("clazz %d\n", (int)dfb_event.clazz);
+	//printf ("clazz %d\n", (int)dfb_event.clazz);
 	switch (dfb_event.clazz) {
 	case DFEC_INPUT:
 		DFBInputEvent * e;
 
 		e = &dfb_event.input;
 		event.type = EVENT_NONE;
-		printf ("type %d\n", (int)e->type);
+		//printf ("type %d\n", (int)e->type);
 		switch (e->type) {
 		case DIET_BUTTONPRESS:
 			event.x = mMouseX;
@@ -417,7 +468,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			const DFBInputDeviceKeyIdentifier id = e->key_id;
 			const DFBInputDeviceKeySymbol sym = e->key_symbol;
 
-			printf ("id = %d symbol = %d\n", id, sym);
+			//printf ("id = %d symbol = %d\n", id, sym);
 			if (e->type == DIET_KEYPRESS)
 				event.type = EVENT_KEY_DOWN;
 			else
@@ -460,6 +511,107 @@ bool DFBInterface::GetEvent(struct Event &event)
 			break;
 		}
 		break;
+	case DFEC_WINDOW:
+	{
+		DFBWindowEvent * e;
+
+		e = &dfb_event.window;
+		event.type = EVENT_NONE;
+		//printf ("type %d\n", (int)e->type);
+		switch (e->type) {
+		case DWET_BUTTONDOWN:
+			event.x = mMouseX;
+			event.y = mMouseY;
+			event.type = EVENT_MOUSE_BUTTON_PRESS;
+			switch (e->button) {
+			case DIBI_LEFT:
+				event.button = 1;
+				break;
+			case DIBI_MIDDLE:
+				event.button = 3;
+				break;
+			case DIBI_RIGHT:
+				event.button = 2;
+				break;
+			default:
+				break;
+			}
+			break;
+		case DWET_BUTTONUP:
+			event.x = mMouseX;
+			event.y = mMouseY;
+			event.type = EVENT_MOUSE_BUTTON_RELEASE;
+			switch (e->button) {
+			case DIBI_LEFT:
+				event.button = 1;
+				break;
+			case DIBI_MIDDLE:
+				event.button = 3;
+				break;
+			case DIBI_RIGHT:
+				event.button = 2;
+				break;
+			default:
+				break;
+			}
+			break;
+		case DWET_MOTION:
+			mMouseX = e->cx;
+			mMouseY = e->cy;
+			event.x = mMouseX;
+			event.y = mMouseY;
+			event.type = EVENT_MOUSE_MOTION;
+			break;
+		case DWET_KEYDOWN:
+		case DWET_KEYUP:
+		{
+			const DFBInputDeviceKeyIdentifier id = e->key_id;
+			const DFBInputDeviceKeySymbol sym = e->key_symbol;
+
+			//printf ("id = %d symbol = %d\n", id, sym);
+			if (e->type == DWET_KEYDOWN)
+				event.type = EVENT_KEY_DOWN;
+			else
+				event.type = EVENT_KEY_UP;
+			if (id == DIKI_UP) {
+				event.keyCode = (int)KEYCODE_UP;
+			} else if(id ==  DIKI_DOWN) {
+				event.keyCode = (int)KEYCODE_DOWN;
+			} else if (id ==  DIKI_LEFT) {
+				event.keyCode = (int)KEYCODE_LEFT;
+			} else if (id == DIKI_RIGHT) {
+				event.keyCode = (int)KEYCODE_RIGHT;
+			} else if (id == DIKI_ENTER) {
+				event.keyCode = (int)KEYCODE_RETURN;
+			} else if (id == DIKI_SPACE) {
+				event.keyCode = (int)KEYCODE_SPACE;
+			} else if (id == DIKI_BACKSPACE) {
+				event.keyCode = (int)KEYCODE_BACK;
+			} else if (id == DIKI_ESCAPE) {
+				if (e->modifiers & (DIMM_SHIFT | DIMM_CONTROL) == (DIMM_SHIFT | DIMM_CONTROL))
+					event.type = EVENT_QUIT;
+				else
+					event.keyCode = (int)KEYCODE_ESCAPE;
+			} else if (id == DIKI_SHIFT_L || id == DIKI_SHIFT_R) {
+				event.keyCode = (int)KEYCODE_SHIFT;
+			} else if (id == DIKI_CONTROL_L || id == DIKI_CONTROL_R) {
+				event.keyCode = (int)KEYCODE_CONTROL;
+			} else if (id >= DIKI_A && id < DIKI_Z) {
+				event.keyCode = (int)('a' + id - DIKI_A);
+				event.keyChar = (int)sym;
+			} else if (id >= DIKI_0 && id < DIKI_9) {
+				event.keyCode = (int)('0' + id - DIKI_0);
+				event.keyChar = (int)sym;
+			} else {
+				event.type = EVENT_NONE;
+			}
+			break;
+		}
+		default:
+			break;
+		}
+		break;
+	}
 	case DIET_UNKNOWN:
 	default:
 		event.type = EVENT_NONE;
