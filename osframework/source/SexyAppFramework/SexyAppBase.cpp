@@ -1066,7 +1066,7 @@ bool SexyAppBase::DrawDirtyStuff()
 	mIsDrawing = false;
 
 	if ((drewScreen || (aStartTime - mLastDrawTick >= 1000) || (mCustomCursorDirty)) &&
-		((int) (aStartTime - mNextDrawTick) >= 0))
+	    ((int) (aStartTime - mNextDrawTick) >= 0))
 	{
 		mLastDrawWasEmpty = false;
 
@@ -1108,22 +1108,20 @@ bool SexyAppBase::DrawDirtyStuff()
 
 		mScreenBltTime = aEndTime - aPreScreenBltTime;
 
-#ifdef _DEBUG
-		/*if (mFPSTime >= 5000) // Show FPS about every 5 seconds
+		if (0 && mFPSTime >= 5000) // Show FPS about every 5 seconds
 		{
 			uint32 aTickNow = GetTickCount();
 
-			OutputDebugString(StrFormat(_S("Theoretical FPS: %d\r\n"), (int) (mFPSCount * 1000 / mFPSTime)).c_str());
-			OutputDebugString(StrFormat(_S("Actual      FPS: %d\r\n"), (mFPSFlipCount * 1000) / max((aTickNow - mFPSStartTick), 1)).c_str());
-			OutputDebugString(StrFormat(_S("Dirty Rate     : %d\r\n"), (mFPSDirtyCount * 1000) / max((aTickNow - mFPSStartTick), 1)).c_str());
+			printf("Theoretical FPS: %d\n", (int) (mFPSCount * 1000 / mFPSTime));
+			printf("Actual      FPS: %d\n", (mFPSFlipCount * 1000) / std::max((aTickNow - mFPSStartTick), 1U));
+			printf("Dirty Rate     : %d\n", (mFPSDirtyCount * 1000) / std::max((aTickNow - mFPSStartTick), 1U));
 
 			mFPSTime = 0;
 			mFPSCount = 0;
 			mFPSFlipCount = 0;
 			mFPSStartTick = aTickNow;
 			mFPSDirtyCount = 0;
-		}*/
-#endif
+		}
 
 		if ((mLoadingThreadStarted) && (!mLoadingThreadCompleted))
 		{
@@ -1682,6 +1680,8 @@ void SexyAppBase::SetAlphaDisabled(bool isDisabled)
 
 void SexyAppBase::EnforceCursor()
 {
+	if (!mDDInterface)
+		return;
 }
 
 void SexyAppBase::ProcessSafeDeleteList()
@@ -2196,6 +2196,7 @@ int SexyAppBase::InitDDInterface()
 	DeleteNativeImageData();
 
 	mDDInterface->Init();
+
 	DemoSyncRefreshRate();
 	PostDDInterfaceInitHook();
 	return 0;
@@ -3247,7 +3248,6 @@ SharedImageRef SexyAppBase::GetSharedImage(const std::string& theFileName, const
 	std::string anUpperFileName = StringToUpper(theFileName);
 	std::string anUpperVariant = StringToUpper(theVariant);
 
-	std::cout<<"GetSharedImage:"<<theFileName<<std::endl;
 	std::pair<SharedImageMap::iterator, bool> aResultPair;
 	SharedImageRef aSharedImageRef;
 
