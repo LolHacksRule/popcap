@@ -386,7 +386,7 @@ void DFBImage::NormalBlt(Image* theImage, int theX, int theY, const Rect& theSrc
 		if (theColor.GetAlpha() != 0xff)
 			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_BLEND_COLORALPHA);
 	} else {
-		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE);
+		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE | DSBLIT_BLEND_COLORALPHA);
 	}
 	dst->SetBlittingFlags(dst, flags);
 	dst->SetColor(dst,
@@ -521,14 +521,17 @@ void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcR
 		if (theColor.GetAlpha() != 0xff)
 			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_BLEND_COLORALPHA);
 	} else {
-		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE);
+		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE | DSBLIT_BLEND_COLORALPHA);
 	}
 	dst->SetBlittingFlags(dst, flags);
+        if (theDrawMode == Graphics::DRAWMODE_ADDITIVE)
+            dst->SetDstBlendFunction (dst, DSBF_ONE);
 	dst->SetColor(dst,
 		      theColor.GetRed(), theColor.GetGreen(),
 		      theColor.GetBlue(), theColor.GetAlpha());
 	dst->SetClip(dst, &clip_reg);
 	dst->Blit(dst, src, &src_rect, theX, theY);
+	dst->SetPorterDuff(dst, DSPD_NONE);
 	dst->SetClip(dst, NULL);
 	mDirty |= SURFACE_DIRTY;
 }
