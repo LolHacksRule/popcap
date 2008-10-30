@@ -195,6 +195,7 @@ public:
 	std::string				mRegisterLink;
 	std::string				mProductVersion;
 	Image*					mCursorImages[NUM_CURSORS];
+        Point                                   mCursorHots[NUM_CURSORS];
 #ifdef WIN32
 	HCURSOR					mOverrideCursor;
 #endif
@@ -245,6 +246,9 @@ public:
         MemoryImage*                            mArrowCursor;
 	MemoryImage*				mHandCursor;
 	MemoryImage*			        mDraggingCursor;
+        Point                                   mArrowCursorHot;
+        Point                                   mHandCursorHot;
+        Point                                   mDraggingCursorHot;
 
 	WidgetSafeDeleteList	                mSafeDeleteList;
 	bool					mMouseIn;
@@ -455,6 +459,8 @@ public:
 	void					SetCursor(int theCursorNum);
 	int				        GetCursor();
 	void					EnableCustomCursors(bool enabled);
+        MemoryImage*                            CreateCursorFromAndMask(unsigned char * data, unsigned char * mask,
+                                                                        int width, int height);
 	virtual Image*		                GetImage(const std::string& theFileName, bool commitBits = true);
 	virtual SharedImageRef	                GetSharedImage(const std::string& theFileName, const std::string& theVariant = "", bool* isNew = NULL);
 

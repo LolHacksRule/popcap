@@ -94,7 +94,7 @@ public:
 
         virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
 
- private:
+ public:
         IDirectFBSurface*               EnsureSurface();
 };
 

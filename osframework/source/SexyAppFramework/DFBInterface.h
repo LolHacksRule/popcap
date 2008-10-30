@@ -69,7 +69,9 @@ public:
 	int						mNextCursorY;
 	int						mCursorX;
 	int						mCursorY;
-	Image*					mCursorImage;
+	IDirectFBSurface*			mCursorImage;
+        int                                     mCursorHotX;
+        int                                     mCursorHotY;
 	bool					mHasOldCursorArea;
 	DFBImage*				mOldCursorAreaImage;
 	DFBImage*				mNewCursorAreaImage;

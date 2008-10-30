@@ -47,6 +47,9 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 	mMouseY = 0;
 	mLayer = NULL;
 	mWindow = NULL;
+	mCursorImage = NULL;
+	mCursorHotX = 0;
+	mCursorHotY = 0;
 }
 
 DFBInterface::~DFBInterface()
@@ -237,17 +240,9 @@ void DFBInterface::Cleanup()
 	if (mBuffer)
 		mBuffer->Release(mBuffer);
 
-	if (mOldCursorAreaImage != NULL)
-	{
-		delete mOldCursorAreaImage;
-		mOldCursorAreaImage = NULL;
-	}
-
-	if (mNewCursorAreaImage != NULL)
-	{
-		delete mNewCursorAreaImage;
-		mNewCursorAreaImage = NULL;
-	}
+	if (mCursorImage)
+		mCursorImage->Release(mCursorImage);
+	mCursorImage = NULL;
 
 	if (mScreenImage != NULL)
 	{
@@ -283,6 +278,19 @@ bool DFBInterface::Redraw(Rect* theClipRect)
 
 bool DFBInterface::EnableCursor(bool enable)
 {
+	printf ("EnableCursor: %s\n", enable ? "true" : "false");
+
+	if (mWindow)
+	{
+		mWindow->SetCursorShape (mWindow, NULL, 0, 0);
+		return true;
+	}
+	else if (mLayer)
+	{
+		mLayer->EnableCursor (mLayer, enable);
+		return true;
+	}
+
 	return false;
 }
 
@@ -291,14 +299,23 @@ bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 	AutoCrit anAutoCrit(mCritSect);
 
 	printf ("SetCursorImage: %p\n", theImage);
-	if (mCursorImage != theImage)
-	{
-		// Wait until next Redraw or cursor move to draw new cursor
-		mCursorImage = theImage;
-		return true;
-	}
-	else
-		return false;
+	if (mCursorImage)
+		mCursorImage->Release(mCursorImage);
+	mCursorImage = NULL;
+
+	DFBImage * anImage = dynamic_cast<DFBImage*>(theImage);
+	if (anImage)
+		mCursorImage = anImage->EnsureSurface();
+	if (mCursorImage)
+		mCursorImage->AddRef(mCursorImage);
+	mCursorHotX = theHotX;
+	mCursorHotY = theHotY;
+
+	if (mWindow)
+		mWindow->SetCursorShape (mWindow, mCursorImage,
+					 mCursorHotX, mCursorHotY);
+
+	return true;
 }
 
 void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
@@ -308,20 +325,12 @@ void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 
 	printf ("SetCursorPos: (%d, %d)\n", theCursorX, theCursorY);
 
-	if (mInRedraw)
-		return;
-
 	AutoCrit anAutoCrit(mCritSect);
 
-	if (mHasOldCursorArea)
-	{
-		;
-	}
-	else
-	{
-		mCursorX = theCursorX;
-		mCursorY = theCursorY;
-	}
+	mCursorX = theCursorX;
+	mCursorY = theCursorY;
+	if (mLayer)
+		mLayer->WarpCursor (mLayer, mCursorX, mCursorY);
 }
 
 IDirectFBSurface* DFBInterface::CreateDFBSurface(int width, int height)
