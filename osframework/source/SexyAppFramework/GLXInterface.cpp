@@ -7,6 +7,7 @@
 #include "Debug.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
+#include "VideoFactory.h"
 
 //#include <GL/glu.h>
 #include <X11/keysym.h>
@@ -294,3 +295,19 @@ void GLXInterface::SwapBuffers()
 	if (mDpy && mWindow)
 		glXSwapBuffers (mDpy, mWindow);
 }
+
+class GLXVideoDriver: public VideoDriver {
+public:
+	GLXVideoDriver ()
+	 : VideoDriver("GLXInterface", 0)
+	{
+	}
+
+	NativeDisplay* Create (SexyAppBase * theApp)
+	{
+		return new GLXInterface (theApp);
+        }
+};
+
+static GLXVideoDriver aGLXVideoDriver;
+static VideoDriverRegistor aGLXVideoDriverRegistor (&aGLXVideoDriver);
