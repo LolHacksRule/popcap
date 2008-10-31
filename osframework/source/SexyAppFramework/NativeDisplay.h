@@ -23,6 +23,7 @@ enum EventType {
     EVENT_MOUSE_WHELL_DOWN,
     EVENT_MOUSE_MOTION,
     EVENT_ACTIVE,
+    EVENT_EXPOSE,
     EVENT_QUIT
 };
 
