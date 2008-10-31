@@ -117,7 +117,7 @@ static GLuint CreateTexture(GLImage* theImage, int x, int y, int width, int heig
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, 1);
 
-	uint32* bits = theImage->GetBits();
+	uint32* bits = theImage->GetBits ();
 	uint32* copy = new uint32[w * h];
 	if (copy) {
 		int i;
@@ -175,8 +175,8 @@ void GLTexture::ReleaseTextures ()
 void GLTexture::CreateTextureDimensions (GLImage* theImage)
 {
 	GLInterface* interface = theImage->mInterface;
-	int aWidth = theImage->GetWidth();
-	int aHeight = theImage->GetHeight();
+	int aWidth = theImage->GetWidth ();
+	int aHeight = theImage->GetHeight ();
 	int i;
 
 	// Calculate inner block sizes
@@ -187,7 +187,7 @@ void GLTexture::CreateTextureDimensions (GLImage* theImage)
 	interface->CalulateBestTexDimensions (mTexBlockWidth, mTexBlockHeight, false, usePOT);
 
 	// Calculate right boundary block sizes
-	int aRightWidth = aWidth%mTexBlockWidth;
+	int aRightWidth = aWidth % mTexBlockWidth;
 	int aRightHeight = mTexBlockHeight;
 	if (aRightWidth > 0)
 		interface->CalulateBestTexDimensions (aRightWidth, aRightHeight, true, usePOT);
@@ -238,8 +238,8 @@ void GLTexture::CreateTextureDimensions (GLImage* theImage)
 	}
 
 	// Assign corner block
-	mTextures.back().mWidth = aCornerWidth;
-	mTextures.back().mHeight = aCornerHeight;
+	mTextures.back ().mWidth = aCornerWidth;
+	mTextures.back ().mHeight = aCornerHeight;
 
 	mMaxTotalU = aWidth / (float)mTexBlockWidth;
 	mMaxTotalV = aHeight / (float)mTexBlockHeight;
@@ -382,8 +382,8 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 		dstX = theX;
 		while (srcX < srcRight)
 		{
-			aWidth = srcRight-srcX;
-			aHeight = srcBottom-srcY;
+			aWidth = srcRight - srcX;
+			aHeight = srcBottom - srcY;
 
 			GLuint aTexture = GetTexture (srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
 
@@ -393,13 +393,13 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
                         glBindTexture (GL_TEXTURE_2D, aTexture);
                         glBegin (GL_TRIANGLE_STRIP);
                         glTexCoord2f (u1, v1);
-                        glVertex2f (x,y);
+                        glVertex2f (x, y);
                         glTexCoord2f (u1, v2);
-                        glVertex2f (x,y + aHeight);
+                        glVertex2f (x, y + aHeight);
                         glTexCoord2f (u2, v1);
-                        glVertex2f (x + aWidth,y);
+                        glVertex2f (x + aWidth, y);
                         glTexCoord2f (u2, v2);
-                        glVertex2f (x + aWidth,y + aHeight);
+                        glVertex2f (x + aWidth, y + aHeight);
                         glEnd ();
 
 			srcX += aWidth;
@@ -552,13 +552,13 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 
 void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mInterface->GetScreenImage () != this)
 	{
-		MemoryImage::FillRect(theRect, theColor, theDrawMode);
+		MemoryImage::FillRect (theRect, theColor, theDrawMode);
 		return;
 	}
 
-	glDisable(GL_TEXTURE_2D);
+	glDisable (GL_TEXTURE_2D);
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -573,10 +573,10 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 
 	SexyGLVertex aVertex[4] =
 	{
-          { 0, 0, aColor, x,	      y,           0},
-          { 0, 0, aColor, x,	      y + aHeight, 0},
-          { 0, 0, aColor, x + aWidth, y,           0},
-          { 0, 0, aColor, x + aWidth, y + aHeight, 0}
+		{ 0, 0, aColor, x,	      y,           0},
+		{ 0, 0, aColor, x,	      y + aHeight, 0},
+		{ 0, 0, aColor, x + aWidth, y,           0},
+		{ 0, 0, aColor, x + aWidth, y + aHeight, 0}
 	};
 
         glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
@@ -600,9 +600,9 @@ void GLImage::AdditiveDrawLine(double theStartX, double theStartY, double theEnd
 
 void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mInterface->GetScreenImage () != this)
 	{
-		MemoryImage::DrawLine(theStartX, theStartY, theEndX, theEndY, theColor, theDrawMode);
+		MemoryImage::DrawLine (theStartX, theStartY, theEndX, theEndY, theColor, theDrawMode);
 		return;
 	}
 
@@ -643,9 +643,9 @@ void GLImage::AdditiveDrawLineAA(double theStartX, double theStartY, double theE
 
 void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mInterface->GetScreenImage () != this)
 	{
-		MemoryImage::DrawLineAA(theStartX, theStartY, theEndX, theEndY, theColor, theDrawMode);
+		MemoryImage::DrawLineAA (theStartX, theStartY, theEndX, theEndY, theColor, theDrawMode);
 		return;
 	}
 
@@ -688,7 +688,7 @@ void GLImage::Create(int theWidth, int theHeight)
 
 	mBits = NULL;
 
-	BitsChanged();
+	BitsChanged ();
 }
 
 void GLImage::BitsChanged()
@@ -698,7 +698,7 @@ void GLImage::BitsChanged()
 
 uint32* GLImage::GetBits()
 {
-	uint32* bits = MemoryImage::GetBits();
+	uint32* bits = MemoryImage::GetBits ();
 
 	if (!bits)
 		return 0;
