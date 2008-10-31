@@ -273,6 +273,8 @@ void DFBImage::Create(int theWidth, int theHeight)
 
 	mWidth = theWidth;
 	mHeight = theHeight;
+	mNumRows = theWidth;
+	mNumCols = theHeight;
 
 	mBits = NULL;
 
