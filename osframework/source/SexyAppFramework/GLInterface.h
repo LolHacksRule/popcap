@@ -53,6 +53,9 @@ public:
         GLint                                   mMinTextureHeight;
         GLint                                   mMaxTextureWidth;
         GLint                                   mMaxTextureHeight;
+        GLint                                   mGoodTextureSize[8096];
+        GLboolean                               mTextureNPOT;
+        const char*                             mGLExtensions;
 
 public:
 	GLInterface(SexyAppBase* theApp);
@@ -66,6 +69,10 @@ public:
         virtual void                            InitGL();
 
         virtual bool                            Redraw(Rect* theClipRect);
+
+        void                                    GenGoodTexSize();
+        void                                    CalulateBestTexDimensions (int & theWidth, int & theHeight,
+                                                                           bool isEdge, bool usePOT);
 };
 
 }
