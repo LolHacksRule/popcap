@@ -118,14 +118,30 @@ static GLuint CreateTexture(GLImage* theImage, int x, int y, int width, int heig
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, 1);
 
 	uint32* bits = theImage->GetBits();
-	glTexImage2D (GL_TEXTURE_2D,
-		      0,
-		      GL_RGBA,
-		      w, h,
-		      0,
-		      GL_BGRA,
-		      GL_UNSIGNED_BYTE,
-		      bits);
+	uint32* copy = new uint32[w * h];
+	if (copy) {
+		int i;
+
+		int aWidth = std::min (w, (theImage->GetWidth() - x));
+		int aHeight = std::min (h, (theImage->GetHeight() - y));
+		int imageWidth = theImage->GetWidth();
+		uint32 * dst = copy;
+		uint32 * src = bits + y * imageWidth + x;
+		for (i = 0; i < aHeight; i++) {
+			memcpy (dst, src, aWidth * 4);
+			dst += w;
+			src += imageWidth;
+		}
+		glTexImage2D (GL_TEXTURE_2D,
+			      0,
+			      GL_RGBA,
+			      w, h,
+			      0,
+			      GL_BGRA,
+			      GL_UNSIGNED_BYTE,
+			      copy);
+		delete [] copy;
+	}
 
 	return texture;
 }
@@ -615,7 +631,29 @@ void GLImage::AdditiveDrawLineAA(double theStartX, double theStartY, double theE
 
 void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
-	TRACE_THIS();
+        glDisable (GL_TEXTURE_2D);
+
+	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	else
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+
+	float x1, y1, x2, y2;
+	SexyRGBA aColor = theColor.ToRGBA ();
+
+	x1 = theStartX;
+	y1 = theStartY;
+	x2 = theEndX;
+	y2 = theEndY;
+
+        glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+
+        glBegin (GL_LINE_STRIP);
+
+        glVertex2f (x1, y1);
+        glVertex2f (x2, y2);
+
+        glEnd ();
 }
 
 void GLImage::CommitBits()
@@ -718,6 +756,16 @@ void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRe
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
         if (srcImage)
  		return;
+
+	srcImage->EnsureTexture();
+	if (!srcImage->mTexture)
+		return;
+
+	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	else
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	srcImage->mTexture->Blt (theX, theY, theSrcRect, theColor);
 }
 
 void GLImage::BltRotated(Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
