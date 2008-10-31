@@ -1196,7 +1196,7 @@ void MemoryImage::DeleteNativeData()
 
 void MemoryImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits)
 {
-	if (theBits != mBits)
+	if (theBits != mBits || theWidth != mWidth || theHeight != mHeight)
 	{
 		delete [] mColorIndices;
 		mColorIndices = NULL;
