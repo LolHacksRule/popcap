@@ -552,6 +552,12 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 
 void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
 {
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::FillRect(theRect, theColor, theDrawMode);
+		return;
+	}
+
 	glDisable(GL_TEXTURE_2D);
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
@@ -594,6 +600,12 @@ void GLImage::AdditiveDrawLine(double theStartX, double theStartY, double theEnd
 
 void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::DrawLine(theStartX, theStartY, theEndX, theEndY, theColor, theDrawMode);
+		return;
+	}
+
         glDisable (GL_TEXTURE_2D);
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
@@ -631,6 +643,12 @@ void GLImage::AdditiveDrawLineAA(double theStartX, double theStartY, double theE
 
 void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::DrawLineAA(theStartX, theStartY, theEndX, theEndY, theColor, theDrawMode);
+		return;
+	}
+
         glDisable (GL_TEXTURE_2D);
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
@@ -729,6 +747,12 @@ void GLImage::AdditiveBltMirror(Image* theImage, int theX, int theY, const Rect&
 
 void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
 {
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::Blt(theImage, theX, theY, theSrcRect, theColor, theDrawMode);
+		return;
+	}
+
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
 	if (!srcImage)
 		return;
