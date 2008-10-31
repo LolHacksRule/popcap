@@ -31,6 +31,54 @@ typedef struct {
 } SexyGLVertex;
 
 namespace Sexy {
+struct GLTextureBlock
+{
+	GLuint    mTexture;
+	GLshort   mWidth;
+        GLshort   mHeight;
+};
+
+class GLTexture
+{
+public:
+        typedef std::vector<GLTextureBlock> TextureVector;
+
+        TextureVector             mTextures;
+        int                       mWidth;
+        int                       mHeight;
+        int                       mTexVecWidth;
+        int                       mTexVecHeight;
+        int                       mTexBlockWidth;
+        int                       mTexBlockHeight;
+        int                       mBitsChangedCount;
+        int                       mTexMemSize;
+        float                     mMaxTotalU;
+        float                     mMaxTotalV;
+
+public:
+        GLTexture();
+        ~GLTexture();
+
+        void                      ReleaseTextures ();
+        void                      CreateTextureDimensions (GLImage *theImage);
+        void                      CreateTextures (GLImage *theImage);
+        void                      CheckCreateTextures (GLImage *theImage);
+
+        GLuint                    GetTexture (int x, int y, int &width, int &height, float &u1, float &v1,
+                                              float &u2, float &v2);
+        GLuint                    GetTextureF (float x, float y, float &width, float &height,
+                                               float &u1, float &v1, float &u2, float &v2);
+
+        void                      Blt (float theX, float theY, const Rect& theSrcRect, const Color& theColor);
+        void                      BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcRect, const Color& theColor,
+						  const Rect *theClipRect = NULL, float theX = 0, float theY = 0, bool center = false);
+        void                      BltTriangles (const TriVertex theVertices[][3], int theNumTriangles, uint32 theColor,
+                                                float tx = 0, float ty = 0);
+};
+
+}
+
+namespace Sexy {
 class GLImageAutoFallback
 {
 public:
@@ -51,11 +99,309 @@ private:
 };
 }
 
+static GLuint CreateTexture(GLImage* theImage, int x, int y, int width, int height)
+{
+	GLuint texture;
+	int w, h;
+
+	/* Use the texture width and height expanded to powers of 2 */
+	w = RoundToPOT (width);
+	h = RoundToPOT (height);
+
+	/* Create an OpenGL texture for the image */
+	glGenTextures (1, &texture);
+	glBindTexture (GL_TEXTURE_2D, texture);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, 1);
+
+	uint32* bits = theImage->GetBits();
+	glTexImage2D (GL_TEXTURE_2D,
+		      0,
+		      GL_RGBA,
+		      w, h,
+		      0,
+		      GL_BGRA,
+		      GL_UNSIGNED_BYTE,
+		      bits);
+
+	return texture;
+}
+
+GLTexture::GLTexture ()
+{
+	mWidth = 0;
+	mHeight = 0;
+	mTexVecWidth = 0;
+	mTexVecHeight = 0;
+	mBitsChangedCount = 0;
+	mTexMemSize = 0;
+	mTexBlockWidth = 64;
+	mTexBlockHeight = 64;
+}
+
+GLTexture::~GLTexture ()
+{
+	ReleaseTextures ();
+}
+
+void GLTexture::ReleaseTextures ()
+{
+	for(int i = 0; i < (int)mTextures.size(); i++)
+		glDeleteTextures (1, &mTextures[i].mTexture);
+
+	mTextures.clear();
+	mTexMemSize = 0;
+}
+
+void GLTexture::CreateTextureDimensions (GLImage* theImage)
+{
+	GLInterface* interface = theImage->mInterface;
+	int aWidth = theImage->GetWidth();
+	int aHeight = theImage->GetHeight();
+	int i;
+
+	// Calculate inner block sizes
+	mTexBlockWidth = aWidth;
+	mTexBlockHeight = aHeight;
+	bool usePOT = true;
+
+	interface->CalulateBestTexDimensions (mTexBlockWidth, mTexBlockHeight, false, usePOT);
+
+	// Calculate right boundary block sizes
+	int aRightWidth = aWidth%mTexBlockWidth;
+	int aRightHeight = mTexBlockHeight;
+	if (aRightWidth > 0)
+		interface->CalulateBestTexDimensions (aRightWidth, aRightHeight, true, usePOT);
+	else
+		aRightWidth = mTexBlockWidth;
+
+	// Calculate bottom boundary block sizes
+	int aBottomWidth = mTexBlockWidth;
+	int aBottomHeight = aHeight % mTexBlockHeight;
+	if (aBottomHeight > 0)
+		interface->CalulateBestTexDimensions (aBottomWidth, aBottomHeight, true, usePOT);
+	else
+		aBottomHeight = mTexBlockHeight;
+
+	// Calculate corner block size
+	int aCornerWidth = aRightWidth;
+	int aCornerHeight = aBottomHeight;
+	interface->CalulateBestTexDimensions (aCornerWidth, aCornerHeight, true, usePOT);
+
+	// Allocate texture array
+	mTexVecWidth = (aWidth + mTexBlockWidth - 1) / mTexBlockWidth;
+	mTexVecHeight = (aHeight + mTexBlockHeight - 1) / mTexBlockHeight;
+	mTextures.resize (mTexVecWidth * mTexVecHeight);
+
+	// Assign inner blocks
+	for(i = 0; i < (int)mTextures.size(); i++)
+	{
+		GLTextureBlock &aBlock = mTextures[i];
+		aBlock.mTexture = 0;
+		aBlock.mWidth = mTexBlockWidth;
+		aBlock.mHeight = mTexBlockHeight;
+	}
+
+	// Assign right blocks
+	for(i = mTexVecWidth - 1; i < (int)mTextures.size(); i += mTexVecWidth)
+	{
+		GLTextureBlock &aBlock = mTextures[i];
+		aBlock.mWidth = aRightWidth;
+		aBlock.mHeight = aRightHeight;
+	}
+
+	// Assign bottom blocks
+	for (i = mTexVecWidth * (mTexVecHeight - 1); i < (int)mTextures.size(); i++)
+	{
+		GLTextureBlock &aBlock = mTextures[i];
+		aBlock.mWidth = aBottomWidth;
+		aBlock.mHeight = aBottomHeight;
+	}
+
+	// Assign corner block
+	mTextures.back().mWidth = aCornerWidth;
+	mTextures.back().mHeight = aCornerHeight;
+
+	mMaxTotalU = aWidth / (float)mTexBlockWidth;
+	mMaxTotalV = aHeight / (float)mTexBlockHeight;
+}
+
+GLuint GLTexture::GetTexture (int x, int y, int &width, int &height,
+			      float &u1, float &v1, float &u2, float &v2)
+{
+	int tx = x / mTexBlockWidth;
+	int ty = y / mTexBlockHeight;
+
+	GLTextureBlock &aBlock = mTextures[ty * mTexVecWidth + tx];
+
+	int left = x % mTexBlockWidth;
+	int top = y % mTexBlockHeight;
+	int right = left + width;
+	int bottom = top + height;
+
+	if (right > aBlock.mWidth)
+		right = aBlock.mWidth;
+
+	if (bottom > aBlock.mHeight)
+		bottom = aBlock.mHeight;
+
+	width = right-left;
+	height = bottom-top;
+
+	u1 = left / (float)aBlock.mWidth;
+	v1 = top / (float)aBlock.mHeight;
+	u2 = right / (float)aBlock.mWidth;
+	v2 = bottom / (float)aBlock.mHeight;
+
+	return aBlock.mTexture;
+}
+
+GLuint GLTexture::GetTextureF (float x, float y, float &width, float &height,
+			       float &u1, float &v1, float &u2, float &v2)
+{
+	int tx = (int) (x / mTexBlockWidth);
+	int ty = (int) (y / mTexBlockHeight);
+
+	GLTextureBlock &aBlock = mTextures[ty * mTexVecWidth + tx];
+
+	float left = x - tx * mTexBlockWidth;
+	float top = y - ty * mTexBlockHeight;
+	float right = left + width;
+	float bottom = top + height;
+
+	if (right > aBlock.mWidth)
+		right = aBlock.mWidth;
+
+	if (bottom > aBlock.mHeight)
+		bottom = aBlock.mHeight;
+
+	width = right-left;
+	height = bottom-top;
+
+	u1 = left / aBlock.mWidth;
+	v1 = top / aBlock.mHeight;
+	u2 = right / aBlock.mWidth;
+	v2 = bottom / aBlock.mHeight;
+
+	return aBlock.mTexture;
+}
+
+void GLTexture::CreateTextures(GLImage* theImage)
+{
+	theImage->CommitBits();
+
+	// Release texture if image size has changed
+	bool createTextures = false;
+	if (mWidth != theImage->mWidth || mHeight!=theImage->mHeight)
+	{
+		ReleaseTextures ();
+		CreateTextureDimensions (theImage);
+		createTextures = true;
+	}
+
+	int i, x, y;
+
+	int aHeight = theImage->GetHeight ();
+	int aWidth = theImage->GetWidth ();
+	int aFormatSize = 4;
+
+	i = 0;
+	for (y = 0; y < aHeight; y += mTexBlockHeight)
+	{
+		for (x = 0; x < aWidth; x += mTexBlockWidth, i++)
+		{
+			GLTextureBlock &aBlock = mTextures[i];
+			if (createTextures)
+			{
+				aBlock.mTexture = CreateTexture (theImage, x, y,
+								 aBlock.mWidth, aBlock.mHeight);
+				if (aBlock.mTexture == 0) // create texture failure
+					return;
+
+				mTexMemSize += aBlock.mWidth * aBlock.mHeight * aFormatSize;
+			}
+		}
+	}
+
+	mWidth = theImage->mWidth;
+	mHeight = theImage->mHeight;
+	mBitsChangedCount = theImage->mBitsChangedCount;
+}
+
+void GLTexture::CheckCreateTextures (GLImage *theImage)
+{
+	if (theImage->mWidth != mWidth || theImage->mHeight != mHeight ||
+	    theImage->mBitsChangedCount != mBitsChangedCount)
+		CreateTextures (theImage);
+}
+
+void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
+		     const Color& theColor)
+{
+
+	int srcLeft = theSrcRect.mX;
+	int srcTop = theSrcRect.mY;
+	int srcRight = srcLeft + theSrcRect.mWidth;
+	int srcBottom = srcTop + theSrcRect.mHeight;
+	int srcX, srcY;
+	float dstX, dstY;
+	int aWidth, aHeight;
+	float u1, v1, u2, v2;
+
+	srcY = srcTop;
+	dstY = theY;
+
+        SexyRGBA rgba = theColor.ToRGBA ();
+        glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
+	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
+		return;
+
+	glEnable (GL_TEXTURE_2D);
+	while (srcY < srcBottom)
+	{
+		srcX = srcLeft;
+		dstX = theX;
+		while (srcX < srcRight)
+		{
+			aWidth = srcRight-srcX;
+			aHeight = srcBottom-srcY;
+
+			GLuint aTexture = GetTexture (srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
+
+                        float x = dstX;// - 0.5f;
+                        float y = dstY;// 0.5f;
+
+                        glBindTexture (GL_TEXTURE_2D, aTexture);
+                        glBegin (GL_TRIANGLE_STRIP);
+                        glTexCoord2f (u1, v1);
+                        glVertex2f (x,y);
+                        glTexCoord2f (u1, v2);
+                        glVertex2f (x,y + aHeight);
+                        glTexCoord2f (u2, v1);
+                        glVertex2f (x + aWidth,y);
+                        glTexCoord2f (u2, v2);
+                        glVertex2f (x + aWidth,y + aHeight);
+                        glEnd ();
+
+			srcX += aWidth;
+			dstX += aWidth;
+
+		}
+
+		srcY += aHeight;
+		dstY += aHeight;
+	}
+}
+
 GLImage::GLImage(GLInterface* theInterface) :
 	MemoryImage(theInterface->mApp),
 	mInterface(theInterface),
 	mDirty(0)
 {
+	mTexture = 0;
 	Init();
 }
 
@@ -63,12 +409,14 @@ GLImage::GLImage() :
 	MemoryImage(gSexyAppBase)
 {
 	mInterface = dynamic_cast<GLInterface *>(gSexyAppBase->mDDInterface);
+	mTexture = 0;
 	Init();
 }
 
 GLImage::~GLImage()
 {
 	DBG_ASSERTE(mLockCount == 0);
+	delete mTexture;
 }
 
 void GLImage::Init()
@@ -346,6 +694,16 @@ void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, c
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
 	if (!srcImage)
 		return;
+
+	srcImage->EnsureTexture();
+	if (!srcImage->mTexture)
+		return;
+
+	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	else
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	srcImage->mTexture->Blt (theX, theY, theSrcRect, theColor);
 }
 
 void GLImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
@@ -410,10 +768,24 @@ void GLImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const 
 
 void GLImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits)
 {
+	if (theBits && !mBits)
+		MemoryImage::GetBits();
+	MemoryImage::SetBits(theBits, theWidth, theHeight, commitBits);
+
+	if (mTexture)
+		mTexture->CheckCreateTextures (this);
 }
 
 void GLImage::Flip(enum FlipFlags flags)
 {
 	if (mInterface->mScreenImage)
 		mInterface->SwapBuffers();
+}
+
+void GLImage::EnsureTexture()
+{
+	if (!mTexture)
+		mTexture = new GLTexture();
+
+	mTexture->CheckCreateTextures (this);
 }

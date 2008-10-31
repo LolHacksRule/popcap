@@ -9,17 +9,20 @@ namespace Sexy
 class GLInterface;
 class GLFont;
 class GLImageAutoFallback;
+class GLTexture;
 
 class GLImage : public MemoryImage
 {
 protected:
 	friend class			GLFont;
 	friend class			GLImageAutoFallback;
+	friend class			GLTexture;
 
 	void				DeleteAllNonSurfaceData();
 
 protected:
 	GLInterface*			mInterface;
+        GLTexture*                      mTexture;
 
 public:
         int                             mDirty;
@@ -92,6 +95,8 @@ public:
 	virtual void			DeleteExtraBuffers();
 
         virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
+
+        void                            EnsureTexture();
 };
 
 }
