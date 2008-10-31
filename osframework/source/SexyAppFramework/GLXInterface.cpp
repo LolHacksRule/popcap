@@ -268,10 +268,21 @@ bool GLXInterface::GetEvent(struct Event &event)
 		break;
 	}
 	case Expose:
+		event.type = EVENT_EXPOSE;
 		Redraw (NULL);
 		break;
         case ConfigureNotify:
 		/* resize (xevent.xconfigure.width, xevent.xconfigure.height); */
+		break;
+	case EnterNotify:
+		event.type = EVENT_ACTIVE;
+		event.active = true;
+		break;
+	case LeaveNotify:
+		event.type = EVENT_ACTIVE;
+		event.active = false;
+		break;
+	default:
 		break;
         }
 
