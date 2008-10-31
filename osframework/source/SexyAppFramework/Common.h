@@ -254,4 +254,19 @@ struct StringLessNoCase { bool operator()(const std::string &s1, const std::stri
 
 }
 
+static inline int RoundToPOT (int i)
+{
+	int v = 1;
+
+	while (v < i)
+		v <<= 1;
+
+	return v;
+}
+
+static inline bool IsPOT (int i)
+{
+	return i && !(i & (i - 1));
+}
+
 #endif //__SEXYAPPFRAMEWORK_COMMON_H__
