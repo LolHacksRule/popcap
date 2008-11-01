@@ -1,6 +1,7 @@
 #include "DummySoundManager.h"
 #include "DummySoundInstance.h"
 #include "Debug.h"
+#include "SoundDriverFactory.h"
 
 #include <fcntl.h>
 #include <math.h>
@@ -222,3 +223,23 @@ void DummySoundManager::SetCooperativeWindow(HWND theHWnd, bool isWindowed)
 {
 }
 #undef SOUND_FLAGS
+
+class DummySoundDriver: public SoundDriver {
+public:
+	DummySoundDriver ()
+	 : SoundDriver("DummyInterface", 0)
+	{
+	}
+
+	SoundManager* Create (SexyAppBase * theApp)
+	{
+		return new DummySoundManager ();
+        }
+};
+
+static DummySoundDriver aDummySoundDriver;
+SoundDriverRegistor aDummySoundDriverRegistor (&aDummySoundDriver);
+SoundDriver* GetDummySoundDriver()
+{
+	return &aDummySoundDriver;
+}
