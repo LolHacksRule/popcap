@@ -227,7 +227,7 @@ void DummySoundManager::SetCooperativeWindow(HWND theHWnd, bool isWindowed)
 class DummySoundDriver: public SoundDriver {
 public:
 	DummySoundDriver ()
-	 : SoundDriver("DummyInterface", 0)
+	 : SoundDriver("DummyInterface", -100)
 	{
 	}
 
