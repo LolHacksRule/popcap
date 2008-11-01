@@ -124,14 +124,20 @@ static GLuint CreateTexture(GLImage* theImage, int x, int y, int width, int heig
 
 		int aWidth = std::min (w, (theImage->GetWidth() - x));
 		int aHeight = std::min (h, (theImage->GetHeight() - y));
+		int aWidthExtra = w > aWidth ? w - aWidth : 0;
+		int aHeightExtra = h > aHeight ? h - aHeight : 0;
+
 		int imageWidth = theImage->GetWidth();
 		uint32 * dst = copy;
 		uint32 * src = bits + y * imageWidth + x;
 		for (i = 0; i < aHeight; i++) {
 			memcpy (dst, src, aWidth * 4);
+			memset (dst + aWidth, 0, aWidthExtra * 4);
 			dst += w;
 			src += imageWidth;
 		}
+		memset (copy + w * aHeight, 0, w * aHeightExtra);
+
 		glTexImage2D (GL_TEXTURE_2D,
 			      0,
 			      GL_RGBA,
