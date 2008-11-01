@@ -1607,8 +1607,8 @@ MemoryImage* SexyAppBase::CreateCursorFromAndMask(unsigned char * data, unsigned
 
 void SexyAppBase::MakeWindow()
 {
-	VideoDriver* aVideoDriver =
-		VideoDriverFactory::GetVideoDriverFactory ()->Find ();
+	VideoDriver* aVideoDriver = dynamic_cast<VideoDriver*>
+		(VideoDriverFactory::GetVideoDriverFactory ()->Find ());
 	DBG_ASSERT (aVideoDriver != NULL);
 	mDDInterface = aVideoDriver->Create(this);
 	InitDDInterface();

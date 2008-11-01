@@ -2,53 +2,30 @@
 #define __VIDEOFACTORY_H__
 
 #include "Common.h"
+#include "DriverFactory.h"
 #include "NativeDisplay.h"
 
 namespace Sexy {
-class VideoDriver
+class VideoDriver: public Driver
 {
  public:
 	virtual NativeDisplay* Create (SexyAppBase * theApp) = 0;
 
- public:
-	std::string mName;
-	int         mPriority;
 
+ public:
 	VideoDriver (const std::string theName,
 		     int               thePriority = 0);
 	~VideoDriver ();
-
-	bool operator< (const VideoDriver& other) const
-	{
-		return mPriority < other.mPriority;
-	}
-};
-
-struct VideoDriverCompare {
-	bool operator() (VideoDriver* const & lhs, VideoDriver* const & rhs) const
-	{
-		return *lhs < *rhs;
-	}
 };
 
 
-
-class VideoDriverFactory
+class VideoDriverFactory: public DriverFactory
 {
  public:
 	static VideoDriverFactory*  GetVideoDriverFactory ();
 
-	void                 AddDriver (VideoDriver * theDriver);
-	void                 RemoveDriver (VideoDriver * theDriver);
-
-	VideoDriver*         Find (const std::string name = "auto");
-
  private:
 	void                 Load();
-
- private:
-	typedef std::set<VideoDriver*, VideoDriverCompare> VideoDrivers;
-	VideoDrivers         mDrivers;
 
  private:
 	VideoDriverFactory ();
