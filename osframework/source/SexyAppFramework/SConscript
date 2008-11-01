@@ -18,10 +18,12 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "ScrollbarWidget.cpp", "ScrollbuttonWidget.cpp", "SEHCatcher.cpp",
         "SexyAppBase.cpp", "SexyMatrix.cpp", "SharedImage.cpp", "Slider.cpp",
         "SWTri.cpp", "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp",
-        "WidgetManager.cpp", "XMLParser.cpp"]
+        "WidgetManager.cpp", "XMLParser.cpp", 'VideoFactory.cpp']
+
 srcs += ["DFBImage.cpp", "DFBFont.cpp", "DFBInterface.cpp"]
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
 env.ParseConfig('pkg-config directfb --cflags --libs')
+env.AppendUnique(CPPDEFINES = ['SEXY_DFB_DRIVER'])
 
 env.AppendUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                             os.path.join('..', 'PakLib')],
@@ -31,7 +33,8 @@ env.AppendUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
 
 srcs += ["GLImage.cpp", "GLInterface.cpp"]
 srcs += ["GLXInterface.cpp"]
-env.AppendUnique(LIBS = ['GL', 'GLX'])
+env.AppendUnique(LIBS = ['GL', 'X11'],
+                 CPPDEFINES = ['SEXY_GLX_DRIVER'])
 
 if gameenv['BUILD_STATIC']:
     gameenv.ParseConfig('pkg-config directfb --cflags --libs')
