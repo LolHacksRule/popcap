@@ -24,9 +24,11 @@
 #include <wctype.h>
 
 #ifdef WIN32
+#define NOMINMAX
 #include <windows.h>
 #include <shellapi.h> 
 #include <mmsystem.h>
+#define snprintf _snprintf
 #else
 #include <stdint.h>
 #include <string.h>

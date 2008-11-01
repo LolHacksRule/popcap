@@ -1,7 +1,6 @@
 #include "Graphics.h"
 #include "Image.h"
 #include "Font.h"
-#include "DDImage.h"
 #include "MemoryImage.h"
 #include "Rect.h"
 #include "Debug.h"
@@ -67,11 +66,7 @@ Graphics::Graphics(Image* theDestImage)
 	}
 	else
 	{
-#ifdef WIN32
-		mIs3D = DDImage::Check3D(theDestImage);
-#else
 		mIs3D = false;
-#endif
 	}
 
 	mClipRect = Rect(0, 0, mDestImage->GetWidth(), mDestImage->GetHeight());
@@ -849,11 +844,7 @@ void Graphics::DrawImageMatrix(Image* theImage, const SexyMatrix3 &theMatrix, co
 void Graphics::DrawImageTransformHelper(Image* theImage, const Transform &theTransform, const Rect &theSrcRect, float x, float y, bool useFloat)
 {
 	bool is3D;
-#ifdef WIN32
-	is3D = DDImage::Check3D(mDestImage);
-#else
 	is3D = false;
-#endif
 	if (theTransform.mComplex || (is3D && useFloat))
 	{
 		DrawImageMatrix(theImage,theTransform.GetMatrix(),theSrcRect,x,y);

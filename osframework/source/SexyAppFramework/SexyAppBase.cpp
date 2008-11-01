@@ -406,7 +406,7 @@ void SexyAppBase::DemoAddMarker(const std::string& theString)
 {
 }
 
-#ifdef WIN32
+#if 0
 void SexyAppBase::DemoRegisterHandle(HANDLE theHandle)
 {
 }
@@ -3073,10 +3073,10 @@ void SexyAppBase::RotateImageHue(Sexy::MemoryImage *theImage, int theDelta)
 		theDelta += 256;
 
 	int aSize = theImage->mWidth * theImage->mHeight;
-	DWORD *aPtr = theImage->GetBits();
+	uint32 *aPtr = theImage->GetBits();
 	for (int i=0; i<aSize; i++)
 	{
-		DWORD aPixel = *aPtr;
+		uint32 aPixel = *aPtr;
 		int alpha = aPixel&0xff000000;
 		int r = (aPixel>>16)&0xff;
 		int g = (aPixel>>8) &0xff;
@@ -3346,7 +3346,7 @@ void SexyAppBase::RemoveMemoryImage(MemoryImage* theMemoryImage)
 
 void SexyAppBase::Remove3DData(MemoryImage* theMemoryImage)
 {
-#ifdef WIN32
+#if 0
 	if (mDDInterface)
 		mDDInterface->Remove3DData(theMemoryImage);
 #endif

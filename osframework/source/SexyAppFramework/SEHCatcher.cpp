@@ -618,7 +618,7 @@ bool SEHCatcher::GetLogicalAddress(void* addr, char* szModule, DWORD len, DWORD&
     for (unsigned i = 0; i < pNtHdr->FileHeader.NumberOfSections; i++, pSection++)
     {
         DWORD sectionStart = pSection->VirtualAddress;
-        DWORD sectionEnd = sectionStart + max(pSection->SizeOfRawData, pSection->Misc.VirtualSize);
+        DWORD sectionEnd = sectionStart + std::max(pSection->SizeOfRawData, pSection->Misc.VirtualSize);
 
         // Is the address in this section???
         if ((rva >= sectionStart) && (rva <= sectionEnd))
@@ -637,7 +637,7 @@ bool SEHCatcher::GetLogicalAddress(void* addr, char* szModule, DWORD len, DWORD&
 
 std::string SEHCatcher::GetFilename(const std::string& thePath)
 {
-	int aLastSlash = max((int) thePath.rfind('\\'), (int) thePath.rfind('/'));	
+	int aLastSlash = std::max((int) thePath.rfind('\\'), (int) thePath.rfind('/'));	
 
 	if (aLastSlash >= 0)
 	{

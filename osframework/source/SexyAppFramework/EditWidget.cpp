@@ -179,7 +179,7 @@ void EditWidget::UpdateCaretPos()
 	if (aPoint.mY<10) aPoint.mY = 10;
 	else if (aPoint.mY>anApp->mHeight-10) aPoint.mY = anApp->mHeight-10;
 
-#ifdef WIN32
+#if 0
 	SetCaretPos(aPoint.mX,aPoint.mY);
 #endif
 }
@@ -191,7 +191,7 @@ void EditWidget::GotFocus()
 	{
 		SexyAppBase *anApp = mWidgetManager->mApp;
 
-#ifdef WIN32
+#if 0
 		CreateCaret(anApp->mHWnd,NULL,0,0);
 		UpdateCaretPos();
 		ShowCaret(anApp->mHWnd);
@@ -209,7 +209,7 @@ void EditWidget::LostFocus()
 
 	if (mWidgetManager && mWidgetManager->mApp->mTabletPC)
 	{
-#ifdef WIN32
+#if 0
 		HideCaret(mWidgetManager->mApp->mHWnd);
 		DestroyCaret();
 #endif

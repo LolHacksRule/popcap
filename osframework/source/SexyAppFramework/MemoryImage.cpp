@@ -491,7 +491,7 @@ void MemoryImage::AdditiveDrawLine(double theStartX, double theStartY, double th
 	uint32 aBRoundAdd = aBMask >> 1;
 
 	uchar* aMaxTable = mApp->mAdd8BitMaxTable;
-	DWORD *aSurface = GetBits();
+	uint32 *aSurface = GetBits();
 
 	if (true)//(mLockedSurfaceDesc.ddpfPixelFormat.dwRGBBitCount == 32)
 	{
@@ -1292,7 +1292,7 @@ uint32* MemoryImage::GetBits()
 		{
 			ZeroMemory(mBits, aSize*sizeof(uint32));
 		}
-#ifdef WIN32
+#if 0
 		else
 		{
 			DDInterface * DDIterface = dynamic_cast<DDInterface *>(mApp->mDDInterface);

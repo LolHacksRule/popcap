@@ -406,7 +406,7 @@ public:
 	// Public methods
 	virtual void			BeginPopup();
 	virtual void			EndPopup();
-#ifdef WIN32
+#if 0
 	virtual int				MsgBox(const std::string &theText, const std::string &theTitle = "Message", int theFlags = MB_OK);
 	virtual int				MsgBox(const std::wstring &theText, const std::wstring &theTitle = L"Message", int theFlags = MB_OK);
 #endif

@@ -4,8 +4,6 @@
 #include "SoundManager.h"
 #include "MemoryImage.h"
 #include "SharedImage.h"
-#include "DDImage.h"
-#include "D3DInterface.h"
 #include "ImageFont.h"
 #include "NativeFont.h"
 #include "../ImageLib/ImageLib.h"
@@ -753,7 +751,7 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 
 		aDDImage->CommitBits();
 
-#ifdef WIN32
+#if 0
 		if (!aDDImage->mHasAlpha)
 		{
 			aDDImage->mWantDDSurface = true;
@@ -763,7 +761,7 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 		SEXY_PERF_END("ResourceManager:DDSurface");
 	}
 
-#ifdef WIN32
+#if 0
 	if (theRes->mPalletize)
 	{
 		SEXY_PERF_BEGIN("ResourceManager:Palletize");
@@ -775,7 +773,7 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 	}
 #endif
 
-#ifdef WIN32
+#if 0
 	if (theRes->mA4R4G4B4)
 		aDDImage->mD3DFlags |= D3DImageFlag_UseA4R4G4B4;
 

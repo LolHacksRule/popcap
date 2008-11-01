@@ -1,7 +1,9 @@
 #include "PerfTimer.h"
 #include <map>
 
+#ifndef WIN32
 #include <sys/time.h>
+#endif
 
 using namespace Sexy;
 #ifndef _MSC_VER

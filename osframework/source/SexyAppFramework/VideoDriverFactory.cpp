@@ -35,6 +35,7 @@ VideoDriverFactory*  VideoDriverFactory::GetVideoDriverFactory ()
  */
 extern VideoDriver* GetGLXVideoDriver();
 extern VideoDriver* GetDFBVideoDriver();
+extern VideoDriver* GetWGLVideoDriver();
 typedef VideoDriver* (* VideoDriverGetter)();
 VideoDriverGetter VideoDriverGetters []= {
 #ifdef SEXY_GLX_DRIVER
@@ -42,6 +43,9 @@ VideoDriverGetter VideoDriverGetters []= {
 #endif
 #ifdef SEXY_DFB_DRIVER
 	GetDFBVideoDriver,
+#endif
+#ifdef SEXY_WGL_DRIVER
+	GetWGLVideoDriver,
 #endif
 	NULL
 };
