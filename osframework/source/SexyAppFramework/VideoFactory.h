@@ -24,6 +24,15 @@ class VideoDriver
 	}
 };
 
+struct VideoDriverCompare {
+	bool operator() (VideoDriver* const & lhs, VideoDriver* const & rhs) const
+	{
+		return *lhs < *rhs;
+	}
+};
+
+
+
 class VideoDriverFactory
 {
  public:
@@ -35,7 +44,10 @@ class VideoDriverFactory
 	VideoDriver*         Find (const std::string name = "auto");
 
  private:
-	typedef std::set<VideoDriver*> VideoDrivers;
+	void                 Load();
+
+ private:
+	typedef std::set<VideoDriver*, VideoDriverCompare> VideoDrivers;
 	VideoDrivers         mDrivers;
 
  private:
