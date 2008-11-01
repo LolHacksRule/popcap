@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "PakInterface.h"
 #ifdef WIN32
 #include <windows.h>
@@ -499,7 +500,8 @@ bool PakFindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFileData)
 bool PakFindClose(PakHandle hFindFile)
 {
 #ifdef WIN32
-	::FindClose(hFindFile(hFileFile);
+	::FindClose(hFindFile);
+	return true;
 #else
 	PFindData* aFindData = (PFindData*) hFindFile;
 
@@ -507,6 +509,7 @@ bool PakFindClose(PakHandle hFindFile)
 		closedir((DIR*)aFindData->mWHandle);
 
 	delete aFindData;
+	return true;
 #endif
 }
 

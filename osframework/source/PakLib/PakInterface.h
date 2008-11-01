@@ -14,7 +14,7 @@
 class PakCollection;
 
 #ifdef WIN32
-typedef FILTIME PakFileTime;
+typedef FILETIME PakFileTime;
 typedef HANDLE PakHandle;
 typedef LPCTSTR PakFileNamePtr;
 typedef LPWIN32_FIND_DATA PakFindDataPtr;
