@@ -27,14 +27,14 @@ class DFBImageAutoFallback
 public:
 	DFBImageAutoFallback(DFBImage * dst, DFBImage * src) :
 		mSrc(src), mDst(dst)
-        {
+	{
 		mDst->GetBits();
 		if (mSrc)
 			mSrc->GetBits();
 	};
 
 	~DFBImageAutoFallback()
-        {
+	{
 	}
 private:
 	DFBImage * mSrc;
@@ -526,8 +526,8 @@ void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcR
 		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE | DSBLIT_BLEND_COLORALPHA);
 	}
 	dst->SetBlittingFlags(dst, flags);
-        if (theDrawMode == Graphics::DRAWMODE_ADDITIVE)
-            dst->SetDstBlendFunction (dst, DSBF_ONE);
+	if (theDrawMode == Graphics::DRAWMODE_ADDITIVE)
+	    dst->SetDstBlendFunction (dst, DSBF_ONE);
 	dst->SetColor(dst,
 		      theColor.GetRed(), theColor.GetGreen(),
 		      theColor.GetBlue(), theColor.GetAlpha());

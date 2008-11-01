@@ -31,14 +31,14 @@ WGLInterface::~WGLInterface ()
 }
 
 #ifndef GET_X_LPARAM
-//#define GET_X_LPARAM(l) ((l) & 0xffff)
-//#define GET_Y_LPARAM(l) ((l) >> 16)
+#define GET_X_LPARAM(l) ((l) & 0xffff)
+#define GET_Y_LPARAM(l) ((l) >> 16)
 #endif
 
-LONG WINAPI WGLInterface::WndProc (HWND    hWnd,
-    				   UINT    uMsg,
-    				   WPARAM  wParam,
-                                   LPARAM  lParam)
+LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
+				   UINT	   uMsg,
+				   WPARAM  wParam,
+				   LPARAM  lParam)
 {
 	LONG ret;
 
@@ -102,7 +102,7 @@ LONG WINAPI WGLInterface::WndProc (HWND    hWnd,
 		event.y = GET_Y_LPARAM (lParam);
 		break;
 	default:
-		ret = DefWindowProc (hWnd, uMsg, wParam, lParam); 
+		ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
 		break;
 	}
 
@@ -122,57 +122,57 @@ int WGLInterface::Init (void)
 	GLInterface::Init();
 
 	HINSTANCE  hInstance = GetModuleHandle (NULL);
-    	WNDCLASS   wndclass; 
- 
-	/* Register the frame class */ 
-    	wndclass.style         = 0; 
-    	wndclass.lpfnWndProc   = (WNDPROC)WndProc;
-    	wndclass.cbClsExtra    = 0;
-    	wndclass.cbWndExtra    = 0;
-    	wndclass.hInstance     = hInstance;
-    	wndclass.hIcon         = LoadIcon (hInstance, "SexyGL");
-    	wndclass.hCursor       = LoadCursor (NULL, IDC_ARROW);
-    	wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    	wndclass.lpszMenuName  = "SexyGL";
-    	wndclass.lpszClassName = "SexyGL";
- 
-        if (!RegisterClass (&wndclass) ) 
+	WNDCLASS   wndclass;
+
+	/* Register the frame class */
+	wndclass.style	       = 0;
+	wndclass.lpfnWndProc   = (WNDPROC)WndProc;
+	wndclass.cbClsExtra    = 0;
+	wndclass.cbWndExtra    = 0;
+	wndclass.hInstance     = hInstance;
+	wndclass.hIcon	       = LoadIcon (hInstance, "SexyGL");
+	wndclass.hCursor       = LoadCursor (NULL, IDC_ARROW);
+	wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wndclass.lpszMenuName  = "SexyGL";
+	wndclass.lpszClassName = "SexyGL";
+
+	if (!RegisterClass (&wndclass) )
 		goto fail;
 
-    	/* Create the frame */ 
-    	mWindow = CreateWindow ("SexyGL",
-        			"SexyGL",
+	/* Create the frame */
+	mWindow = CreateWindow ("SexyGL",
+				"SexyGL",
 				WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 				CW_USEDEFAULT,
 				CW_USEDEFAULT,
 				mWidth,
-             			mHeight,
-             			NULL,
-             			NULL,
-             			hInstance,
-             			NULL);
+				mHeight,
+				NULL,
+				NULL,
+				hInstance,
+				NULL);
 	if (!mWindow)
 		goto fail;
 
 	mHDC = GetDC (mWindow);
 
-    	PIXELFORMATDESCRIPTOR pfd, *ppfd;
-    	int pixelformat;
- 
-    	ppfd = &pfd;
- 
-   	ppfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	PIXELFORMATDESCRIPTOR pfd, *ppfd;
+	int pixelformat;
+
+	ppfd = &pfd;
+
+	ppfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	ppfd->nVersion = 1;
-    	ppfd->dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |  
-                        PFD_DOUBLEBUFFER; 
-    	ppfd->dwLayerMask = PFD_MAIN_PLANE; 
-    	ppfd->iPixelType = PFD_TYPE_RGBA; 
-    	ppfd->cColorBits = 24; 
-    	ppfd->cDepthBits = 0; 
-    	ppfd->cAccumBits = 0; 
-    	ppfd->cStencilBits = 0; 
- 
-    	pixelformat = ChoosePixelFormat (mHDC, ppfd); 
+	ppfd->dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |
+		PFD_DOUBLEBUFFER;
+	ppfd->dwLayerMask = PFD_MAIN_PLANE;
+	ppfd->iPixelType = PFD_TYPE_RGBA;
+	ppfd->cColorBits = 24;
+	ppfd->cDepthBits = 0;
+	ppfd->cAccumBits = 0;
+	ppfd->cStencilBits = 0;
+
+	pixelformat = ChoosePixelFormat (mHDC, ppfd);
 	if (!pixelformat)
 		goto close_window;
 	if (SetPixelFormat (mHDC, pixelformat, ppfd) == FALSE)
@@ -188,7 +188,7 @@ int WGLInterface::Init (void)
 
 	RECT rect;
 	GetClientRect (mWindow, &rect);
-        if (rect.right != mWidth || rect.bottom != mHeight)
+	if (rect.right != mWidth || rect.bottom != mHeight)
 	{
 		MoveWindow (mWindow,
 			    wininfo.rcWindow.left,
@@ -281,16 +281,16 @@ Image* WGLInterface::CreateImage(SexyAppBase * theApp,
 void WGLInterface::PumpMsg()
 {
 	MSG msg;
-        while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE) == TRUE) 
-        { 
-            if (GetMessage (&msg, NULL, 0, 0) ) 
-            { 
-                TranslateMessage (&msg); 
-                DispatchMessage (&msg); 
-            } else {
-                break;
-            } 
-        }
+	while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE) == TRUE)
+	{
+		if (GetMessage (&msg, NULL, 0, 0) )
+		{
+			TranslateMessage (&msg);
+			DispatchMessage (&msg);
+		} else {
+			break;
+		}
+	}
 }
 
 bool WGLInterface::HasEvent()
@@ -327,14 +327,14 @@ void WGLInterface::SwapBuffers()
 class WGLVideoDriver: public VideoDriver {
 public:
 	WGLVideoDriver ()
-	 : VideoDriver("WGLInterface", 10)
-	{
-	}
+		: VideoDriver("WGLInterface", 10)
+		{
+		}
 
 	NativeDisplay* Create (SexyAppBase * theApp)
-	{
-		return new WGLInterface (theApp);
-        }
+		{
+			return new WGLInterface (theApp);
+		}
 };
 
 static WGLVideoDriver aWGLVideoDriver;

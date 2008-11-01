@@ -14,7 +14,7 @@ class SoundDriver: public Driver
 
  public:
 	SoundDriver (const std::string theName,
-		     int               thePriority = 0);
+		     int	       thePriority = 0);
 	~SoundDriver ();
 };
 
@@ -25,7 +25,7 @@ class SoundDriverFactory: public DriverFactory
 	static SoundDriverFactory*  GetSoundDriverFactory ();
 
  private:
-	void                 Load();
+	void		     Load();
 
  private:
 	SoundDriverFactory ();

@@ -22,37 +22,37 @@ public:
 	WGLInterface(SexyAppBase* theApp);
 	virtual ~WGLInterface();
 
-	virtual int			        Init();
-	virtual void			        Cleanup();
+	virtual int				Init();
+	virtual void				Cleanup();
 
-        virtual void                            SwapBuffers();
+	virtual void				SwapBuffers();
 
-	virtual void			        RemapMouse(int& theX, int& theY);
-        virtual bool                            EnableCursor(bool enable);
+	virtual void				RemapMouse(int& theX, int& theY);
+	virtual bool				EnableCursor(bool enable);
 	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
 	virtual void				SetCursorPos(int theCursorX, int theCursorY);
 
-        virtual Image*                          CreateImage(SexyAppBase * theApp,
-                                                            int width, int height);
-        virtual bool                            HasEvent();
-        virtual bool                            GetEvent(struct Event &event);
+	virtual Image*				CreateImage(SexyAppBase * theApp,
+							    int width, int height);
+	virtual bool				HasEvent();
+	virtual bool				GetEvent(struct Event &event);
 
 private:
 	typedef std::list<Event> EventQueue;
-	HDC                                     mHDC;
-        HWND                                    mWindow;
-        HGLRC                                   mContext;
-        int                                     mGLXMajor;
-        int                                     mGLXMinor;
+	HDC					mHDC;
+	HWND					mWindow;
+	HGLRC					mContext;
+	int					mGLXMajor;
+	int					mGLXMinor;
 
-	EventQueue                              mEventQueue;
+	EventQueue				mEventQueue;
 
-	static LONG WINAPI 			WndProc (HWND    hWnd,
-    				   			 UINT    uMsg,
-    				   			 WPARAM  wParam,
-                                   			 LPARAM  lParam);
+	static LONG WINAPI			WndProc (HWND	 hWnd,
+							 UINT	 uMsg,
+							 WPARAM	 wParam,
+							 LPARAM	 lParam);
 
-	void                                    PumpMsg();
+	void					PumpMsg();
 };
 
 }

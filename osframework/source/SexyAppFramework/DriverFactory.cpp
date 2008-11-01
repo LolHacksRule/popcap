@@ -3,7 +3,7 @@
 using namespace Sexy;
 
 Driver::Driver (const std::string theName,
-			  int               thePriority)
+			  int		    thePriority)
     : mName (theName), mPriority (thePriority)
 {
 }

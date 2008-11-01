@@ -3,7 +3,7 @@
 using namespace Sexy;
 
 SoundDriver::SoundDriver (const std::string theName,
-			  int               thePriority)
+			  int		    thePriority)
 	: Driver(theName, thePriority)
 {
 }

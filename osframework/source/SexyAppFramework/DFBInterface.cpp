@@ -91,7 +91,7 @@ int DFBInterface::Init(void)
 		//mDFB->SetCooperativeLevel(mDFB, DFSCL_EXCLUSIVE);
 	}
 
-        ret = mDFB->GetDisplayLayer (mDFB, DLID_PRIMARY, &mLayer);
+	ret = mDFB->GetDisplayLayer (mDFB, DLID_PRIMARY, &mLayer);
 	DBG_ASSERT (ret == DFB_OK);
 
 	DFBDisplayLayerConfig layer_config;
@@ -391,7 +391,7 @@ bool DFBInterface::HasEvent()
 	if (!mBuffer)
 		return false;
 
-	return 	mBuffer->HasEvent(mBuffer) == DFB_OK;
+	return	mBuffer->HasEvent(mBuffer) == DFB_OK;
 }
 
 bool DFBInterface::GetEvent(struct Event &event)
@@ -399,7 +399,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 	if (!HasEvent())
 		return false;
 
- 	DFBEvent dfb_event;
+	DFBEvent dfb_event;
 	if (mBuffer->GetEvent(mBuffer, &dfb_event) != DFB_OK)
 		return false;
 
@@ -485,7 +485,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 				event.type = EVENT_KEY_UP;
 			if (id == DIKI_UP) {
 				event.keyCode = (int)KEYCODE_UP;
-			} else if(id ==  DIKI_DOWN) {
+			} else if(id ==	 DIKI_DOWN) {
 				event.keyCode = (int)KEYCODE_DOWN;
 			} else if (id ==  DIKI_LEFT) {
 				event.keyCode = (int)KEYCODE_LEFT;
@@ -585,7 +585,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 				event.type = EVENT_KEY_UP;
 			if (id == DIKI_UP) {
 				event.keyCode = (int)KEYCODE_UP;
-			} else if(id ==  DIKI_DOWN) {
+			} else if(id ==	 DIKI_DOWN) {
 				event.keyCode = (int)KEYCODE_DOWN;
 			} else if (id ==  DIKI_LEFT) {
 				event.keyCode = (int)KEYCODE_LEFT;
@@ -640,7 +640,7 @@ public:
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
 		return new DFBInterface (theApp);
-        }
+	}
 };
 
 static DFBVideoDriver aDFBVideoDriver;

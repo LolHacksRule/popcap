@@ -21,12 +21,12 @@ typedef std::set<DFBImage*> DFBImageSet;
 
 class DFBInterface : public NativeDisplay
 {
-        friend class DFBImage;
+	friend class DFBImage;
 public:
-	SexyAppBase*			        mApp;
+	SexyAppBase*				mApp;
 
-        IDirectFB                             * mDFB;
-	IDirectFBSurface                      * mPrimarySurface;
+	IDirectFB			      * mDFB;
+	IDirectFBSurface		      * mPrimarySurface;
 
 	bool					mIs3D;
 
@@ -43,7 +43,7 @@ public:
 	Ratio					mDisplayAspect;
 
 	Rect					mPresentationRect;
-	int				        mFullscreenBits;
+	int					mFullscreenBits;
 	DWORD					mRefreshRate;
 	DWORD					mMillisecondsPerFrame;
 	int					mScanLineFailCount;
@@ -70,8 +70,8 @@ public:
 	int						mCursorX;
 	int						mCursorY;
 	IDirectFBSurface*			mCursorImage;
-        int                                     mCursorHotX;
-        int                                     mCursorHotY;
+	int					mCursorHotX;
+	int					mCursorHotY;
 	bool					mHasOldCursorArea;
 	DFBImage*				mOldCursorAreaImage;
 	DFBImage*				mNewCursorAreaImage;
@@ -92,32 +92,32 @@ public:
 
 	static std::string		ResultToString(int theResult);
 
-	Image*				        GetScreenImage();
+	Image*					GetScreenImage();
 	int					Init();
 	bool					Redraw(Rect* theClipRect = NULL);
 	void					SetVideoOnlyDraw(bool videoOnly);
 	void					RemapMouse(int& theX, int& theY);
 
-        virtual bool                            EnableCursor(bool enable);
+	virtual bool				EnableCursor(bool enable);
 	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
 	virtual void				SetCursorPos(int theCursorX, int theCursorY);
 
-        virtual Image*                          CreateImage(SexyAppBase * theApp,
-                                                            int width, int height);
-        virtual bool                            HasEvent();
-        virtual bool                            GetEvent(struct Event &event);
+	virtual Image*				CreateImage(SexyAppBase * theApp,
+							    int width, int height);
+	virtual bool				HasEvent();
+	virtual bool				GetEvent(struct Event &event);
 
  private:
-        IDirectFBSurface*                       CreateDFBSurface(int width, int height);
+	IDirectFBSurface*			CreateDFBSurface(int width, int height);
 
  private:
-        IDirectFBInputDevice                  * mInput;
-        IDirectFBEventBuffer                  * mBuffer;
-        int                                     mMouseX;
-        int                                     mMouseY;
+	IDirectFBInputDevice		      * mInput;
+	IDirectFBEventBuffer		      * mBuffer;
+	int					mMouseX;
+	int					mMouseY;
 
-        IDirectFBDisplayLayer                 * mLayer;
-        IDirectFBWindow                       * mWindow;
+	IDirectFBDisplayLayer		      * mLayer;
+	IDirectFBWindow			      * mWindow;
 };
 
 }

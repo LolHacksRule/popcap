@@ -3,7 +3,7 @@
 using namespace Sexy;
 
 VideoDriver::VideoDriver (const std::string theName,
-			  int               thePriority)
+			  int		    thePriority)
 	: Driver(theName, thePriority)
 {
 }

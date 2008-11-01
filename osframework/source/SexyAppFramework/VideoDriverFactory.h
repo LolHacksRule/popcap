@@ -14,7 +14,7 @@ class VideoDriver: public Driver
 
  public:
 	VideoDriver (const std::string theName,
-		     int               thePriority = 0);
+		     int	       thePriority = 0);
 	~VideoDriver ();
 };
 
@@ -25,7 +25,7 @@ class VideoDriverFactory: public DriverFactory
 	static VideoDriverFactory*  GetVideoDriverFactory ();
 
  private:
-	void                 Load();
+	void		     Load();
 
  private:
 	VideoDriverFactory ();

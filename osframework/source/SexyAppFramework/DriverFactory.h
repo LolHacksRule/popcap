@@ -9,10 +9,10 @@ class Driver
 {
  public:
 	std::string mName;
-	int         mPriority;
+	int	    mPriority;
 
 	Driver (const std::string theName,
-		     int               thePriority = 0);
+		     int	       thePriority = 0);
 	virtual ~Driver ();
 
 	bool operator< (const Driver& other) const
@@ -31,14 +31,14 @@ struct DriverCompare {
 class DriverFactory
 {
  public:
-	void                   AddDriver (Driver * theDriver);
-	void                   RemoveDriver (Driver * theDriver);
+	void		       AddDriver (Driver * theDriver);
+	void		       RemoveDriver (Driver * theDriver);
 
-	Driver*                Find (const std::string name = "auto");
+	Driver*		       Find (const std::string name = "auto");
 
  private:
 	typedef std::set<Driver*, DriverCompare> Drivers;
-	Drivers                mDrivers;
+	Drivers		       mDrivers;
 
  public:
 	DriverFactory ();

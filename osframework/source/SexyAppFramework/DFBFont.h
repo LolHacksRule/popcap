@@ -21,7 +21,7 @@ public:
 
 public:
 	DFBFont(const std::string& theFace, int thePointSize, bool bold = false, bool italics = false, bool underline = false);
-        DFBFont(SexyAppBase* theApp, const std::string& theFace, int thePointSize, bool bold, bool italics, bool underline);
+	DFBFont(SexyAppBase* theApp, const std::string& theFace, int thePointSize, bool bold, bool italics, bool underline);
 	DFBFont(const DFBFont& theDFBFont);
 
 	virtual ~DFBFont();

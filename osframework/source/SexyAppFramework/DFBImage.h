@@ -21,9 +21,9 @@ protected:
 
 public:
 	DFBInterface*			mInterface;
-        IDirectFBSurface*               mSurface;
-        DFBSurfaceCapabilities          mCaps;
-        int                             mDirty;
+	IDirectFBSurface*		mSurface;
+	DFBSurfaceCapabilities		mCaps;
+	int				mDirty;
 	bool				mSurfaceSet;
 	bool				mNoLock;
 	bool					mVideoMemory;
@@ -59,11 +59,11 @@ public:
 
 public:
 	DFBImage();
-        DFBImage(IDirectFBSurface * theSurface, DFBInterface* theInterface);
+	DFBImage(IDirectFBSurface * theSurface, DFBInterface* theInterface);
 	DFBImage(DFBInterface* theInterface);
 	virtual ~DFBImage();
 
-        void                            DeleteSurface();
+	void				DeleteSurface();
 
 	virtual bool			LockSurface();
 	virtual bool			UnlockSurface();
@@ -92,10 +92,10 @@ public:
 	virtual void			DeleteNativeData();
 	virtual void			DeleteExtraBuffers();
 
-        virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
+	virtual void			Flip(enum FlipFlags flags = FLIP_NONE);
 
  public:
-        IDirectFBSurface*               EnsureSurface();
+	IDirectFBSurface*		EnsureSurface();
 };
 
 }
