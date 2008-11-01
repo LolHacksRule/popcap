@@ -9,18 +9,11 @@
 #include "Debug.h"
 #include "KeyCodes.h"
 #ifdef WIN32
-#include "DDInterface.h"
-#include "D3DInterface.h"
-#include "D3DTester.h"
-#include "DDImage.h"
 #include "DSoundManager.h"
 #include "DSoundInstance.h"
 #include "BassMusicInterface.h"
-#else
-#include "DFBInterface.h"
-#include "DFBInterface.h"
-#include "DFBImage.h"
 #endif
+#include "VideoFactory.h"
 #include "SoundManager.h"
 #include "SoundInstance.h"
 #include "MusicInterface.h"
@@ -1614,7 +1607,10 @@ MemoryImage* SexyAppBase::CreateCursorFromAndMask(unsigned char * data, unsigned
 
 void SexyAppBase::MakeWindow()
 {
-	mDDInterface = new DFBInterface(this);
+	VideoDriver* aVideoDriver =
+		VideoDriverFactory::GetVideoDriverFactory ()->Find ();
+	DBG_ASSERT (aVideoDriver != NULL);
+	mDDInterface = aVideoDriver->Create(this);
 	InitDDInterface();
 	mWidgetManager->mImage =
 		dynamic_cast<MemoryImage*>(mDDInterface->GetScreenImage());
@@ -1809,7 +1805,9 @@ void SexyAppBase::EnforceCursor()
 		}
 		else
 		{
-			if (mDDInterface->SetCursorImage(mCursorImages[mCursorNum]))
+			if (mDDInterface->SetCursorImage(mCursorImages[mCursorNum],
+							 mCursorHots[mCursorNum].mX,
+							 mCursorHots[mCursorNum].mY))
 				mCustomCursorDirty = true;
 
 			mDDInterface->EnableCursor(true);
