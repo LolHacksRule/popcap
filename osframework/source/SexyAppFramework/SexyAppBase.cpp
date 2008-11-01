@@ -8,12 +8,8 @@
 #include "Widget.h"
 #include "Debug.h"
 #include "KeyCodes.h"
-#ifdef WIN32
-#include "DSoundManager.h"
-#include "DSoundInstance.h"
-#include "BassMusicInterface.h"
-#endif
 #include "VideoDriverFactory.h"
+#include "SoundDriverFactory.h"
 #include "SoundManager.h"
 #include "SoundInstance.h"
 #include "MusicInterface.h"
@@ -23,7 +19,6 @@
 #include "Dialog.h"
 #include "../ImageLib/ImageLib.h"
 #include "Rect.h"
-#include "FModMusicInterface.h"
 #include "PropertiesParser.h"
 #include "PerfTimer.h"
 #include "MTRand.h"
@@ -2720,7 +2715,14 @@ void SexyAppBase::Init()
 	mWidgetManager->Resize(Rect(0, 0, mWidth, mHeight), Rect(0, 0, mWidth, mHeight));
 
 	if (mSoundManager == NULL)
-		mSoundManager = new DummySoundManager();
+	{
+		SoundDriver* aSoundDriver = dynamic_cast<SoundDriver*>
+			(SoundDriverFactory::GetSoundDriverFactory ()->Find ());
+		if (aSoundDriver)
+			mSoundManager = aSoundDriver->Create (this);
+		else
+			mSoundManager = new DummySoundManager();
+	}
 	if (mMusicInterface == NULL)
 		mMusicInterface = new MusicInterface();
 
