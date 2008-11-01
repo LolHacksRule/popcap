@@ -1,12 +1,15 @@
 #define XMD_H
 
 #ifdef WIN32
+#define NOMINMAX
 #include <windows.h>
 #endif
 #include <math.h>
 #include <string.h>
 #ifdef WIN32
 #include <tchar.h>
+typedef unsigned char uint8_t;
+typedef unsigned int  uint32_t;
 #endif
 
 #include "ImageLib.h"
@@ -1092,7 +1095,7 @@ bool ImageLib::WriteBMPImage(const std::string& theFileName, Image* theImage)
 
 	fwrite(&aFileHeader,sizeof(aFileHeader),1,aFile);
 	fwrite(&aHeader,sizeof(aHeader),1,aFile);
-	DWORD *aRow = theImage->mBits + (theImage->mHeight-1)*theImage->mWidth;
+	unsigned int *aRow = theImage->mBits + (theImage->mHeight-1)*theImage->mWidth;
 	int aRowSize = theImage->mWidth*4;
 	for (int i=0; i<theImage->mHeight; i++, aRow-=theImage->mWidth)
 		fwrite(aRow,4,theImage->mWidth,aFile);
