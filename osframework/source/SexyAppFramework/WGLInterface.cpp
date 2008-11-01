@@ -125,14 +125,14 @@ int WGLInterface::Init (void)
 	WNDCLASS   wndclass;
 
 	/* Register the frame class */
-	wndclass.style	       = 0;
+	wndclass.style	       = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 	wndclass.lpfnWndProc   = (WNDPROC)WndProc;
 	wndclass.cbClsExtra    = 0;
 	wndclass.cbWndExtra    = 0;
 	wndclass.hInstance     = hInstance;
 	wndclass.hIcon	       = LoadIcon (hInstance, "SexyGL");
 	wndclass.hCursor       = LoadCursor (NULL, IDC_ARROW);
-	wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wndclass.hbrBackground = GetStockObject (BLACK_BRUSH);
 	wndclass.lpszMenuName  = "SexyGL";
 	wndclass.lpszClassName = "SexyGL";
 
