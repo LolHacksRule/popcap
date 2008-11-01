@@ -45,10 +45,9 @@ void VideoDriverFactory::RemoveDriver (VideoDriver * theDriver)
 VideoDriver* VideoDriverFactory::Find (const std::string name)
 {
 	if (name == "auto") {
-		VideoDrivers::reverse_iterator rit;
-
 		if (!mDrivers.size ())
 			return 0;
+
 		return *mDrivers.rbegin();
 	}
 
@@ -59,3 +58,27 @@ VideoDriver* VideoDriverFactory::Find (const std::string name)
 	return 0;
 
 }
+
+/* This is a hack that preventing gcc from striping drivers out of
+ * binary.
+ */
+extern VideoDriver* GetGLXVideoDriver();
+extern VideoDriver* GetDFBVideoDriver();
+typedef VideoDriver* (* VideoDriverGetter)();
+VideoDriverGetter VideoDriverGetters []= {
+#ifdef SEXY_GLX_DRIVER
+	GetGLXVideoDriver,
+#endif
+#ifdef SEXY_DFB_DRIVER
+	GetDFBVideoDriver,
+#endif
+	NULL
+};
+
+void VideoDriverFactory::Load(void)
+{
+	int i = 0;
+	for (i = 0; VideoDriverGetters[i]; i++)
+		VideoDriverGetters[i]();
+}
+
