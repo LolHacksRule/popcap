@@ -20,6 +20,8 @@ using namespace Sexy;
 GLXInterface::GLXInterface (SexyAppBase* theApp)
 	: GLInterface (theApp)
 {
+	mDpy = 0;
+	mWindow = None;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
 }
@@ -110,6 +112,10 @@ void GLXInterface::Cleanup ()
 	mInitialized = false;
 
 	GLInterface::Cleanup ();
+
+	if (mScreenImage)
+		delete mScreenImage;
+	mScreenImage = NULL;
 
 	if (mDpy)
 		glXMakeCurrent (mDpy, None, NULL);
@@ -299,7 +305,7 @@ void GLXInterface::SwapBuffers()
 class GLXVideoDriver: public VideoDriver {
 public:
 	GLXVideoDriver ()
-	 : VideoDriver("GLXInterface", 0)
+	 : VideoDriver("GLXInterface", 10)
 	{
 	}
 
@@ -310,4 +316,9 @@ public:
 };
 
 static GLXVideoDriver aGLXVideoDriver;
-static VideoDriverRegistor aGLXVideoDriverRegistor (&aGLXVideoDriver);
+VideoDriverRegistor aGLXVideoDriverRegistor (&aGLXVideoDriver);
+VideoDriver* GetGLXVideoDriver()
+{
+	return &aGLXVideoDriver;
+}
+

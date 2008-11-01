@@ -7,6 +7,7 @@
 #include "Debug.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
+#include "VideoFactory.h"
 
 #include <cstdio>
 
@@ -112,7 +113,7 @@ int DFBInterface::Init(void)
 
 	ret = mLayer->SetCooperativeLevel (mLayer, DLSCL_ADMINISTRATIVE);
 	DBG_ASSERT (ret == DFB_OK);
-	ret = mLayer->EnableCursor (mLayer, 1);
+	//ret = mLayer->EnableCursor (mLayer, 1);
 
 	IDirectFBSurface * surface = 0;
 
@@ -497,7 +498,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			} else if (id == DIKI_BACKSPACE) {
 				event.keyCode = (int)KEYCODE_BACK;
 			} else if (id == DIKI_ESCAPE) {
-				if (e->modifiers & (DIMM_SHIFT | DIMM_CONTROL) == (DIMM_SHIFT | DIMM_CONTROL))
+				if ((e->modifiers & (DIMM_SHIFT | DIMM_CONTROL)) == (DIMM_SHIFT | DIMM_CONTROL))
 					event.type = EVENT_QUIT;
 				else
 					event.keyCode = (int)KEYCODE_ESCAPE;
@@ -597,7 +598,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			} else if (id == DIKI_BACKSPACE) {
 				event.keyCode = (int)KEYCODE_BACK;
 			} else if (id == DIKI_ESCAPE) {
-				if (e->modifiers & (DIMM_SHIFT | DIMM_CONTROL) == (DIMM_SHIFT | DIMM_CONTROL))
+				if ((e->modifiers & (DIMM_SHIFT | DIMM_CONTROL)) == (DIMM_SHIFT | DIMM_CONTROL))
 					event.type = EVENT_QUIT;
 				else
 					event.keyCode = (int)KEYCODE_ESCAPE;
@@ -627,4 +628,24 @@ bool DFBInterface::GetEvent(struct Event &event)
 		break;
 	}
 	return true;
+}
+
+class DFBVideoDriver: public VideoDriver {
+public:
+	DFBVideoDriver ()
+	 : VideoDriver("DFBInterface", 0)
+	{
+	}
+
+	NativeDisplay* Create (SexyAppBase * theApp)
+	{
+		return new DFBInterface (theApp);
+        }
+};
+
+static DFBVideoDriver aDFBVideoDriver;
+VideoDriverRegistor aDFBVideoDriverRegistor (&aDFBVideoDriver);
+VideoDriver* GetDFBVideoDriver()
+{
+	return &aDFBVideoDriver;
 }
