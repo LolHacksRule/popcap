@@ -7,7 +7,7 @@
 #include "Debug.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
-#include "VideoFactory.h"
+#include "VideoDriverFactory.h"
 
 //#include <GL/glu.h>
 #include <X11/keysym.h>

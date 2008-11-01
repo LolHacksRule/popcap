@@ -1,5 +1,5 @@
-#ifndef __VIDEOFACTORY_H__
-#define __VIDEOFACTORY_H__
+#ifndef __VIDEODriverFACTORY_H__
+#define __VIDEODriverFACTORY_H__
 
 #include "Common.h"
 #include "DriverFactory.h"

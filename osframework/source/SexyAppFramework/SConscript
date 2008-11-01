@@ -18,7 +18,8 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "ScrollbarWidget.cpp", "ScrollbuttonWidget.cpp", "SEHCatcher.cpp",
         "SexyAppBase.cpp", "SexyMatrix.cpp", "SharedImage.cpp", "Slider.cpp",
         "SWTri.cpp", "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp",
-        "WidgetManager.cpp", "XMLParser.cpp", 'DriverFactory.cpp', 'VideoFactory.cpp']
+        "WidgetManager.cpp", "XMLParser.cpp", 'DriverFactory.cpp',
+        'VideoDriverFactory.cpp']
 
 srcs += ["DFBImage.cpp", "DFBFont.cpp", "DFBInterface.cpp"]
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]

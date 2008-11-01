@@ -13,7 +13,7 @@
 #include "DSoundInstance.h"
 #include "BassMusicInterface.h"
 #endif
-#include "VideoFactory.h"
+#include "VideoDriverFactory.h"
 #include "SoundManager.h"
 #include "SoundInstance.h"
 #include "MusicInterface.h"
