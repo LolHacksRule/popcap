@@ -18,7 +18,7 @@
 // A DDImage is actually derived from MemoryImage, so where an Image or
 // MemoryImage is required, a DDImage will suffice as well. A DDImage
 // contains optimized code for use with DirectX 7+.
-#include "SexyAppFramework/DDImage.h"
+#include "SexyAppFramework/MemoryImage.h"
 
 // The Rectangle template, used to specify X, Y, Width, Height
 #include "SexyAppFramework/Rect.h"
