@@ -2,6 +2,10 @@
 #define __SEXY_PERFTIMER_H__
 
 #include "Common.h"
+#include <time.h>
+#ifdef __MINGW32__
+#include <sys/time.h>
+#endif
 
 namespace Sexy
 {
@@ -11,7 +15,7 @@ namespace Sexy
 class PerfTimer 
 {
 protected:
-#ifdef WIN32
+#ifdef _MSC_VER
 	LARGE_INTEGER mStart;
 #else
         struct timeval mStart;
@@ -28,7 +32,7 @@ public:
 
 	double GetDuration();
 
-#ifdef WIN32
+#ifdef _MSC_VER
 	static __int64 GetCPUSpeed(); // in Hz
 	static int GetCPUSpeedMHz();
 #endif

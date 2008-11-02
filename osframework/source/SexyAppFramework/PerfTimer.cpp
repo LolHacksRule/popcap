@@ -1,7 +1,7 @@
 #include "PerfTimer.h"
 #include <map>
 
-#ifndef WIN32
+#ifndef _MSC_VER
 #include <sys/time.h>
 #endif
 
@@ -16,7 +16,7 @@ using namespace Sexy;
 ///////////////////////////////////////////////////////////////////////////////
 inline int QueryCounters(int64_t *lpPerformanceCount)
 {
-#ifdef WIN32
+#ifdef _MSC_VER
 	/* returns TSC only */
 	_asm
 	{
@@ -36,7 +36,7 @@ inline int QueryCounters(int64_t *lpPerformanceCount)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef WIN32
+#ifdef _MSC_VER
 inline int DeltaCounters(int64_t *lpPerformanceCount)
 {
 	_asm
@@ -84,7 +84,7 @@ static int64_t gCPUSpeed = 0;
 PerfTimer::PerfTimer()
 {
 	mDuration = 0;
-#ifdef WIN32
+#ifdef _MSC_VER
 	mStart.QuadPart = 0;
 #else
 	mStart.tv_sec = 0;
@@ -97,7 +97,7 @@ PerfTimer::PerfTimer()
 ///////////////////////////////////////////////////////////////////////////////
 void PerfTimer::CalcDuration()
 {
-#ifdef WIN32
+#ifdef _MSC_VER
 	LARGE_INTEGER anEnd, aFreq;
 	QueryPerformanceCounter(&anEnd);
 	QueryPerformanceFrequency(&aFreq);
@@ -115,7 +115,7 @@ void PerfTimer::CalcDuration()
 void PerfTimer::Start()
 {
 	mRunning = true;
-#ifdef WIN32
+#ifdef _MSC_VER
 	QueryPerformanceCounter(&mStart);
 #else
 	gettimeofday(&mStart, NULL);
@@ -145,7 +145,7 @@ double PerfTimer::GetDuration()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef WIN32
+#ifdef _MSC_VER
 int64_t PerfTimer::GetCPUSpeed()
 {
 	if(gCPUSpeed<=0)
@@ -303,7 +303,7 @@ void SexyPerf::EndPerf()
 
 	gPerfOn = false;
 
-#ifdef WIN32
+#ifdef _MSC_VER
 	int64_t aFreq = PerfTimer::GetCPUSpeed();
 #else
 	int64_t aFreq = 1;
