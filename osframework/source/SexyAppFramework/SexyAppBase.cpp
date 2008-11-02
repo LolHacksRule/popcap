@@ -1602,8 +1602,25 @@ MemoryImage* SexyAppBase::CreateCursorFromAndMask(unsigned char * data, unsigned
 
 void SexyAppBase::MakeWindow()
 {
+#ifdef _WIN32_WCE
+	std::string driver("auto");
+#else
+	char* video_driver = getenv ("SEXY_VIDEO_DRIVER");
+	std::string driver(video_driver ? video_driver : "auto");
+#endif
 	VideoDriver* aVideoDriver = dynamic_cast<VideoDriver*>
-		(VideoDriverFactory::GetVideoDriverFactory ()->Find ());
+		(VideoDriverFactory::GetVideoDriverFactory ()->Find (driver));
+	if (aVideoDriver == NULL && driver != "auto")
+	{
+		std::cout<<"Video driver \'"<<driver<<"\'"<<" doesn't available."<<std::endl;
+		aVideoDriver = dynamic_cast<VideoDriver*>
+			(VideoDriverFactory::GetVideoDriverFactory ()->Find ());
+	}
+	if (!aVideoDriver)
+	{
+		std::cout<<"Video driver doesn't available."<<std::endl;
+		DoExit (1);
+	}
 	DBG_ASSERT (aVideoDriver != NULL);
 	mDDInterface = aVideoDriver->Create(this);
 	InitDDInterface();
@@ -2325,7 +2342,11 @@ int SexyAppBase::InitDDInterface()
 	PreDDInterfaceInitHook();
 	DeleteNativeImageData();
 
-	mDDInterface->Init();
+	if (mDDInterface->Init())
+	{
+		std::cout<<"Initializing video driver failed."<<std::endl;
+		DoExit (1);
+	}
 
 	DemoSyncRefreshRate();
 	PostDDInterfaceInitHook();
