@@ -7,3 +7,5 @@ semantic.cache
 .sconsign.dblite
 *.pyc
 *.pyo
+*.obj
+*.pdb
