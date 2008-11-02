@@ -22,6 +22,7 @@ GLXInterface::GLXInterface (SexyAppBase* theApp)
 {
 	mDpy = 0;
 	mWindow = None;
+	mContext = NULL;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
 }
@@ -119,6 +120,10 @@ void GLXInterface::Cleanup ()
 
 	if (mDpy)
 		glXMakeCurrent (mDpy, None, NULL);
+
+	if (mContext)
+	    glXDestroyContext (mDpy, mContext);
+	mContext = NULL;
 
 	if (mWindow)
 		XDestroyWindow (mDpy, mWindow);
