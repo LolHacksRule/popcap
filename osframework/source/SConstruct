@@ -13,12 +13,12 @@ except Exception, e:
   config = 'configs'
 
 modname = config
-config = __import__(modname)
-modcomps = modname.split('.')
+config = __import__ (modname)
+modcomps = modname.split ('.')
 for modcomp in modcomps[1:]:
-  config = getattr(config, modcomp)
+  config = getattr (config, modcomp)
 
-def createConvenienceLibBuilder(env):
+def createConvenienceLibBuilder (env):
   """This is a utility function that creates the ConvenienceLibrary
   Builder in an Environment if it is not there already.
 
@@ -30,38 +30,39 @@ def createConvenienceLibBuilder(env):
   try:
     convenience_lib = env['BUILDERS']['ConvenienceLibrary']
   except KeyError:
-    action_list = [ SCons.Action.Action("$ARCOM", "$ARCOMSTR") ]
+    action_list = [ SCons.Action.Action ("$ARCOM", "$ARCOMSTR") ]
     #if env.Detect('ranlib'):
     #  ranlib_action = SCons.Action.Action("$RANLIBCOM", "$RANLIBCOMSTR")
     #  action_list.append(ranlib_action)
 
-    convenience_lib = SCons.Builder.Builder(action = action_list,
-                                            emitter = '$LIBEMITTER',
-                                            prefix = '$LIBPREFIX',
-                                            suffix = '$LIBSUFFIX',
-                                            src_suffix = '$SHOBJSUFFIX',
-                                            src_builder = 'SharedObject')
+    convenience_lib = SCons.Builder.Builder (action = action_list,
+                                             emitter = '$LIBEMITTER',
+                                             prefix = '$LIBPREFIX',
+                                             suffix = '$LIBSUFFIX',
+                                             src_suffix = '$SHOBJSUFFIX',
+                                             src_builder = 'SharedObject')
     env['BUILDERS']['ConvenienceLibrary'] = convenience_lib
 
     return convenience_lib
 
-opts = Options('Config.py')
+opts = Options ('Config.py')
 
-config.AddOptions(opts)
+config.AddOptions (opts)
 
-env = Environment(options = opts, ENV = os.environ)
+env = Environment (options = opts, ENV = os.environ)
 env['BUILD_STATIC'] = True
-createConvenienceLibBuilder(env)
-config.Configure(env)
+createConvenienceLibBuilder (env)
+config.Configure (env)
+Help (opts.GenerateHelpText (env))
 
-gameenv = env.Clone()
-Export(['env', 'gameenv'])
+gameenv = env.Clone ()
+Export (['env', 'gameenv'])
 
-sconscripts = [os.path.join('ImageLib', 'SConscript')]
-sconscripts += [os.path.join('PakLib', 'SConscript')]
-sconscripts += [os.path.join('SexyAppFramework', 'SConscript')]
-sconscripts += [os.path.join('demos', 'SConscript')]
+sconscripts = [os.path.join ('ImageLib', 'SConscript')]
+sconscripts += [os.path.join ('PakLib', 'SConscript')]
+sconscripts += [os.path.join ('SexyAppFramework', 'SConscript')]
+sconscripts += [os.path.join ('demos', 'SConscript')]
 
 for sconscript in sconscripts:
-  SConscript(sconscript)
+  SConscript (sconscript)
 
