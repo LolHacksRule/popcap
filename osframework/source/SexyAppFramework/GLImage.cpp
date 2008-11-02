@@ -1402,7 +1402,7 @@ void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRe
 	}
 	else
 	{
-		Blt (theImage, theX, theY, theSrcRect, theColor, theDrawMode);
+		GLImage::Blt (theImage, theX, theY, theSrcRect, theColor, theDrawMode);
 	}
 }
 
