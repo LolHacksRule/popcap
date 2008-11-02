@@ -894,7 +894,9 @@ time_t Sexy::GetFileDate(const std::string& theFileName)
 		//FileTimeToUnixTime(&aFileTime, &aFileDate, FALSE);
 
 		LONGLONG ll = (__int64) aFileTime.dwHighDateTime << 32;
-		ll = ll + aFileTime.dwLowDateTime - 116444736000000000;
+		LONGLONG offset = 116444736;
+		offset *= 1000000000;
+		ll = ll + aFileTime.dwLowDateTime - offset;
 		aFileDate = (time_t) (ll/10000000);
 
 		FindClose(aFindHandle);
