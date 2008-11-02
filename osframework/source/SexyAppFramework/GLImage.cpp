@@ -1386,19 +1386,24 @@ void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRe
 		return;
 	}
 
-	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-        if (srcImage)
- 		return;
+	FRect aClipRect (theClipRect.mX, theClipRect.mY, theClipRect.mWidth, theClipRect.mHeight);
+	FRect aDestRect (theX, theY, theSrcRect.mWidth, theSrcRect.mHeight);
 
-	srcImage->EnsureTexture();
-	if (!srcImage->mTexture)
-		return;
+	FRect anIntersect = aDestRect.Intersection (aClipRect);
+	if (anIntersect.mWidth != aDestRect.mWidth || anIntersect.mHeight != aDestRect.mHeight)
+	{
+		if (anIntersect.mWidth != 0 && anIntersect.mHeight != 0)
+		{
+			SexyTransform2D aTransform;
+			aTransform.Translate( theX, theY);
 
-	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
+		}
+	}
 	else
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
-	srcImage->mTexture->Blt (theX, theY, theSrcRect, theColor);
+	{
+		Blt (theImage, theX, theY, theSrcRect, theColor, theDrawMode);
+	}
 }
 
 void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Color& theColor,
