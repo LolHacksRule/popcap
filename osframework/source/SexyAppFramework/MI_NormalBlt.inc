@@ -2,8 +2,8 @@
 	uint32* aDestPixelsRow = ((uint32*) GetBits()) + (theY * mWidth) + theX;
 
 #ifndef DST_NEXT
-#define DST_NEXT(x)             ((x)--)
-#define DST_NEXT_PIXELS(x, w)   (x) -= (w)
+#define DST_NEXT(x)             ((x)++)
+#define DST_NEXT_PIXELS(x, w)   (x) += (w)
 #endif
 
 	if ((mHasAlpha) || (mHasTrans) || (theColor != Color::White))
