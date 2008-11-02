@@ -33,7 +33,7 @@
 namespace Sexy
 {
 
-#if defined(SEXY_DISABLE_MODVAL) || defined(RELEASEFINAL) || !defined(WIN32)
+#if defined(SEXY_DISABLE_MODVAL) || defined(RELEASEFINAL) || !defined(WIN32) || !defined(_MSC_VER)
 #define M(val)  (val)
 #define M1(val) (val)
 #define M2(val) (val)
