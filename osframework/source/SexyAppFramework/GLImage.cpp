@@ -621,7 +621,8 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
         if (aList.size () >= 3) {
 		glBegin (GL_TRIANGLE_FAN);
 		for (int i = 0; i < aList.size(); ++i) {
-			glColor4ub (aList[i].color.r, aList[i].color.g, aList[i].color.b, aList[i].color.a);
+			glColor4ub (aList[i].color.r, aList[i].color.g,
+				    aList[i].color.b, aList[i].color.a);
 			glTexCoord2f (aList[i].tu, aList[i].tv);
 			glVertex2f (aList[i].sx, aList[i].sy);
 		}
@@ -751,10 +752,14 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 			{
 				VertexList aList;
 
-                                SexyGLVertex vertex0 = {(GLfloat)u1, (GLfloat)v1, rgba, (GLfloat)tp[0].x, (GLfloat)tp[0].y};
-                                SexyGLVertex vertex1 = {(GLfloat)u1, (GLfloat)v2, rgba, (GLfloat)tp[1].x, (GLfloat)tp[1].y};
-                                SexyGLVertex vertex2 = {(GLfloat)u2, (GLfloat)v1, rgba, (GLfloat)tp[2].x, (GLfloat)tp[2].y};
-                                SexyGLVertex vertex3 = {(GLfloat)u2, (GLfloat)v2, rgba, (GLfloat)tp[3].x, (GLfloat)tp[3].y};
+                                SexyGLVertex vertex0 = {(GLfloat)u1, (GLfloat)v1, rgba,
+							(GLfloat)tp[0].x, (GLfloat)tp[0].y};
+                                SexyGLVertex vertex1 = {(GLfloat)u1, (GLfloat)v2, rgba,
+							(GLfloat)tp[1].x, (GLfloat)tp[1].y};
+                                SexyGLVertex vertex2 = {(GLfloat)u2, (GLfloat)v1, rgba,
+							(GLfloat)tp[2].x, (GLfloat)tp[2].y};
+                                SexyGLVertex vertex3 = {(GLfloat)u2, (GLfloat)v2, rgba,
+							(GLfloat)tp[3].x, (GLfloat)tp[3].y};
 
 				aList.push_back (vertex0);
 				aList.push_back (vertex1);
@@ -1152,17 +1157,20 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
         glEnd ();
 }
 
-void GLImage::NormalDrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
+void GLImage::NormalDrawLine(double theStartX, double theStartY, double theEndX, double theEndY,
+			     const Color& theColor)
 {
 	TRACE_THIS();
 }
 
-void GLImage::AdditiveDrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
+void GLImage::AdditiveDrawLine(double theStartX, double theStartY, double theEndX, double theEndY,
+			       const Color& theColor)
 {
 	TRACE_THIS();
 }
 
-void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
+void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY,
+		       const Color& theColor, int theDrawMode)
 {
 	if (mInterface->GetScreenImage () != this)
 	{
@@ -1195,17 +1203,20 @@ void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, doubl
         glEnd ();
 }
 
-void GLImage::NormalDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
+void GLImage::NormalDrawLineAA(double theStartX, double theStartY,
+			       double theEndX, double theEndY, const Color& theColor)
 {
 	TRACE_THIS();
 }
 
-void GLImage::AdditiveDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
+void GLImage::AdditiveDrawLineAA(double theStartX, double theStartY,
+				 double theEndX, double theEndY, const Color& theColor)
 {
 	TRACE_THIS();
 }
 
-void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
+void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY,
+			 const Color& theColor, int theDrawMode)
 {
 	if (mInterface->GetScreenImage () != this)
 	{
@@ -1268,6 +1279,12 @@ uint32* GLImage::GetBits()
 
 	if (!bits)
 		return 0;
+
+	if (mInterface->GetScreenImage() == this)
+	{
+		//glReadPixels ()?
+		TRACE_THIS ();
+	}
 	return bits;
 }
 
@@ -1278,37 +1295,40 @@ void GLImage::Clear()
 
 void GLImage::NormalFillRect(const Rect& theRect, const Color& theColor)
 {
+	TRACE_THIS ();
 }
 
 void GLImage::AdditiveFillRect(const Rect& theRect, const Color& theColor)
 {
+	TRACE_THIS ();
 }
 
-void GLImage::NormalBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
-{
-	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-	if (!srcImage)
-		return;
-}
-
-void GLImage::NormalBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
-{
-	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-	if (!srcImage)
-		return;
-}
-
-void GLImage::AdditiveBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
+void GLImage::NormalBlt(Image* theImage, int theX, int theY,
+			const Rect& theSrcRect, const Color& theColor)
 {
 	TRACE_THIS ();
 }
 
-void GLImage::AdditiveBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
+void GLImage::NormalBltMirror(Image* theImage, int theX, int theY,
+			      const Rect& theSrcRectOrig, const Color& theColor)
 {
 	TRACE_THIS ();
 }
 
-void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
+void GLImage::AdditiveBlt(Image* theImage, int theX, int theY,
+			  const Rect& theSrcRect, const Color& theColor)
+{
+	TRACE_THIS ();
+}
+
+void GLImage::AdditiveBltMirror(Image* theImage, int theX, int theY,
+				const Rect& theSrcRectOrig, const Color& theColor)
+{
+	TRACE_THIS ();
+}
+
+void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect,
+		  const Color& theColor, int theDrawMode)
 {
 	if (mInterface->GetScreenImage() != this)
 	{
@@ -1331,7 +1351,8 @@ void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, c
 	srcImage->mTexture->Blt (theX, theY, theSrcRect, theColor);
 }
 
-void GLImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
+void GLImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect,
+			const Color& theColor, int theDrawMode)
 {
 	if (mInterface->GetScreenImage() != this)
 	{
@@ -1356,7 +1377,8 @@ void GLImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcR
 	BltTransformed (theImage, NULL, theColor, theDrawMode, theSrcRect, aTransform);
 }
 
-void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect, const Color& theColor, int theDrawMode)
+void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect,
+		   const Color& theColor, int theDrawMode)
 {
 	if (mInterface->GetScreenImage() != this)
 	{
@@ -1385,7 +1407,7 @@ void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Co
 			      float theX, float theY, bool center)
 {
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-        if (srcImage)
+        if (!srcImage)
  		return;
 
 	srcImage->EnsureTexture();
@@ -1446,7 +1468,8 @@ void GLImage::StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& t
 	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
 }
 
-void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
+void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect,
+			       const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
 {
 	if (mInterface->GetScreenImage() != this)
 	{
@@ -1474,7 +1497,8 @@ void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const R
 	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
 }
 
-void GLImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix, const Rect& theClipRect, const Color& theColor, int theDrawMode, const Rect &theSrcRect, bool blend)
+void GLImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix, const Rect& theClipRect,
+			const Color& theColor, int theDrawMode, const Rect &theSrcRect, bool blend)
 {
 	if (mInterface->GetScreenImage() != this)
 	{
@@ -1486,7 +1510,9 @@ void GLImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &th
 	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, theMatrix, blend, x, y);
 }
 
-void GLImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3], int theNumTriangles, const Rect& theClipRect, const Color &theColor, int theDrawMode, float tx, float ty, bool blend)
+void GLImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3], int theNumTriangles,
+			      const Rect& theClipRect, const Color &theColor, int theDrawMode,
+			      float tx, float ty, bool blend)
 {
 	if (mInterface->GetScreenImage() != this)
 	{
@@ -1515,7 +1541,9 @@ bool GLImage::Palletize()
 	return false;
 }
 
-void GLImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const Color& theColor, int theDrawMode, const BYTE* theCoverage, int theCoverX, int theCoverY, int theCoverWidth, int theCoverHeight)
+void GLImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const Color& theColor,
+					int theDrawMode, const BYTE* theCoverage, int theCoverX, int theCoverY,
+					int theCoverWidth, int theCoverHeight)
 {
 	if (theSpanCount == 0)
 		return;
