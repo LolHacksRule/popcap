@@ -3022,8 +3022,7 @@ Image* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColor)
 
 Image* SexyAppBase::CopyImage(Image* theImage, const Rect& theRect)
 {
-	Image* anImage = mDDInterface->CreateImage(this, 0, 0);
-	anImage->SetBits(0, theRect.mWidth, theRect.mHeight);
+	Image* anImage = mDDInterface->CreateImage(this, theRect.mWidth, theRect.mHeight);
 
 	Graphics g(anImage);
 	g.DrawImage(theImage, -theRect.mX, -theRect.mY);
