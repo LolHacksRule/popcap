@@ -6,6 +6,18 @@ import os
 import sys
 import SCons
 
+### configurations
+try:
+  from Config import config
+except Exception, e:
+  config = 'configs'
+
+modname = config
+config = __import__(modname)
+modcomps = modname.split('.')
+for modcomp in modcomps[1:]:
+  config = getattr(config, modcomp)
+
 def createConvenienceLibBuilder(env):
   """This is a utility function that creates the ConvenienceLibrary
   Builder in an Environment if it is not there already.
@@ -33,12 +45,15 @@ def createConvenienceLibBuilder(env):
 
     return convenience_lib
 
-env = Environment()
-createConvenienceLibBuilder(env)
-env.AppendUnique(CFLAGS = ['-pthread'],
-                 LINKFLAGS = ['-pthread'])
-env.AppendUnique(CFLAGS = ['-g', '-Wall'], CXXFLAGS = ['-g', '-Wall'], LINKFLAGS = ['-g'])
+opts = Options('Config.py')
+
+config.AddOptions(opts)
+
+env = Environment(options = opts, ENV = os.environ)
 env['BUILD_STATIC'] = True
+createConvenienceLibBuilder(env)
+config.Configure(env)
+
 gameenv = env.Clone()
 Export(['env', 'gameenv'])
 

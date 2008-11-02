@@ -21,28 +21,43 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "WidgetManager.cpp", "XMLParser.cpp", 'DriverFactory.cpp',
         'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp']
 
-srcs += ["DFBImage.cpp", "DFBFont.cpp", "DFBInterface.cpp"]
+#dummy sound manager
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
-env.ParseConfig('pkg-config directfb --cflags --libs')
-env.AppendUnique(CPPDEFINES = ['SEXY_DFB_DRIVER'])
 
-env.AppendUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
-                            os.path.join('..', 'PakLib')],
-                 LIBPATH = [os.path.join('..', 'ImageLib'),
-                            os.path.join('..', 'PakLib')],
-                 LIBS = ['PakLib', 'ImageLib', 'rt'])
+if 'DIRECTFB' in env['DRIVERS']:
+    srcs += ["DFBImage.cpp", "DFBFont.cpp", "DFBInterface.cpp"]
+    env['DIRECTFB']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_DFB_DRIVER'])
 
-srcs += ["GLImage.cpp", "GLInterface.cpp"]
-srcs += ["GLXInterface.cpp"]
-env.AppendUnique(LIBS = ['GL', 'X11'],
-                 CPPDEFINES = ['SEXY_GLX_DRIVER'])
+if 'GLX' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLInterface.cpp"]
+    srcs += ["GLXInterface.cpp"]
+    env['GLX']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_GLX_DRIVER'])
+
+if 'WGL' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLInterface.cpp"]
+    srcs += ["WGLInterface.cpp"]
+    env['WGL']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_WGL_DRIVER'])
+
+env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
+                             os.path.join('..', 'PakLib')],
+                  LIBPATH = [os.path.join('..', 'ImageLib'),
+                             os.path.join('..', 'PakLib')],
+                  LIBS = ['PakLib', 'ImageLib'])
 
 if gameenv['BUILD_STATIC']:
-    gameenv.ParseConfig('pkg-config directfb --cflags --libs')
-    gameenv.AppendUnique(LIBPATH = [os.path.join('..', 'ImageLib'),
-                                    os.path.join('..', 'PakLib')],
-                         LIBS = ['PakLib', 'ImageLib', 'rt'])
-    gameenv.AppendUnique(LIBS = ['GL', 'X11'])
+    if 'DIRECTFB' in env['DRIVERS']:
+        gameenv['DIRECTFB']['ENABLE'](gameenv)
+    if 'GLX' in env['DRIVERS']:
+        gameenv['GLX']['ENABLE'](gameenv)
+    if 'WGL' in env['DRIVERS']:
+        gameenv['WGL']['ENABLE'](gameenv)
+
+    gameenv.PrependUnique(LIBPATH = [os.path.join('..', 'ImageLib'),
+                                     os.path.join('..', 'PakLib')],
+                          LIBS = ['PakLib', 'ImageLib'])
 
 if gameenv['BUILD_STATIC']:
     env.Library('SexyAppFramework', srcs)
