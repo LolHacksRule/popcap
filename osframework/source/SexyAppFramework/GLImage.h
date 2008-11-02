@@ -97,6 +97,10 @@ public:
         virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
 
         void                            EnsureTexture();
+        void                            BltTransformed(Image* theImage, const Rect* theClipRect, const Color& theColor,
+                                                       int theDrawMode, const Rect &theSrcRect,
+                                                       const SexyMatrix3 &theTransform,
+                                                       float theX = 0, float theY = 0, bool center = false);
 };
 
 }

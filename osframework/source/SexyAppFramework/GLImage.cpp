@@ -5,12 +5,14 @@
 #include "Rect.h"
 #include "Graphics.h"
 #include "SexyAppBase.h"
+#include "SexyVector.h"
+#include "SexyMatrix.h"
 #include "Debug.h"
 #include "PerfTimer.h"
 
 using namespace Sexy;
 
-#if 0
+#if 1
 #define TRACE() printf ("%s:%d\n", __FUNCTION__, __LINE__);
 #define TRACE_THIS() printf ("%s:%d this = %p\n", __FUNCTION__, __LINE__, this);
 #else
@@ -107,7 +109,7 @@ private:
 #define GL_BGRA  0x80E1
 #endif
 
-static GLuint CreateTexture(GLImage* theImage, int x, int y, int width, int height)
+static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int height)
 {
 	GLuint texture;
 	int w, h;
@@ -426,6 +428,530 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 	}
 }
 
+struct VertexList
+{
+	enum { MAX_STACK_VERTS = 100 };
+	SexyGLVertex mStackVerts[MAX_STACK_VERTS];
+	SexyGLVertex *mVerts;
+	int mSize;
+	int mCapacity;
+
+	typedef int size_type;
+
+	VertexList() : mVerts(mStackVerts), mSize(0),
+		       mCapacity (MAX_STACK_VERTS)
+	{
+	}
+
+	VertexList(const VertexList &theList) : mVerts(mStackVerts),
+						mSize(theList.mSize),
+						mCapacity(MAX_STACK_VERTS)
+	{
+		reserve (mSize);
+		memcpy (mVerts, theList.mVerts, mSize * sizeof (mVerts[0]));
+	}
+
+	~VertexList()
+	{
+		if (mVerts != mStackVerts)
+			delete mVerts;
+	}
+
+	void reserve(int theCapacity)
+	{
+		if (mCapacity < theCapacity)
+		{
+			mCapacity = theCapacity;
+
+			SexyGLVertex *aNewList = new SexyGLVertex[theCapacity];
+			memcpy (aNewList, mVerts, mSize * sizeof (mVerts[0]));
+			if (mVerts != mStackVerts)
+				delete mVerts;
+
+			mVerts = aNewList;
+		}
+	}
+
+	void push_back(const SexyGLVertex &theVert)
+	{
+		if (mSize == mCapacity)
+			reserve (mCapacity * 2);
+
+		mVerts[mSize++] = theVert;
+	}
+
+	void operator = (const VertexList &theList)
+	{
+		reserve (theList.mSize);
+		mSize = theList.mSize;
+		memcpy (mVerts, theList.mVerts, mSize * sizeof (mVerts[0]));
+	}
+
+
+	SexyGLVertex& operator [](int thePos)
+	{
+		return mVerts[thePos];
+	}
+
+	int size()
+	{
+		return mSize;
+	}
+
+	void clear()
+	{
+		mSize = 0;
+	}
+};
+
+static inline float GetCoord (const SexyGLVertex &theVertex, int theCoord)
+{
+	switch (theCoord)
+	{
+		case 0: return theVertex.sx;
+		case 1: return theVertex.sy;
+		case 2: return theVertex.sz;
+		case 3: return theVertex.tu;
+		case 4: return theVertex.tv;
+		default: return 0;
+	}
+}
+
+static inline SexyGLVertex Interpolate (const SexyGLVertex &v1,
+					const SexyGLVertex &v2,
+					float t)
+{
+	SexyGLVertex aVertex = v1;
+
+	aVertex.sx = v1.sx + t * (v2.sx - v1.sx);
+	aVertex.sy = v1.sy + t * (v2.sy - v1.sy);
+	aVertex.tu = v1.tu + t * (v2.tu - v1.tu);
+	aVertex.tv = v1.tv + t * (v2.tv - v1.tv);
+	if (v1.color != v2.color)
+	{
+
+		int r = v1.color.r + (int)(t * (v2.color.r - v1.color.r));
+		int g = v1.color.g + (int)(t * (v2.color.g - v1.color.g));
+		int b = v1.color.b + (int)(t * (v2.color.b - v1.color.b));
+		int a = v1.color.a + (int)(t * (v2.color.a - v1.color.a));
+
+		aVertex.color = Color (r,g,b,a).ToRGBA();
+	}
+
+	return aVertex;
+}
+
+template<class Pred>
+struct PointClipper
+{
+	Pred mPred;
+
+	void ClipPoint (int n, float clipVal, const SexyGLVertex &v1,
+			const SexyGLVertex &v2, VertexList &out);
+	void ClipPoints (int n, float clipVal, VertexList &in, VertexList &out);
+};
+
+template<class Pred>
+void PointClipper<Pred>::ClipPoint (int n, float clipVal, const SexyGLVertex &v1,
+				    const SexyGLVertex &v2, VertexList &out)
+{
+	if (!mPred (GetCoord (v1, n), clipVal))
+	{
+		if (!mPred (GetCoord(v2, n), clipVal)) // both inside
+			out.push_back (v2);
+		else // inside -> outside
+		{
+			float t = (clipVal - GetCoord(v1, n)) / (GetCoord (v2, n) - GetCoord(v1, n));
+			out.push_back (Interpolate (v1, v2, t));
+		}
+	}
+	else
+	{
+		if (!mPred (GetCoord (v2, n), clipVal)) // outside -> inside
+		{
+			float t = (clipVal - GetCoord (v1, n)) / (GetCoord (v2, n) - GetCoord (v1, n));
+			out.push_back (Interpolate (v1, v2, t));
+			out.push_back (v2);
+		}
+		//else outside -> outside
+	}
+}
+
+template<class Pred>
+void PointClipper<Pred>::ClipPoints (int n, float clipVal, VertexList &in, VertexList &out)
+{
+	if (in.size() < 2)
+		return;
+
+	ClipPoint (n, clipVal, in[in.size () - 1], in[0], out);
+	for (VertexList::size_type i = 0; i < in.size ()-1; i++)
+		ClipPoint (n, clipVal, in[i], in[i + 1], out);
+}
+
+static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
+{
+	VertexList l1, l2;
+	l1 = theList;
+
+	int left = theClipRect->mX;
+	int right = left + theClipRect->mWidth;
+	int top = theClipRect->mY;
+	int bottom = top + theClipRect->mHeight;
+
+	VertexList *in = &l1, *out = &l2;
+	PointClipper<std::less<float> > aLessClipper;
+	PointClipper<std::greater_equal<float> > aGreaterClipper;
+
+	aLessClipper.ClipPoints (0,left,*in,*out);
+	std::swap (in, out);
+	out->clear ();
+
+	aLessClipper.ClipPoints (1, top, *in, *out);
+	std::swap (in, out);
+	out->clear ();
+
+	aGreaterClipper.ClipPoints (0, right, *in, *out);
+	std::swap (in,out);
+	out->clear ();
+
+	aGreaterClipper.ClipPoints (1, bottom, *in, *out);
+
+	VertexList &aList = *out;
+
+        if (aList.size () >= 3) {
+		glBegin (GL_TRIANGLE_FAN);
+		for (int i = 0; i < aList.size(); ++i) {
+			glColor4ub (aList[i].color.r, aList[i].color.g, aList[i].color.b, aList[i].color.a);
+			glTexCoord2f (aList[i].tu, aList[i].tv);
+			glVertex2f (aList[i].sx, aList[i].sy);
+		}
+		glEnd ();
+        }
+}
+
+static void DoPolyTextureClip (VertexList &theList)
+{
+	VertexList l2;
+
+	float left = 0;
+	float right = 1;
+	float top = 0;
+	float bottom = 1;
+
+	VertexList *in = &theList, *out = &l2;
+	PointClipper<std::less<float> > aLessClipper;
+	PointClipper<std::greater_equal<float> > aGreaterClipper;
+
+	aLessClipper.ClipPoints (3, left, *in, *out);
+	std::swap (in, out);
+	out->clear ();
+
+	aLessClipper.ClipPoints (4, top, *in, *out);
+	std::swap (in,out);
+	out->clear();
+
+	aGreaterClipper.ClipPoints (3, right, *in, *out);
+	std::swap (in,out);
+	out->clear();
+
+	aGreaterClipper.ClipPoints (4, bottom, *in, *out);
+}
+
+void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcRect, const Color& theColor,
+				const Rect *theClipRect, float theX, float theY, bool center)
+{
+	int srcLeft = theSrcRect.mX;
+	int srcTop = theSrcRect.mY;
+	int srcRight = srcLeft + theSrcRect.mWidth;
+	int srcBottom = srcTop + theSrcRect.mHeight;
+	int srcX, srcY;
+	float dstX, dstY;
+	int aWidth;
+	int aHeight;
+	float u1,v1,u2,v2;
+	float startx = 0, starty = 0;
+	float pixelcorrect = 0.0f;//0.5f;
+
+	if (center)
+	{
+		startx = -theSrcRect.mWidth / 2.0f;
+		starty = -theSrcRect.mHeight / 2.0f;
+		pixelcorrect = 0.0f;
+	}
+
+	srcY = srcTop;
+	dstY = starty;
+
+	SexyRGBA rgba = theColor.ToRGBA();
+
+	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
+		return;
+
+        glEnable (GL_TEXTURE_2D);
+        glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
+
+	while (srcY < srcBottom)
+	{
+		srcX = srcLeft;
+		dstX = startx;
+		while (srcX < srcRight)
+		{
+			aWidth = srcRight - srcX;
+			aHeight = srcBottom - srcY;
+			GLuint aTexture = GetTexture (srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
+
+			float x = dstX;// - pixelcorrect; // - 0.5f; //FIXME correct??
+			float y = dstY;// - pixelcorrect; // - 0.5f;
+
+			SexyVector2 p[4] = { SexyVector2 (x, y),           SexyVector2 (x,          y + aHeight),
+					     SexyVector2 (x + aWidth, y) , SexyVector2 (x + aWidth, y + aHeight) };
+			SexyVector2 tp[4];
+
+			int i;
+			for (i = 0; i < 4; i++)
+			{
+				tp[i] = theTrans * p[i];
+				tp[i].x -= pixelcorrect - theX;
+				tp[i].y -= pixelcorrect - theY;
+			}
+
+			bool clipped = false;
+			if (theClipRect != NULL)
+			{
+				int left = theClipRect->mX;
+				int right = left + theClipRect->mWidth;
+				int top = theClipRect->mY;
+				int bottom = top + theClipRect->mHeight;
+				for (i = 0; i < 4; i++)
+				{
+					if (tp[i].x < left || tp[i].x >= right ||
+					    tp[i].y < top || tp[i].y >= bottom)
+					{
+						clipped = true;
+						break;
+					}
+				}
+			}
+
+                        glBindTexture (GL_TEXTURE_2D, aTexture);
+
+                        if (!clipped) {
+				glBegin (GL_TRIANGLE_STRIP);
+				glTexCoord2f (u1, v1);
+				glVertex2f (tp[0].x,tp[0].y);
+				glTexCoord2f (u1, v2);
+				glVertex2f (tp[1].x,tp[1].y);
+				glTexCoord2f (u2, v1);
+				glVertex2f (tp[2].x,tp[2].y);
+				glTexCoord2f (u2, v2);
+				glVertex2f (tp[3].x,tp[3].y);
+				glEnd ();
+                        }
+                        else
+			{
+				VertexList aList;
+
+                                SexyGLVertex vertex0 = {(GLfloat)u1, (GLfloat)v1, rgba, (GLfloat)tp[0].x, (GLfloat)tp[0].y};
+                                SexyGLVertex vertex1 = {(GLfloat)u1, (GLfloat)v2, rgba, (GLfloat)tp[1].x, (GLfloat)tp[1].y};
+                                SexyGLVertex vertex2 = {(GLfloat)u2, (GLfloat)v1, rgba, (GLfloat)tp[2].x, (GLfloat)tp[2].y};
+                                SexyGLVertex vertex3 = {(GLfloat)u2, (GLfloat)v2, rgba, (GLfloat)tp[3].x, (GLfloat)tp[3].y};
+
+				aList.push_back (vertex0);
+				aList.push_back (vertex1);
+				aList.push_back (vertex3);
+				aList.push_back (vertex2);
+
+                                DrawPolyClipped (theClipRect, aList);
+			}
+			srcX += aWidth;
+			dstX += aWidth;
+
+		}
+		srcY += aHeight;
+		dstY += aHeight;
+	}
+}
+
+#define GetColorFromTriVertex(theVertex, theColor) (theVertex.color ? theVertex.color : theColor)
+
+void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriangles, uint32 theColor, float tx, float ty)
+{
+	glEnable(GL_TEXTURE_2D); //FIXME only set this at start of drawing all
+
+	if ((mMaxTotalU <= 1.0) && (mMaxTotalV <= 1.0))
+	{
+		glBindTexture(GL_TEXTURE_2D, mTextures[0].mTexture);
+
+		SexyGLVertex aVertexCache[300];
+		int aVertexCacheNum = 0;
+
+		glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+		glEnableClientState (GL_COLOR_ARRAY);
+		glEnableClientState (GL_VERTEX_ARRAY);
+
+		glTexCoordPointer (2, GL_FLOAT, 5 * sizeof(GLfloat) + 4 * sizeof(GLubyte), aVertexCache);
+		glColorPointer (4, GL_UNSIGNED_BYTE, 5 * sizeof(GLfloat) + 4 * sizeof(GLubyte),
+				((GLubyte*)aVertexCache) + 2 * sizeof(GLfloat));
+		glVertexPointer (3, GL_FLOAT, 5 * sizeof(GLfloat) + 4 * sizeof(GLubyte),
+				 ((GLubyte*)aVertexCache) + 2 * sizeof(GLfloat) + 4 * sizeof(GLubyte));
+
+		for (int aTriangleNum = 0; aTriangleNum < theNumTriangles; aTriangleNum++)
+		{
+			Color col;
+			TriVertex* aTriVerts = (TriVertex*) theVertices[aTriangleNum];
+			SexyGLVertex* aVertex = &aVertexCache[aVertexCacheNum];
+
+			aVertexCacheNum += 3;
+
+			aVertex[0].sx = aTriVerts[0].x + tx;
+			aVertex[0].sy = aTriVerts[0].y + ty;
+			aVertex[0].sz = 0;
+			col = GetColorFromTriVertex(aTriVerts[0],theColor);
+			aVertex[0].color = col.ToRGBA();
+			aVertex[0].tu = aTriVerts[0].u * mMaxTotalU;
+			aVertex[0].tv = aTriVerts[0].v * mMaxTotalV;
+
+			aVertex[1].sx = aTriVerts[1].x + tx;
+			aVertex[1].sy = aTriVerts[1].y + ty;
+			aVertex[1].sz = 0;
+			col = GetColorFromTriVertex(aTriVerts[0],theColor);
+			aVertex[1].color = col.ToRGBA();
+			aVertex[1].tu = aTriVerts[1].u * mMaxTotalU;
+			aVertex[1].tv = aTriVerts[1].v * mMaxTotalV;
+
+			aVertex[2].sx = aTriVerts[2].x + tx;
+			aVertex[2].sy = aTriVerts[2].y + ty;
+			aVertex[2].sz = 0;
+			col = GetColorFromTriVertex(aTriVerts[0],theColor);
+			aVertex[2].color = col.ToRGBA();
+			aVertex[2].tu = aTriVerts[2].u * mMaxTotalU;
+			aVertex[2].tv = aTriVerts[2].v * mMaxTotalV;
+
+			if ((aVertexCacheNum == 300) || (aTriangleNum == theNumTriangles - 1))
+			{
+
+
+				glDrawArrays (GL_TRIANGLES, 0, 300);
+
+				if (aTriangleNum == theNumTriangles - 1) {
+					glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+					glDisableClientState (GL_COLOR_ARRAY);
+					glDisableClientState (GL_VERTEX_ARRAY);
+				}
+
+
+				aVertexCacheNum = 0;
+			}
+		}
+	}
+	else
+	{
+		for (int aTriangleNum = 0; aTriangleNum < theNumTriangles; aTriangleNum++)
+		{
+			TriVertex* aTriVerts = (TriVertex*) theVertices[aTriangleNum];
+
+			SexyGLVertex aVertex[3];
+			Color col = GetColorFromTriVertex(aTriVerts[0],theColor);
+
+			SexyGLVertex vertex1 = {(GLfloat)(aTriVerts[0].u * mMaxTotalU),
+						(GLfloat)(aTriVerts[0].v * mMaxTotalV),
+						col.ToRGBA(),
+						aTriVerts[0].x + tx, aTriVerts[0].u + ty, 0.0f};
+
+			col = GetColorFromTriVertex(aTriVerts[1],theColor);
+
+			SexyGLVertex vertex2 = {(GLfloat)(aTriVerts[1].u * mMaxTotalU),
+						(GLfloat)(aTriVerts[1].v * mMaxTotalV),
+						col.ToRGBA(),
+						aTriVerts[1].x + tx, aTriVerts[1].u + ty, 0.0f};
+			col = GetColorFromTriVertex (aTriVerts[2],theColor);
+
+			SexyGLVertex vertex3 = {(GLfloat)(aTriVerts[2].u * mMaxTotalU),
+						(GLfloat)(aTriVerts[2].v * mMaxTotalV),
+						col.ToRGBA(),
+						aTriVerts[2].x + tx, aTriVerts[2].u + ty, 0.0f};
+
+			aVertex[0] = vertex1;
+			aVertex[1]  = vertex2;
+			aVertex[2] = vertex3;
+
+			float aMinU = mMaxTotalU, aMinV = mMaxTotalV;
+			float aMaxU = 0, aMaxV = 0;
+
+			int i,j,k;
+			for (i = 0; i < 3; i++)
+			{
+				if (aVertex[i].tu < aMinU)
+					aMinU = aVertex[i].tu;
+
+				if (aVertex[i].tv < aMinV)
+					aMinV = aVertex[i].tv;
+
+				if (aVertex[i].tu > aMaxU)
+					aMaxU = aVertex[i].tu;
+
+				if (aVertex[i].tv > aMaxV)
+					aMaxV = aVertex[i].tv;
+			}
+
+			VertexList aMasterList;
+			aMasterList.push_back (aVertex[0]);
+			aMasterList.push_back (aVertex[1]);
+			aMasterList.push_back (aVertex[2]);
+
+			VertexList aList;
+
+			int aLeft = (int)floorf (aMinU);
+			int aTop = (int)floorf (aMinV);
+			int aRight = (int)ceilf (aMaxU);
+			int aBottom = (int)ceilf (aMaxV);
+			if (aLeft < 0)
+				aLeft = 0;
+			if (aTop < 0)
+				aTop = 0;
+			if (aRight > mTexVecWidth)
+				aRight = mTexVecWidth;
+			if (aBottom > mTexVecHeight)
+				aBottom = mTexVecHeight;
+
+			GLTextureBlock &aStandardBlock = mTextures[0];
+			for (i = aTop; i < aBottom; i++)
+			{
+				for (j = aLeft; j < aRight; j++)
+				{
+					GLTextureBlock &aBlock = mTextures[i * mTexVecWidth + j];
+
+
+					VertexList aList = aMasterList;
+					for (k = 0; k < 3; k++)
+					{
+						aList[k].tu -= j;
+						aList[k].tv -= i;
+						if (i == mTexVecHeight-1)
+							aList[k].tv *= (float)aStandardBlock.mHeight / aBlock.mHeight;
+						if (j == mTexVecWidth-1)
+							aList[k].tu *= (float)aStandardBlock.mWidth / aBlock.mWidth;
+					}
+
+					DoPolyTextureClip (aList);
+					if (aList.size() >= 3)
+					{
+						glBindTexture (GL_TEXTURE_2D, aBlock.mTexture);
+						glBegin (GL_TRIANGLE_FAN);
+						for (int i = 0; i < aList.size (); ++i) {
+							glTexCoord2f (aList[i].tu, aList[i].tv);
+							glColor4ub (aList[i].color.r, aList[i].color.g,
+								    aList[i].color.b, aList[i].color.a);
+							glVertex3f (aList[i].sx, aList[i].sy, aList[i].sz);
+						}
+						glEnd ();
+					}
+				}
+			}
+		}
+	}
+}
+
 GLImage::GLImage(GLInterface* theInterface) :
 	MemoryImage(theInterface->mApp),
 	mInterface(theInterface),
@@ -560,8 +1086,32 @@ void GLImage::RehupFirstPixelTrans()
 
 bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty, bool convex)
 {
-	TRACE_THIS();
-	return false;
+	if (mInterface->GetScreenImage () != this)
+		return false;
+
+	SexyRGBA aColor = theColor.ToRGBA();
+
+	VertexList aList;
+	for (int i = 0; i < theNumVertices; i++)
+	{
+		SexyGLVertex vert = {
+			0, 0, aColor, theVertices[i].mX + tx, theVertices[i].mY + ty, 0
+		};
+		aList.push_back (vert);
+	}
+
+	if (theClipRect != NULL) {
+		DrawPolyClipped (theClipRect, aList);
+	} else {
+		glDisable (GL_TEXTURE_2D);
+		glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+		glBegin (GL_TRIANGLE_FAN);
+		for (int i = 0; i < aList.size(); ++i)
+			glVertex2f (aList[i].sx, aList[i].sy);
+		glEnd ();
+        }
+
+	return true;
 }
 
 void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
@@ -699,6 +1249,8 @@ void GLImage::Create(int theWidth, int theHeight)
 
 	mWidth = theWidth;
 	mHeight = theHeight;
+	mNumRows = theWidth;
+	mNumCols = theHeight;
 
 	mBits = NULL;
 
@@ -721,6 +1273,7 @@ uint32* GLImage::GetBits()
 
 void GLImage::Clear()
 {
+	TRACE_THIS();
 }
 
 void GLImage::NormalFillRect(const Rect& theRect, const Color& theColor)
@@ -747,16 +1300,12 @@ void GLImage::NormalBltMirror(Image* theImage, int theX, int theY, const Rect& t
 
 void GLImage::AdditiveBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
 {
-	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-	if (!srcImage)
-		return;
+	TRACE_THIS ();
 }
 
 void GLImage::AdditiveBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
 {
-	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-	if (!srcImage)
-		return;
+	TRACE_THIS ();
 }
 
 void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
@@ -784,13 +1333,37 @@ void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, c
 
 void GLImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
 {
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::BltMirror(theImage, theX, theY, theSrcRect, theColor, theDrawMode);
+		return;
+	}
+
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
 	if (!srcImage)
 		return;
+
+	srcImage->EnsureTexture();
+	if (!srcImage->mTexture)
+		return;
+
+	SexyTransform2D aTransform;
+
+	aTransform.Translate (-theSrcRect.mWidth, 0);
+	aTransform.Scale (-1, 1);
+	aTransform.Translate (theX, theY);
+
+	BltTransformed (theImage, NULL, theColor, theDrawMode, theSrcRect, aTransform);
 }
 
 void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect, const Color& theColor, int theDrawMode)
 {
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::BltF (theImage, theX, theY, theSrcRect, theClipRect, theColor, theDrawMode);
+		return;
+	}
+
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
         if (srcImage)
  		return;
@@ -806,39 +1379,135 @@ void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRe
 	srcImage->mTexture->Blt (theX, theY, theSrcRect, theColor);
 }
 
-void GLImage::BltRotated(Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
+void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Color& theColor,
+			      int theDrawMode, const Rect &theSrcRect,
+			      const SexyMatrix3 &theTransform,
+			      float theX, float theY, bool center)
 {
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-	if (!srcImage)
+        if (srcImage)
+ 		return;
+
+	srcImage->EnsureTexture();
+	if (!srcImage->mTexture)
 		return;
+
+	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	else
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	srcImage->mTexture->BltTransformed (theTransform, theSrcRect, theColor,
+					    theClipRect, theX, theY, center);
 }
 
-void GLImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRectOrig, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
+void GLImage::BltRotated (Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
 {
-	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-	if (!srcImage)
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::BltRotated (theImage, theX, theY, theSrcRect, theClipRect, theColor, theDrawMode,
+					 theRot, theRotCenterX, theRotCenterY);
 		return;
+	}
+
+	SexyTransform2D aTransform;
+
+	aTransform.Translate (-theRotCenterX, -theRotCenterY);
+	aTransform.RotateRad (theRot);
+	aTransform.Translate (theX + theRotCenterX, theY + theRotCenterY);
+
+	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
 }
 
-void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRectOrig, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
+void GLImage::StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
 {
-	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-	if (!srcImage)
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::StretchBlt (theImage, theDestRect, theSrcRect, theClipRect,
+					 theColor, theDrawMode, fastStretch);
 		return;
+	}
+
+	float xScale = (float)theDestRect.mWidth / theSrcRect.mWidth;
+	float yScale = (float)theDestRect.mHeight / theSrcRect.mHeight;
+
+	SexyTransform2D aTransform;
+	bool mirror = false;
+	if (mirror)
+	{
+		aTransform.Translate (-theSrcRect.mWidth, 0);
+		aTransform.Scale (-xScale, yScale);
+	}
+	else
+	{
+		aTransform.Scale (xScale, yScale);
+	}
+
+	aTransform.Translate (theDestRect.mX, theDestRect.mY);
+	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
+}
+
+void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
+{
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::StretchBltMirror (theImage, theDestRect, theSrcRect, theClipRect,
+					       theColor, theDrawMode, fastStretch);
+		return;
+	}
+
+	float xScale = (float)theDestRect.mWidth / theSrcRect.mWidth;
+	float yScale = (float)theDestRect.mHeight / theSrcRect.mHeight;
+
+	SexyTransform2D aTransform;
+	bool mirror = true;
+	if (mirror)
+	{
+		aTransform.Translate (-theSrcRect.mWidth, 0);
+		aTransform.Scale (-xScale, yScale);
+	}
+	else
+	{
+		aTransform.Scale (xScale, yScale);
+	}
+
+	aTransform.Translate (theDestRect.mX, theDestRect.mY);
+	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
 }
 
 void GLImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix, const Rect& theClipRect, const Color& theColor, int theDrawMode, const Rect &theSrcRect, bool blend)
 {
-	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-	if (!srcImage)
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::BltMatrix (theImage, x, y, theMatrix, theClipRect, theColor,
+					theDrawMode, theSrcRect, blend);
 		return;
+	}
+
+	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, theMatrix, blend, x, y);
 }
 
 void GLImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3], int theNumTriangles, const Rect& theClipRect, const Color &theColor, int theDrawMode, float tx, float ty, bool blend)
 {
-	GLImage * srcImage = dynamic_cast<GLImage*>(theTexture);
-	if (!srcImage)
+	if (mInterface->GetScreenImage() != this)
+	{
+		MemoryImage::BltTrianglesTex (theTexture, theVertices, theNumTriangles, theClipRect, theColor,
+					      theDrawMode, tx, ty, blend);
 		return;
+	}
+
+	GLImage * srcImage = dynamic_cast<GLImage*>(theTexture);
+        if (srcImage)
+ 		return;
+
+	srcImage->EnsureTexture();
+	if (!srcImage->mTexture)
+		return;
+
+	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	else
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	srcImage->mTexture->BltTriangles (theVertices, theNumTriangles, (uint32)theColor.ToInt(), tx, ty);
 }
 
 bool GLImage::Palletize()
