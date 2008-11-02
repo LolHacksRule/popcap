@@ -5,3 +5,5 @@
 *.so*
 semantic.cache
 .sconsign.dblite
+*.pyc
+*.pyo
