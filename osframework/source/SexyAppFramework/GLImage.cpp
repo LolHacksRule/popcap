@@ -80,27 +80,6 @@ public:
 
 }
 
-namespace Sexy {
-class GLImageAutoFallback
-{
-public:
-	GLImageAutoFallback(GLImage * dst, GLImage * src) :
-		mSrc(src), mDst(dst)
-        {
-		mDst->GetBits();
-		if (mSrc)
-			mSrc->GetBits();
-	};
-
-	~GLImageAutoFallback()
-        {
-	}
-private:
-	GLImage * mSrc;
-	GLImage * mDst;
-};
-}
-
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
 #endif

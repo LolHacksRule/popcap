@@ -8,14 +8,12 @@ namespace Sexy
 
 class GLInterface;
 class GLFont;
-class GLImageAutoFallback;
 class GLTexture;
 
 class GLImage : public MemoryImage
 {
 protected:
 	friend class			GLFont;
-	friend class			GLImageAutoFallback;
 	friend class			GLTexture;
 
 	void				DeleteAllNonSurfaceData();
