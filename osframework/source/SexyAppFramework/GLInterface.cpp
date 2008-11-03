@@ -12,6 +12,10 @@
 
 using namespace Sexy;
 
+#ifdef SEXY_OPENGLES
+#define ftofix(f) (GLfixed)(f * 65536.0f)
+#endif
+
 GLInterface::GLInterface(SexyAppBase* theApp)
 {
 	mApp = theApp;
@@ -85,6 +89,8 @@ void GLInterface::InitGL()
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureWidth);
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureHeight);
 
+	printf ("Maximium texture size: %d\n", mMaxTextureHeight);
+
 	mGLExtensions = (const char*)glGetString (GL_EXTENSIONS);
 	if (mGLExtensions) {
 		if (strstr (mGLExtensions, "GL_ARB_texture_non_power_of_two") ||
@@ -102,18 +108,29 @@ void GLInterface::InitGL()
 	glDisable (GL_NORMALIZE);
 	glDisable (GL_CULL_FACE);
 	glShadeModel (GL_FLAT);
+#ifndef SEXY_OPENGLES
 	glReadBuffer (GL_BACK);
+
 	glPixelStorei (GL_PACK_ROW_LENGTH, 0);
+#endif
 	glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 
+#ifdef GL_TEXTURE_GEN_S
 	glDisable (GL_TEXTURE_GEN_S);
 	glDisable (GL_TEXTURE_GEN_T);
-
+#endif
 	glClearColor (0.0, 0.0, 0.0, 0.0);
 
-	glMatrixMode (GL_PROJECTION );
+	glMatrixMode (GL_PROJECTION) ;
 	glLoadIdentity ();
+
+#ifndef SEXY_OPENGLES
 	glOrtho (0, mWidth, mHeight, 0, -1.0, 1.0);
+#else
+	glOrthox (ftofix (0.0), ftofix (mWidth),
+		  ftofix (mHeight), ftofix (0),
+		  ftofix (-1.0), ftofix (1.0));
+#endif
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
 

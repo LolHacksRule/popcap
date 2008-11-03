@@ -7,7 +7,11 @@
 #include "Rect.h"
 #include "Ratio.h"
 
+#ifdef SEXY_OPENGLES
+#include <GLES/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 namespace Sexy
 {

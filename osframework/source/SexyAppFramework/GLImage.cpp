@@ -88,6 +88,10 @@ public:
 #define GL_BGRA  0x80E1
 #endif
 
+#ifdef SEXY_OPENGLES
+#define ftofix(f) (GLfixed)(f * 65536.0f)
+#endif
+
 static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int height)
 {
 	GLuint texture;
@@ -104,7 +108,9 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#ifdef GL_TEXTURE_PRIORITY
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, 1);
+#endif
 
 	uint32* bits = theImage->GetBits ();
 	uint32* copy = new uint32[w * h];
@@ -289,8 +295,8 @@ GLuint GLTexture::GetTextureF (float x, float y, float &width, float &height,
 	if (bottom > aBlock.mHeight)
 		bottom = aBlock.mHeight;
 
-	width = right-left;
-	height = bottom-top;
+	width = right - left;
+	height = bottom - top;
 
 	u1 = left / aBlock.mWidth;
 	v1 = top / aBlock.mHeight;
@@ -386,6 +392,7 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
                         float y = dstY;// 0.5f;
 
                         glBindTexture (GL_TEXTURE_2D, aTexture);
+#ifndef SEXY_OPENGLES
                         glBegin (GL_TRIANGLE_STRIP);
                         glTexCoord2f (u1, v1);
                         glVertex2f (x, y);
@@ -396,7 +403,29 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
                         glTexCoord2f (u2, v2);
                         glVertex2f (x + aWidth, y + aHeight);
                         glEnd ();
+#else
+			GLfloat verts[4 * 2];
+			verts[0] = x;          verts[1] = y;
+			verts[2] = x;          verts[3] = y + aHeight;
+			verts[4] = x + aWidth; verts[5] = y;
+			verts[6] = x + aWidth; verts[7] = y + aHeight;
 
+			GLfloat coords[4 * 2];
+			coords[0] = u1; coords[1] = v1;
+			coords[2] = u1; coords[3] = v2;
+			coords[4] = u2; coords[5] = v1;
+			coords[6] = u2; coords[7] = v2;
+
+			glEnableClientState (GL_VERTEX_ARRAY);
+			glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+			glVertexPointer (2, GL_FLOAT, 0, verts);
+			glTexCoordPointer (2, GL_FLOAT, 0, coords);
+			glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
+			glDisableClientState (GL_VERTEX_ARRAY);
+			glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+#endif
 			srcX += aWidth;
 			dstX += aWidth;
 
@@ -598,6 +627,7 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 	VertexList &aList = *out;
 
         if (aList.size () >= 3) {
+#ifndef SEXY_OPENGLES
 		glBegin (GL_TRIANGLE_FAN);
 		for (int i = 0; i < aList.size(); ++i) {
 			glColor4ub (aList[i].color.r, aList[i].color.g,
@@ -606,6 +636,42 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 			glVertex2f (aList[i].sx, aList[i].sy);
 		}
 		glEnd ();
+#else
+		GLubyte* colors;
+		GLfloat* coords;
+		GLfloat* verts;
+
+		colors = new GLubyte[4 * aList.size()];
+		coords = new GLfloat[2 * aList.size()];
+		verts = new GLfloat[2 * aList.size()];
+		for (int i = 0; i < aList.size(); ++i) {
+			colors[i * 4]     = aList[i].color.r;
+			colors[i * 4 + 1] = aList[i].color.g;
+			colors[i * 4 + 2] = aList[i].color.b;
+			colors[i * 4 + 3] = aList[i].color.a;
+			coords[i * 2]     = aList[i].tu;
+			coords[i * 2 + 1] = aList[i].tv;
+			verts[i * 2]      = aList[i].sx;
+			verts[i * 2 + 1]  = aList[i].sy;
+		}
+
+		glEnableClientState (GL_VERTEX_ARRAY);
+		glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+		glEnableClientState (GL_COLOR_ARRAY);
+
+		glColorPointer (4, GL_UNSIGNED_BYTE, 0, colors);
+		glVertexPointer (2, GL_FLOAT, 0, verts);
+		glTexCoordPointer (2, GL_FLOAT, 0, coords);
+		glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
+
+		glDisableClientState (GL_VERTEX_ARRAY);
+		glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState (GL_COLOR_ARRAY);
+
+		delete [] colors;
+		delete [] coords;
+		delete [] verts;
+#endif
         }
 }
 
@@ -716,6 +782,7 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
                         glBindTexture (GL_TEXTURE_2D, aTexture);
 
                         if (!clipped) {
+#ifndef SEXY_OPENGLES
 				glBegin (GL_TRIANGLE_STRIP);
 				glTexCoord2f (u1, v1);
 				glVertex2f (tp[0].x,tp[0].y);
@@ -726,6 +793,29 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 				glTexCoord2f (u2, v2);
 				glVertex2f (tp[3].x,tp[3].y);
 				glEnd ();
+#else
+				GLfloat verts[4 * 2];
+				verts[0] = tp[0].x; verts[1] = tp[0].y;
+				verts[2] = tp[1].x; verts[3] = tp[1].y;
+				verts[4] = tp[2].x; verts[5] = tp[2].y;
+				verts[6] = tp[3].x; verts[7] = tp[3].y;
+
+				GLfloat coords[4 * 2];
+				coords[0] = u1; coords[1] = v1;
+				coords[2] = u1; coords[3] = v2;
+				coords[4] = u2; coords[5] = v1;
+				coords[6] = u2; coords[7] = v2;
+
+				glEnableClientState (GL_VERTEX_ARRAY);
+				glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+				glVertexPointer (2, GL_FLOAT, 0, verts);
+				glTexCoordPointer (2, GL_FLOAT, 0, coords);
+				glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
+				glDisableClientState (GL_VERTEX_ARRAY);
+				glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+#endif
                         }
                         else
 			{
@@ -921,6 +1011,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 					if (aList.size() >= 3)
 					{
 						glBindTexture (GL_TEXTURE_2D, aBlock.mTexture);
+#ifndef SEXY_OPENGLES
 						glBegin (GL_TRIANGLE_FAN);
 						for (int i = 0; i < aList.size (); ++i) {
 							glTexCoord2f (aList[i].tu, aList[i].tv);
@@ -929,6 +1020,43 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 							glVertex3f (aList[i].sx, aList[i].sy, aList[i].sz);
 						}
 						glEnd ();
+#else
+						GLubyte* colors;
+						GLfloat* coords;
+						GLfloat* verts;
+
+						colors = new GLubyte[4 * aList.size()];
+						coords = new GLfloat[2 * aList.size()];
+						verts = new GLfloat[3 * aList.size()];
+						for (int i = 0; i < aList.size(); ++i) {
+							colors[i * 4]     = aList[i].color.r;
+							colors[i * 4 + 1] = aList[i].color.g;
+							colors[i * 4 + 2] = aList[i].color.b;
+							colors[i * 4 + 3] = aList[i].color.a;
+							coords[i * 2]     = aList[i].tu;
+							coords[i * 2 + 1] = aList[i].tv;
+							verts[i * 2]      = aList[i].sx;
+							verts[i * 2 + 1]  = aList[i].sy;
+							verts[i * 2 + 2]  = aList[i].sz;
+						}
+
+						glEnableClientState (GL_VERTEX_ARRAY);
+						glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+						glEnableClientState (GL_COLOR_ARRAY);
+
+						glColorPointer (4, GL_UNSIGNED_BYTE, 0, colors);
+						glVertexPointer (3, GL_FLOAT, 0, verts);
+						glTexCoordPointer (2, GL_FLOAT, 0, coords);
+						glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
+
+						glDisableClientState (GL_VERTEX_ARRAY);
+						glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+						glDisableClientState (GL_COLOR_ARRAY);
+
+						delete [] colors;
+						delete [] coords;
+						delete [] verts;
+#endif
 					}
 				}
 			}
@@ -1089,10 +1217,29 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 	} else {
 		glDisable (GL_TEXTURE_2D);
 		glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+#ifndef SEXY_OPENGLES
 		glBegin (GL_TRIANGLE_FAN);
 		for (int i = 0; i < aList.size(); ++i)
 			glVertex2f (aList[i].sx, aList[i].sy);
 		glEnd ();
+#else
+		GLfloat* verts;
+
+		verts = new GLfloat[2 * aList.size()];
+		for (int i = 0; i < aList.size(); ++i) {
+			verts[i * 2]      = aList[i].sx;
+			verts[i * 2 + 1]  = aList[i].sy;
+		}
+
+		glEnableClientState (GL_VERTEX_ARRAY);
+
+		glVertexPointer (2, GL_FLOAT, 0, verts);
+		glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
+
+		glDisableClientState (GL_VERTEX_ARRAY);
+
+		delete [] verts;
+#endif
         }
 
 	return true;
@@ -1119,21 +1266,37 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 	float aWidth = theRect.mWidth;
 	float aHeight = theRect.mHeight;
 
+
+        glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+#ifdef SEXY_OPENGLES
+	GLfloat verts[4 * 2];
+	verts[0] = x;          verts[1] = y;
+	verts[2] = x;          verts[3] = y + aHeight;
+	verts[4] = x + aWidth; verts[5] = y;
+	verts[6] = x + aWidth; verts[7] = y + aHeight;
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, verts);
+	glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
+	glDisableClientState (GL_VERTEX_ARRAY);
+#else
 	SexyGLVertex aVertex[4] =
 	{
-		{ 0, 0, aColor, x,	      y,           0},
-		{ 0, 0, aColor, x,	      y + aHeight, 0},
+		{ 0, 0, aColor, x,	    y,           0},
+		{ 0, 0, aColor, x,	    y + aHeight, 0},
 		{ 0, 0, aColor, x + aWidth, y,           0},
 		{ 0, 0, aColor, x + aWidth, y + aHeight, 0}
 	};
 
-        glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
         glBegin (GL_TRIANGLE_STRIP);
         glVertex2f (aVertex[0].sx, aVertex[0].sy);
         glVertex2f (aVertex[1].sx, aVertex[1].sy);
         glVertex2f (aVertex[2].sx, aVertex[2].sy);
         glVertex2f (aVertex[3].sx, aVertex[3].sy);
         glEnd ();
+#endif
 }
 
 void GLImage::NormalDrawLine(double theStartX, double theStartY, double theEndX, double theEndY,
@@ -1173,13 +1336,27 @@ void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, doubl
 	y2 = theEndY;
 
         glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
-
+#ifndef SEXY_OPENGLES
         glBegin (GL_LINE_STRIP);
 
         glVertex2f (x1, y1);
         glVertex2f (x2, y2);
 
         glEnd ();
+#else
+	GLfloat verts[2 * 2];
+	verts[0] = x1; verts[1] = y1;
+	verts[2] = x2; verts[3] = y2;
+
+	static GLubyte indices[] = { 0, 1};
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, verts);
+	glDrawElements (GL_LINES, 2, GL_UNSIGNED_BYTE, indices);
+
+	glDisableClientState (GL_VERTEX_ARRAY);
+#endif
 }
 
 void GLImage::NormalDrawLineAA(double theStartX, double theStartY,
@@ -1219,13 +1396,27 @@ void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, dou
 	y2 = theEndY;
 
         glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
-
+#ifndef SEXY_OPENGLES
         glBegin (GL_LINE_STRIP);
 
         glVertex2f (x1, y1);
         glVertex2f (x2, y2);
 
         glEnd ();
+#else
+	GLfloat verts[2 * 2];
+	verts[0] = x1; verts[1] = y1;
+	verts[2] = x2; verts[3] = y2;
+
+	static GLubyte indices[] = { 0, 1};
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, verts);
+	glDrawElements (GL_LINES, 2, GL_UNSIGNED_BYTE, indices);
+
+	glDisableClientState (GL_VERTEX_ARRAY);
+#endif
 }
 
 void GLImage::CommitBits()
@@ -1406,7 +1597,8 @@ void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Co
 					    theClipRect, theX, theY, center);
 }
 
-void GLImage::BltRotated (Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
+void GLImage::BltRotated (Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect,
+			  const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
 {
 	if (mInterface->GetScreenImage() != this)
 	{
@@ -1424,7 +1616,8 @@ void GLImage::BltRotated (Image* theImage, float theX, float theY, const Rect &t
 	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
 }
 
-void GLImage::StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
+void GLImage::StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect,
+			 const Color& theColor, int theDrawMode, bool fastStretch)
 {
 	if (mInterface->GetScreenImage() != this)
 	{
