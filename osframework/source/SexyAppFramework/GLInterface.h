@@ -25,9 +25,9 @@ typedef std::set<GLImage*> GLImageSet;
 
 class GLInterface : public NativeDisplay
 {
-        friend class GLImage;
+	friend class GLImage;
 public:
-	SexyAppBase*			        mApp;
+	SexyAppBase*				mApp;
 
 	int					mWidth;
 	int					mHeight;
@@ -41,7 +41,7 @@ public:
 	Ratio					mDisplayAspect;
 
 	Rect					mPresentationRect;
-	int				        mFullscreenBits;
+	int					mFullscreenBits;
 	DWORD					mRefreshRate;
 	DWORD					mMillisecondsPerFrame;
 	int					mScanLineFailCount;
@@ -51,15 +51,15 @@ public:
 	bool					mVideoOnlyDraw;
 	ulong					mInitCount;
 
-        GLImage*                                mScreenImage;
+	GLImage*				mScreenImage;
 
-        GLint                                   mMinTextureWidth;
-        GLint                                   mMinTextureHeight;
-        GLint                                   mMaxTextureWidth;
-        GLint                                   mMaxTextureHeight;
-        GLint                                   mGoodTextureSize[8096];
-        GLboolean                               mTextureNPOT;
-        const char*                             mGLExtensions;
+	GLint					mMinTextureWidth;
+	GLint					mMinTextureHeight;
+	GLint					mMaxTextureWidth;
+	GLint					mMaxTextureHeight;
+	GLint					mGoodTextureSize[8096];
+	GLboolean				mTextureNPOT;
+	const char*				mGLExtensions;
 
 public:
 	GLInterface(SexyAppBase* theApp);
@@ -69,14 +69,14 @@ public:
 	virtual int				Init();
 	virtual void				Cleanup();
 
-        virtual void                            SwapBuffers();
-        virtual void                            InitGL();
+	virtual void				SwapBuffers();
+	virtual void				InitGL();
 
-        virtual bool                            Redraw(Rect* theClipRect);
+	virtual bool				Redraw(Rect* theClipRect);
 
-        void                                    GenGoodTexSize();
-        void                                    CalulateBestTexDimensions (int & theWidth, int & theHeight,
-                                                                           bool isEdge, bool usePOT);
+	void					GenGoodTexSize();
+	void					CalulateBestTexDimensions (int & theWidth, int & theHeight,
+									   bool isEdge, bool usePOT);
 };
 
 }

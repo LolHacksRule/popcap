@@ -35,47 +35,47 @@ typedef struct {
 namespace Sexy {
 struct GLTextureBlock
 {
-	GLuint    mTexture;
-	GLshort   mWidth;
-        GLshort   mHeight;
+	GLuint	  mTexture;
+	GLshort	  mWidth;
+	GLshort	  mHeight;
 };
 
 class GLTexture
 {
 public:
-        typedef std::vector<GLTextureBlock> TextureVector;
+	typedef std::vector<GLTextureBlock> TextureVector;
 
-        TextureVector             mTextures;
-        int                       mWidth;
-        int                       mHeight;
-        int                       mTexVecWidth;
-        int                       mTexVecHeight;
-        int                       mTexBlockWidth;
-        int                       mTexBlockHeight;
-        int                       mBitsChangedCount;
-        int                       mTexMemSize;
-        float                     mMaxTotalU;
-        float                     mMaxTotalV;
+	TextureVector		  mTextures;
+	int			  mWidth;
+	int			  mHeight;
+	int			  mTexVecWidth;
+	int			  mTexVecHeight;
+	int			  mTexBlockWidth;
+	int			  mTexBlockHeight;
+	int			  mBitsChangedCount;
+	int			  mTexMemSize;
+	float			  mMaxTotalU;
+	float			  mMaxTotalV;
 
 public:
-        GLTexture();
-        ~GLTexture();
+	GLTexture();
+	~GLTexture();
 
-        void                      ReleaseTextures ();
-        void                      CreateTextureDimensions (GLImage *theImage);
-        void                      CreateTextures (GLImage *theImage);
-        void                      CheckCreateTextures (GLImage *theImage);
+	void			  ReleaseTextures ();
+	void			  CreateTextureDimensions (GLImage *theImage);
+	void			  CreateTextures (GLImage *theImage);
+	void			  CheckCreateTextures (GLImage *theImage);
 
-        GLuint                    GetTexture (int x, int y, int &width, int &height, float &u1, float &v1,
-                                              float &u2, float &v2);
-        GLuint                    GetTextureF (float x, float y, float &width, float &height,
-                                               float &u1, float &v1, float &u2, float &v2);
+	GLuint			  GetTexture (int x, int y, int &width, int &height, float &u1, float &v1,
+					      float &u2, float &v2);
+	GLuint			  GetTextureF (float x, float y, float &width, float &height,
+					       float &u1, float &v1, float &u2, float &v2);
 
-        void                      Blt (float theX, float theY, const Rect& theSrcRect, const Color& theColor);
-        void                      BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcRect, const Color& theColor,
+	void			  Blt (float theX, float theY, const Rect& theSrcRect, const Color& theColor);
+	void			  BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcRect, const Color& theColor,
 						  const Rect *theClipRect = NULL, float theX = 0, float theY = 0, bool center = false);
-        void                      BltTriangles (const TriVertex theVertices[][3], int theNumTriangles, uint32 theColor,
-                                                float tx = 0, float ty = 0);
+	void			  BltTriangles (const TriVertex theVertices[][3], int theNumTriangles, uint32 theColor,
+						float tx = 0, float ty = 0);
 };
 
 }
@@ -85,7 +85,7 @@ public:
 #endif
 
 #ifndef GL_BGRA
-#define GL_BGRA  0x80E1
+#define GL_BGRA	 0x80E1
 #endif
 
 #ifdef SEXY_OPENGLES
@@ -130,7 +130,7 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 		GLenum format = GL_BGRA;
 
 #if defined(SEXY_INTEL_CANMORE) || defined(SEXY_INTEL_OLO)
-                /* FIXME: test GL_BGRA instead */
+		/* FIXME: test GL_BGRA instead */
 		format = GL_RGBA;
 #endif
 		int imageWidth = theImage->GetWidth();
@@ -143,7 +143,7 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 			{
 				uint32 pixel = src[j];
 				dst[j] =
-					(pixel  & 0xff00ff00) |
+					(pixel	& 0xff00ff00) |
 					((pixel & 0x00ff0000) >> 16) |
 					((pixel & 0x000000ff) << 16);
 
@@ -395,8 +395,8 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 	srcY = srcTop;
 	dstY = theY;
 
-        SexyRGBA rgba = theColor.ToRGBA ();
-        glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
+	SexyRGBA rgba = theColor.ToRGBA ();
+	glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
 
@@ -412,25 +412,25 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 
 			GLuint aTexture = GetTexture (srcX, srcY, aWidth, aHeight, u1, v1, u2, v2);
 
-                        float x = dstX;// - 0.5f;
-                        float y = dstY;// 0.5f;
+			float x = dstX;// - 0.5f;
+			float y = dstY;// 0.5f;
 
-                        glBindTexture (GL_TEXTURE_2D, aTexture);
+			glBindTexture (GL_TEXTURE_2D, aTexture);
 #ifndef SEXY_OPENGLES
-                        glBegin (GL_TRIANGLE_STRIP);
-                        glTexCoord2f (u1, v1);
-                        glVertex2f (x, y);
-                        glTexCoord2f (u1, v2);
-                        glVertex2f (x, y + aHeight);
-                        glTexCoord2f (u2, v1);
-                        glVertex2f (x + aWidth, y);
-                        glTexCoord2f (u2, v2);
-                        glVertex2f (x + aWidth, y + aHeight);
-                        glEnd ();
+			glBegin (GL_TRIANGLE_STRIP);
+			glTexCoord2f (u1, v1);
+			glVertex2f (x, y);
+			glTexCoord2f (u1, v2);
+			glVertex2f (x, y + aHeight);
+			glTexCoord2f (u2, v1);
+			glVertex2f (x + aWidth, y);
+			glTexCoord2f (u2, v2);
+			glVertex2f (x + aWidth, y + aHeight);
+			glEnd ();
 #else
 			GLfloat verts[4 * 2];
-			verts[0] = x;          verts[1] = y;
-			verts[2] = x;          verts[3] = y + aHeight;
+			verts[0] = x;	       verts[1] = y;
+			verts[2] = x;	       verts[3] = y + aHeight;
 			verts[4] = x + aWidth; verts[5] = y;
 			verts[6] = x + aWidth; verts[7] = y + aHeight;
 
@@ -650,7 +650,7 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 
 	VertexList &aList = *out;
 
-        if (aList.size () >= 3) {
+	if (aList.size () >= 3) {
 #ifndef SEXY_OPENGLES
 		glBegin (GL_TRIANGLE_FAN);
 		for (int i = 0; i < aList.size(); ++i) {
@@ -669,13 +669,13 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 		coords = new GLfloat[2 * aList.size()];
 		verts = new GLfloat[2 * aList.size()];
 		for (int i = 0; i < aList.size(); ++i) {
-			colors[i * 4]     = aList[i].color.r;
+			colors[i * 4]	  = aList[i].color.r;
 			colors[i * 4 + 1] = aList[i].color.g;
 			colors[i * 4 + 2] = aList[i].color.b;
 			colors[i * 4 + 3] = aList[i].color.a;
-			coords[i * 2]     = aList[i].tu;
+			coords[i * 2]	  = aList[i].tu;
 			coords[i * 2 + 1] = aList[i].tv;
-			verts[i * 2]      = aList[i].sx;
+			verts[i * 2]	  = aList[i].sx;
 			verts[i * 2 + 1]  = aList[i].sy;
 		}
 
@@ -696,7 +696,7 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 		delete [] coords;
 		delete [] verts;
 #endif
-        }
+	}
 }
 
 static void DoPolyTextureClip (VertexList &theList)
@@ -757,8 +757,8 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
 
-        glEnable (GL_TEXTURE_2D);
-        glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
+	glEnable (GL_TEXTURE_2D);
+	glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
 
 	while (srcY < srcBottom)
 	{
@@ -773,7 +773,7 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 			float x = dstX;// - pixelcorrect; // - 0.5f; //FIXME correct??
 			float y = dstY;// - pixelcorrect; // - 0.5f;
 
-			SexyVector2 p[4] = { SexyVector2 (x, y),           SexyVector2 (x,          y + aHeight),
+			SexyVector2 p[4] = { SexyVector2 (x, y),	   SexyVector2 (x,	    y + aHeight),
 					     SexyVector2 (x + aWidth, y) , SexyVector2 (x + aWidth, y + aHeight) };
 			SexyVector2 tp[4];
 
@@ -803,9 +803,9 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 				}
 			}
 
-                        glBindTexture (GL_TEXTURE_2D, aTexture);
+			glBindTexture (GL_TEXTURE_2D, aTexture);
 
-                        if (!clipped) {
+			if (!clipped) {
 #ifndef SEXY_OPENGLES
 				glBegin (GL_TRIANGLE_STRIP);
 				glTexCoord2f (u1, v1);
@@ -840,18 +840,18 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 				glDisableClientState (GL_VERTEX_ARRAY);
 				glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 #endif
-                        }
-                        else
+			}
+			else
 			{
 				VertexList aList;
 
-                                SexyGLVertex vertex0 = {(GLfloat)u1, (GLfloat)v1, rgba,
+				SexyGLVertex vertex0 = {(GLfloat)u1, (GLfloat)v1, rgba,
 							(GLfloat)tp[0].x, (GLfloat)tp[0].y};
-                                SexyGLVertex vertex1 = {(GLfloat)u1, (GLfloat)v2, rgba,
+				SexyGLVertex vertex1 = {(GLfloat)u1, (GLfloat)v2, rgba,
 							(GLfloat)tp[1].x, (GLfloat)tp[1].y};
-                                SexyGLVertex vertex2 = {(GLfloat)u2, (GLfloat)v1, rgba,
+				SexyGLVertex vertex2 = {(GLfloat)u2, (GLfloat)v1, rgba,
 							(GLfloat)tp[2].x, (GLfloat)tp[2].y};
-                                SexyGLVertex vertex3 = {(GLfloat)u2, (GLfloat)v2, rgba,
+				SexyGLVertex vertex3 = {(GLfloat)u2, (GLfloat)v2, rgba,
 							(GLfloat)tp[3].x, (GLfloat)tp[3].y};
 
 				aList.push_back (vertex0);
@@ -859,7 +859,7 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 				aList.push_back (vertex3);
 				aList.push_back (vertex2);
 
-                                DrawPolyClipped (theClipRect, aList);
+				DrawPolyClipped (theClipRect, aList);
 			}
 			srcX += aWidth;
 			dstX += aWidth;
@@ -1053,13 +1053,13 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 						coords = new GLfloat[2 * aList.size()];
 						verts = new GLfloat[3 * aList.size()];
 						for (int i = 0; i < aList.size(); ++i) {
-							colors[i * 4]     = aList[i].color.r;
+							colors[i * 4]	  = aList[i].color.r;
 							colors[i * 4 + 1] = aList[i].color.g;
 							colors[i * 4 + 2] = aList[i].color.b;
 							colors[i * 4 + 3] = aList[i].color.a;
-							coords[i * 2]     = aList[i].tu;
+							coords[i * 2]	  = aList[i].tu;
 							coords[i * 2 + 1] = aList[i].tv;
-							verts[i * 2]      = aList[i].sx;
+							verts[i * 2]	  = aList[i].sx;
 							verts[i * 2 + 1]  = aList[i].sy;
 							verts[i * 2 + 2]  = aList[i].sz;
 						}
@@ -1251,7 +1251,7 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 
 		verts = new GLfloat[2 * aList.size()];
 		for (int i = 0; i < aList.size(); ++i) {
-			verts[i * 2]      = aList[i].sx;
+			verts[i * 2]	  = aList[i].sx;
 			verts[i * 2 + 1]  = aList[i].sy;
 		}
 
@@ -1264,7 +1264,7 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 
 		delete [] verts;
 #endif
-        }
+	}
 
 	return true;
 }
@@ -1291,11 +1291,11 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 	float aHeight = theRect.mHeight;
 
 
-        glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+	glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
 #ifdef SEXY_OPENGLES
 	GLfloat verts[4 * 2];
-	verts[0] = x;          verts[1] = y;
-	verts[2] = x;          verts[3] = y + aHeight;
+	verts[0] = x;	       verts[1] = y;
+	verts[2] = x;	       verts[3] = y + aHeight;
 	verts[4] = x + aWidth; verts[5] = y;
 	verts[6] = x + aWidth; verts[7] = y + aHeight;
 
@@ -1308,18 +1308,18 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 #else
 	SexyGLVertex aVertex[4] =
 	{
-		{ 0, 0, aColor, x,	    y,           0},
+		{ 0, 0, aColor, x,	    y,		 0},
 		{ 0, 0, aColor, x,	    y + aHeight, 0},
-		{ 0, 0, aColor, x + aWidth, y,           0},
+		{ 0, 0, aColor, x + aWidth, y,		 0},
 		{ 0, 0, aColor, x + aWidth, y + aHeight, 0}
 	};
 
-        glBegin (GL_TRIANGLE_STRIP);
-        glVertex2f (aVertex[0].sx, aVertex[0].sy);
-        glVertex2f (aVertex[1].sx, aVertex[1].sy);
-        glVertex2f (aVertex[2].sx, aVertex[2].sy);
-        glVertex2f (aVertex[3].sx, aVertex[3].sy);
-        glEnd ();
+	glBegin (GL_TRIANGLE_STRIP);
+	glVertex2f (aVertex[0].sx, aVertex[0].sy);
+	glVertex2f (aVertex[1].sx, aVertex[1].sy);
+	glVertex2f (aVertex[2].sx, aVertex[2].sy);
+	glVertex2f (aVertex[3].sx, aVertex[3].sy);
+	glEnd ();
 #endif
 }
 
@@ -1344,7 +1344,7 @@ void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, doubl
 		return;
 	}
 
-        glDisable (GL_TEXTURE_2D);
+	glDisable (GL_TEXTURE_2D);
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1359,14 +1359,14 @@ void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, doubl
 	x2 = theEndX;
 	y2 = theEndY;
 
-        glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+	glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
 #ifndef SEXY_OPENGLES
-        glBegin (GL_LINE_STRIP);
+	glBegin (GL_LINE_STRIP);
 
-        glVertex2f (x1, y1);
-        glVertex2f (x2, y2);
+	glVertex2f (x1, y1);
+	glVertex2f (x2, y2);
 
-        glEnd ();
+	glEnd ();
 #else
 	GLfloat verts[2 * 2];
 	verts[0] = x1; verts[1] = y1;
@@ -1404,7 +1404,7 @@ void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, dou
 		return;
 	}
 
-        glDisable (GL_TEXTURE_2D);
+	glDisable (GL_TEXTURE_2D);
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1419,14 +1419,14 @@ void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, dou
 	x2 = theEndX;
 	y2 = theEndY;
 
-        glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
+	glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
 #ifndef SEXY_OPENGLES
-        glBegin (GL_LINE_STRIP);
+	glBegin (GL_LINE_STRIP);
 
-        glVertex2f (x1, y1);
-        glVertex2f (x2, y2);
+	glVertex2f (x1, y1);
+	glVertex2f (x2, y2);
 
-        glEnd ();
+	glEnd ();
 #else
 	GLfloat verts[2 * 2];
 	verts[0] = x1; verts[1] = y1;
@@ -1606,8 +1606,8 @@ void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Co
 			      float theX, float theY, bool center)
 {
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
-        if (!srcImage)
- 		return;
+	if (!srcImage)
+		return;
 
 	srcImage->EnsureTexture();
 	if (!srcImage->mTexture)
@@ -1723,8 +1723,8 @@ void GLImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3
 	}
 
 	GLImage * srcImage = dynamic_cast<GLImage*>(theTexture);
-        if (srcImage)
- 		return;
+	if (srcImage)
+		return;
 
 	srcImage->EnsureTexture();
 	if (!srcImage->mTexture)

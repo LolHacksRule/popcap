@@ -23,30 +23,30 @@ public:
 	GdlGLESInterface(SexyAppBase* theApp);
 	virtual ~GdlGLESInterface();
 
-	virtual int			        Init();
-	virtual void			        Cleanup();
+	virtual int				Init();
+	virtual void				Cleanup();
 
-        virtual void                            SwapBuffers();
+	virtual void				SwapBuffers();
 
-	virtual void			        RemapMouse(int& theX, int& theY);
-        virtual bool                            EnableCursor(bool enable);
+	virtual void				RemapMouse(int& theX, int& theY);
+	virtual bool				EnableCursor(bool enable);
 	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
 	virtual void				SetCursorPos(int theCursorX, int theCursorY);
 
-        virtual Image*                          CreateImage(SexyAppBase * theApp,
-                                                            int width, int height);
-        virtual bool                            HasEvent();
-        virtual bool                            GetEvent(struct Event &event);
+	virtual Image*				CreateImage(SexyAppBase * theApp,
+							    int width, int height);
+	virtual bool				HasEvent();
+	virtual bool				GetEvent(struct Event &event);
 
 private:
-        EGLint                                  mEGLMajor;
-        EGLint                                  mEGLMinor;
+	EGLint					mEGLMajor;
+	EGLint					mEGLMinor;
 
-        EGLDisplay                              mDpy;
-        EGLConfig                               mConfig;
-        EGLSurface                              mSurface;
-        EGLContext                              mContext;
-        NativeWindowType                        mWindow;
+	EGLDisplay				mDpy;
+	EGLConfig				mConfig;
+	EGLSurface				mSurface;
+	EGLContext				mContext;
+	NativeWindowType			mWindow;
 };
 
 }

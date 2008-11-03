@@ -20,10 +20,10 @@ protected:
 
 protected:
 	GLInterface*			mInterface;
-        GLTexture*                      mTexture;
+	GLTexture*			mTexture;
 
 public:
-        int                             mDirty;
+	int				mDirty;
 	bool				mSurfaceSet;
 	bool				mNoLock;
 	bool				mVideoMemory;
@@ -63,7 +63,7 @@ public:
 	GLImage(GLInterface* theInterface);
 	virtual ~GLImage();
 
-        void                            DeleteSurface();
+	void				DeleteSurface();
 
 	virtual bool			LockSurface();
 	virtual bool			UnlockSurface();
@@ -92,13 +92,13 @@ public:
 	virtual void			DeleteNativeData();
 	virtual void			DeleteExtraBuffers();
 
-        virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
+	virtual void			Flip(enum FlipFlags flags = FLIP_NONE);
 
-        void                            EnsureTexture();
-        void                            BltTransformed(Image* theImage, const Rect* theClipRect, const Color& theColor,
-                                                       int theDrawMode, const Rect &theSrcRect,
-                                                       const SexyMatrix3 &theTransform,
-                                                       float theX = 0, float theY = 0, bool center = false);
+	void				EnsureTexture();
+	void				BltTransformed(Image* theImage, const Rect* theClipRect, const Color& theColor,
+						       int theDrawMode, const Rect &theSrcRect,
+						       const SexyMatrix3 &theTransform,
+						       float theX = 0, float theY = 0, bool center = false);
 };
 
 }

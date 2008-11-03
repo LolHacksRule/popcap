@@ -93,10 +93,10 @@ int GdlGLESInterface::Init (void)
 	static EGLint attributes[] =
 	{
 		EGL_BUFFER_SIZE,    24,//EGL_DONT_CARE,
-		//EGL_RED_SIZE,       8,
+		//EGL_RED_SIZE,	      8,
 		//EGL_GREEN_SIZE,     8,
 		//EGL_BLUE_SIZE,      8,
-		EGL_DEPTH_SIZE,     32,
+		EGL_DEPTH_SIZE,	    32,
 		EGL_NONE
 	};
 
@@ -120,7 +120,7 @@ int GdlGLESInterface::Init (void)
 
 #ifdef SEXY_INTEL_CANMORE
 	mSurface = eglCreateWindowSurface (mDpy, configs[0],
-					     (EGLSurface)GDL_PLANE_ID_UPP_C, NULL);
+					   (EGLSurface)GDL_PLANE_ID_UPP_C, NULL);
 #else
 	mSurface = eglCreateWindowSurface (mDpy, configs[0], NULL, NULL);
 #endif
@@ -266,7 +266,7 @@ public:
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
 		return new GdlGLESInterface (theApp);
-        }
+	}
 };
 
 static GdlGLESVideoDriver aGdlGLESVideoDriver;
@@ -275,4 +275,3 @@ VideoDriver* GetGdlGLESVideoDriver()
 {
 	return &aGdlGLESVideoDriver;
 }
-

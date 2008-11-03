@@ -1121,7 +1121,7 @@ bool SexyAppBase::DrawDirtyStuff()
 
 		mScreenBltTime = aEndTime - aPreScreenBltTime;
 
-		if (0 && mFPSTime >= 2000) // Show FPS about every 5 seconds
+		if (1 && mFPSTime >= 2000) // Show FPS about every 5 seconds
 		{
 			uint32 aTickNow = GetTickCount();
 

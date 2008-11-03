@@ -28,10 +28,10 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 	mRefreshRate = 60;
 	mMillisecondsPerFrame = 1000 / mRefreshRate;
 
-        mMinTextureWidth = 1;
-        mMinTextureHeight = 1;
-        mMaxTextureWidth = 4096;
-        mMaxTextureHeight = 4096;
+	mMinTextureWidth = 1;
+	mMinTextureHeight = 1;
+	mMaxTextureWidth = 4096;
+	mMaxTextureHeight = 4096;
 	mTextureNPOT = GL_FALSE;
 
 	mGLExtensions = NULL;
@@ -51,10 +51,10 @@ int GLInterface::Init(void)
 {
 	GLInterface::Cleanup();
 
-        mMinTextureWidth = 1;
-        mMinTextureHeight = 1;
-        mMaxTextureWidth = 4096;
-        mMaxTextureHeight = 4096;
+	mMinTextureWidth = 1;
+	mMinTextureHeight = 1;
+	mMaxTextureWidth = 4096;
+	mMaxTextureHeight = 4096;
 	mTextureNPOT = GL_FALSE;
 
 	return 0;
@@ -98,6 +98,8 @@ void GLInterface::InitGL()
 		    strstr (mGLExtensions, "GL_ARB_texture_rectangle") ||
 		    strstr (mGLExtensions, "GL_EXT_texture_rectangle"))
 			mTextureNPOT = GL_TRUE;
+
+		printf ("GL extensions: %s\n", mGLExtensions);
 	}
 
 	GenGoodTexSize ();
