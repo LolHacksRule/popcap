@@ -103,6 +103,12 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 
 	/* Create an OpenGL texture for the image */
 	glGenTextures (1, &texture);
+	if (texture == 0)
+	{
+		printf ("Generating a texture failed.");
+		return 0;
+	}
+
 	glBindTexture (GL_TEXTURE_2D, texture);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -121,12 +127,30 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 		int aHeight = std::min (h, (theImage->GetHeight() - y));
 		int aWidthExtra = w > aWidth ? w - aWidth : 0;
 		int aHeightExtra = h > aHeight ? h - aHeight : 0;
+		GLenum format = GL_BGRA;
 
+#if defined(SEXY_INTEL_CANMORE) || defined(SEXY_INTEL_OLO)
+                /* FIXME: test GL_BGRA instead */
+		format = GL_RGBA;
+#endif
 		int imageWidth = theImage->GetWidth();
 		uint32 * dst = copy;
 		uint32 * src = bits + y * imageWidth + x;
 		for (i = 0; i < aHeight; i++) {
+#if defined(SEXY_INTEL_CANMORE) || defined(SEXY_INTEL_OLO)
+			/* FIXME: test GL_BGRA instead */
+			for (uint32 j = 0; j < aWidth; j++)
+			{
+				uint32 pixel = src[j];
+				dst[j] =
+					(pixel  & 0xff00ff00) |
+					((pixel & 0x00ff0000) >> 16) |
+					((pixel & 0x000000ff) << 16);
+
+			}
+#else
 			memcpy (dst, src, aWidth * 4);
+#endif
 			memset (dst + aWidth, 0, aWidthExtra * 4);
 			dst += w;
 			src += imageWidth;
@@ -138,7 +162,7 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 			      GL_RGBA,
 			      w, h,
 			      0,
-			      GL_BGRA,
+			      GL_RGBA, //GL_BGRA,
 			      GL_UNSIGNED_BYTE,
 			      copy);
 		delete [] copy;
