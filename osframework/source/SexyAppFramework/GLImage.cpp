@@ -162,7 +162,7 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 			      GL_RGBA,
 			      w, h,
 			      0,
-			      GL_RGBA, //GL_BGRA,
+			      format,
 			      GL_UNSIGNED_BYTE,
 			      copy);
 		delete [] copy;
