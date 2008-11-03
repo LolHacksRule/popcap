@@ -117,7 +117,7 @@ int DFBInterface::Init(void)
 
 	IDirectFBSurface * surface = 0;
 
-#if 1
+#if !defined(SEXY_INTEL_CANMORE) && !defined(SEXY_INTEL_OLO)
 	DFBWindowDescription window_desc;
 
 	window_desc.flags =
