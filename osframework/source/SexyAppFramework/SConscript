@@ -41,6 +41,12 @@ if 'WGL' in env['DRIVERS']:
     env['WGL']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_WGL_DRIVER'])
 
+if 'GDLGLES' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLInterface.cpp"]
+    srcs += ["GdlGLESInterface.cpp"]
+    env['GDLGLES']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_GDLGLES_DRIVER'])
+
 env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                              os.path.join('..', 'PakLib')],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
@@ -54,6 +60,8 @@ if gameenv['BUILD_STATIC']:
         gameenv['GLX']['ENABLE'](gameenv)
     if 'WGL' in env['DRIVERS']:
         gameenv['WGL']['ENABLE'](gameenv)
+    if 'GDLGLES' in env['DRIVERS']:
+        gameenv['GDLGLES']['ENABLE'](gameenv)
 
     gameenv.PrependUnique(LIBPATH = [os.path.join('..', 'ImageLib'),
                                      os.path.join('..', 'PakLib')],
