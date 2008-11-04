@@ -22,6 +22,13 @@ GdlGLESInterface::GdlGLESInterface (SexyAppBase* theApp)
 	mSurface = EGL_NO_SURFACE;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
+	mCursorHotX = 0;
+	mCursorHotY = 0;
+	mCursorX = 0;
+	mCursorY = 0;
+	mCursorOldX = 0;
+	mCursorOldY = 0;
+	mCursorEnabled = false;
 }
 
 GdlGLESInterface::~GdlGLESInterface ()
@@ -189,6 +196,8 @@ void GdlGLESInterface::Cleanup ()
 
 	GLInterface::Cleanup ();
 
+	mCursorImage = 0;
+
 	if (mScreenImage)
 		delete mScreenImage;
 	mScreenImage = NULL;
@@ -209,6 +218,11 @@ void GdlGLESInterface::Cleanup ()
 	if (mDpy)
 		eglTerminate (mDpy);
 	mDpy = NULL;
+
+	mCursorX = 0;
+	mCursorY = 0;
+	mCursorOldX = 0;
+	mCursorOldY = 0;
 }
 
 void GdlGLESInterface::RemapMouse(int& theX, int& theY)
@@ -217,20 +231,48 @@ void GdlGLESInterface::RemapMouse(int& theX, int& theY)
 
 bool GdlGLESInterface::EnableCursor(bool enable)
 {
-	return false;
+	mCursorEnabled = enable;
+	return true;
 }
 
 bool GdlGLESInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
+	GLImage * aGLImage = dynamic_cast<GLImage*>(theImage);
+	mCursorImage = aGLImage;
+	mCursorHotX = theHotX;
+	mCursorHotY = theHotY;
 	return false;
 }
 
 void GdlGLESInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
+        mCursorOldX = mCursorX;
+        mCursorOldY = mCursorY;
+	mCursorX = theCursorX;
+	mCursorY = theCursorY;
+}
+
+bool GdlGLESInterface::CursorChanged(int theCursorX, int theCursorY)
+{
+	SetCursorPos (theCursorX, theCursorY);
+	if (mCursorImage &&
+	    (mCursorOldX != mCursorX ||
+	     mCursorOldY != mCursorY))
+		return true;
+	return false;
+}
+
+bool GdlGLESInterface::DrawCursor(Graphics* g)
+{
+	if (!mCursorImage)
+		return false;
+
+	g->DrawImage (mCursorImage, mCursorX, mCursorY);
+	return true;
 }
 
 Image* GdlGLESInterface::CreateImage(SexyAppBase * theApp,
-				 int width, int height)
+				     int width, int height)
 {
 	GLImage* anImage = new GLImage(this);
 

@@ -38,6 +38,9 @@ public:
 	virtual bool				HasEvent();
 	virtual bool				GetEvent(struct Event &event);
 
+        virtual bool                            CursorChanged(int theCursorX, int theCursorY);
+        virtual bool                            DrawCursor(Graphics* g);
+
 private:
 	EGLint					mEGLMajor;
 	EGLint					mEGLMinor;
@@ -47,6 +50,16 @@ private:
 	EGLSurface				mSurface;
 	EGLContext				mContext;
 	NativeWindowType			mWindow;
+
+        bool                                    mCursorEnabled;
+        int                                     mCursorX;
+        int                                     mCursorY;
+        int                                     mCursorOldX;
+        int                                     mCursorOldY;
+        int                                     mCursorHotX;
+        int                                     mCursorHotY;
+
+        GLImage*                                mCursorImage;
 };
 
 }
