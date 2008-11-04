@@ -60,6 +60,8 @@ public:
 	GLint					mGoodTextureSize[8096];
 	GLboolean				mTextureNPOT;
 	const char*				mGLExtensions;
+
+public:
         GLint                                   mGLMajor;
         GLint                                   mGLMinor;
 
