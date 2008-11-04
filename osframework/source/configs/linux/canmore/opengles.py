@@ -17,3 +17,6 @@ def Configure (env):
     gles = {}
     gles['ENABLE'] = EnableGDLGLES
     env.AppendUnique(GDLGLES = gles)
+
+    ### enable genaric linux input driver.
+    configs.linux.LinuxInputConfigure (env)
