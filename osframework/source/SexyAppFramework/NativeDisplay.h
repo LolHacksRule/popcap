@@ -12,6 +12,7 @@ namespace Sexy
 class Font;
 class Image;
 class SexyAppBase;
+class Graphics;
 
 enum EventType {
     EVENT_NONE,
@@ -74,6 +75,9 @@ public:
 	virtual Image*			            GetScreenImage() = 0;
 	virtual bool				    Redraw(Rect* theClipRect = 0) = 0;
 	virtual void				    RemapMouse(int& theX, int& theY) = 0;
+
+        virtual bool                                CursorChanged(int theCursorX, int theCursorY);
+        virtual bool                                DrawCursor(Graphics* g);
 
         virtual bool                                EnableCursor(bool enable);
 	virtual bool				    SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);

@@ -77,3 +77,13 @@ bool NativeDisplay::GetEvent(struct Event & event)
 	event.type = EVENT_NONE;
 	return false;
 }
+
+bool NativeDisplay::CursorChanged(int theCursorX, int theCursorY)
+{
+	return false;
+}
+
+bool NativeDisplay::DrawCursor(Sexy::Graphics* g)
+{
+	return false;
+}
