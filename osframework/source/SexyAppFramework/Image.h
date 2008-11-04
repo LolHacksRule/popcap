@@ -54,6 +54,12 @@ enum FlipFlags {
     FLIP_WAIT_SYNC = FLIP_WAIT | FLIP_ONSYNC
 };
 
+enum ImageFlags {
+    IMAGE_FLAGS_NONE          = 0,
+    IMAGE_FLAGS_DOUBLE_BUFFER = 1 << 0,
+    IMAGE_FLAGS_FLIP_AS_COPY  = 1 << 1
+};
+
 class Image
 {
 	friend class			Sexy::SysFont;
@@ -61,15 +67,17 @@ class Image
 public:
 	bool					mDrawn;
 	std::string				mFilePath;
-	int						mWidth;
-	int						mHeight;
+	int					mWidth;
+	int					mHeight;
 
 	// for image strips
-	int						mNumRows; 
-	int						mNumCols;
+	int					mNumRows;
+	int					mNumCols;
 
 	// for animations
 	AnimInfo				*mAnimInfo;
+
+        ImageFlags                               mFlags;
 
 public:
 	Image();

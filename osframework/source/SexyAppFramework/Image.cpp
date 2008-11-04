@@ -13,6 +13,7 @@ Image::Image()
 
 	mAnimInfo = NULL;
 	mDrawn = false;
+	mFlags = IMAGE_FLAGS_NONE;
 }
 
 Image::Image(const Image& theImage) :
