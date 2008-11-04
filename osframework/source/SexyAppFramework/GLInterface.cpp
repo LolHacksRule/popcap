@@ -35,6 +35,8 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 	mTextureNPOT = GL_FALSE;
 
 	mGLExtensions = NULL;
+	mGLMajor = 1;
+        mGLMinor = 1;
 }
 
 GLInterface::~GLInterface()
@@ -65,6 +67,8 @@ void GLInterface::Cleanup()
 	mInitialized = false;
 
 	mGLExtensions = NULL;
+	mGLMajor = 1;
+        mGLMinor = 1;
 }
 
 bool GLInterface::Redraw(Rect* theClipRect)
@@ -101,6 +105,17 @@ void GLInterface::InitGL()
 
 		printf ("GL extensions: %s\n", mGLExtensions);
 	}
+	const char* version = (const char*)glGetString (GL_VERSION);
+	const char* str = version;
+	while (!(*str >= '0' && *str <= '9') && *str)
+		str++;
+	if (*str)
+	{
+		mGLMajor = atoi (str);
+		str = strchr (str, '.') + 1;
+		mGLMinor = atoi (str);
+	}
+	printf ("GL version: %s(%d.%d)\n", version, mGLMajor, mGLMinor);
 
 	GenGoodTexSize ();
 	glEnable (GL_BLEND);

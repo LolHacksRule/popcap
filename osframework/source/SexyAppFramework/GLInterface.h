@@ -60,6 +60,8 @@ public:
 	GLint					mGoodTextureSize[8096];
 	GLboolean				mTextureNPOT;
 	const char*				mGLExtensions;
+        GLint                                   mGLMajor;
+        GLint                                   mGLMinor;
 
 public:
 	GLInterface(SexyAppBase* theApp);
