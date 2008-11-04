@@ -73,6 +73,7 @@ LinuxInputInterface::LinuxInputInterface (InputManager* theManager)
 
 LinuxInputInterface::~LinuxInputInterface ()
 {
+    Cleanup ();
 }
 
 bool LinuxInputInterface::Init()
@@ -150,6 +151,7 @@ handle_key_event (struct input_event & linux_event,
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
 		else if (linux_event.value == 0)
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
+		event.flags = EVENT_FLAGS_BUTTON;
 		if (linux_event.code == BTN_MOUSE)
 			event.button = 1;
 		else if (linux_event.code == (BTN_MOUSE + 1))
@@ -170,11 +172,13 @@ handle_rel_event (struct input_event & linux_event,
 	{
 	case REL_X:
 		event.type = EVENT_MOUSE_MOTION;
-		event.x += linux_event.value;
+		event.flags = EVENT_FLAGS_REL_AXIS;
+		event.x = linux_event.value;
 		break;
 	case REL_Y:
 		event.type = EVENT_MOUSE_MOTION;
-		event.y += linux_event.value;
+		event.flags = EVENT_FLAGS_REL_AXIS;
+		event.y = linux_event.value;
 		break;
 	default:
 		break;
@@ -191,10 +195,12 @@ handle_abs_event (struct input_event & linux_event,
 	{
 	case ABS_X:
 		event.type = EVENT_MOUSE_MOTION;
+		event.flags = EVENT_FLAGS_AXIS;
 		event.x = linux_event.value;
 		break;
 	case ABS_Y:
 		event.type = EVENT_MOUSE_MOTION;
+		event.flags = EVENT_FLAGS_AXIS;
 		event.y = linux_event.value;
 		break;
 	default:
@@ -234,7 +240,7 @@ void* LinuxInputInterface::Run (void * data)
 		FD_ZERO (&set);
 		FD_SET (fd, &set);
 
-		status = select (fd + 1, &set, NULL, NULL, NULL );
+		status = select (fd + 1, &set, NULL, NULL, NULL);
 		if (status < 0 && errno != EINTR)
 			break;
 		if (status < 0)
@@ -258,6 +264,7 @@ void* LinuxInputInterface::Run (void * data)
 			Event event;
 
 			event.type = EVENT_NONE;
+			event.flags = 0;
 			event.x = driver->mX;
 			event.y = driver->mY;
 
@@ -265,14 +272,20 @@ void* LinuxInputInterface::Run (void * data)
 
 			if (event.type == EVENT_MOUSE_MOTION)
 			{
-				driver->mX = event.x;
-				driver->mY = event.y;
+				if (event.flags & EVENT_FLAGS_AXIS)
+				{
+					driver->mX = event.x;
+					driver->mY = event.y;
+				}
 			}
 			if (event.type != EVENT_NONE)
 			{
-				printf ("event.type: %d\n", event.type);
-				printf ("event.x: %d\n", event.x);
-				printf ("event.y: %d\n", event.y);
+				if (0)
+				{
+					printf ("event.type: %d\n", event.type);
+					printf ("event.x: %d\n", event.x);
+					printf ("event.y: %d\n", event.y);
+				}
 				driver->PostEvent (event);
 			}
 		}
