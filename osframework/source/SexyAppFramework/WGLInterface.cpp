@@ -51,6 +51,7 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 	ret = 1;
 	Event event;
 	event.type = EVENT_NONE;
+	event.flags = 0;
 	switch (uMsg)
 	{
 	case WM_CLOSE:
@@ -62,42 +63,49 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		break;
 	case WM_LBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
+		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 		event.button = 1;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
 		break;
 	case WM_LBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
+		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 		event.button = 1;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
 		break;
 	case WM_MBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
+		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 		event.button = 3;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
 		break;
 	case WM_MBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
+		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 		event.button = 3;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
 		break;
 	case WM_RBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
+		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 		event.button = 2;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
 		break;
 	case WM_RBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
+		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 		event.button = 2;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
 		break;
 	case WM_MOUSEMOVE:
 		event.type = EVENT_MOUSE_MOTION;
+		event.flags = EVENT_FLAGS_AXIS;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
 		break;

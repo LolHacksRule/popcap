@@ -185,6 +185,7 @@ bool GLXInterface::GetEvent(struct Event &event)
 	XNextEvent (mDpy, &xevent);
 
 	event.type = EVENT_NONE;
+	event.flags = 0;
 	KeySym key;
 
 	//printf ("XEvent type %d\n", xevent.type);
@@ -230,6 +231,7 @@ bool GLXInterface::GetEvent(struct Event &event)
 		XButtonPressedEvent * be = (XButtonPressedEvent*)&xevent;
 		if (be->button >= Button1 && be->button <= Button3) {
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
+			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (be->button) {
 			case Button1:
 				event.button = 1;
@@ -253,6 +255,7 @@ bool GLXInterface::GetEvent(struct Event &event)
 		XButtonReleasedEvent * be = (XButtonReleasedEvent*)&xevent;
 		if (be->button >= Button1 && be->button <= Button3) {
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
+			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (be->button) {
 			case Button1:
 				event.button = 1;
@@ -275,6 +278,7 @@ bool GLXInterface::GetEvent(struct Event &event)
 	{
 		XMotionEvent * me = (XMotionEvent*)&xevent;
 		event.type = EVENT_MOUSE_MOTION;
+		event.flags = EVENT_FLAGS_AXIS;
 		event.x = me->x;
 		event.y = me->y;
 		break;

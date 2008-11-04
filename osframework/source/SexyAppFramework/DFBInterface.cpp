@@ -403,19 +403,21 @@ bool DFBInterface::GetEvent(struct Event &event)
 	if (mBuffer->GetEvent(mBuffer, &dfb_event) != DFB_OK)
 		return false;
 
+	event.type = EVENT_NONE;
+	event.flags = 0;
 	//printf ("clazz %d\n", (int)dfb_event.clazz);
 	switch (dfb_event.clazz) {
 	case DFEC_INPUT:
 		DFBInputEvent * e;
 
 		e = &dfb_event.input;
-		event.type = EVENT_NONE;
 		//printf ("type %d\n", (int)e->type);
 		switch (e->type) {
 		case DIET_BUTTONPRESS:
 			event.x = mMouseX;
 			event.y = mMouseY;
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
+			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
 			case DIBI_LEFT:
 				event.button = 1;
@@ -434,6 +436,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			event.x = mMouseX;
 			event.y = mMouseY;
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
+			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
 			case DIBI_LEFT:
 				event.button = 1;
@@ -470,6 +473,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 				event.x = mMouseX;
 				event.y = mMouseY;
 				event.type = EVENT_MOUSE_MOTION;
+				event.flags = EVENT_FLAGS_AXIS;
 			}
 			break;
 		case DIET_KEYPRESS:
@@ -533,6 +537,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			event.x = mMouseX;
 			event.y = mMouseY;
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
+			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
 			case DIBI_LEFT:
 				event.button = 1;
@@ -551,6 +556,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			event.x = mMouseX;
 			event.y = mMouseY;
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
+			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
 			case DIBI_LEFT:
 				event.button = 1;
@@ -571,6 +577,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			event.x = mMouseX;
 			event.y = mMouseY;
 			event.type = EVENT_MOUSE_MOTION;
+			event.flags = EVENT_FLAGS_AXIS;
 			break;
 		case DWET_KEYDOWN:
 		case DWET_KEYUP:
