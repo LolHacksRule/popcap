@@ -155,9 +155,9 @@ handle_key_event (struct input_event & linux_event,
 		if (linux_event.code == BTN_MOUSE)
 			event.button = 1;
 		else if (linux_event.code == (BTN_MOUSE + 1))
-			event.button = 3;
-		else if (linux_event.code == (BTN_MOUSE + 2))
 			event.button = 2;
+		else if (linux_event.code == (BTN_MOUSE + 2))
+			event.button = 3;
 	}
 
 	return true;
