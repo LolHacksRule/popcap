@@ -432,7 +432,14 @@ bool WidgetManager::DrawScreen()
 	//if (aImage != NULL)
 	//surfaceLocked = aImage->LockSurface();
 
-	bool cursorChanged = mApp->mDDInterface->UpdateCursor(mLastMouseX, mLastMouseY);
+	NativeDisplay * aInterface = mApp->mDDInterface;
+	bool cursorChanged = aInterface->UpdateCursor(mLastMouseX,
+						      mLastMouseY);
+	bool redrawAll = false;
+	if ((mImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER) &&
+	    !(mImage->mFlags & IMAGE_FLAGS_FLIP_AS_COPY))
+		redrawAll = true;
+
 	if (aDirtyCount > 0 || cursorChanged)
 	{
 		Graphics g(aScrG);
@@ -447,7 +454,7 @@ bool WidgetManager::DrawScreen()
 			if (aWidget == mWidgetManager->mBaseModalWidget)
 				aModalFlags.mIsOver = true;
 
-			if ((aWidget->mDirty) && (aWidget->mVisible))
+			if ((redrawAll || aWidget->mDirty) && (aWidget->mVisible))
 			{
 				Graphics aClipG(g);
 				aClipG.SetFastStretch(!is3D);
@@ -463,7 +470,7 @@ bool WidgetManager::DrawScreen()
 			++anItr;
 		}
 
-		if (mApp->mDDInterface->DrawCursor (&g))
+		if (aInterface->DrawCursor (&g))
 			drewStuff = true;
 		aImage->Flip(FLIP_WAIT_SYNC);
 	}
