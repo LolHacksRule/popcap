@@ -119,7 +119,8 @@ void GLInterface::InitGL()
 		    strstr (mGLExtensions, "GL_EXT_texture_rectangle"))
 			mTextureNPOT = GL_TRUE;
 		if (mGLMajor > 2 || (mGLMajor == 1 && mGLMinor >= 2) ||
-		    strstr (mGLExtensions, "GL_IMG_texture_format_BGRA888"))
+		    strstr (mGLExtensions, "GL_IMG_texture_format_BGRA888") ||
+		    strstr (mGLExtensions, "GL_EXT_bgra"))
 			mTexBGRA = GL_TRUE;
 		else
 			mTexBGRA = GL_FALSE;
