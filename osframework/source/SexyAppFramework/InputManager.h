@@ -26,11 +26,12 @@ class InputManager
         bool          HasEvent();
         void          PushEvent(Event &event);
         bool          PopEvent(Event &event);
+        void          Update(void);
 
  private:
         SexyAppBase * mApp;
 
-        typedef std::list<InputDriver*> Drivers;
+        typedef std::list<InputInterface*> Drivers;
 	typedef std::list<Event> EventQueue;
 
         Drivers       mDrivers;

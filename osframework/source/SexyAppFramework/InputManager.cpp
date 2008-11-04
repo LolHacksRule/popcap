@@ -1,6 +1,7 @@
 #include "AutoCrit.h"
 #include "InputManager.h"
 #include "SexyAppBase.h"
+#include "InputDriverFactory.h"
 
 using namespace Sexy;
 
@@ -20,7 +21,22 @@ void InputManager::Init ()
 {
 	Cleanup ();
 
-	AutoCrit anAutoCrit (mCritSect);
+	InputDriverFactory* factory;
+
+	factory = InputDriverFactory::GetInputDriverFactory ();
+
+	const DriverFactory::Drivers* Creators = factory->GetDrivers ();
+	DriverFactory::Drivers::iterator it;
+	for (it = Creators->begin (); it != Creators->end (); ++it)
+	{
+		InputInterface * aInput;
+		aInput = dynamic_cast<InputInterface*>
+			(((InputDriver*)(*it))->Create (mApp));
+		if (aInput->Init ())
+			mDrivers.push_back (aInput);
+		else
+			delete aInput;
+	}
 }
 
 void InputManager::Cleanup (void)
@@ -63,4 +79,15 @@ bool InputManager::PopEvent (Event &event)
 	event = mEventQueue.front ();
 	mEventQueue.pop_front ();
 	return true;
+}
+
+void InputManager::Update (void)
+{
+	Event event;
+	while (mApp->mDDInterface && mApp->mDDInterface->GetEvent (event))
+		PushEvent (event);
+
+	Drivers::iterator it;
+	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
+		(*it)->Update ();
 }
