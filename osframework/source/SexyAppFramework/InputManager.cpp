@@ -78,6 +78,20 @@ bool InputManager::PopEvent (Event &event)
 
 	event = mEventQueue.front ();
 	mEventQueue.pop_front ();
+
+	if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
+	    event.type == EVENT_MOUSE_BUTTON_RELEASE ||
+	    event.type == EVENT_MOUSE_MOTION)
+	{
+		if (event.x < 0)
+			event.x = 0;
+		if (event.y < 0)
+			event.y = 0;
+		if (event.x > mApp->mWidth)
+			event.x = mApp->mWidth;
+		if (event.y > mApp->mHeight)
+			event.y = mApp->mHeight;
+	}
 	return true;
 }
 
