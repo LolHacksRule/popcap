@@ -248,8 +248,8 @@ void* LinuxInputInterface::Run (void * data)
 		if (driver->mDone)
 			break;
 
-		int readlen;
-		readlen = read (fd, linux_event, sizeof (linux_event) ) / sizeof (linux_event[0]);
+		ssize_t readlen;
+		readlen = read (fd, linux_event, sizeof (linux_event));
 
 		if (readlen < 0 && errno != EINTR)
 			break;
@@ -260,6 +260,7 @@ void* LinuxInputInterface::Run (void * data)
 		if (readlen <= 0)
 			continue;
 
+		readlen /= sizeof (linux_event[0]);
 		for (int i = 0; i < readlen; i++) {
 			Event event;
 
