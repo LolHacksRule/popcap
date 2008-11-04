@@ -83,7 +83,7 @@ public:
 	virtual bool				    Redraw(Rect* theClipRect = 0) = 0;
 	virtual void				    RemapMouse(int& theX, int& theY) = 0;
 
-        virtual bool                                CursorChanged(int theCursorX, int theCursorY);
+        virtual bool                                UpdateCursor(int theCursorX, int theCursorY);
         virtual bool                                DrawCursor(Graphics* g);
 
         virtual bool                                EnableCursor(bool enable);

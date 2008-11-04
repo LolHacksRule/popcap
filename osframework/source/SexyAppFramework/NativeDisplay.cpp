@@ -78,7 +78,7 @@ bool NativeDisplay::GetEvent(struct Event & event)
 	return false;
 }
 
-bool NativeDisplay::CursorChanged(int theCursorX, int theCursorY)
+bool NativeDisplay::UpdateCursor(int theCursorX, int theCursorY)
 {
 	return false;
 }

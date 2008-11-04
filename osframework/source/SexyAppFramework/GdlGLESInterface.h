@@ -38,7 +38,7 @@ public:
 	virtual bool				HasEvent();
 	virtual bool				GetEvent(struct Event &event);
 
-        virtual bool                            CursorChanged(int theCursorX, int theCursorY);
+        virtual bool                            UpdateCursor(int theCursorX, int theCursorY);
         virtual bool                            DrawCursor(Graphics* g);
 
 private:

@@ -432,7 +432,7 @@ bool WidgetManager::DrawScreen()
 	//if (aImage != NULL)
 	//surfaceLocked = aImage->LockSurface();
 
-	bool cursorChanged = mApp->mDDInterface->CursorChanged(mLastMouseX, mLastMouseY);
+	bool cursorChanged = mApp->mDDInterface->UpdateCursor(mLastMouseX, mLastMouseY);
 	if (aDirtyCount > 0 || cursorChanged)
 	{
 		Graphics g(aScrG);

@@ -150,6 +150,15 @@ int GdlGLESInterface::Init (void)
 	mApp->mWidth = width;
 	mApp->mHeight = height;
 
+#if 0
+	EGLint SwapBehavior;
+	eglQuerySurface (mDpy, mSurface, EGL_SWAP_BEHAVIOR, &SwapBehavior);
+	printf ("swap behavior: %s\n",
+		SwapBehavior == EGL_BUFFER_PRESERVED ? "preserved" : "destroyed");
+
+	eglSurfaceAttrib (mDpy, mSurface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_PRESERVED);
+#endif
+
 	mContext = eglCreateContext (mDpy, configs[0], EGL_NO_CONTEXT, NULL);
 	if (mContext == EGL_NO_CONTEXT)
 	{
@@ -252,7 +261,7 @@ void GdlGLESInterface::SetCursorPos(int theCursorX, int theCursorY)
 	mCursorY = theCursorY;
 }
 
-bool GdlGLESInterface::CursorChanged(int theCursorX, int theCursorY)
+bool GdlGLESInterface::UpdateCursor(int theCursorX, int theCursorY)
 {
 	SetCursorPos (theCursorX, theCursorY);
 	if (mCursorImage &&
