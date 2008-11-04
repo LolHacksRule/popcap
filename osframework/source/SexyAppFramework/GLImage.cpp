@@ -127,27 +127,28 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 		int aHeight = std::min (h, (theImage->GetHeight() - y));
 		int aWidthExtra = w > aWidth ? w - aWidth : 0;
 		int aHeightExtra = h > aHeight ? h - aHeight : 0;
-		GLenum format = GL_BGRA;
+		GLenum format, intlformat;
 
-#if defined(SEXY_OPENGLES)
-		/* FIXME: test GL_BGRA instead */
-		format = GL_RGBA;
+		if (theImage->mInterface->mTexBGRA == GL_TRUE)
+		{
+#if !defined(SEXY_OPENGLES)
+			intlformat = GL_RGBA;
 #else
-		if (theImage->mInterface->mGLMajor > 1 ||
-		    (theImage->mInterface->mGLMajor >= 1 &&
-		     theImage->mInterface->mGLMajor >= 2))
-			format = GL_BGRA;
-		else
-			format = GL_RGBA;
+			intlformat = GL_BGRA;
 #endif
+			format = GL_BGRA;
+		}
+		else
+		{
+			intlformat = GL_RGBA;
+			format = GL_RGBA;
+		}
 		int imageWidth = theImage->GetWidth();
 		uint32 * dst = copy;
 		uint32 * src = bits + y * imageWidth + x;
 
 		for (i = 0; i < aHeight; i++) {
-#if !defined(SEXY_OPENGLES)
 			if (format == GL_RGBA)
-#endif
 			{
 				for (int j = 0; j < aWidth; j++)
 				{
@@ -158,12 +159,10 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 						((pixel & 0x000000ff) << 16);
 				}
 			}
-#if !defined(SEXY_OPENGLES)
 			else
 			{
 				memcpy (dst, src, aWidth * 4);
 			}
-#endif
 			memset (dst + aWidth, 0, aWidthExtra * 4);
 			dst += w;
 			src += imageWidth;
@@ -173,7 +172,7 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 
 		glTexImage2D (GL_TEXTURE_2D,
 			      0,
-			      GL_RGBA,
+			      intlformat,
 			      w, h,
 			      0,
 			      format,
