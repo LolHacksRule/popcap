@@ -31,13 +31,17 @@ struct DriverCompare {
 class DriverFactory
 {
  public:
+	typedef std::set<Driver*, DriverCompare> Drivers;
+
 	void		       AddDriver (Driver * theDriver);
 	void		       RemoveDriver (Driver * theDriver);
 
 	Driver*		       Find (const std::string name = "auto");
 
+ public:
+        const Drivers*         GetDrivers();
+
  private:
-	typedef std::set<Driver*, DriverCompare> Drivers;
 	Drivers		       mDrivers;
 
  public:

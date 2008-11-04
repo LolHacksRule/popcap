@@ -50,3 +50,7 @@ Driver* DriverFactory::Find (const std::string name)
 
 }
 
+const DriverFactory::Drivers* DriverFactory::GetDrivers()
+{
+	return &mDrivers;
+}
