@@ -64,6 +64,7 @@ public:
 public:
         GLint                                   mGLMajor;
         GLint                                   mGLMinor;
+        GLboolean                               mTexBGRA;
 
 public:
 	GLInterface(SexyAppBase* theApp);

@@ -37,6 +37,7 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 	mGLExtensions = NULL;
 	mGLMajor = 1;
         mGLMinor = 1;
+	mTexBGRA = GL_FALSE;
 }
 
 GLInterface::~GLInterface()
@@ -69,6 +70,7 @@ void GLInterface::Cleanup()
 	mGLExtensions = NULL;
 	mGLMajor = 1;
         mGLMinor = 1;
+	mTexBGRA = GL_FALSE;
 }
 
 bool GLInterface::Redraw(Rect* theClipRect)
@@ -90,21 +92,6 @@ void GLInterface::InitGL()
 {
 	glViewport (0, 0, mWidth, mHeight);
 
-	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureWidth);
-	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureHeight);
-
-	printf ("Maximium texture size: %d\n", mMaxTextureHeight);
-
-	mGLExtensions = (const char*)glGetString (GL_EXTENSIONS);
-	if (mGLExtensions) {
-		if (strstr (mGLExtensions, "GL_ARB_texture_non_power_of_two") ||
-		    strstr (mGLExtensions, "GL_EXT_texture_non_power_of_two") ||
-		    strstr (mGLExtensions, "GL_ARB_texture_rectangle") ||
-		    strstr (mGLExtensions, "GL_EXT_texture_rectangle"))
-			mTextureNPOT = GL_TRUE;
-
-		printf ("GL extensions: %s\n", mGLExtensions);
-	}
 	const char* version = (const char*)glGetString (GL_VERSION);
 	const char* str = version;
 	while (!(*str >= '0' && *str <= '9') && *str)
@@ -116,6 +103,28 @@ void GLInterface::InitGL()
 		mGLMinor = atoi (str);
 	}
 	printf ("GL version: %s(%d.%d)\n", version, mGLMajor, mGLMinor);
+
+	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureWidth);
+	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureHeight);
+
+	printf ("Maximium texture size: %d\n", mMaxTextureHeight);
+
+	mGLExtensions = (const char*)glGetString (GL_EXTENSIONS);
+	printf ("GL extensions: %s\n", mGLExtensions);
+
+	if (mGLExtensions) {
+		if (strstr (mGLExtensions, "GL_ARB_texture_non_power_of_two") ||
+		    strstr (mGLExtensions, "GL_EXT_texture_non_power_of_two") ||
+		    strstr (mGLExtensions, "GL_ARB_texture_rectangle") ||
+		    strstr (mGLExtensions, "GL_EXT_texture_rectangle"))
+			mTextureNPOT = GL_TRUE;
+		if (mGLMajor > 2 || (mGLMajor == 1 && mGLMinor >= 2) ||
+		    strstr (mGLExtensions, "GL_IMG_texture_format_BGRA888"))
+			mTexBGRA = GL_TRUE;
+		else
+			mTexBGRA = GL_FALSE;
+	}
+
 
 	GenGoodTexSize ();
 	glEnable (GL_BLEND);
