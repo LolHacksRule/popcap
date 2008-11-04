@@ -92,6 +92,10 @@ int GLXInterface::Init (void)
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	InitGL ();
 
+	mScreenImage->mFlags =
+		(ImageFlags)(IMAGE_FLAGS_DOUBLE_BUFFER |
+			     IMAGE_FLAGS_FLIP_AS_COPY);
+
 	mInitCount++;
 	mInitialized = true;
 

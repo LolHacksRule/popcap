@@ -29,6 +29,7 @@ GdlGLESInterface::GdlGLESInterface (SexyAppBase* theApp)
 	mCursorOldX = 0;
 	mCursorOldY = 0;
 	mCursorEnabled = false;
+	mCursorDrawn = false;
 }
 
 GdlGLESInterface::~GdlGLESInterface ()
@@ -103,7 +104,7 @@ int GdlGLESInterface::Init (void)
 		//EGL_RED_SIZE,	      8,
 		//EGL_GREEN_SIZE,     8,
 		//EGL_BLUE_SIZE,      8,
-		EGL_DEPTH_SIZE,	    32,
+		EGL_DEPTH_SIZE,     32,
 		EGL_NONE
 	};
 
@@ -177,7 +178,27 @@ int GdlGLESInterface::Init (void)
 	glSwapInterval (mDpy, 1);
 #endif
 
+	mCursorDrawn = false;
+	glGenTextures (1, &mOldCursorTex);
+
+	static unsigned char bits[64 * 64 * 4] = { 0 };
+
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	glBindTexture (GL_TEXTURE_2D, mOldCursorTex);
+	glTexImage2D (GL_TEXTURE_2D,
+		      0,
+		      GL_RGBA,
+		      64, 64,
+		      0,
+		      GL_RGBA,
+		      GL_UNSIGNED_BYTE,
+		      bits);
+
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
+	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
+
 	InitGL ();
 
 	mInitCount++;
@@ -206,6 +227,7 @@ void GdlGLESInterface::Cleanup ()
 	GLInterface::Cleanup ();
 
 	mCursorImage = 0;
+	glDeleteTextures (1, &mOldCursorTex);
 
 	if (mScreenImage)
 		delete mScreenImage;
@@ -276,7 +298,16 @@ bool GdlGLESInterface::DrawCursor(Graphics* g)
 	if (!mCursorImage)
 		return false;
 
+	if (0)
+	{
+		glBindTexture (GL_TEXTURE_2D, mOldCursorTex);
+		glCopyTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, mCursorX, mCursorY, 64, 64);
+	}
+
 	g->DrawImage (mCursorImage, mCursorX, mCursorY);
+
+	mCursorDrawnX = mCursorX;
+	mCursorDrawnY = mCursorY;
 	return true;
 }
 
@@ -304,7 +335,40 @@ bool GdlGLESInterface::GetEvent(struct Event &event)
 void GdlGLESInterface::SwapBuffers()
 {
 	if (mSurface)
+	{
 		eglSwapBuffers (mDpy, mSurface);
+
+		if (0 && mCursorDrawn)
+		{
+			glColor4ub (255, 255, 255, 255);
+
+			glBindTexture (GL_TEXTURE_2D, mOldCursorTex);
+
+			GLfloat verts[4 * 2];
+			verts[0] = 0;  verts[1] = 0;
+			verts[2] = 0;  verts[3] = 64;
+			verts[4] = 64; verts[5] = 0;
+			verts[6] = 64; verts[7] = 64;
+
+			GLfloat coords[4 * 2];
+			coords[0] = 0.0f; coords[1] = 0.0f;
+			coords[2] = 0.0f; coords[3] = 1.0f;
+			coords[4] = 1.0f; coords[5] = 0.0f;
+			coords[6] = 1.0f; coords[7] = 1.0f;
+
+			glEnableClientState (GL_VERTEX_ARRAY);
+			glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+			glVertexPointer (2, GL_FLOAT, 0, verts);
+			glTexCoordPointer (2, GL_FLOAT, 0, coords);
+			glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
+			glDisableClientState (GL_VERTEX_ARRAY);
+			glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+
+			mCursorDrawn = false;
+		}
+	}
 }
 
 class GdlGLESVideoDriver: public VideoDriver {

@@ -54,12 +54,16 @@ private:
         bool                                    mCursorEnabled;
         int                                     mCursorX;
         int                                     mCursorY;
+        int                                     mCursorDrawnX;
+        int                                     mCursorDrawnY;
         int                                     mCursorOldX;
         int                                     mCursorOldY;
         int                                     mCursorHotX;
         int                                     mCursorHotY;
 
         GLImage*                                mCursorImage;
+        bool                                    mCursorDrawn;
+        GLuint                                  mOldCursorTex;
 };
 
 }

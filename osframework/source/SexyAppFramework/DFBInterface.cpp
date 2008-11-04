@@ -167,7 +167,9 @@ int DFBInterface::Init(void)
 	mApp->mHeight = height;
 
 	mScreenImage = new DFBImage(surface, this);
-
+	mScreenImage->mFlags =
+		(ImageFlags)(IMAGE_FLAGS_DOUBLE_BUFFER |
+			     IMAGE_FLAGS_FLIP_AS_COPY);
 #if 0
 	DFBInputDeviceID id = (DFBInputDeviceID)0xffffffff;
 	ret = mDFB->GetInputDevice (mDFB, id, &mInput);

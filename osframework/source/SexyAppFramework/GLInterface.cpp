@@ -7,6 +7,7 @@
 #include "Debug.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
+#include "InputManager.h"
 
 #include <cstdio>
 
@@ -80,7 +81,22 @@ bool GLInterface::Redraw(Rect* theClipRect)
 	if (!mInitialized)
 		return false;
 
-	SwapBuffers ();
+	if (!mScreenImage)
+		return false;
+
+	if ((mScreenImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER) &&
+	    !(mScreenImage->mFlags & IMAGE_FLAGS_FLIP_AS_COPY))
+	{
+		Event event;
+
+		event.type = EVENT_EXPOSE;
+		mApp->mInputManager->PushEvent (event);
+	}
+	else
+	{
+		SwapBuffers ();
+	}
+
 	return true;
 }
 
