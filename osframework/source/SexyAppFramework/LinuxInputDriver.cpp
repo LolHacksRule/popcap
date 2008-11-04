@@ -81,27 +81,16 @@ bool LinuxInputInterface::Init()
 	if (mFd >= 0)
 		Cleanup ();
 
-	const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
-	if (!device)
-		device = "/dev/input/mice";
-	mFd = open (device, O_RDWR);
-	if (mFd < 0) {
-		printf ("open mouse device failed.");
+	if (!OpenDevice ())
 		goto open_failed;
-	}
 
-	int ret;
-	ret = ioctl (mFd, EVIOCGRAB, 1);
-	if (ret)
-	{
-		printf ("grab device failed.\n");
-		goto close_fd;
-	}
-
+	mRetry = 0;
 	mDone = false;
 	mThread = new pthread_t;
 	if (!mThread)
-		goto ungrab_fd;
+		goto close_device;
+
+	int ret;
 	ret = pthread_create (mThread, NULL, LinuxInputInterface::Run, this);
 	if (ret)
 		goto delete_thread;
@@ -109,11 +98,8 @@ bool LinuxInputInterface::Init()
  delete_thread:
 	delete mThread;
 	mThread = 0;
- ungrab_fd:
-	ioctl (mFd, EVIOCGRAB, 0);
- close_fd:
-	close (mFd);
-	mFd = -1;
+ close_device:
+	CloseDevice ();
  open_failed:
 	return false;
 }
@@ -129,12 +115,122 @@ void LinuxInputInterface::Cleanup()
 	delete mThread;
 	mThread = 0;
 
-	ioctl (mFd, EVIOCGRAB, 0);
-	close (mFd);
-	mFd = -1;
+	CloseDevice ();
 
 	mX = 0;
 	mY = 0;
+}
+
+static void
+get_device_info (int              fd)
+{
+     unsigned int  num_keys     = 0;
+     unsigned int  num_ext_keys = 0;
+     unsigned int  num_buttons  = 0;
+     unsigned int  num_rels     = 0;
+     unsigned int  num_abs      = 0;
+
+     char name[256];
+     unsigned long eventbit[NBITS(EV_MAX)];
+     unsigned long keybit[NBITS(KEY_MAX)];
+     unsigned long relbit[NBITS(REL_MAX)];
+     unsigned long absbit[NBITS(ABS_MAX)];
+
+     /* get device name */
+     ioctl (fd, EVIOCGNAME(255), name);
+     printf ("device name: %s\n", name);
+
+     /* get event type bits */
+     ioctl (fd, EVIOCGBIT(0, sizeof(eventbit)), eventbit);
+
+     if (test_bit (EV_KEY, eventbit))
+     {
+          int i;
+
+          /* get keyboard bits */
+          ioctl (fd, EVIOCGBIT(EV_KEY, sizeof(keybit)), keybit);
+
+	  /**  count typical keyboard keys only */
+          for (i = KEY_Q; i < KEY_M; i++)
+               if (test_bit (i, keybit))
+                    num_keys++;
+
+          for (i = KEY_OK; i < KEY_MAX; i++)
+               if (test_bit (i, keybit))
+                    num_ext_keys++;
+
+          for (i = BTN_MOUSE; i < BTN_JOYSTICK; i++)
+               if (test_bit (i, keybit))
+                    num_buttons++;
+     }
+
+     if (test_bit (EV_REL, eventbit))
+     {
+          int i;
+
+          /* get bits for relative axes */
+          ioctl (fd, EVIOCGBIT (EV_REL, sizeof(relbit)), relbit);
+
+          for (i = 0; i < REL_MAX; i++)
+               if (test_bit (i, relbit))
+                    num_rels++;
+     }
+
+     if (test_bit (EV_ABS, eventbit))
+     {
+          int i;
+
+          /* get bits for absolute axes */
+          ioctl (fd, EVIOCGBIT (EV_ABS, sizeof (absbit)), absbit);
+
+          for (i = 0; i < ABS_PRESSURE; i++)
+               if (test_bit (i, absbit))
+                    num_abs++;
+     }
+
+     printf ("keys: %d\n", num_keys);
+     printf ("extend keys: %d\n", num_ext_keys);
+     printf ("buttons: %d\n", num_buttons);
+     printf ("relative events: %d\n", num_rels);
+     printf ("absolute events: %d\n", num_abs);
+}
+
+bool LinuxInputInterface::OpenDevice ()
+{
+	const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
+	if (!device)
+		device = "/dev/input/event0";
+	mFd = open (device, O_RDWR);
+	if (mFd < 0) {
+		printf ("open mouse device failed.\n");
+		goto open_failed;
+	}
+
+	int ret;
+	ret = ioctl (mFd, EVIOCGRAB, 1);
+	if (ret)
+	{
+		printf ("grab device failed.\n");
+		goto close_fd;
+	}
+
+	get_device_info (mFd);
+	return true;
+ close_fd:
+	close (mFd);
+	mFd = -1;
+ open_failed:
+	return false;
+}
+
+void LinuxInputInterface::CloseDevice ()
+{
+	if (mFd < 0)
+		return;
+
+	ioctl (mFd, EVIOCGRAB, 0);
+	close (mFd);
+	mFd = -1;
 }
 
 static bool
@@ -237,25 +333,49 @@ void* LinuxInputInterface::Run (void * data)
 
 	while (!driver->mDone)
 	{
-		FD_ZERO (&set);
-		FD_SET (fd, &set);
+		if (driver->mFd >= 0)
+		{
+			FD_ZERO (&set);
+			FD_SET (fd, &set);
 
-		status = select (fd + 1, &set, NULL, NULL, NULL);
-		if (status < 0 && errno != EINTR)
-			break;
-		if (status < 0)
+			status = select (fd + 1, &set, NULL, NULL, NULL);
+			if (status < 0 && errno != EINTR)
+			{
+				printf ("device disconnected.\n");
+				driver->CloseDevice ();
+				continue;
+			}
+			if (status < 0)
+				continue;
+			if (driver->mDone)
+				break;
+		}
+		else
+		{
+			if (driver->mRetry > 10)
+				break;
+
+			usleep (100);
+			printf ("try to reopen the input device.\n");
+			if (!driver->OpenDevice ())
+				driver->mRetry++;
+			else
+				driver->mRetry = 0;
 			continue;
-		if (driver->mDone)
-			break;
+		}
 
 		ssize_t readlen;
 		readlen = read (fd, linux_event, sizeof (linux_event));
 
-		if (readlen < 0 && errno != EINTR)
-			break;
-
 		if (driver->mDone)
 			break;
+
+		if (readlen < 0 && errno != EINTR)
+		{
+			printf ("device disconnected.\n");
+			driver->CloseDevice ();
+			continue;
+		}
 
 		if (readlen <= 0)
 			continue;

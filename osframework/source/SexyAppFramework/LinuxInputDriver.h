@@ -23,6 +23,9 @@ public:
         virtual bool          GetEvent (Event & event);
 
 private:
+        bool                  OpenDevice ();
+        void                  CloseDevice ();
+
         static void *         Run (void * data);
 
  private:
@@ -31,6 +34,8 @@ private:
         pthread_t*            mThread;
         int                   mX;
         int                   mY;
+
+        int                   mRetry;
 };
 
 }
