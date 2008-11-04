@@ -36,8 +36,8 @@ InputDriverFactory*  InputDriverFactory::GetInputDriverFactory ()
 extern InputDriver* GetLinuxInputDriver();
 typedef InputDriver* (* InputDriverGetter)();
 InputDriverGetter InputDriverGetters []= {
-#ifdef SEXY_LINUX_DRIVER
-	//GetLinuxInputDriver,
+#ifdef SEXY_LINUX_INPUT_DRIVER
+	GetLinuxInputDriver,
 #endif
 	NULL
 };
