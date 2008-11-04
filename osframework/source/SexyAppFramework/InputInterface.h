@@ -7,9 +7,10 @@
 namespace Sexy
 {
 
+class InputManager;
 class InputInterface {
  public:
-        InputInterface();
+        InputInterface(InputManager* theManager);
 
         virtual ~InputInterface();
 
@@ -17,8 +18,12 @@ class InputInterface {
         virtual bool          Init();
         virtual void          Cleanup();
 
-        virtual bool          HasEvent() = 0;
-        virtual bool          GetEvent(Event & event) = 0;
+        virtual bool          HasEvent () = 0;
+        virtual bool          GetEvent (Event & event) = 0;
+        virtual void          Update ();
+
+ protected:
+        InputManager*         mManager;
 };
 
 }

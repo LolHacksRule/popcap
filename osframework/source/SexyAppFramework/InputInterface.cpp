@@ -1,10 +1,12 @@
 #include "Common.h"
 #include "InputInterface.h"
+#include "InputManager.h"
 
 using namespace Sexy;
 
 
-InputInterface::InputInterface()
+InputInterface::InputInterface(InputManager* theManager)
+	: mManager (theManager)
 {
 }
 
@@ -19,4 +21,12 @@ bool InputInterface::Init()
 
 void InputInterface::Cleanup()
 {
+}
+
+void InputInterface::Update()
+{
+	Event event;
+
+	while (GetEvent (event))
+		mManager->PushEvent (event);
 }
