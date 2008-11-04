@@ -30,6 +30,7 @@
 #include <math.h>
 
 #include "ResourceManager.h"
+#include "InputManager.h"
 #include "AutoCrit.h"
 #include "Debug.h"
 #include "../PakLib/PakInterface.h"
@@ -308,6 +309,7 @@ SexyAppBase::SexyAppBase()
 
 	mWidgetManager = new WidgetManager(this);
 	mResourceManager = new ResourceManager(this);
+	mInputManager = new InputManager (this);
 
 	mPrimaryThreadId = 0;
 	mTabletPC = false;
@@ -329,6 +331,7 @@ SexyAppBase::~SexyAppBase()
 
 	delete mWidgetManager;
 	delete mResourceManager;
+	delete mInputManager;
 
 	SharedImageMap::iterator aSharedImageItr = mSharedImageMap.begin();
 	while (aSharedImageItr != mSharedImageMap.end())
@@ -1145,12 +1148,12 @@ bool SexyAppBase::DrawDirtyStuff()
 			if ((int) (aEndTime - mNextDrawTick) >= 0)
 				mNextDrawTick = aEndTime;
 
-			/*char aStr[256];
-			sprintf(aStr, "Next Draw Time: %d\r\n", mNextDrawTick);
-			OutputDebugString(aStr);*/
+			printf ("Next Draw Time: %d\n", mNextDrawTick);
 		}
 		else
+		{
 			mNextDrawTick = aEndTime;
+		}
 
 		mHasPendingDraw = false;
 		mCustomCursorDirty = false;
@@ -2278,6 +2281,9 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 					if (mMuteOnLostFocus)
 						Mute(true);
 				}
+				break;
+			case EVENT_EXPOSE:
+				mWidgetManager->MarkAllDirty();
 				break;
 			default:
 				break;

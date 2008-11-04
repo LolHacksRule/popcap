@@ -32,6 +32,7 @@ class HTTPTransfer;
 class Dialog;
 
 class ResourceManager;
+class InputManager;
 
 class WidgetSafeDeleteInfo
 {
@@ -339,6 +340,8 @@ public:
 	StringDoubleMap			mDoubleProperties;
 	StringStringVectorMap	mStringVectorProperties;
 	ResourceManager*		mResourceManager;
+
+        InputManager*                           mInputManager;
 
 #ifdef ZYLOM
 	uint					mZylomGameId;
