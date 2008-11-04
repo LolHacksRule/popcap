@@ -432,7 +432,8 @@ bool WidgetManager::DrawScreen()
 	//if (aImage != NULL)
 	//surfaceLocked = aImage->LockSurface();
 
-	if (aDirtyCount > 0)
+	bool cursorChanged = mApp->mDDInterface->CursorChanged(mLastMouseX, mLastMouseY);
+	if (aDirtyCount > 0 || cursorChanged)
 	{
 		Graphics g(aScrG);
 		g.Translate(-mMouseDestRect.mX, -mMouseDestRect.mY);
@@ -461,6 +462,9 @@ bool WidgetManager::DrawScreen()
 
 			++anItr;
 		}
+
+		if (cursorChanged && mApp->mDDInterface->DrawCursor (&g))
+			drewStuff = true;
 		aImage->Flip(FLIP_WAIT_SYNC);
 	}
 
