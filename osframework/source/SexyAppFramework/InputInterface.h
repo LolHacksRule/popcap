@@ -22,6 +22,7 @@ class InputInterface {
         virtual bool          GetEvent (Event & event) = 0;
         virtual void          Update ();
 
+        void                  PostEvent(Event & event);
  protected:
         InputManager*         mManager;
 };

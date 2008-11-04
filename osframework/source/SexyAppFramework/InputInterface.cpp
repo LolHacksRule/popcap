@@ -30,3 +30,8 @@ void InputInterface::Update()
 	while (GetEvent (event))
 		mManager->PushEvent (event);
 }
+
+void InputInterface::PostEvent(Event &event)
+{
+	mManager->PushEvent (event);
+}
