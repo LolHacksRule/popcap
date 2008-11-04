@@ -28,8 +28,15 @@ enum EventType {
     EVENT_QUIT
 };
 
+#define EVENT_FLAGS_AXIS     (1U << 0)
+#define EVENT_FLAGS_REL_AXIS (1U << 1)
+#define EVENT_FLAGS_BUTTON   (1U << 2)
+#define EVENT_FLAGS_KEY_CODE (1U << 3)
+#define EVENT_FLAGS_KEY_CHAR (1U << 4)
+
 struct Event {
     enum EventType type;
+    unsigned int   flags;
     int            keyCode;
     int            keyChar;
     int            x;
