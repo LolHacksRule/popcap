@@ -19,7 +19,8 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "SexyAppBase.cpp", "SexyMatrix.cpp", "SharedImage.cpp", "Slider.cpp",
         "SWTri.cpp", "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp",
         "WidgetManager.cpp", "XMLParser.cpp", 'DriverFactory.cpp',
-        'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp']
+        'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
+        'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp']
 
 #dummy sound manager
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
@@ -47,6 +48,11 @@ if 'GDLGLES' in env['DRIVERS']:
     env['GDLGLES']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_GDLGLES_DRIVER'])
 
+if 'LINUXINPUT' in env['DRIVERS']:
+    srcs += ["LinuxInputDriver.cpp"]
+    env['LINUXINPUT']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_LINUX_INPUT_DRIVER'])
+
 env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                              os.path.join('..', 'PakLib')],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
@@ -62,6 +68,8 @@ if gameenv['BUILD_STATIC']:
         gameenv['WGL']['ENABLE'](gameenv)
     if 'GDLGLES' in env['DRIVERS']:
         gameenv['GDLGLES']['ENABLE'](gameenv)
+    if 'LINUXINPUT' in env['DRIVERS']:
+        gameenv['LINUXINPUT']['ENABLE'](gameenv)
 
     gameenv.PrependUnique(LIBPATH = [os.path.join('..', 'ImageLib'),
                                      os.path.join('..', 'PakLib')],
