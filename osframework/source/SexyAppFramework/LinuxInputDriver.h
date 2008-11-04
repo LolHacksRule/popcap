@@ -29,6 +29,8 @@ private:
         int                   mFd;
         int                   mDone;
         pthread_t*            mThread;
+        int                   mX;
+        int                   mY;
 };
 
 }
