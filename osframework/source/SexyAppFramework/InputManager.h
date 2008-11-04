@@ -39,6 +39,11 @@ class InputManager
         unsigned      mMaxEvents;
 
 	CritSect      mCritSect;
+
+	int           mX;
+	int           mY;
+	int           mWidth;
+	int           mHeight;
 };
 
 }

@@ -8,8 +8,11 @@ using namespace Sexy;
 InputManager::InputManager (SexyAppBase * theApp,
 			    unsigned theMaxEvents)
 	: mApp (theApp), mDrivers (), mEventQueue (),
-	  mMaxEvents (theMaxEvents), mCritSect ()
+	  mMaxEvents (theMaxEvents), mCritSect (),
+	  mX (0), mY (0)
 {
+	mWidth = 1;
+	mHeight = 1;
 }
 
 InputManager::~InputManager ()
@@ -37,6 +40,9 @@ void InputManager::Init ()
 		else
 			delete aInput;
 	}
+
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
 }
 
 void InputManager::Cleanup (void)
@@ -48,6 +54,11 @@ void InputManager::Cleanup (void)
 	AutoCrit anAutoCrit (mCritSect);
 	mDrivers.clear ();
 	mEventQueue.clear ();
+
+	mX = 0;
+	mY = 0;
+	mWidth = 1;
+	mHeight = 1;
 }
 
 bool InputManager::HasEvent ()
@@ -83,14 +94,43 @@ bool InputManager::PopEvent (Event &event)
 	    event.type == EVENT_MOUSE_BUTTON_RELEASE ||
 	    event.type == EVENT_MOUSE_MOTION)
 	{
-		if (event.x < 0)
-			event.x = 0;
-		if (event.y < 0)
-			event.y = 0;
-		if (event.x > mApp->mWidth)
-			event.x = mApp->mWidth;
-		if (event.y > mApp->mHeight)
-			event.y = mApp->mHeight;
+		int x, y;
+
+		x = event.x;
+		y = event.y;
+		if (event.flags & EVENT_FLAGS_REL_AXIS)
+		{
+			mX += x;
+			mY += y;
+		}
+		else if (event.flags & EVENT_FLAGS_AXIS)
+		{
+			mX = x;
+			mY = y;
+		}
+
+		if (mX < 0)
+			mX = 0;
+		if (mY < 0)
+			mY = 0;
+		if (mX >= mWidth)
+			mX = mWidth - 1;
+		if (mY > mHeight)
+			mY = mHeight - 1;
+		event.x = mX;
+		event.y = mY;
+		event.flags |= EVENT_FLAGS_AXIS;
+		event.flags &= ~EVENT_FLAGS_REL_AXIS;
+	}
+
+	if (0 && event.type != EVENT_NONE)
+	{
+		printf ("event.type: %d\n", event.type);
+		if (event.flags & EVENT_FLAGS_AXIS)
+		{
+			printf ("event.x: %d\n", event.x);
+			printf ("event.y: %d\n", event.y);
+		}
 	}
 	return true;
 }
