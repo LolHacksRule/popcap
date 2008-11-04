@@ -2205,7 +2205,8 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 	{
 		Sexy::Event event;
 
-		while(mDDInterface && mDDInterface->GetEvent(event)) {
+		mInputManager->Update ();
+		while (mInputManager->PopEvent(event)) {
 			switch(event.type) {
 			case EVENT_QUIT:
 				Shutdown();
@@ -2345,6 +2346,8 @@ int SexyAppBase::InitDDInterface()
 	if (!mDDInterface)
 		return -1;
 
+	mInputManager->Cleanup ();
+
 	PreDDInterfaceInitHook();
 	DeleteNativeImageData();
 
@@ -2356,6 +2359,8 @@ int SexyAppBase::InitDDInterface()
 
 	DemoSyncRefreshRate();
 	PostDDInterfaceInitHook();
+
+	mInputManager->Init ();
 	return 0;
 }
 
