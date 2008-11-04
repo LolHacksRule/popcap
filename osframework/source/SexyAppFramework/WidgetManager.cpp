@@ -463,7 +463,7 @@ bool WidgetManager::DrawScreen()
 			++anItr;
 		}
 
-		if (cursorChanged && mApp->mDDInterface->DrawCursor (&g))
+		if (mApp->mDDInterface->DrawCursor (&g))
 			drewStuff = true;
 		aImage->Flip(FLIP_WAIT_SYNC);
 	}
