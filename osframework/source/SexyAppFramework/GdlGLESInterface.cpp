@@ -304,7 +304,9 @@ bool GdlGLESInterface::DrawCursor(Graphics* g)
 		glCopyTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, mCursorX, mCursorY, 64, 64);
 	}
 
-	g->DrawImage (mCursorImage, mCursorX, mCursorY);
+	g->DrawImage (mCursorImage,
+		      mCursorX - mCursorHotX,
+		      mCursorY - mCursorHotY);
 
 	mCursorDrawnX = mCursorX;
 	mCursorDrawnY = mCursorY;
