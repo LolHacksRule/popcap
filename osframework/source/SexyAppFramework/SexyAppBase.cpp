@@ -1820,9 +1820,12 @@ void SexyAppBase::EnforceCursor()
 		}
 		else
 		{
+			int hotX, hotY;
+
+			hotX = mCursorImages[mCursorNum]->GetWidth () / 2;
+			hotY = mCursorImages[mCursorNum]->GetHeight () / 2;
 			if (mDDInterface->SetCursorImage(mCursorImages[mCursorNum],
-							 mCursorHots[mCursorNum].mX,
-							 mCursorHots[mCursorNum].mY))
+							 hotX, hotY))
 				mCustomCursorDirty = true;
 
 			mDDInterface->EnableCursor(true);
