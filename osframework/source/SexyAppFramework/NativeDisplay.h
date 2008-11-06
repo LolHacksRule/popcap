@@ -15,17 +15,17 @@ class SexyAppBase;
 class Graphics;
 
 enum EventType {
-    EVENT_NONE,
-    EVENT_KEY_DOWN,
-    EVENT_KEY_UP,
-    EVENT_MOUSE_BUTTON_PRESS,
-    EVENT_MOUSE_BUTTON_RELEASE,
-    EVENT_MOUSE_WHEEL_UP,
-    EVENT_MOUSE_WHELL_DOWN,
-    EVENT_MOUSE_MOTION,
-    EVENT_ACTIVE,
-    EVENT_EXPOSE,
-    EVENT_QUIT
+        EVENT_NONE                  = 0,
+        EVENT_KEY_DOWN              = 1,
+        EVENT_KEY_UP                = 2,
+        EVENT_MOUSE_BUTTON_PRESS    = 3,
+        EVENT_MOUSE_BUTTON_RELEASE  = 4,
+        EVENT_MOUSE_WHEEL_UP        = 5,
+        EVENT_MOUSE_WHELL_DOWN      = 6,
+        EVENT_MOUSE_MOTION          = 7,
+        EVENT_ACTIVE                = 8,
+        EVENT_EXPOSE                = 9,
+        EVENT_QUIT
 };
 
 #define EVENT_FLAGS_AXIS     (1U << 0)
@@ -35,14 +35,14 @@ enum EventType {
 #define EVENT_FLAGS_KEY_CHAR (1U << 4)
 
 struct Event {
-    enum EventType type;
-    unsigned int   flags;
-    int            keyCode;
-    int            keyChar;
-    int            x;
-    int            y;
-    int            button;
-    bool           active;
+        enum EventType type;
+        unsigned int   flags;
+        int            keyCode;
+        int            keyChar;
+        int            x;
+        int            y;
+        int            button;
+        bool           active;
 };
 
 class NativeDisplay
