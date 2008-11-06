@@ -15,6 +15,7 @@ def Configure (env):
                       CXXFLAGS = ['-g', '-Wall'],
                       LINKFLAGS = ['-g', '-fno-unit-at-a-time'],
                       LIBS = ['rt', 'm'])
+    configs.linux.EnableLinuxUdpInputServer (env)
 
 def LunuxInputAddOptions (opts):
     pass
@@ -28,3 +29,19 @@ def LinuxInputConfigure(env):
     linux_input = {}
     linux_input['ENABLE'] = EnableLinuxInput
     env.AppendUnique (LINUXINPUT = linux_input)
+
+def UdpInputAddOptions (opts):
+    pass
+
+def EnableUdpInput (env):
+    pass
+
+def UdpInputConfigure(env):
+    configs.linux.Configure (env)
+    env.AppendUnique (DRIVERS = ['UDPINPUT'])
+    udp_input = {}
+    udp_input['ENABLE'] = EnableUdpInput
+    env.AppendUnique (UDPINPUT = udp_input)
+
+def EnableLinuxUdpInputServer(env):
+    env.AppendUnique(CPPDEFINES = ['LINUXUDPINPUTSERVER'])
