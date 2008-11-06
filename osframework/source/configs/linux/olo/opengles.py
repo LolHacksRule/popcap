@@ -8,7 +8,7 @@ import os.path
 def AddOptions (opts):
     configs.linux.olo.AddOptions (opts)
 
-def EnableGDLGLES (env):
+def EnableCEGLES (env):
     env.PrependUnique (CPPDEFINES = ['SEXY_OPENGLES'],
                        CPPPATH = [os.path.join ('#', 'configs', 'linux',
                                                 'olo', 'include'),
@@ -18,10 +18,10 @@ def EnableGDLGLES (env):
 
 def Configure (env):
     configs.linux.olo.Configure (env)
-    env.AppendUnique (DRIVERS = ['GDLGLES'])
+    env.AppendUnique (DRIVERS = ['CEGLES'])
     gles = {}
-    gles['ENABLE'] = EnableGDLGLES
-    env.AppendUnique(GDLGLES = gles)
+    gles['ENABLE'] = EnableCEGLES
+    env.AppendUnique(CEGLES = gles)
 
     ### enable genaric linux input driver.
     configs.linux.LinuxInputConfigure (env)

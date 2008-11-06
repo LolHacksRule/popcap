@@ -1,5 +1,5 @@
-#ifndef __GDLGLESINTERFACE_H__
-#define __GDLGLESINTERFACE_H__
+#ifndef __CEGLESINTERFACE_H__
+#define __CEGLESINTERFACE_H__
 
 #include "Common.h"
 #include "CritSect.h"
@@ -17,11 +17,11 @@ class SexyAppBase;
 class Image;
 class MemoryImage;
 
-class GdlGLESInterface : public GLInterface
+class CEGLESInterface : public GLInterface
 {
 public:
-	GdlGLESInterface(SexyAppBase* theApp);
-	virtual ~GdlGLESInterface();
+	CEGLESInterface(SexyAppBase* theApp);
+	virtual ~CEGLESInterface();
 
 	virtual int				Init();
 	virtual void				Cleanup();

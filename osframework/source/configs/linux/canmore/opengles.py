@@ -7,16 +7,16 @@ import configs.linux.canmore
 def AddOptions (opts):
     configs.linux.canmore.AddOptions (opts)
 
-def EnableGDLGLES (env):
+def EnableCEGLES (env):
     env.PrependUnique (CPPDEFINES = ['SEXY_OPENGLES'],
                        LIBS = ['GLES_CM', 'IMGegl', 'srv_um', 'gdl', 'osal'])
 
 def Configure (env):
     configs.linux.canmore.Configure (env)
-    env.AppendUnique (DRIVERS = ['GDLGLES'])
+    env.AppendUnique (DRIVERS = ['CEGLES'])
     gles = {}
-    gles['ENABLE'] = EnableGDLGLES
-    env.AppendUnique(GDLGLES = gles)
+    gles['ENABLE'] = EnableCEGLES
+    env.AppendUnique(CEGLES = gles)
 
     ### enable generic linux and udp input driver.
     configs.linux.LinuxInputConfigure (env)

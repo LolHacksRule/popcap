@@ -42,11 +42,11 @@ if 'WGL' in env['DRIVERS']:
     env['WGL']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_WGL_DRIVER'])
 
-if 'GDLGLES' in env['DRIVERS']:
+if 'CEGLES' in env['DRIVERS']:
     srcs += ["GLImage.cpp", "GLInterface.cpp"]
-    srcs += ["GdlGLESInterface.cpp"]
-    env['GDLGLES']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_GDLGLES_DRIVER'])
+    srcs += ["CEGLESInterface.cpp"]
+    env['CEGLES']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_CEGLES_DRIVER'])
 
 if 'LINUXINPUT' in env['DRIVERS']:
     srcs += ["LinuxInputDriver.cpp"]
@@ -71,8 +71,8 @@ if gameenv['BUILD_STATIC']:
         gameenv['GLX']['ENABLE'](gameenv)
     if 'WGL' in env['DRIVERS']:
         gameenv['WGL']['ENABLE'](gameenv)
-    if 'GDLGLES' in env['DRIVERS']:
-        gameenv['GDLGLES']['ENABLE'](gameenv)
+    if 'CEGLES' in env['DRIVERS']:
+        gameenv['CEGLES']['ENABLE'](gameenv)
     if 'LINUXINPUT' in env['DRIVERS']:
         gameenv['LINUXINPUT']['ENABLE'](gameenv)
 

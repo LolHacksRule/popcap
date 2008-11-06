@@ -1,5 +1,5 @@
 #include "SexyAppBase.h"
-#include "GdlGLESInterface.h"
+#include "CEGLESInterface.h"
 #include "GLImage.h"
 #include "AutoCrit.h"
 #include "Graphics.h"
@@ -13,7 +13,7 @@
 
 using namespace Sexy;
 
-GdlGLESInterface::GdlGLESInterface (SexyAppBase* theApp)
+CEGLESInterface::CEGLESInterface (SexyAppBase* theApp)
 	: GLInterface (theApp)
 {
 	mDpy = NULL;
@@ -32,7 +32,7 @@ GdlGLESInterface::GdlGLESInterface (SexyAppBase* theApp)
 	mCursorDrawn = false;
 }
 
-GdlGLESInterface::~GdlGLESInterface ()
+CEGLESInterface::~CEGLESInterface ()
 {
 	Cleanup();
 }
@@ -70,7 +70,7 @@ static void init_gdl_plane (void)
 }
 #endif
 
-int GdlGLESInterface::Init (void)
+int CEGLESInterface::Init (void)
 {
 	Cleanup();
 
@@ -218,7 +218,7 @@ int GdlGLESInterface::Init (void)
 	return -1;
 }
 
-void GdlGLESInterface::Cleanup ()
+void CEGLESInterface::Cleanup ()
 {
 	AutoCrit anAutoCrit(mCritSect);
 
@@ -256,17 +256,17 @@ void GdlGLESInterface::Cleanup ()
 	mCursorOldY = 0;
 }
 
-void GdlGLESInterface::RemapMouse(int& theX, int& theY)
+void CEGLESInterface::RemapMouse(int& theX, int& theY)
 {
 }
 
-bool GdlGLESInterface::EnableCursor(bool enable)
+bool CEGLESInterface::EnableCursor(bool enable)
 {
 	mCursorEnabled = enable;
 	return true;
 }
 
-bool GdlGLESInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
+bool CEGLESInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
 	GLImage * aGLImage = dynamic_cast<GLImage*>(theImage);
 	mCursorImage = aGLImage;
@@ -275,7 +275,7 @@ bool GdlGLESInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 	return false;
 }
 
-void GdlGLESInterface::SetCursorPos(int theCursorX, int theCursorY)
+void CEGLESInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
         mCursorOldX = mCursorX;
         mCursorOldY = mCursorY;
@@ -283,7 +283,7 @@ void GdlGLESInterface::SetCursorPos(int theCursorX, int theCursorY)
 	mCursorY = theCursorY;
 }
 
-bool GdlGLESInterface::UpdateCursor(int theCursorX, int theCursorY)
+bool CEGLESInterface::UpdateCursor(int theCursorX, int theCursorY)
 {
 	SetCursorPos (theCursorX, theCursorY);
 	if (mCursorImage &&
@@ -293,7 +293,7 @@ bool GdlGLESInterface::UpdateCursor(int theCursorX, int theCursorY)
 	return false;
 }
 
-bool GdlGLESInterface::DrawCursor(Graphics* g)
+bool CEGLESInterface::DrawCursor(Graphics* g)
 {
 	if (!mCursorImage)
 		return false;
@@ -313,7 +313,7 @@ bool GdlGLESInterface::DrawCursor(Graphics* g)
 	return true;
 }
 
-Image* GdlGLESInterface::CreateImage(SexyAppBase * theApp,
+Image* CEGLESInterface::CreateImage(SexyAppBase * theApp,
 				     int width, int height)
 {
 	GLImage* anImage = new GLImage(this);
@@ -324,17 +324,17 @@ Image* GdlGLESInterface::CreateImage(SexyAppBase * theApp,
 	return anImage;
 }
 
-bool GdlGLESInterface::HasEvent()
+bool CEGLESInterface::HasEvent()
 {
 	return false;
 }
 
-bool GdlGLESInterface::GetEvent(struct Event &event)
+bool CEGLESInterface::GetEvent(struct Event &event)
 {
 	return false;
 }
 
-void GdlGLESInterface::SwapBuffers()
+void CEGLESInterface::SwapBuffers()
 {
 	if (mSurface)
 	{
@@ -373,22 +373,22 @@ void GdlGLESInterface::SwapBuffers()
 	}
 }
 
-class GdlGLESVideoDriver: public VideoDriver {
+class CEGLESVideoDriver: public VideoDriver {
 public:
-	GdlGLESVideoDriver ()
-	 : VideoDriver("GdlGLESInterface", 10)
+	CEGLESVideoDriver ()
+	 : VideoDriver("CEGLESInterface", 10)
 	{
 	}
 
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
-		return new GdlGLESInterface (theApp);
+		return new CEGLESInterface (theApp);
 	}
 };
 
-static GdlGLESVideoDriver aGdlGLESVideoDriver;
-VideoDriverRegistor aGdlGLESVideoDriverRegistor (&aGdlGLESVideoDriver);
-VideoDriver* GetGdlGLESVideoDriver()
+static CEGLESVideoDriver aCEGLESVideoDriver;
+VideoDriverRegistor aCEGLESVideoDriverRegistor (&aCEGLESVideoDriver);
+VideoDriver* GetCEGLESVideoDriver()
 {
-	return &aGdlGLESVideoDriver;
+	return &aCEGLESVideoDriver;
 }

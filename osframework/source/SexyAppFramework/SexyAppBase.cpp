@@ -1148,7 +1148,7 @@ bool SexyAppBase::DrawDirtyStuff()
 			if ((int) (aEndTime - mNextDrawTick) >= 0)
 				mNextDrawTick = aEndTime;
 
-			printf ("Next Draw Time: %d\n", mNextDrawTick);
+			/* printf ("Next Draw Time: %d\n", mNextDrawTick); */
 		}
 		else
 		{
