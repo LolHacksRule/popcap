@@ -119,14 +119,8 @@ public:
 };
 
 extern PakInterface* gPakInterface;
-
-static PakHandle gPakFileMapping = NULL;
-static PakInterfaceBase* gPakInterfaceP = 0;
-
-static PakInterfaceBase* GetPakPtr()
-{
-    return gPakInterfaceP;
-}
+//static PakHandle gPakFileMapping = NULL;
+extern PakInterfaceBase* GetPakPtr();
 
 static inline char * p_wcstombs(const wchar_t * theString)
 {
@@ -142,7 +136,7 @@ static inline char * p_wcstombs(const wchar_t * theString)
 static inline PFILE* p_fopen(const char* theFileName, const char* theAccess) 
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FOpen(theFileName, theAccess);	
+                return GetPakPtr()->FOpen(theFileName, theAccess);	
 	FILE* aFP = fopen(theFileName, theAccess);
 	if (aFP == NULL)
 		return NULL;
@@ -156,7 +150,7 @@ static inline PFILE* p_fopen(const char* theFileName, const char* theAccess)
 static inline PFILE* p_fopen(const wchar_t* theFileName, const wchar_t* theAccess) 
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FOpen(theFileName, theAccess);
+		return GetPakPtr()->FOpen(theFileName, theAccess);
 #ifdef WIN32
 	FILE* aFP = _wfopen(theFileName, theAccess);
 #else
@@ -180,7 +174,7 @@ static inline PFILE* p_fopen(const wchar_t* theFileName, const wchar_t* theAcces
 static inline int p_fclose(PFILE* theFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FClose(theFile);
+		return GetPakPtr()->FClose(theFile);
 	int aResult = fclose(theFile->mFP);
 	delete theFile;
 	return aResult;
@@ -189,21 +183,21 @@ static inline int p_fclose(PFILE* theFile)
 static inline int p_fseek(PFILE* theFile, long theOffset, int theOrigin)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FSeek(theFile, theOffset, theOrigin);
+		return GetPakPtr()->FSeek(theFile, theOffset, theOrigin);
 	return fseek(theFile->mFP, theOffset, theOrigin);
 }
 
 static inline int p_ftell(PFILE* theFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FTell(theFile);
+		return GetPakPtr()->FTell(theFile);
 	return ftell(theFile->mFP);
 }
 
 static inline size_t p_fread(void* thePtr, int theSize, int theCount, PFILE* theFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FRead(thePtr, theSize, theCount, theFile);
+		return GetPakPtr()->FRead(thePtr, theSize, theCount, theFile);
 	return fread(thePtr, theSize, theCount, theFile->mFP);
 }
 
@@ -217,35 +211,35 @@ static inline size_t p_fwrite(const void* thePtr, int theSize, int theCount, PFI
 static inline int p_fgetc(PFILE* theFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FGetC(theFile);
+		return GetPakPtr()->FGetC(theFile);
 	return fgetc(theFile->mFP);
 }
 
 static inline int p_ungetc(int theChar, PFILE* theFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->UnGetC(theChar, theFile);
+		return GetPakPtr()->UnGetC(theChar, theFile);
 	return ungetc(theChar, theFile->mFP);
 }
 
 static inline char* p_fgets(char* thePtr, int theSize, PFILE* theFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FGetS(thePtr, theSize, theFile);
+		return GetPakPtr()->FGetS(thePtr, theSize, theFile);
 	return fgets(thePtr, theSize, theFile->mFP);
 }
 
 static inline wchar_t* p_fgets(wchar_t* thePtr, int theSize, PFILE* theFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FGetS(thePtr, theSize, theFile);
+		return GetPakPtr()->FGetS(thePtr, theSize, theFile);
 	return fgetws(thePtr, theSize, theFile->mFP);
 }
 
 static inline int p_feof(PFILE* theFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FEof(theFile);
+		return GetPakPtr()->FEof(theFile);
 	return feof(theFile->mFP);
 }
 
@@ -256,7 +250,7 @@ extern bool PakFindClose(PakHandle hFindFile);
 static inline PakHandle p_FindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr lpFindFileData)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FindFirstFile(lpFileName, lpFindFileData);
+		return GetPakPtr()->FindFirstFile(lpFileName, lpFindFileData);
 
 	return PakFindFirstFile(lpFileName, lpFindFileData);
 }
@@ -264,7 +258,7 @@ static inline PakHandle p_FindFirstFile(PakFileNamePtr lpFileName, PakFindDataPt
 static inline bool p_FindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFileData)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FindNextFile(hFindFile, lpFindFileData);
+		return GetPakPtr()->FindNextFile(hFindFile, lpFindFileData);
 
 	return PakFindNextFile(hFindFile, lpFindFileData);
 }
@@ -272,7 +266,7 @@ static inline bool p_FindNextFile(PakHandle hFindFile, PakFindDataPtr lpFindFile
 static inline bool p_FindClose(PakHandle hFindFile)
 {
 	if (GetPakPtr() != NULL)
-		return (gPakInterfaceP)->FindClose(hFindFile);
+		return GetPakPtr()->FindClose(hFindFile);
 
 	return PakFindClose(hFindFile);
 }

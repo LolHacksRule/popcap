@@ -29,6 +29,12 @@ enum
 
 PakInterface* gPakInterface = new PakInterface();
 
+static PakInterfaceBase* gPakInterfaceP = 0;
+PakInterfaceBase* GetPakPtr()
+{
+    return gPakInterfaceP;
+}
+
 static std::string StringToUpper(const std::string& theString)
 {
 	std::string aString;
@@ -89,9 +95,10 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 	struct stat buf;
 	fstat(aFileHandle, &buf);
 
-	off_t aFileSize = buf.st_size;
+	size_t aFileSize = buf.st_size;
 
-	void* aFileMapping = mmap(0, aFileSize, PROT_READ | MAP_SHARED, MAP_ANONYMOUS, aFileHandle, 0);
+	void* aFileMapping = mmap(NULL, aFileSize, PROT_READ,
+				  MAP_SHARED, (int)aFileHandle, 0);
 	if (aFileMapping == MAP_FAILED)
 	{
 		close(aFileHandle);
@@ -116,8 +123,8 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 	if (aFP == NULL)
 		return false;
 
-	ulong aMagic = 0;
-	FRead(&aMagic, sizeof(ulong), 1, aFP);
+	uint aMagic = 0;
+	FRead(&aMagic, sizeof(uint), 1, aFP);
 	if (aMagic != 0xBAC04AC0)
 	{
 		FClose(aFP);
@@ -147,6 +154,7 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 		FRead(aName, 1, aNameWidth, aFP);
 		aName[aNameWidth] = 0;
 
+		printf ("file name:%s\n", aName);
 		int aSrcSize = 0;
 		FRead(&aSrcSize, sizeof(int), 1, aFP);
 		PakFileTime aFileTime;
