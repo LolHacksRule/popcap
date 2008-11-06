@@ -425,10 +425,6 @@ void InputServer::PostEvent (Event &event)
 	unsigned char buf[sizeof (struct UdpInput) * sizeof (uint32_t)];
 	unsigned int offset = 0;
 
-	printf ("event type: %d\n", event.type);
-	printf ("event x: %d\n", event.x);
-	printf ("event y: %d\n", event.y);
-
 	offset += write32 (buf + offset, (uint32_t)event.type);
 	offset += write32 (buf + offset, (uint32_t)event.flags);
 	offset += write32 (buf + offset, (uint32_t)event.x);
