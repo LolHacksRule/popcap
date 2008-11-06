@@ -31,7 +31,7 @@ struct DriverCompare {
 class DriverFactory
 {
  public:
-	typedef std::set<Driver*, DriverCompare> Drivers;
+	typedef std::multiset<Driver*, DriverCompare> Drivers;
 
 	void		       AddDriver (Driver * theDriver);
 	void		       RemoveDriver (Driver * theDriver);
