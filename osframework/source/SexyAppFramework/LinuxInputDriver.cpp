@@ -349,6 +349,8 @@ void* LinuxInputInterface::Run (void * data)
 				continue;
 			if (driver->mDone)
 				break;
+			if (!FD_ISSET (fd, &set))
+				continue;
 		}
 		else
 		{

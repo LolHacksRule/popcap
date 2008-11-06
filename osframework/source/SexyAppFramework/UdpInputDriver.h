@@ -30,7 +30,7 @@ private:
 
  private:
         int                   mFd;
-        int                   mDone;
+        volatile int          mDone;
         pthread_t*            mThread;
         int                   mX;
         int                   mY;

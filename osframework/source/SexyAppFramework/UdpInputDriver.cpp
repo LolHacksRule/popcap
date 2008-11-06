@@ -193,7 +193,12 @@ void* UdpInputInterface::Run (void * data)
 			FD_ZERO (&set);
 			FD_SET (fd, &set);
 
-			status = select (fd + 1, &set, NULL, NULL, NULL);
+			struct timeval timeout;
+
+			//gettimeofday (&timeout, NULL);
+			timeout.tv_sec = 1;
+			timeout.tv_usec = 0;
+			status = select (fd + 1, &set, NULL, NULL, &timeout);
 			if (status < 0 && errno != EINTR)
 			{
 				printf ("device disconnected.\n");
@@ -204,6 +209,8 @@ void* UdpInputInterface::Run (void * data)
 				continue;
 			if (driver->mDone)
 				break;
+			if (!FD_ISSET (fd, &set))
+				continue;
 		}
 		else
 		{
