@@ -428,7 +428,7 @@ bool LinuxInputInterface::GetEvent (Event & event)
 class LinuxInputDriver: public InputDriver {
 public:
 	LinuxInputDriver ()
-	 : InputDriver("LinuxInputInterface", 10)
+	 : InputDriver("LinuxInputInterface", 0)
 	{
 	}
 

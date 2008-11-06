@@ -250,7 +250,7 @@ void* UdpInputInterface::Run (void * data)
 			}
 			if (event.type != EVENT_NONE)
 			{
-				if (1)
+				if (0)
 				{
 					printf ("event.type: %d\n", event.type);
 					printf ("event.x: %d\n", event.x);
@@ -277,7 +277,7 @@ bool UdpInputInterface::GetEvent (Event & event)
 class UdpInputDriver: public InputDriver {
 public:
 	UdpInputDriver ()
-	 : InputDriver("UdpInputInterface", 10)
+	 : InputDriver("UdpInputInterface", 0)
 	{
 	}
 
