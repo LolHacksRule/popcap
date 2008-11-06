@@ -154,7 +154,6 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 		FRead(aName, 1, aNameWidth, aFP);
 		aName[aNameWidth] = 0;
 
-		printf ("file name:%s\n", aName);
 		int aSrcSize = 0;
 		FRead(&aSrcSize, sizeof(int), 1, aFP);
 		PakFileTime aFileTime;
