@@ -7,6 +7,8 @@ namespace Sexy
 class ButtonListener
 {	
 public:
+        virtual ~ButtonListener() {}
+
 	virtual void			ButtonPress(int theId) {}
 	virtual void			ButtonPress(int theId, int theClickCount) { ButtonPress(theId); }
 	virtual void			ButtonDepress(int theId) {}
