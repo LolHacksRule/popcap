@@ -29,7 +29,7 @@ void InputManager::Init ()
 	factory = InputDriverFactory::GetInputDriverFactory ();
 
 	const DriverFactory::Drivers* Creators = factory->GetDrivers ();
-	DriverFactory::Drivers::iterator it;
+	DriverFactory::Drivers::const_iterator it;
 	for (it = Creators->begin (); it != Creators->end (); ++it)
 	{
 		InputInterface * aInput;
