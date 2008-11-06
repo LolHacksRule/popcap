@@ -25,3 +25,4 @@ def Configure (env):
 
     ### enable genaric linux input driver.
     configs.linux.LinuxInputConfigure (env)
+    configs.linux.UdpInputConfigure (env)

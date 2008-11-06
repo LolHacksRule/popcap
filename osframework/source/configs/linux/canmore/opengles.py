@@ -18,5 +18,6 @@ def Configure (env):
     gles['ENABLE'] = EnableGDLGLES
     env.AppendUnique(GDLGLES = gles)
 
-    ### enable genaric linux input driver.
+    ### enable generic linux and udp input driver.
     configs.linux.LinuxInputConfigure (env)
+    configs.linux.UdpInputConfigure (env)
