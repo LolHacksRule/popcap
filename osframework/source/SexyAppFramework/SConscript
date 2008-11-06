@@ -53,6 +53,11 @@ if 'LINUXINPUT' in env['DRIVERS']:
     env['LINUXINPUT']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_LINUX_INPUT_DRIVER'])
 
+if 'UDPINPUT' in env['DRIVERS']:
+    srcs += ["UdpInputDriver.cpp"]
+    env['UDPINPUT']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_UDP_INPUT_DRIVER'])
+
 env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                              os.path.join('..', 'PakLib')],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
@@ -79,3 +84,7 @@ if gameenv['BUILD_STATIC']:
     env.Library('SexyAppFramework', srcs)
 else:
     env.SharedLibrary('SexyAppFramework', srcs)
+
+if 'LINUXUDPINPUTSERVER' in env['CPPDEFINES']:
+    env = Environment ()
+    env.Program ('luis', 'LinuxUdpInputServer.cpp')

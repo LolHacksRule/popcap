@@ -34,10 +34,15 @@ InputDriverFactory*  InputDriverFactory::GetInputDriverFactory ()
  * binary.
  */
 extern InputDriver* GetLinuxInputDriver();
+extern InputDriver* GetUdpInputDriver();
+
 typedef InputDriver* (* InputDriverGetter)();
 InputDriverGetter InputDriverGetters []= {
 #ifdef SEXY_LINUX_INPUT_DRIVER
 	GetLinuxInputDriver,
+#endif
+#ifdef SEXY_UDP_INPUT_DRIVER
+	GetUdpInputDriver,
 #endif
 	NULL
 };
