@@ -28,22 +28,33 @@ void ModuleInputInterface::Cleanup()
 	CloseDevice ();
 }
 
+static void PostEventForModule (void * manager,
+				struct Event* event)
+{
+	InputInterface* interface =
+		(InputInterface*)manager;
+
+	interface->PostEvent (*((Sexy::Event*)event));
+}
+
 bool ModuleInputInterface::OpenDevice ()
 {
 	ModuleManager* manager = ModuleManager::GetModuleManager ();
 	mModule = manager->LoadModule (mModuleName.c_str ());
 	if (!mModule)
 		goto open_failed;
-	mOpen = (InputModuleOpen)mModule->GetSymbol ("InputModuleOpen");
-	mClose = (InputModuleClose)mModule->GetSymbol ("InputModuleClose");
+	mOpen = (InputModuleOpenFunc)mModule->GetSymbol ("InputModuleOpen");
+	mClose = (InputModuleCloseFunc)mModule->GetSymbol ("InputModuleClose");
 	if (!mOpen || !mClose)
 		goto close_module;
 
 	struct InputModuleInfo info;
 
 	memset (&info, 0, sizeof (info));
+	info.manager = (void*)this;
 	info.width = mApp->mWidth;
 	info.height = mApp->mHeight;
+	info.postevent = PostEventForModule;
 	mHandle = mOpen (&info);
 	if (!mHandle)
 		goto close_module;

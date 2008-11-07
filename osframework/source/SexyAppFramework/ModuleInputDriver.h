@@ -34,8 +34,8 @@ private:
         std::string           mModuleName;
         void*                 mHandle;
 
-        InputModuleOpen       mOpen;
-        InputModuleClose      mClose;
+        InputModuleOpenFunc   mOpen;
+        InputModuleCloseFunc  mClose;
 };
 
 }
