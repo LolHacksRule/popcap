@@ -14,6 +14,7 @@ public:
 public:
         static ModuleManager* GetModuleManager ();
         Module* LoadModule (const char * thePath);
+        void UnloadModule (Module* theModule);
 
 private:
         ModuleLoader*        mLoader;

@@ -38,3 +38,11 @@ Module* ModuleManager::LoadModule (const char * thePath)
 
 	return mLoader->Load (thePath);
 }
+
+void ModuleManager::UnloadModule (Module* theModule)
+{
+	if (!mLoader)
+		return;
+
+	mLoader->Unload (theModule);
+}
