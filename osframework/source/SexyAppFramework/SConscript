@@ -20,7 +20,8 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "SWTri.cpp", "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp",
         "WidgetManager.cpp", "XMLParser.cpp", 'DriverFactory.cpp',
         'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
-        'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp']
+        'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
+        'ModuleLoader.cpp', 'ModuleManager.cpp']
 
 #dummy sound manager
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
@@ -58,6 +59,12 @@ if 'UDPINPUT' in env['DRIVERS']:
     env['UDPINPUT']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_UDP_INPUT_DRIVER'])
 
+print env['LOADERS']
+if 'POSIXMODULELOADER' in env['LOADERS']:
+    srcs += ["PosixModuleLoader.cpp"]
+    env['POSIXMODULELOADER']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_POSIX_MODULE_LOADER'])
+
 env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                              os.path.join('..', 'PakLib')],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
@@ -75,6 +82,9 @@ if gameenv['BUILD_STATIC']:
         gameenv['CEGLES']['ENABLE'](gameenv)
     if 'LINUXINPUT' in env['DRIVERS']:
         gameenv['LINUXINPUT']['ENABLE'](gameenv)
+
+    if 'POSIXMODULELOADER' in env['LOADERS']:
+        gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)
 
     gameenv.PrependUnique(LIBPATH = [os.path.join('..', 'ImageLib'),
                                      os.path.join('..', 'PakLib')],

@@ -16,6 +16,7 @@ def Configure (env):
                       LINKFLAGS = ['-g', '-fno-unit-at-a-time'],
                       LIBS = ['rt', 'm'])
     configs.linux.EnableLinuxUdpInputServer (env)
+    configs.PosixModuleLoaderConfigure (env)
 
 def LunuxInputAddOptions (opts):
     pass
