@@ -4,6 +4,7 @@
 #include "Event.h"
 
 #ifdef __cplusplus
+namespace Sexy {
 extern "C" {
 #endif
 
@@ -34,6 +35,7 @@ typedef void* (* InputModuleOpenFunc) (const struct InputModuleInfo*);
 typedef void (* InputModuleCloseFunc) (void*);
 
 #ifdef __cplusplus
+}
 }
 #endif
 
