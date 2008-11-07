@@ -18,6 +18,12 @@ PosixModuleLoader::~PosixModuleLoader ()
 #define RTLD_LAZY
 #endif
 
+#ifdef __APPLE__
+#define MODULE_SUFFIX ".dyld"
+#else
+#define MODULE_SUFFIX ".so"
+#endif
+
 Module* PosixModuleLoader::Load (const char* thePath)
 {
 	void* handle;
@@ -25,8 +31,34 @@ Module* PosixModuleLoader::Load (const char* thePath)
 	handle = dlopen (thePath, RTLD_LOCAL | RTLD_LAZY);
 	if (!handle)
 	{
-		printf ("dlerror: %s\n", dlerror ());
-		return 0;
+		std::string fileName (thePath);
+		std::string::size_type lastSlash;
+		std::string::size_type firstPrefix;
+		std::string::size_type lastSuffix;
+		std::string baseName;
+		std::string altName;
+
+		lastSlash = fileName.rfind ("/");
+		if (lastSlash != std::string::npos)
+			baseName = fileName.substr (lastSlash + 1);
+		else
+			baseName = fileName;
+		firstPrefix = baseName.find ("lib");
+		lastSuffix = baseName.rfind (MODULE_SUFFIX);
+		if (lastSlash != std::string::npos)
+			altName = fileName.substr (0, lastSlash);
+		if (firstPrefix == std::string::npos)
+			altName += "lib";
+		altName += baseName;
+		if (lastSuffix == std::string::npos)
+			altName += MODULE_SUFFIX;
+
+		handle = dlopen (altName.c_str (), RTLD_LOCAL | RTLD_LAZY);
+		if (!handle)
+		{
+			printf ("dlerror: %s\n", dlerror ());
+			return 0;
+		}
 	}
 
 	return new PosixModule (handle, this);
