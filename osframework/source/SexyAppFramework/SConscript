@@ -59,7 +59,6 @@ if 'UDPINPUT' in env['DRIVERS']:
     env['UDPINPUT']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_UDP_INPUT_DRIVER'])
 
-print env['LOADERS']
 if 'POSIXMODULELOADER' in env['LOADERS']:
     srcs += ["PosixModuleLoader.cpp"]
     env['POSIXMODULELOADER']['ENABLE'](env)
@@ -101,3 +100,7 @@ else:
 if 'LINUXUDPINPUTSERVER' in env['CPPDEFINES']:
     env = Environment ()
     env.Program ('luis', 'LinuxUdpInputServer.cpp')
+
+if False:
+    env = Environment ()
+    env.SharedLibrary ('SexyInputModule', 'TestInputModule.c')
