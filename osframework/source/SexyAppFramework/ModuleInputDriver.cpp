@@ -10,11 +10,12 @@ ModuleInputInterface::ModuleInputInterface (SexyAppBase* theApp,
 	  mApp (theApp), mModule (0), mModuleName (theModuleName),
 	  mHandle (0)
 {
+	mModuleName = std::string ("SexyInputModule");
 }
 
 ModuleInputInterface::~ModuleInputInterface ()
 {
-    Cleanup ();
+	Cleanup ();
 }
 
 bool ModuleInputInterface::Init()
