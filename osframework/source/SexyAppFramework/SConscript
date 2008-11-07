@@ -65,6 +65,9 @@ if 'POSIXMODULELOADER' in env['LOADERS']:
     env['POSIXMODULELOADER']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_POSIX_MODULE_LOADER'])
 
+#c module input driver
+srcs += ['ModuleInputDriver.cpp']
+
 env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
                              os.path.join('..', 'PakLib')],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
