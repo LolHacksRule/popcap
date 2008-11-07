@@ -39,7 +39,8 @@ void PosixModuleLoader::Unload (Module* theModule)
 
 PosixModule::PosixModule (void* theHandle,
 			  PosixModuleLoader* theLoader) :
-	mHandle (theHandle), mLoader (theLoader)
+	mHandle (theHandle), mLoader (theLoader),
+	mError (0)
 {
 }
 
