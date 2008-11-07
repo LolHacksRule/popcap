@@ -72,6 +72,8 @@ struct PFindData
 class PakInterfaceBase
 {
 public:
+        virtual ~PakInterfaceBase() {}
+public:
 	virtual PFILE*			FOpen(const char* theFileName, const char* theAccess) = 0;
 	virtual PFILE*			FOpen(const wchar_t* theFileName, const wchar_t* theAccess) { return NULL; }
 	virtual int				FClose(PFILE* theFile) = 0;
