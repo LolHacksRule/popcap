@@ -35,6 +35,7 @@ InputDriverFactory*  InputDriverFactory::GetInputDriverFactory ()
  */
 extern InputDriver* GetLinuxInputDriver();
 extern InputDriver* GetUdpInputDriver();
+extern InputDriver* GetModuleInputDriver();
 
 typedef InputDriver* (* InputDriverGetter)();
 InputDriverGetter InputDriverGetters []= {
@@ -44,6 +45,7 @@ InputDriverGetter InputDriverGetters []= {
 #ifdef SEXY_UDP_INPUT_DRIVER
 	GetUdpInputDriver,
 #endif
+	GetModuleInputDriver,
 	NULL
 };
 
