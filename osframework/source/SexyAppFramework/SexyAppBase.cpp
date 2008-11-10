@@ -2754,9 +2754,14 @@ void SexyAppBase::Init()
 		SoundDriver* aSoundDriver = dynamic_cast<SoundDriver*>
 			(SoundDriverFactory::GetSoundDriverFactory ()->Find ());
 		if (aSoundDriver)
+		{
 			mSoundManager = aSoundDriver->Create (this);
+			mMusicInterface = aSoundDriver->CreateMusicInterface (this);
+		}
 		else
+		{
 			mSoundManager = new DummySoundManager();
+		}
 	}
 	if (mMusicInterface == NULL)
 		mMusicInterface = new MusicInterface();
