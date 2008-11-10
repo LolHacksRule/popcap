@@ -158,11 +158,13 @@ bool GstSoundInstance::Play(bool looping, bool autoRelease)
 	mAutoRelease = autoRelease;
 	mLoop = looping;
 
-	g_print ("%s: playing.(%s auto release %d loop %d).\n",
-		 GST_OBJECT_NAME (GST_OBJECT (mBin)), mUrl,
-		 autoRelease, looping);
+	if (0)
+	    g_print ("%s: playing.(%s auto release %d loop %d).\n",
+		     GST_OBJECT_NAME (GST_OBJECT (mBin)), mUrl,
+		     autoRelease, looping);
 
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PLAYING);
+	g_usleep (50);
 	return true;
 }
 
@@ -171,6 +173,7 @@ void GstSoundInstance::Stop()
 	if (!mBin)
 		return;
 
+	g_usleep (50);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_READY);
 }
 
@@ -264,10 +267,12 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 		break;
 	}
 	case GST_MESSAGE_EOS:
-		g_print ("%s: received EOS.\n", GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
+		if (0)
+			g_print ("%s: received EOS.\n", GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
 		if (player->mLoop)
 		{
-			g_print ("restarting player.\n");
+			if (0)
+				g_print ("restarting player.\n");
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_READY);
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_PLAYING);
 		}
