@@ -59,6 +59,12 @@ if 'UDPINPUT' in env['DRIVERS']:
     env['UDPINPUT']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_UDP_INPUT_DRIVER'])
 
+if 'GSTSOUND' in env['DRIVERS']:
+    srcs += ["GstSoundManager.cpp", 'GstSoundInstance.cpp',
+             'GstMusicInterface.cpp']
+    env['GSTSOUND']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_GST_SOUND_DRIVER'])
+
 if 'POSIXMODULELOADER' in env['LOADERS']:
     srcs += ["PosixModuleLoader.cpp"]
     env['POSIXMODULELOADER']['ENABLE'](env)
@@ -84,6 +90,8 @@ if gameenv['BUILD_STATIC']:
         gameenv['CEGLES']['ENABLE'](gameenv)
     if 'LINUXINPUT' in env['DRIVERS']:
         gameenv['LINUXINPUT']['ENABLE'](gameenv)
+    if 'GSTSOUND' in env['DRIVERS']:
+        gameenv['GSTSOUND']['ENABLE'](gameenv)
 
     if 'POSIXMODULELOADER' in env['LOADERS']:
         gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)

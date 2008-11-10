@@ -46,3 +46,16 @@ def UdpInputConfigure(env):
 
 def EnableLinuxUdpInputServer(env):
     env.AppendUnique(CPPDEFINES = ['LINUXUDPINPUTSERVER'])
+
+def GstSoundAddOptions (opts):
+    pass
+
+def EnableGstSound (env):
+    env.ParseConfig('pkg-config gstreamer-0.10 --cflags --libs')
+
+def GstSoundConfigure(env):
+    configs.linux.Configure (env)
+    env.AppendUnique (DRIVERS = ['GSTSOUND'])
+    gst_sound = {}
+    gst_sound['ENABLE'] = EnableGstSound
+    env.AppendUnique (GSTSOUND = gst_sound)
