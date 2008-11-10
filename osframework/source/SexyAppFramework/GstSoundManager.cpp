@@ -70,7 +70,7 @@ int GstSoundManager::FindFreeChannel()
 
 bool GstSoundManager::Initialized()
 {
-	return false;
+	return true;
 }
 
 int GstSoundManager::VolumeToDB(double theVolume)
@@ -125,9 +125,7 @@ int GstSoundManager::LoadSound(const std::string& theFilename)
 void GstSoundManager::ReleaseSound(unsigned int theSfxID)
 {
 	if (mSourceFileNames[theSfxID].length() != 0)
-	{
 		mSourceFileNames[theSfxID] = "";
-	}
 }
 
 int GstSoundManager::GetFreeSoundId()
@@ -144,6 +142,11 @@ int GstSoundManager::GetFreeSoundId()
 int GstSoundManager::GetNumSounds()
 {
 	int aCount = 0;
+	int i;
+
+	for (i = 0; i < MAX_SOURCE_SOUNDS; i++)
+		if (mSourceFileNames[i].length () != 0)
+			aCount++;
 	return aCount;
 }
 
