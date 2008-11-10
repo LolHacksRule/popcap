@@ -4,7 +4,7 @@
 
 using namespace Sexy;
 
-static gboolean
+static inline gboolean
 object_has_property (GObject * object, const char * name)
 {
 	GObjectClass * klass;
@@ -84,7 +84,8 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 			}
 		}
 
-		g_print ("uri = %s\n", url);
+		if (0)
+			g_print ("uri = %s\n", url);
 		g_object_set (G_OBJECT (mBin), "uri", url, NULL);
 		mUrl = url;
 	}
@@ -239,13 +240,16 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 
 		if (GST_OBJECT (player->mBin) == GST_MESSAGE_SRC (msg))
 		{
-			g_print ("%s.\n%s: %s -> %s (pending: %s).\n",
-				 player->mUrl,
-				 GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)),
-				 gst_element_state_get_name (oldstate),
-				 gst_element_state_get_name (newstate),
-				 gst_element_state_get_name (pending));
-			if (newstate == GST_STATE_READY && oldstate == GST_STATE_PAUSED &&
+			if (0)
+			{
+				g_print ("%s.\n%s: %s -> %s (pending: %s).\n",
+					 player->mUrl,
+					 GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)),
+					 gst_element_state_get_name (oldstate),
+					 gst_element_state_get_name (newstate),
+					 gst_element_state_get_name (pending));
+			}
+			if (0 && newstate == GST_STATE_READY && oldstate == GST_STATE_PAUSED &&
 			    player->mHasPlayed && player->mAutoRelease)
 				player->mReleased = true;
 		}
@@ -258,6 +262,10 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 			g_print ("restarting player.\n");
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_READY);
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_PLAYING);
+		}
+		else if (player->mAutoRelease)
+		{
+			player->mReleased = true;
 		}
 		break;
 	default:
