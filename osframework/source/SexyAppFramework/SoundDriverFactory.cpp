@@ -12,6 +12,11 @@ SoundDriver::~SoundDriver ()
 {
 }
 
+MusicInterface* SoundDriver::CreateMusicInterface (SexyAppBase * theApp)
+{
+	return 0;
+}
+
 SoundDriverFactory::SoundDriverFactory ()
 	: DriverFactory ()
 {
@@ -34,8 +39,12 @@ SoundDriverFactory*  SoundDriverFactory::GetSoundDriverFactory ()
  * binary.
  */
 extern SoundDriver* GetDummySoundDriver();
+extern SoundDriver* GetGstSoundDriver();
 typedef SoundDriver* (* SoundDriverGetter)();
 SoundDriverGetter SoundDriverGetters []= {
+#ifdef SEXY_GST_SOUND_DRIVER
+	GetGstSoundDriver,
+#endif
 	GetDummySoundDriver,
 	NULL
 };

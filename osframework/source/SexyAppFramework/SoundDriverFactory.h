@@ -4,6 +4,7 @@
 #include "Common.h"
 #include "DriverFactory.h"
 #include "SoundManager.h"
+#include "MusicInterface.h"
 
 namespace Sexy {
 class SoundDriver: public Driver
@@ -11,6 +12,7 @@ class SoundDriver: public Driver
  public:
 	virtual SoundManager* Create (SexyAppBase * theApp) = 0;
 
+	virtual MusicInterface* CreateMusicInterface (SexyAppBase * theApp);
 
  public:
 	SoundDriver (const std::string theName,
