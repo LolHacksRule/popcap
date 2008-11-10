@@ -14,6 +14,7 @@ class GstMusicInfo
 {
 public:
         GstSoundInstance*  mPlayer;
+        double             mVolume;
 
 public:
 	GstMusicInfo ();
@@ -53,7 +54,8 @@ public:
 	virtual void			Update();
 
 private:
-        GstMusicMap                             mMusicMap;
+        GstMusicMap                     mMusicMap;
+        double                          mVolume;
 };
 
 }

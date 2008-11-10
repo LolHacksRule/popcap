@@ -7,10 +7,12 @@ using namespace Sexy;
 GstMusicInfo::GstMusicInfo ()
 {
 	mPlayer = 0;
+	mVolume = 1.0;
 }
 
 GstMusicInterface::GstMusicInterface()
 {
+	mVolume = 1.0;
 }
 
 GstMusicInterface::~GstMusicInterface()
@@ -143,7 +145,10 @@ void GstMusicInterface::ResumeAllMusic()
 		GstMusicInfo* aMusicInfo = &anIt->second;
 
                 if (aMusicInfo->mPlayer)
+		{
 			aMusicInfo->mPlayer->Resume ();
+			aMusicInfo->mPlayer->SetVolume (mVolume * aMusicInfo->mVolume);
+		}
         }
 }
 
@@ -164,6 +169,19 @@ void GstMusicInterface::FadeOutAll(bool stopSong, double theSpeed)
 
 void GstMusicInterface::SetSongVolume(int theSongId, double theVolume)
 {
+	GstMusicMap::iterator anIt;
+
+	anIt= mMusicMap.find (theSongId);
+	if (anIt == mMusicMap.end ())
+		return;
+
+	GstMusicInfo* aMusicInfo = &anIt->second;
+
+	if (aMusicInfo->mPlayer)
+	{
+		aMusicInfo->mPlayer->SetVolume (theVolume);
+		aMusicInfo->mVolume = theVolume;
+	}
 }
 
 void GstMusicInterface::SetSongMaxVolume(int theSongId, double theMaxVolume)
@@ -188,6 +206,18 @@ bool GstMusicInterface::IsPlaying(int theSongId)
 
 void GstMusicInterface::SetVolume(double theVolume)
 {
+	mVolume = theVolume;
+
+	GstMusicMap::iterator anIt;
+
+	for (anIt = mMusicMap.begin (); anIt != mMusicMap.end(); ++anIt)
+	{
+		GstMusicInfo* aMusicInfo = &anIt->second;
+
+                if (aMusicInfo->mPlayer &&
+		    aMusicInfo->mPlayer->IsPlaying ())
+			aMusicInfo->mPlayer->SetVolume (mVolume * aMusicInfo->mVolume);
+        }
 }
 
 void GstMusicInterface::SetMusicAmplify(int theSongId, double theAmp)

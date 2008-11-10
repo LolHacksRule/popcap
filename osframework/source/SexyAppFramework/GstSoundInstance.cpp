@@ -33,8 +33,6 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 	mVolume = 1.0;
 	mPan = 0;
 
-	RehupVolume();
-
 	GstElement * fakesink;
 
 	mBin = (GstBin *)gst_element_factory_make ("playbin", 0);
@@ -89,6 +87,8 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 		g_object_set (G_OBJECT (mBin), "uri", url, NULL);
 		mUrl = url;
 	}
+
+	RehupVolume();
 }
 
 GstSoundInstance::~GstSoundInstance()
@@ -103,6 +103,14 @@ GstSoundInstance::~GstSoundInstance()
 
 void GstSoundInstance::RehupVolume()
 {
+	double volume =
+		mBaseVolume * mVolume;
+
+	if (mSoundManagerP)
+		volume *= mSoundManagerP->mMasterVolume;
+
+	volume *= 10;
+	g_object_set (G_OBJECT (mBin), "volume", volume, NULL);
 }
 
 void GstSoundInstance::RehupPan()
