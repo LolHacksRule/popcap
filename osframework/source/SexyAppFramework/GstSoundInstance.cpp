@@ -134,7 +134,6 @@ void GstSoundInstance::RehupVolume()
 	if (mSoundManagerP)
 		volume *= mSoundManagerP->mMasterVolume;
 
-	volume *= 2;
 	g_object_set (G_OBJECT (mBin), "volume", volume, NULL);
 }
 
@@ -189,7 +188,6 @@ bool GstSoundInstance::Play(bool looping, bool autoRelease)
 		     autoRelease, looping);
 
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PLAYING);
-	g_usleep (50);
 	return true;
 }
 
@@ -198,7 +196,6 @@ void GstSoundInstance::Stop()
 	if (!mBin)
 		return;
 
-	g_usleep (50);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_READY);
 }
 
