@@ -104,7 +104,8 @@ GstSoundInstance::~GstSoundInstance()
 	{
 		GstState state, pending;
 
-		gst_element_get_state (GST_ELEMENT (mBin), &state, &pending, 0);
+		gst_element_get_state (GST_ELEMENT (mBin), &state, &pending,
+				       GST_CLOCK_TIME_NONE);
 		for (int i = 0; i < 3; i++)
 		{
 			if (gst_element_set_state (GST_ELEMENT (mBin),
@@ -196,6 +197,9 @@ void GstSoundInstance::Stop()
 	if (!mBin)
 		return;
 
+	GstState state;
+	gst_element_get_state (GST_ELEMENT (mBin), &state, NULL,
+			       GST_CLOCK_TIME_NONE);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_READY);
 }
 
@@ -204,6 +208,9 @@ void GstSoundInstance::Pause()
 	if (!mBin || !IsPlaying ())
 		return;
 
+	GstState state;
+	gst_element_get_state (GST_ELEMENT (mBin), &state, NULL,
+			       GST_CLOCK_TIME_NONE);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PAUSED);
 }
 
@@ -212,6 +219,9 @@ void GstSoundInstance::Resume()
 	if (!mBin)
 		return;
 
+	GstState state;
+	gst_element_get_state (GST_ELEMENT (mBin), &state, NULL,
+			       GST_CLOCK_TIME_NONE);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PLAYING);
 }
 
