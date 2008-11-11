@@ -55,4 +55,4 @@ def Configure (env):
                       LIBS = [])
     env.AppendUnique (LINKFLAGS = ['-export-dynamic'])
 
-    env.Replace (PKGCONFIG = 'PKG_CONFIG_PATH= PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR pkg-config')
+    env['PKGCONFIG'] = 'PKG_CONFIG_PATH= PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR pkg-config'

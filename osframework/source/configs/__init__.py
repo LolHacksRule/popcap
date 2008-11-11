@@ -11,6 +11,8 @@ def AddOptions(opts):
 
 def Configure(env):
     env.AppendUnique (DRIVERS = [], LOADERS = [])
+    if not env.has_key ('PKGCONFIG'):
+        env.Replace (PKGCONFIG = 'pkg-config')
 
 def PosixModuleLoaderAddOptions (opts):
     pass
