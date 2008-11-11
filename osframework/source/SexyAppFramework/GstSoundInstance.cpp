@@ -36,56 +36,63 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 	GstElement * fakesink;
 
 	mBin = (GstBin *)gst_element_factory_make ("playbin", 0);
-	fakesink = gst_element_factory_make ("fakesink", 0);
-	g_object_set (G_OBJECT (mBin), "video-sink", fakesink, NULL);
+	if (mBin)
+	{
+		fakesink = gst_element_factory_make ("fakesink", 0);
+		g_object_set (G_OBJECT (mBin), "video-sink", fakesink, NULL);
 
-	mBus = gst_pipeline_get_bus (GST_PIPELINE (mBin));
-	mBusid = gst_bus_add_watch (mBus, MessageHandler, this);
+		mBus = gst_pipeline_get_bus (GST_PIPELINE (mBin));
+		mBusid = gst_bus_add_watch (mBus, MessageHandler, this);
 
-	const gchar* uri = theUri.c_str ();
-	if (gst_uri_is_valid (uri)) {
-		g_object_set (G_OBJECT (mBin), "uri", uri, NULL);
-		mUrl = g_strdup (uri);
-	} else {
-		gchar * url;
-
-		if (g_path_is_absolute  (uri)) {
-			url = g_strdup_printf ("%s%s", "file://", uri);
+		const gchar* uri = theUri.c_str ();
+		if (gst_uri_is_valid (uri)) {
+			g_object_set (G_OBJECT (mBin), "uri", uri, NULL);
+			mUrl = g_strdup (uri);
 		} else {
-			gchar * current_dir = g_get_current_dir ();
+			gchar * url;
 
-			url = g_strdup_printf ("%s%s/%s", "file://", current_dir, uri);
-			g_free (current_dir);
-		}
+			if (g_path_is_absolute  (uri)) {
+				url = g_strdup_printf ("%s%s", "file://", uri);
+			} else {
+				gchar * current_dir = g_get_current_dir ();
 
-		gchar* filename = strrchr (url + 7, '/');
-		if (!filename)
-			filename = url + 7;
-		if (!strrchr (filename, '.'))
-		{
-			static const gchar* extensions[]  = {
-				".ogg", ".OGG", ".mp3", ".MP3", ".wav", NULL
-			};
-
-			for (int i = 0; extensions[i]; i++)
-			{
-				gchar * newurl;
-
-				newurl = g_strdup_printf ("%s%s", url, extensions[i]);
-				if (!access (newurl + 7, F_OK))
-				{
-					g_free (url);
-					url = newurl;
-					break;
-				}
-				g_free (newurl);
+				url = g_strdup_printf ("%s%s/%s", "file://", current_dir, uri);
+				g_free (current_dir);
 			}
-		}
 
-		if (0)
-			g_print ("uri = %s\n", url);
-		g_object_set (G_OBJECT (mBin), "uri", url, NULL);
-		mUrl = url;
+			gchar* filename = strrchr (url + 7, '/');
+			if (!filename)
+				filename = url + 7;
+			if (!strrchr (filename, '.'))
+			{
+				static const gchar* extensions[]  = {
+					".ogg", ".OGG", ".mp3", ".MP3", ".wav", NULL
+				};
+
+				for (int i = 0; extensions[i]; i++)
+				{
+					gchar * newurl;
+
+					newurl = g_strdup_printf ("%s%s", url, extensions[i]);
+					if (!access (newurl + 7, F_OK))
+					{
+						g_free (url);
+						url = newurl;
+						break;
+					}
+					g_free (newurl);
+				}
+			}
+
+			if (0)
+				g_print ("uri = %s\n", url);
+			g_object_set (G_OBJECT (mBin), "uri", url, NULL);
+			mUrl = url;
+		}
+	}
+	else
+	{
+		mUrl = 0;
 	}
 
 	RehupVolume();
@@ -93,10 +100,25 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 
 GstSoundInstance::~GstSoundInstance()
 {
-	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_NULL);
-	g_source_remove (mBusid);
+	if (mBin)
+	{
+		GstState state, pending;
 
-	gst_object_unref (G_OBJECT (mBin));
+		gst_element_get_state (GST_ELEMENT (mBin), &state, &pending, 0);
+		for (int i = 0; i < 3; i++)
+		{
+			if (gst_element_set_state (GST_ELEMENT (mBin),
+						   GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE)
+				g_usleep (50);
+			else
+				break;
+		}
+		gst_element_get_state (GST_ELEMENT (mBin), &state, NULL, 0);
+		g_assert (state == GST_STATE_NULL);
+		g_source_remove (mBusid);
+
+		gst_object_unref (G_OBJECT (mBin));
+	}
 
 	g_free (mUrl);
 }
@@ -106,10 +128,13 @@ void GstSoundInstance::RehupVolume()
 	double volume =
 		mBaseVolume * mVolume;
 
+	if (!mBin)
+		return;
+
 	if (mSoundManagerP)
 		volume *= mSoundManagerP->mMasterVolume;
 
-	volume *= 10;
+	volume *= 2;
 	g_object_set (G_OBJECT (mBin), "volume", volume, NULL);
 }
 
