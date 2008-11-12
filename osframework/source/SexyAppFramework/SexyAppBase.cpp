@@ -256,7 +256,7 @@ SexyAppBase::SexyAppBase()
 	mVSyncBrokenTestStartTick = 0;
 	mVSyncBrokenTestUpdates = 0;
 	mWaitForVSync = false;
-	mSoftVSyncWait = true;
+	mSoftVSyncWait = false;
 	mUserChanged3DSetting = false;
 	mAutoEnable3D = false;
 	mTest3D = false;
