@@ -32,6 +32,14 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 
 	mVolume = 1.0;
 	mPan = 0;
+	mDuration = 0;
+	mBusid = 0;
+	mTimeoutid = 0;
+	mEosWorks = true;
+
+#ifdef SEXY_INTEL_CANMORE
+	mEosWorks = false;
+#endif
 
 	GstElement * fakesink;
 
@@ -89,6 +97,8 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 			g_object_set (G_OBJECT (mBin), "uri", url, NULL);
 			mUrl = url;
 		}
+
+		mTimeoutid = g_timeout_add (1000, (GSourceFunc)TimeoutHandler, this);
 	}
 	else
 	{
@@ -102,6 +112,18 @@ GstSoundInstance::~GstSoundInstance()
 {
 	if (mBin)
 	{
+		{
+			AutoCrit aAutoCrit (mLock);
+
+			if (mBusid > 0)
+				g_source_remove (mBusid);
+			if (mTimeoutid > 0)
+				g_source_remove (mTimeoutid);
+			mBusid = 0;
+			mTimeoutid = 0;
+		}
+		AutoCrit aAutoCrit (mLock);
+
 		GstState state, pending;
 
 		gst_element_get_state (GST_ELEMENT (mBin), &state, &pending,
@@ -116,9 +138,10 @@ GstSoundInstance::~GstSoundInstance()
 		}
 		gst_element_get_state (GST_ELEMENT (mBin), &state, NULL, 0);
 		g_assert (state == GST_STATE_NULL);
-		g_source_remove (mBusid);
 
 		gst_object_unref (G_OBJECT (mBin));
+
+		mBin = 0;
 	}
 
 	g_free (mUrl);
@@ -261,6 +284,10 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 		reinterpret_cast<GstSoundInstance*> (data);
 	GError * err;
 	gchar * debug;
+	AutoCrit aAutoCrit (player->mLock);
+
+	if (!player->mBin)
+		return TRUE;
 
 	switch (GST_MESSAGE_TYPE (msg)) {
 	case GST_MESSAGE_WARNING:
@@ -283,7 +310,7 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 
 		if (GST_OBJECT (player->mBin) == GST_MESSAGE_SRC (msg))
 		{
-			if (0)
+			if (strstr (player->mUrl, ".wav"))
 			{
 				g_print ("%s.\n%s: %s -> %s (pending: %s).\n",
 					 player->mUrl,
@@ -301,6 +328,9 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 	case GST_MESSAGE_EOS:
 		if (0)
 			g_print ("%s: received EOS.\n", GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
+		if (!player->mEosWorks)
+			player->mEosWorks = true;
+
 		if (player->mLoop)
 		{
 			if (0)
@@ -313,8 +343,75 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 			player->mReleased = true;
 		}
 		break;
+	case GST_MESSAGE_DURATION:
+	{
+		GstClockTime duration;
+		GstFormat format = GST_FORMAT_TIME;
+
+		gst_message_parse_duration (msg, &format, (gint64*) &duration);
+		if (format == GST_FORMAT_TIME)
+			player->mDuration = duration;
+		break;
+	}
 	default:
 		break;
+	}
+
+	return TRUE;
+}
+
+gboolean GstSoundInstance::TimeoutHandler (gpointer data)
+{
+	GstSoundInstance * player =
+		reinterpret_cast<GstSoundInstance*> (data);
+
+	AutoCrit aAutoCrit (player->mLock);
+
+ 	if (player->mBin && !player->mEosWorks)
+	{
+		gint64 position;
+		gint64 duration;
+		GstFormat format;
+
+		position = 0;
+		duration = 0;
+		format = GST_FORMAT_TIME;
+		gst_element_query_position (GST_ELEMENT (player->mBin), &format, &position);
+
+		format = GST_FORMAT_TIME;
+		gst_element_query_duration (GST_ELEMENT (player->mBin), &format, &duration);
+
+		if (duration == 0 || ABS (GST_CLOCK_DIFF (position,
+							  duration)) > GST_NSECOND * 10)
+			return TRUE;
+
+		GstState state;
+		gst_element_get_state (GST_ELEMENT (player->mBin), &state, NULL,
+				       GST_CLOCK_TIME_NONE);
+		if (state != GST_STATE_PLAYING)
+			return TRUE;
+
+		if (player->mLoop)
+		{
+			if (0)
+				g_print ("restarting player.\n");
+			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_READY);
+			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_PLAYING);
+		}
+		else if (player->mAutoRelease)
+		{
+			player->mReleased = true;
+		}
+
+		if (strstr (player->mUrl, ".wav"))
+			g_print ("<%s>uri: %s autorelease %d released %d\n"
+				 " time: %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT "\n",
+				 GST_OBJECT_NAME (player->mBin), player->mUrl, player->mAutoRelease,
+				 player->mReleased, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
+	}
+	else
+	{
+		return FALSE;
 	}
 
 	return TRUE;

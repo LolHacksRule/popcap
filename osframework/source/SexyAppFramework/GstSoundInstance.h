@@ -2,6 +2,7 @@
 #define __GstSOUNDINSTANCE_H__
 
 #include "SoundInstance.h"
+#include "AutoCrit.h"
 
 #include <gst/gst.h>
 
@@ -58,12 +59,18 @@ public:
         static gboolean                 MessageHandler (GstBus * bus, GstMessage * msg,
                                                         gpointer data);
 
+        static gboolean                 TimeoutHandler (gpointer data);
 
         guint	                        mBusid;
+        guint                           mTimeoutid;
 	GstBin*                         mBin;
 	GstBus*                         mBus;
         gchar*                          mUrl;
 
+        GstClockTime                    mDuration;
+
+        CritSect                        mLock;
+        bool                            mEosWorks;
 };
 
 }
