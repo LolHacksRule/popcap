@@ -13,6 +13,7 @@ GstMusicInfo::GstMusicInfo ()
 GstMusicInterface::GstMusicInterface()
 {
 	mVolume = 1.0;
+	gst_init (NULL, NULL);
 }
 
 GstMusicInterface::~GstMusicInterface()
