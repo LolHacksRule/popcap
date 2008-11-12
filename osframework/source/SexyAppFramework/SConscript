@@ -61,7 +61,7 @@ if 'UDPINPUT' in env['DRIVERS']:
 
 if 'GSTSOUND' in env['DRIVERS']:
     srcs += ["GstSoundManager.cpp", 'GstSoundInstance.cpp',
-             'GstMusicInterface.cpp']
+             'GstMusicInterface.cpp', 'GstPakSrc.cpp']
     env['GSTSOUND']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_GST_SOUND_DRIVER'])
 

@@ -51,7 +51,7 @@ def GstSoundAddOptions (opts):
     pass
 
 def EnableGstSound (env):
-    env.ParseConfig('$PKGCONFIG gstreamer-0.10 --cflags --libs')
+    env.ParseConfig('$PKGCONFIG gstreamer-base-0.10 gstreamer-0.10 --cflags --libs')
 
 def GstSoundConfigure(env):
     configs.linux.Configure (env)
