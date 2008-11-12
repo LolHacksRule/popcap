@@ -126,11 +126,21 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 
 	GstElement * fakesink;
 
-	mBin = (GstBin *)gst_element_factory_make ("playbin", 0);
+	mBin = (GstBin *)gst_element_factory_make ("playbin2", 0);
+	if (!mBin)
+		mBin = (GstBin *)gst_element_factory_make ("playbin", 0);
 	if (mBin)
 	{
-		fakesink = gst_element_factory_make ("fakesink", 0);
-		g_object_set (G_OBJECT (mBin), "video-sink", fakesink, NULL);
+		if (GOBJECT_HAS_PROPERTY (mBin, "flags"))
+		{
+			g_object_set (G_OBJECT (mBin), "flags",
+				      0x00000002 | 0x00000010, NULL);
+		}
+		else
+		{
+			fakesink = gst_element_factory_make ("fakesink", 0);
+			g_object_set (G_OBJECT (mBin), "video-sink", fakesink, NULL);
+		}
 
 		mBus = gst_pipeline_get_bus (GST_PIPELINE (mBin));
 		mBusid = gst_bus_add_watch (mBus, MessageHandler, this);
