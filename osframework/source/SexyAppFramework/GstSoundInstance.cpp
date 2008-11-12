@@ -1,5 +1,7 @@
 #include "GstSoundInstance.h"
 #include "GstSoundManager.h"
+#include "GstPakSrc.h"
+
 #include <cstring>
 
 using namespace Sexy;
@@ -17,6 +19,87 @@ object_has_property (GObject * object, const char * name)
 
 #define GOBJECT_HAS_PROPERTY(o, n) \
 	object_has_property (G_OBJECT (o), (n))
+
+static gchar * pak_probe (const gchar * origuri)
+{
+	gchar * uri;
+
+	const gchar* filename = strrchr (origuri, '/');
+	if (!filename)
+		filename = origuri;
+	if (!strrchr (filename, '.'))
+	{
+		static const gchar* extensions[]  = {
+			".ogg", ".OGG", ".mp3", ".MP3", ".wav", NULL
+		};
+
+		for (int i = 0; extensions[i]; i++)
+		{
+			PFILE * fp;
+
+			uri = g_strdup_printf ("pak://%s%s", origuri, extensions[i]);
+			fp = p_fopen (uri + 6, "rb");
+			if (fp)
+			{
+				p_fclose (fp);
+				return uri;
+			}
+			g_free (uri);
+		}
+	}
+
+	PFILE * fp;
+
+	uri = g_strdup_printf ("pak://%s", origuri);
+	fp = p_fopen (uri + 6, "rb");
+	if (fp)
+	{
+		p_fclose (fp);
+		return uri;
+	}
+	g_free (uri);
+
+	return NULL;
+}
+
+static gchar* file_probe (const gchar * origuri)
+{
+	gchar * uri;
+
+	if (g_path_is_absolute  (origuri)) {
+		uri = g_strdup_printf ("%s%s", "file://", origuri);
+	} else {
+		gchar * current_dir = g_get_current_dir ();
+
+		uri = g_strdup_printf ("%s%s/%s", "file://", current_dir, origuri);
+		g_free (current_dir);
+	}
+
+	gchar* filename = strrchr (uri + 7, '/');
+	if (!filename)
+		filename = uri + 7;
+	if (!strrchr (filename, '.'))
+	{
+		static const gchar* extensions[]  = {
+			".ogg", ".OGG", ".mp3", ".MP3", ".wav", NULL
+		};
+
+		for (int i = 0; extensions[i]; i++)
+		{
+			gchar * newuri;
+
+			newuri = g_strdup_printf ("%s%s", uri, extensions[i]);
+			if (!access (newuri + 7, F_OK))
+			{
+				g_free (uri);
+				return newuri;
+			}
+			g_free (newuri);
+		}
+	}
+
+	return uri;
+}
 
 GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 				   const std::string&     theUri)
@@ -59,46 +142,16 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 		} else {
 			gchar * url;
 
-			if (g_path_is_absolute  (uri)) {
-				url = g_strdup_printf ("%s%s", "file://", uri);
-			} else {
-				gchar * current_dir = g_get_current_dir ();
-
-				url = g_strdup_printf ("%s%s/%s", "file://", current_dir, uri);
-				g_free (current_dir);
-			}
-
-			gchar* filename = strrchr (url + 7, '/');
-			if (!filename)
-				filename = url + 7;
-			if (!strrchr (filename, '.'))
-			{
-				static const gchar* extensions[]  = {
-					".ogg", ".OGG", ".mp3", ".MP3", ".wav", NULL
-				};
-
-				for (int i = 0; extensions[i]; i++)
-				{
-					gchar * newurl;
-
-					newurl = g_strdup_printf ("%s%s", url, extensions[i]);
-					if (!access (newurl + 7, F_OK))
-					{
-						g_free (url);
-						url = newurl;
-						break;
-					}
-					g_free (newurl);
-				}
-			}
-
+			url = pak_probe (uri);
+			if (!uri)
+				url = file_probe (uri);
 			if (0)
 				g_print ("uri = %s\n", url);
 			g_object_set (G_OBJECT (mBin), "uri", url, NULL);
 			mUrl = url;
 		}
 
-		mTimeoutid = g_timeout_add (1000, (GSourceFunc)TimeoutHandler, this);
+		mTimeoutid = g_timeout_add (1500, (GSourceFunc)TimeoutHandler, this);
 	}
 	else
 	{
@@ -224,6 +277,7 @@ void GstSoundInstance::Stop()
 	gst_element_get_state (GST_ELEMENT (mBin), &state, NULL,
 			       GST_CLOCK_TIME_NONE);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_READY);
+	mAutoRelease = false;
 }
 
 void GstSoundInstance::Pause()
@@ -327,15 +381,17 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 	}
 	case GST_MESSAGE_EOS:
 		if (0)
-			g_print ("%s: received EOS.\n", GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
-		if (!player->mEosWorks)
-			player->mEosWorks = true;
-
-		if (player->mLoop)
+			g_print ("%s<%s>: received EOS.\n",
+				 GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)), player->mUrl);
+		if (player->mLoop && player->mEosWorks)
 		{
 			if (0)
 				g_print ("restarting player.\n");
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_READY);
+
+			GstState state;
+			gst_element_get_state (GST_ELEMENT (player->mBin), &state, NULL,
+					       GST_CLOCK_TIME_NONE);
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_PLAYING);
 		}
 		else if (player->mAutoRelease)
@@ -367,6 +423,11 @@ gboolean GstSoundInstance::TimeoutHandler (gpointer data)
 
 	AutoCrit aAutoCrit (player->mLock);
 
+	if (player->mBin && 0)
+		g_print ("<%s>uri: %s autorelease %d released %d loop %d\n",
+			 GST_OBJECT_NAME (player->mBin), player->mUrl, player->mAutoRelease,
+			 player->mReleased, player->mLoop);
+
  	if (player->mBin && !player->mEosWorks)
 	{
 		gint64 position;
@@ -381,7 +442,14 @@ gboolean GstSoundInstance::TimeoutHandler (gpointer data)
 		format = GST_FORMAT_TIME;
 		gst_element_query_duration (GST_ELEMENT (player->mBin), &format, &duration);
 
-		if (duration == 0 || ABS (GST_CLOCK_DIFF (position,
+		if (0)
+			g_print ("<%s>uri: %s autorelease %d released %d loop %d\n"
+				 " time: %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT "\n",
+				 GST_OBJECT_NAME (player->mBin), player->mUrl, player->mAutoRelease,
+				 player->mReleased, player->mLoop, GST_TIME_ARGS (position),
+				 GST_TIME_ARGS (duration));
+
+ 		if (duration == 0 || ABS (GST_CLOCK_DIFF (position,
 							  duration)) > GST_NSECOND * 10)
 			return TRUE;
 
@@ -395,23 +463,19 @@ gboolean GstSoundInstance::TimeoutHandler (gpointer data)
 		{
 			if (0)
 				g_print ("restarting player.\n");
+			GstState state;
+			gst_element_get_state (GST_ELEMENT (player->mBin), &state, NULL,
+					       GST_CLOCK_TIME_NONE);
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_READY);
+
+			gst_element_get_state (GST_ELEMENT (player->mBin), &state, NULL,
+					       GST_CLOCK_TIME_NONE);
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_PLAYING);
 		}
 		else if (player->mAutoRelease)
 		{
 			player->mReleased = true;
 		}
-
-		if (0)
-			g_print ("<%s>uri: %s autorelease %d released %d\n"
-				 " time: %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT "\n",
-				 GST_OBJECT_NAME (player->mBin), player->mUrl, player->mAutoRelease,
-				 player->mReleased, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
-	}
-	else
-	{
-		return FALSE;
 	}
 
 	return TRUE;

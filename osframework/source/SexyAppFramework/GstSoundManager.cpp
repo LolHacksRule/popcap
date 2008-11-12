@@ -3,6 +3,7 @@
 #include "Debug.h"
 #include "SoundDriverFactory.h"
 #include "GstMusicInterface.h"
+#include "GstPakSrc.h"
 
 #include <fcntl.h>
 #include <math.h>
@@ -264,6 +265,8 @@ public:
 	GstSoundDriver ()
 	 : SoundDriver("GstInterface", 0)
 	{
+		gst_init (NULL, NULL);
+		gst_pak_src_plugin_register ();
 	}
 
 	SoundManager* Create (SexyAppBase * theApp)
