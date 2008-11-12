@@ -310,7 +310,7 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 
 		if (GST_OBJECT (player->mBin) == GST_MESSAGE_SRC (msg))
 		{
-			if (strstr (player->mUrl, ".wav"))
+			if (0)
 			{
 				g_print ("%s.\n%s: %s -> %s (pending: %s).\n",
 					 player->mUrl,
@@ -403,7 +403,7 @@ gboolean GstSoundInstance::TimeoutHandler (gpointer data)
 			player->mReleased = true;
 		}
 
-		if (strstr (player->mUrl, ".wav"))
+		if (0)
 			g_print ("<%s>uri: %s autorelease %d released %d\n"
 				 " time: %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT "\n",
 				 GST_OBJECT_NAME (player->mBin), player->mUrl, player->mAutoRelease,
