@@ -11,7 +11,7 @@ using namespace Sexy;
 
 GstSoundManager::GstSoundManager()
 {
-	mLastReleaseTick = 0;
+	g_get_current_time (&mLastReleaseTime);
 
 	int i;
 
@@ -52,6 +52,18 @@ void* GstSoundManager::MainLoop (void* data)
 
 int GstSoundManager::FindFreeChannel()
 {
+	GTimeVal now;
+
+	g_get_current_time (&now);
+
+	gulong diff = (now.tv_sec - mLastReleaseTime.tv_sec) * 1000;
+	diff += now.tv_usec - mLastReleaseTime.tv_usec;
+	if (ABS (diff) > 1000)
+	{
+		ReleaseFreeChannels ();
+		mLastReleaseTime = now;
+	}
+
 	for (int i = 0; i < MAX_CHANNELS; i++)
 	{
 		if (mPlayingSounds[i] == NULL)

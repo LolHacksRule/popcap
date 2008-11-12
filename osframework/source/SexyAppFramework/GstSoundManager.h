@@ -23,7 +23,7 @@ protected:
 	int				        mBasePans[MAX_SOURCE_SOUNDS];
 	GstSoundInstance*			mPlayingSounds[MAX_CHANNELS];
 	double					mMasterVolume;
-	DWORD					mLastReleaseTick;
+	GTimeVal				mLastReleaseTime;
 
 protected:
 	int					FindFreeChannel();
