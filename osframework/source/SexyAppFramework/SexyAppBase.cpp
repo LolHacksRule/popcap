@@ -2758,11 +2758,9 @@ void SexyAppBase::Init()
 			mSoundManager = aSoundDriver->Create (this);
 			mMusicInterface = aSoundDriver->CreateMusicInterface (this);
 		}
-		else
-		{
-			mSoundManager = new DummySoundManager();
-		}
 	}
+	if (mSoundManager == NULL)
+		mSoundManager = new DummySoundManager();
 	if (mMusicInterface == NULL)
 		mMusicInterface = new MusicInterface();
 
