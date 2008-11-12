@@ -338,7 +338,11 @@ void* LinuxInputInterface::Run (void * data)
 			FD_ZERO (&set);
 			FD_SET (fd, &set);
 
-			status = select (fd + 1, &set, NULL, NULL, NULL);
+			struct timeval timeout;
+
+			timeout.tv_sec = 1;
+			timeout.tv_usec = 0;
+			status = select (fd + 1, &set, NULL, NULL, &timeout);
 			if (status < 0 && errno != EINTR)
 			{
 				printf ("device disconnected.\n");
