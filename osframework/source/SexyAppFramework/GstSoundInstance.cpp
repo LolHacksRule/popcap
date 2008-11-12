@@ -188,9 +188,18 @@ GstSoundInstance::~GstSoundInstance()
 		AutoCrit aAutoCrit (mLock);
 
 		GstState state, pending;
+		GstStateChangeReturn res;
 
-		gst_element_get_state (GST_ELEMENT (mBin), &state, &pending,
-				       GST_CLOCK_TIME_NONE);
+		res = gst_element_get_state (GST_ELEMENT (mBin), &state, &pending, 0);
+		if (res == GST_STATE_CHANGE_ASYNC && pending != GST_STATE_VOID_PENDING && 0)
+		{
+			g_print ("%s[uri %s] async state change %s -> %s.\n",
+				 GST_OBJECT_NAME (mBin), mUrl,
+				 gst_element_state_get_name (state),
+				 gst_element_state_get_name (pending));
+		}
+		res = gst_element_get_state (GST_ELEMENT (mBin), &state, &pending,
+					     GST_CLOCK_TIME_NONE);
 		for (int i = 0; i < 3; i++)
 		{
 			if (gst_element_set_state (GST_ELEMENT (mBin),
@@ -275,6 +284,7 @@ bool GstSoundInstance::Play(bool looping, bool autoRelease)
 		     autoRelease, looping);
 
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PLAYING);
+
 	return true;
 }
 
@@ -283,9 +293,16 @@ void GstSoundInstance::Stop()
 	if (!mBin)
 		return;
 
-	GstState state;
-	gst_element_get_state (GST_ELEMENT (mBin), &state, NULL,
-			       GST_CLOCK_TIME_NONE);
+	GstState state, pending;
+	GstStateChangeReturn res;
+	res = gst_element_get_state (GST_ELEMENT (mBin), &state, &pending, 0);
+	if (res == GST_STATE_CHANGE_ASYNC && pending != GST_STATE_VOID_PENDING && 0)
+	{
+		g_print ("%s<uri %s> async state change %s -> %s.\n",
+			 GST_OBJECT_NAME (mBin), mUrl,
+			 gst_element_state_get_name (state),
+			 gst_element_state_get_name (pending));
+	}
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_READY);
 	mAutoRelease = false;
 }
@@ -295,9 +312,6 @@ void GstSoundInstance::Pause()
 	if (!mBin || !IsPlaying ())
 		return;
 
-	GstState state;
-	gst_element_get_state (GST_ELEMENT (mBin), &state, NULL,
-			       GST_CLOCK_TIME_NONE);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PAUSED);
 }
 
@@ -306,9 +320,6 @@ void GstSoundInstance::Resume()
 	if (!mBin)
 		return;
 
-	GstState state;
-	gst_element_get_state (GST_ELEMENT (mBin), &state, NULL,
-			       GST_CLOCK_TIME_NONE);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PLAYING);
 }
 
@@ -355,6 +366,15 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 
 	switch (GST_MESSAGE_TYPE (msg)) {
 	case GST_MESSAGE_WARNING:
+		gst_message_parse_warning (msg, &err, &debug);
+		g_print ("uri: %s\n", player->mUrl);
+		g_print ("Source: %s\n", GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
+		g_print ("Warning quark - %s\n", g_quark_to_string (err->domain));
+		g_print ("Warning code - %d\n", err->code);
+		g_print ("Warning: %s\n", err->message);
+		g_error_free (err);
+		g_free (debug);
+		return TRUE;
 	case GST_MESSAGE_ERROR:
 		gst_message_parse_error (msg, &err, &debug);
 		g_print ("uri: %s\n", player->mUrl);
