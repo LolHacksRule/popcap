@@ -13,7 +13,6 @@ GstMusicInfo::GstMusicInfo ()
 GstMusicInterface::GstMusicInterface()
 {
 	mVolume = 1.0;
-	gst_init (NULL, NULL);
 }
 
 GstMusicInterface::~GstMusicInterface()
@@ -33,7 +32,7 @@ bool GstMusicInterface::LoadMusic(int theSongId, const std::string& theFileName)
 
 void GstMusicInterface::PlayMusic(int theSongId, int theOffset, bool noLoop)
 {
-	printf ("sound id %d offset %dnoloop %d\n", theSongId, theOffset, noLoop);
+	printf ("sound id %d offset %d noloop %d\n", theSongId, theOffset, noLoop);
 
 	GstMusicMap::iterator anIt;
 

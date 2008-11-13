@@ -28,7 +28,6 @@ GstSoundManager::GstSoundManager()
 	mMasterVolume = 1.0;
 
 	GThread* thread;
-	gst_init (NULL, NULL);
 	mLoop = g_main_loop_new (NULL, FALSE);
 	thread = g_thread_create (MainLoop, mLoop, TRUE, NULL);
 }
@@ -245,11 +244,21 @@ void GstSoundManager::StopAllSounds()
 
 double GstSoundManager::GetMasterVolume()
 {
-	return 1.0;
+	return mMasterVolume;
 }
 
 void GstSoundManager::SetMasterVolume(double theVolume)
 {
+	mMasterVolume = theVolume;
+
+	for (int i = 0; i < MAX_CHANNELS; i++)
+	{
+		if (mPlayingSounds[i] != NULL)
+		{
+			double volume = mPlayingSounds[i]->GetVolume ();
+			mPlayingSounds[i]->SetVolume(volume);
+		}
+	}
 }
 
 void GstSoundManager::Flush()
@@ -263,21 +272,35 @@ void GstSoundManager::SetCooperativeWindow(HWND theHWnd, bool isWindowed)
 class GstSoundDriver: public SoundDriver {
 public:
 	GstSoundDriver ()
-	 : SoundDriver("GstInterface", 0)
+		: SoundDriver("GstInterface", 0),
+		  mInitialized (false)
 	{
+	}
+
+	void Init ()
+	{
+		if (mInitialized)
+			return;
+
 		gst_init (NULL, NULL);
 		gst_pak_src_plugin_register ();
+
+		mInitialized = true;
 	}
 
 	SoundManager* Create (SexyAppBase * theApp)
 	{
+		Init ();
 		return new GstSoundManager ();
         }
 
 	MusicInterface* CreateMusicInterface (SexyAppBase * theApp)
 	{
+		Init ();
 		return new GstMusicInterface ();
         }
+private:
+	bool     mInitialized;
 };
 
 static GstSoundDriver aGstSoundDriver;
