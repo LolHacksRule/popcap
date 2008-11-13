@@ -6,6 +6,9 @@
 
 using namespace Sexy;
 
+GST_DEBUG_CATEGORY_STATIC (GSTSOUNDINSTANCE);
+#define GST_CAT_DEFAULT GSTSOUNDINSTANCE
+
 static inline gboolean
 object_has_property (GObject * object, const char * name)
 {
@@ -19,6 +22,18 @@ object_has_property (GObject * object, const char * name)
 
 #define GOBJECT_HAS_PROPERTY(o, n) \
 	object_has_property (G_OBJECT (o), (n))
+
+static void debug_init (void)
+{
+	static bool initialized = false;
+
+	if (!initialized)
+	{
+		GST_DEBUG_CATEGORY_INIT (GSTSOUNDINSTANCE, "GstSoundInstance",
+					 0, "Gstreamer sound player");
+		initialized = true;
+	}
+}
 
 static gchar * pak_probe (const gchar * origuri)
 {
@@ -105,6 +120,8 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 				   const std::string&     theUri)
 	: SoundInstance ()
 {
+	debug_init ();
+
 	mSoundManagerP = theSoundManager;
 	mReleased = false;
 	mAutoRelease = false;
@@ -193,10 +210,10 @@ GstSoundInstance::~GstSoundInstance()
 		res = gst_element_get_state (GST_ELEMENT (mBin), &state, &pending, 0);
 		if (res == GST_STATE_CHANGE_ASYNC && pending != GST_STATE_VOID_PENDING && 0)
 		{
-			g_print ("%s[uri %s] async state change %s -> %s.\n",
-				 GST_OBJECT_NAME (mBin), mUrl,
-				 gst_element_state_get_name (state),
-				 gst_element_state_get_name (pending));
+		      GST_INFO ("%s[uri %s] async state change %s -> %s.\n",
+				GST_OBJECT_NAME (mBin), mUrl,
+				gst_element_state_get_name (state),
+				gst_element_state_get_name (pending));
 		}
 		res = gst_element_get_state (GST_ELEMENT (mBin), &state, &pending,
 					     GST_CLOCK_TIME_NONE);
@@ -230,6 +247,8 @@ void GstSoundInstance::RehupVolume()
 	if (mSoundManagerP)
 		volume *= mSoundManagerP->mMasterVolume;
 
+	GST_INFO ("%s[uri %s] set volume to %f.\n",
+		  GST_OBJECT_NAME (mBin), mUrl, volume);
 	g_object_set (G_OBJECT (mBin), "volume", volume, NULL);
 }
 
@@ -278,10 +297,9 @@ bool GstSoundInstance::Play(bool looping, bool autoRelease)
 	mAutoRelease = autoRelease;
 	mLoop = looping;
 
-	if (0)
-	    g_print ("%s: playing.(%s auto release %d loop %d).\n",
-		     GST_OBJECT_NAME (GST_OBJECT (mBin)), mUrl,
-		     autoRelease, looping);
+	GST_INFO ("%s: playing.(%s auto release %d loop %d).\n",
+		  GST_OBJECT_NAME (GST_OBJECT (mBin)), mUrl,
+		  autoRelease, looping);
 
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PLAYING);
 
@@ -298,10 +316,10 @@ void GstSoundInstance::Stop()
 	res = gst_element_get_state (GST_ELEMENT (mBin), &state, &pending, 0);
 	if (res == GST_STATE_CHANGE_ASYNC && pending != GST_STATE_VOID_PENDING && 0)
 	{
-		g_print ("%s<uri %s> async state change %s -> %s.\n",
-			 GST_OBJECT_NAME (mBin), mUrl,
-			 gst_element_state_get_name (state),
-			 gst_element_state_get_name (pending));
+		GST_INFO ("%s[uri %s] async state change %s -> %s.\n",
+			  GST_OBJECT_NAME (mBin), mUrl,
+			  gst_element_state_get_name (state),
+			  gst_element_state_get_name (pending));
 	}
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_READY);
 	mAutoRelease = false;
@@ -394,29 +412,21 @@ GstSoundInstance::MessageHandler (GstBus * bus, GstMessage * msg, gpointer data)
 
 		if (GST_OBJECT (player->mBin) == GST_MESSAGE_SRC (msg))
 		{
-			if (0)
-			{
-				g_print ("%s.\n%s: %s -> %s (pending: %s).\n",
-					 player->mUrl,
-					 GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)),
-					 gst_element_state_get_name (oldstate),
-					 gst_element_state_get_name (newstate),
-					 gst_element_state_get_name (pending));
-			}
-			if (0 && newstate == GST_STATE_READY && oldstate == GST_STATE_PAUSED &&
-			    player->mHasPlayed && player->mAutoRelease)
-				player->mReleased = true;
+			GST_INFO ("%s.\n%s: %s -> %s (pending: %s).\n",
+				  player->mUrl,
+				  GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)),
+				  gst_element_state_get_name (oldstate),
+				  gst_element_state_get_name (newstate),
+				  gst_element_state_get_name (pending));
 		}
 		break;
 	}
 	case GST_MESSAGE_EOS:
-		if (0)
-			g_print ("%s<%s>: received EOS.\n",
-				 GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)), player->mUrl);
+		GST_INFO ("%s[%s]: received EOS.\n",
+			  GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)), player->mUrl);
 		if (player->mLoop && player->mEosWorks)
 		{
-			if (0)
-				g_print ("restarting player.\n");
+			GST_INFO ("restarting player.\n");
 			gst_element_set_state (GST_ELEMENT (player->mBin), GST_STATE_READY);
 
 			GstState state;
@@ -453,8 +463,8 @@ gboolean GstSoundInstance::TimeoutHandler (gpointer data)
 
 	AutoCrit aAutoCrit (player->mLock);
 
-	if (player->mBin && 0)
-		g_print ("<%s>uri: %s autorelease %d released %d loop %d\n",
+	if (player->mBin)
+		GST_INFO ("%s[uri %s] autorelease %d released %d loop %d\n",
 			 GST_OBJECT_NAME (player->mBin), player->mUrl, player->mAutoRelease,
 			 player->mReleased, player->mLoop);
 
@@ -472,12 +482,11 @@ gboolean GstSoundInstance::TimeoutHandler (gpointer data)
 		format = GST_FORMAT_TIME;
 		gst_element_query_duration (GST_ELEMENT (player->mBin), &format, &duration);
 
-		if (0)
-			g_print ("<%s>uri: %s autorelease %d released %d loop %d\n"
-				 " time: %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT "\n",
-				 GST_OBJECT_NAME (player->mBin), player->mUrl, player->mAutoRelease,
-				 player->mReleased, player->mLoop, GST_TIME_ARGS (position),
-				 GST_TIME_ARGS (duration));
+		GST_INFO ("%s[uri: %s] autorelease %d released %d loop %d\n"
+			 " time: %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT "\n",
+			  GST_OBJECT_NAME (player->mBin), player->mUrl, player->mAutoRelease,
+			  player->mReleased, player->mLoop, GST_TIME_ARGS (position),
+			  GST_TIME_ARGS (duration));
 
  		if (duration == 0 || ABS (GST_CLOCK_DIFF (position,
 							  duration)) > GST_NSECOND * 10)
@@ -491,8 +500,7 @@ gboolean GstSoundInstance::TimeoutHandler (gpointer data)
 
 		if (player->mLoop)
 		{
-			if (0)
-				g_print ("restarting player.\n");
+			GST_INFO ("restarting player.\n");
 			GstState state;
 			gst_element_get_state (GST_ELEMENT (player->mBin), &state, NULL,
 					       GST_CLOCK_TIME_NONE);
