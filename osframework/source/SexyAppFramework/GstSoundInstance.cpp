@@ -190,6 +190,8 @@ GstSoundInstance::GstSoundInstance(GstSoundManager* theSoundManager,
 
 GstSoundInstance::~GstSoundInstance()
 {
+	GST_DEBUG ("%s[uri %s] Enter",
+		   mBin ? GST_OBJECT_NAME (mBin) : "", mUrl);
 	if (mBin)
 	{
 		{
@@ -234,6 +236,7 @@ GstSoundInstance::~GstSoundInstance()
 	}
 
 	g_free (mUrl);
+	GST_DEBUG ("Leave");
 }
 
 void GstSoundInstance::RehupVolume()
@@ -258,6 +261,9 @@ void GstSoundInstance::RehupPan()
 
 void GstSoundInstance::Release()
 {
+	GST_INFO ("%s[uri %s] released.\n",
+		  GST_OBJECT_NAME (mBin), mUrl);
+
 	Stop ();
 	mReleased = true;
 }
@@ -330,6 +336,9 @@ void GstSoundInstance::Pause()
 	if (!mBin || !IsPlaying ())
 		return;
 
+	GST_INFO ("%s[uri %s] paused.\n",
+		  GST_OBJECT_NAME (mBin), mUrl);
+
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PAUSED);
 }
 
@@ -338,6 +347,8 @@ void GstSoundInstance::Resume()
 	if (!mBin)
 		return;
 
+	GST_INFO ("%s[uri %s] resumed.\n",
+		  GST_OBJECT_NAME (mBin), mUrl);
 	gst_element_set_state (GST_ELEMENT (mBin), GST_STATE_PLAYING);
 }
 
