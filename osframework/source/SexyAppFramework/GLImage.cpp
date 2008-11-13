@@ -938,9 +938,9 @@ static void GLDrawVertexList3 (VertexList& aList)
 		colors[i * 4 + 3] = aList[i].color.a;
 		coords[i * 2]	  = aList[i].tu;
 		coords[i * 2 + 1] = aList[i].tv;
-		verts[i * 2]	  = aList[i].sx;
-		verts[i * 2 + 1]  = aList[i].sy;
-		verts[i * 2 + 2]  = aList[i].sz;
+		verts[i * 3]	  = aList[i].sx;
+		verts[i * 3 + 1]  = aList[i].sy;
+		verts[i * 3 + 2]  = aList[i].sz;
 	}
 
 	glEnableClientState (GL_VERTEX_ARRAY);
@@ -1641,7 +1641,7 @@ void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRe
 	}
 	else
 	{
-		GLImage::Blt (theImage, theX, theY, theSrcRect, theColor, theDrawMode);
+		GLImage::Blt (theImage, int (theX), int (theY), theSrcRect, theColor, theDrawMode);
 	}
 }
 
