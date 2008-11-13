@@ -392,6 +392,45 @@ void GLTexture::CheckCreateTextures (GLImage *theImage)
 		CreateTextures (theImage);
 }
 
+static void GLDrawQuad (float x1, float y1, float x2, float y2,
+			float u1, float v1, float u2, float v2)
+{
+#ifndef SEXY_OPENGLES
+	glBegin (GL_TRIANGLE_STRIP);
+	glTexCoord2f (u1, v1);
+	glVertex2f (x1, y1);
+	glTexCoord2f (u1, v2);
+	glVertex2f (x1, y2);
+	glTexCoord2f (u2, v1);
+	glVertex2f (x2, y1);
+	glTexCoord2f (u2, v2);
+	glVertex2f (x2, y2);
+	glEnd ();
+#else
+	GLfloat verts[4 * 2];
+	verts[0] = x1; verts[1] = y1;
+	verts[2] = x1; verts[3] = y2;
+	verts[4] = x2; verts[5] = y1;
+	verts[6] = x2; verts[7] = y2;
+
+	GLfloat coords[4 * 2];
+	coords[0] = u1; coords[1] = v1;
+	coords[2] = u1; coords[3] = v2;
+	coords[4] = u2; coords[5] = v1;
+	coords[6] = u2; coords[7] = v2;
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, verts);
+	glTexCoordPointer (2, GL_FLOAT, 0, coords);
+	glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
+	glDisableClientState (GL_VERTEX_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+#endif
+}
+
 void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 		     const Color& theColor)
 {
@@ -429,40 +468,10 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 			float y = dstY;// 0.5f;
 
 			glBindTexture (GL_TEXTURE_2D, aTexture);
-#ifndef SEXY_OPENGLES
-			glBegin (GL_TRIANGLE_STRIP);
-			glTexCoord2f (u1, v1);
-			glVertex2f (x, y);
-			glTexCoord2f (u1, v2);
-			glVertex2f (x, y + aHeight);
-			glTexCoord2f (u2, v1);
-			glVertex2f (x + aWidth, y);
-			glTexCoord2f (u2, v2);
-			glVertex2f (x + aWidth, y + aHeight);
-			glEnd ();
-#else
-			GLfloat verts[4 * 2];
-			verts[0] = x;	       verts[1] = y;
-			verts[2] = x;	       verts[3] = y + aHeight;
-			verts[4] = x + aWidth; verts[5] = y;
-			verts[6] = x + aWidth; verts[7] = y + aHeight;
 
-			GLfloat coords[4 * 2];
-			coords[0] = u1; coords[1] = v1;
-			coords[2] = u1; coords[3] = v2;
-			coords[4] = u2; coords[5] = v1;
-			coords[6] = u2; coords[7] = v2;
+			GLDrawQuad (x, y, x + aWidth, y + aHeight,
+				    u1, v1, u2, v2);
 
-			glEnableClientState (GL_VERTEX_ARRAY);
-			glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-			glVertexPointer (2, GL_FLOAT, 0, verts);
-			glTexCoordPointer (2, GL_FLOAT, 0, coords);
-			glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
-
-			glDisableClientState (GL_VERTEX_ARRAY);
-			glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-#endif
 			srcX += aWidth;
 			dstX += aWidth;
 
@@ -633,6 +642,55 @@ void PointClipper<Pred>::ClipPoints (int n, float clipVal, VertexList &in, Verte
 		ClipPoint (n, clipVal, in[i], in[i + 1], out);
 }
 
+static void GLDrawVertexList (VertexList& aList)
+{
+#ifndef SEXY_OPENGLES
+	glBegin (GL_TRIANGLE_FAN);
+	for (int i = 0; i < aList.size(); ++i) {
+		glColor4ub (aList[i].color.r, aList[i].color.g,
+			    aList[i].color.b, aList[i].color.a);
+		glTexCoord2f (aList[i].tu, aList[i].tv);
+		glVertex2f (aList[i].sx, aList[i].sy);
+	}
+	glEnd ();
+#else
+	GLubyte* colors;
+	GLfloat* coords;
+	GLfloat* verts;
+
+	colors = new GLubyte[4 * aList.size()];
+	coords = new GLfloat[2 * aList.size()];
+	verts = new GLfloat[2 * aList.size()];
+	for (int i = 0; i < aList.size(); ++i) {
+		colors[i * 4]	  = aList[i].color.r;
+		colors[i * 4 + 1] = aList[i].color.g;
+		colors[i * 4 + 2] = aList[i].color.b;
+		colors[i * 4 + 3] = aList[i].color.a;
+		coords[i * 2]	  = aList[i].tu;
+		coords[i * 2 + 1] = aList[i].tv;
+		verts[i * 2]	  = aList[i].sx;
+		verts[i * 2 + 1]  = aList[i].sy;
+	}
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState (GL_COLOR_ARRAY);
+
+	glColorPointer (4, GL_UNSIGNED_BYTE, 0, colors);
+	glVertexPointer (2, GL_FLOAT, 0, verts);
+	glTexCoordPointer (2, GL_FLOAT, 0, coords);
+	glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
+
+	glDisableClientState (GL_VERTEX_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState (GL_COLOR_ARRAY);
+
+	delete [] colors;
+	delete [] coords;
+	delete [] verts;
+#endif
+}
+
 static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 {
 	VertexList l1, l2;
@@ -663,53 +721,8 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 
 	VertexList &aList = *out;
 
-	if (aList.size () >= 3) {
-#ifndef SEXY_OPENGLES
-		glBegin (GL_TRIANGLE_FAN);
-		for (int i = 0; i < aList.size(); ++i) {
-			glColor4ub (aList[i].color.r, aList[i].color.g,
-				    aList[i].color.b, aList[i].color.a);
-			glTexCoord2f (aList[i].tu, aList[i].tv);
-			glVertex2f (aList[i].sx, aList[i].sy);
-		}
-		glEnd ();
-#else
-		GLubyte* colors;
-		GLfloat* coords;
-		GLfloat* verts;
-
-		colors = new GLubyte[4 * aList.size()];
-		coords = new GLfloat[2 * aList.size()];
-		verts = new GLfloat[2 * aList.size()];
-		for (int i = 0; i < aList.size(); ++i) {
-			colors[i * 4]	  = aList[i].color.r;
-			colors[i * 4 + 1] = aList[i].color.g;
-			colors[i * 4 + 2] = aList[i].color.b;
-			colors[i * 4 + 3] = aList[i].color.a;
-			coords[i * 2]	  = aList[i].tu;
-			coords[i * 2 + 1] = aList[i].tv;
-			verts[i * 2]	  = aList[i].sx;
-			verts[i * 2 + 1]  = aList[i].sy;
-		}
-
-		glEnableClientState (GL_VERTEX_ARRAY);
-		glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-		glEnableClientState (GL_COLOR_ARRAY);
-
-		glColorPointer (4, GL_UNSIGNED_BYTE, 0, colors);
-		glVertexPointer (2, GL_FLOAT, 0, verts);
-		glTexCoordPointer (2, GL_FLOAT, 0, coords);
-		glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
-
-		glDisableClientState (GL_VERTEX_ARRAY);
-		glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState (GL_COLOR_ARRAY);
-
-		delete [] colors;
-		delete [] coords;
-		delete [] verts;
-#endif
-	}
+	if (aList.size () >= 3)
+		GLDrawVertexList (aList);
 }
 
 static void DoPolyTextureClip (VertexList &theList)
@@ -738,6 +751,49 @@ static void DoPolyTextureClip (VertexList &theList)
 	out->clear();
 
 	aGreaterClipper.ClipPoints (4, bottom, *in, *out);
+}
+
+static void GLDrawQuadTransformed (float x1, float y1,
+				   float x2, float y2,
+				   float x3, float y3,
+				   float x4, float y4,
+				   float u1, float v1,
+				   float u2, float v2)
+{
+#ifndef SEXY_OPENGLES
+	glBegin (GL_TRIANGLE_STRIP);
+	glTexCoord2f (u1, v1);
+	glVertex2f (x1, y1);
+	glTexCoord2f (u1, v2);
+	glVertex2f (x2, y2);
+	glTexCoord2f (u2, v1);
+	glVertex2f (x3, y3);
+	glTexCoord2f (u2, v2);
+	glVertex2f (x4, y4);
+	glEnd ();
+#else
+	GLfloat verts[4 * 2];
+	verts[0] = x1; verts[1] = y1;
+	verts[2] = x2; verts[3] = y2;
+	verts[4] = x3; verts[5] = y3;
+	verts[6] = x4; verts[7] = y4;
+
+	GLfloat coords[4 * 2];
+	coords[0] = u1; coords[1] = v1;
+	coords[2] = u1; coords[3] = v2;
+	coords[4] = u2; coords[5] = v1;
+	coords[6] = u2; coords[7] = v2;
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, verts);
+	glTexCoordPointer (2, GL_FLOAT, 0, coords);
+	glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
+	glDisableClientState (GL_VERTEX_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+#endif
 }
 
 void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcRect, const Color& theColor,
@@ -819,40 +875,11 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 			glBindTexture (GL_TEXTURE_2D, aTexture);
 
 			if (!clipped) {
-#ifndef SEXY_OPENGLES
-				glBegin (GL_TRIANGLE_STRIP);
-				glTexCoord2f (u1, v1);
-				glVertex2f (tp[0].x,tp[0].y);
-				glTexCoord2f (u1, v2);
-				glVertex2f (tp[1].x,tp[1].y);
-				glTexCoord2f (u2, v1);
-				glVertex2f (tp[2].x,tp[2].y);
-				glTexCoord2f (u2, v2);
-				glVertex2f (tp[3].x,tp[3].y);
-				glEnd ();
-#else
-				GLfloat verts[4 * 2];
-				verts[0] = tp[0].x; verts[1] = tp[0].y;
-				verts[2] = tp[1].x; verts[3] = tp[1].y;
-				verts[4] = tp[2].x; verts[5] = tp[2].y;
-				verts[6] = tp[3].x; verts[7] = tp[3].y;
-
-				GLfloat coords[4 * 2];
-				coords[0] = u1; coords[1] = v1;
-				coords[2] = u1; coords[3] = v2;
-				coords[4] = u2; coords[5] = v1;
-				coords[6] = u2; coords[7] = v2;
-
-				glEnableClientState (GL_VERTEX_ARRAY);
-				glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-				glVertexPointer (2, GL_FLOAT, 0, verts);
-				glTexCoordPointer (2, GL_FLOAT, 0, coords);
-				glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
-
-				glDisableClientState (GL_VERTEX_ARRAY);
-				glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-#endif
+				GLDrawQuadTransformed (tp[0].x, tp[0].y,
+						       tp[1].x, tp[1].y,
+						       tp[2].x, tp[2].y,
+						       tp[3].x, tp[3].y,
+						       u1, v1, u2, v2);
 			}
 			else
 			{
@@ -884,6 +911,56 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 }
 
 #define GetColorFromTriVertex(theVertex, theColor) (theVertex.color ? theVertex.color : theColor)
+
+static void GLDrawVertexList3 (VertexList& aList)
+{
+#ifndef SEXY_OPENGLES
+	glBegin (GL_TRIANGLE_FAN);
+	for (int i = 0; i < aList.size (); ++i) {
+		glTexCoord2f (aList[i].tu, aList[i].tv);
+		glColor4ub (aList[i].color.r, aList[i].color.g,
+			    aList[i].color.b, aList[i].color.a);
+		glVertex3f (aList[i].sx, aList[i].sy, aList[i].sz);
+	}
+	glEnd ();
+#else
+	GLubyte* colors;
+	GLfloat* coords;
+	GLfloat* verts;
+
+	colors = new GLubyte[4 * aList.size()];
+	coords = new GLfloat[2 * aList.size()];
+	verts = new GLfloat[3 * aList.size()];
+	for (int i = 0; i < aList.size(); ++i) {
+		colors[i * 4]	  = aList[i].color.r;
+		colors[i * 4 + 1] = aList[i].color.g;
+		colors[i * 4 + 2] = aList[i].color.b;
+		colors[i * 4 + 3] = aList[i].color.a;
+		coords[i * 2]	  = aList[i].tu;
+		coords[i * 2 + 1] = aList[i].tv;
+		verts[i * 2]	  = aList[i].sx;
+		verts[i * 2 + 1]  = aList[i].sy;
+		verts[i * 2 + 2]  = aList[i].sz;
+	}
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState (GL_COLOR_ARRAY);
+
+	glColorPointer (4, GL_UNSIGNED_BYTE, 0, colors);
+	glVertexPointer (3, GL_FLOAT, 0, verts);
+	glTexCoordPointer (2, GL_FLOAT, 0, coords);
+	glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
+
+	glDisableClientState (GL_VERTEX_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState (GL_COLOR_ARRAY);
+
+	delete [] colors;
+	delete [] coords;
+	delete [] verts;
+#endif
+}
 
 void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriangles, uint32 theColor, float tx, float ty)
 {
@@ -1048,52 +1125,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 					if (aList.size() >= 3)
 					{
 						glBindTexture (GL_TEXTURE_2D, aBlock.mTexture);
-#ifndef SEXY_OPENGLES
-						glBegin (GL_TRIANGLE_FAN);
-						for (int i = 0; i < aList.size (); ++i) {
-							glTexCoord2f (aList[i].tu, aList[i].tv);
-							glColor4ub (aList[i].color.r, aList[i].color.g,
-								    aList[i].color.b, aList[i].color.a);
-							glVertex3f (aList[i].sx, aList[i].sy, aList[i].sz);
-						}
-						glEnd ();
-#else
-						GLubyte* colors;
-						GLfloat* coords;
-						GLfloat* verts;
-
-						colors = new GLubyte[4 * aList.size()];
-						coords = new GLfloat[2 * aList.size()];
-						verts = new GLfloat[3 * aList.size()];
-						for (int i = 0; i < aList.size(); ++i) {
-							colors[i * 4]	  = aList[i].color.r;
-							colors[i * 4 + 1] = aList[i].color.g;
-							colors[i * 4 + 2] = aList[i].color.b;
-							colors[i * 4 + 3] = aList[i].color.a;
-							coords[i * 2]	  = aList[i].tu;
-							coords[i * 2 + 1] = aList[i].tv;
-							verts[i * 2]	  = aList[i].sx;
-							verts[i * 2 + 1]  = aList[i].sy;
-							verts[i * 2 + 2]  = aList[i].sz;
-						}
-
-						glEnableClientState (GL_VERTEX_ARRAY);
-						glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-						glEnableClientState (GL_COLOR_ARRAY);
-
-						glColorPointer (4, GL_UNSIGNED_BYTE, 0, colors);
-						glVertexPointer (3, GL_FLOAT, 0, verts);
-						glTexCoordPointer (2, GL_FLOAT, 0, coords);
-						glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
-
-						glDisableClientState (GL_VERTEX_ARRAY);
-						glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-						glDisableClientState (GL_COLOR_ARRAY);
-
-						delete [] colors;
-						delete [] coords;
-						delete [] verts;
-#endif
+						GLDrawVertexList3 (aList);
 					}
 				}
 			}
