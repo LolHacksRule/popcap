@@ -35,12 +35,16 @@ InputDriverFactory*  InputDriverFactory::GetInputDriverFactory ()
  */
 extern InputDriver* GetLinuxInputDriver();
 extern InputDriver* GetUdpInputDriver();
+extern InputDriver* GetSMInputDriver();
 extern InputDriver* GetModuleInputDriver();
 
 typedef InputDriver* (* InputDriverGetter)();
 InputDriverGetter InputDriverGetters []= {
 #ifdef SEXY_LINUX_INPUT_DRIVER
 	GetLinuxInputDriver,
+#endif
+#ifdef SEXY_SM_INPUT_DRIVER
+	GetSMInputDriver,
 #endif
 #ifdef SEXY_UDP_INPUT_DRIVER
 	GetUdpInputDriver,
