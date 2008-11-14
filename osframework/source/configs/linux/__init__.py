@@ -25,7 +25,6 @@ def EnableLinuxInput (env):
     pass
 
 def LinuxInputConfigure(env):
-    configs.linux.Configure (env)
     env.AppendUnique (DRIVERS = ['LINUXINPUT'])
     linux_input = {}
     linux_input['ENABLE'] = EnableLinuxInput
@@ -38,11 +37,22 @@ def EnableUdpInput (env):
     pass
 
 def UdpInputConfigure(env):
-    configs.linux.Configure (env)
     env.AppendUnique (DRIVERS = ['UDPINPUT'])
     udp_input = {}
     udp_input['ENABLE'] = EnableUdpInput
     env.AppendUnique (UDPINPUT = udp_input)
+
+def SMInputAddOptions (opts):
+    pass
+
+def EnableSMInput (env):
+    pass
+
+def SMInputConfigure(env):
+    env.AppendUnique (DRIVERS = ['SMINPUT'])
+    sm_input = {}
+    sm_input['ENABLE'] = EnableSMInput
+    env.AppendUnique (SMINPUT = sm_input)
 
 def EnableLinuxUdpInputServer(env):
     env.AppendUnique(CPPDEFINES = ['LINUXUDPINPUTSERVER'])

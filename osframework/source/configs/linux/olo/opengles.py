@@ -26,3 +26,7 @@ def Configure (env):
     ### enable genaric linux input driver.
     configs.linux.LinuxInputConfigure (env)
     configs.linux.UdpInputConfigure (env)
+    configs.linux.SMInputConfigure (env)
+
+    ### gstreamer sound manager
+    configs.linux.GstSoundConfigure (env)
