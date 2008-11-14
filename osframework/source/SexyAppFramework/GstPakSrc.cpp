@@ -88,12 +88,14 @@ static void
 gst_pak_src_base_init (gpointer g_class)
 {
 	GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+	GstElementDetails details;
 
-	gst_element_class_set_details_simple (gstelement_class,
-					      "Pak Source",
-					      "Source/Pak",
-					      "Read from arbitrary point in a file from pop package file",
-					      "Luo Jinghua <sunmoon1997@gmail.com>");
+	details.longname = "Pak Source";
+	details.klass = "Source/Pak";
+	details.description = "Read from arbitrary point in a file from pop package file";
+	details.author = "Luo Jinghua <sunmoon1997@gmail.com>";
+	gst_element_class_set_details (gstelement_class,
+				       &details);
 	gst_element_class_add_pad_template (gstelement_class,
 					    gst_static_pad_template_get (&srctemplate));
 }
@@ -495,17 +497,35 @@ void gst_pak_src_plugin_register (void)
 
 	if (!registered)
 	{
-		gboolean ret = gst_plugin_register_static (GST_VERSION_MAJOR,
-							   GST_VERSION_MINOR,
-							   "paksrc",
-							   "pak source",
-							   plugin_init,
-							   "0.1",
-							   "BSD",
-							   "",
-							   "paksrc",
-							   "");
+		static GstPluginDesc desc = {
+			GST_VERSION_MAJOR,
+			GST_VERSION_MINOR,
+			"paksrc",
+			"pak source",
+			plugin_init,
+			"0.1",
+			GST_LICENSE_UNKNOWN,
+			"",
+			"paksrc",
+			"",
+			GST_PADDING_INIT
+		};
+
+#if (GST_VERSION_MAJOR > 0) || (GST_VERSION_MINOR > 10) || (GST_VERSION_MICRO >= 16)
+		gboolean ret = gst_plugin_register_static (desc.major_version,
+							   desc.minor_version,
+							   desc.name,
+							   desc.description,
+							   desc.plugin_init,
+							   desc.version,
+							   desc.license,
+							   desc.source,
+							   desc.package,
+							   desc.origin);
 		g_assert (ret == TRUE);
+#else
+		_gst_plugin_register_static (&desc);
+#endif
 		registered = true;
 	}
 }
