@@ -2751,8 +2751,14 @@ void SexyAppBase::Init()
 
 	if (mSoundManager == NULL)
 	{
+#ifdef _WIN32_WCE
+		char* sound_driver = NULL;
+#else
+		char* sound_driver = getenv ("SEXY_SOUND_DRIVER");
+#endif
+		std::string driver(sound_driver ? sound_driver : "auto");
 		SoundDriver* aSoundDriver = dynamic_cast<SoundDriver*>
-			(SoundDriverFactory::GetSoundDriverFactory ()->Find ());
+			(SoundDriverFactory::GetSoundDriverFactory ()->Find (driver));
 		if (aSoundDriver)
 		{
 			mSoundManager = aSoundDriver->Create (this);
