@@ -2,6 +2,8 @@
 # -*- python -*-
 # Author: Luo Jinghua
 
+import os.path
+
 def AddOptions(opts):
     from SCons.Variables.BoolVariable import BoolVariable
     if 'debug' in opts.keys ():
@@ -11,6 +13,8 @@ def AddOptions(opts):
 
 def Configure(env):
     env.AppendUnique (DRIVERS = [], LOADERS = [])
+    env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'lib')],
+                      LIBPATH = [os.path.join ('#', 'extra', 'include')])
     if not env.has_key ('PKGCONFIG'):
         env.Replace (PKGCONFIG = 'pkg-config')
 
