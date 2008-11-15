@@ -70,6 +70,12 @@ if 'GSTSOUND' in env['DRIVERS']:
     env['GSTSOUND']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_GST_SOUND_DRIVER'])
 
+if 'AUDIERESOUND' in env['DRIVERS']:
+    srcs += ["AudiereSoundManager.cpp", 'AudiereSoundInstance.cpp',
+             'AudiereMusicInterface.cpp', 'AudiereLoader.cpp']
+    env['AUDIERESOUND']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_AUDIERE_SOUND_DRIVER'])
+
 if 'POSIXMODULELOADER' in env['LOADERS']:
     srcs += ["PosixModuleLoader.cpp"]
     env['POSIXMODULELOADER']['ENABLE'](env)
@@ -99,6 +105,8 @@ if gameenv['BUILD_STATIC']:
         gameenv['SMINPUT']['ENABLE'](gameenv)
     if 'GSTSOUND' in env['DRIVERS']:
         gameenv['GSTSOUND']['ENABLE'](gameenv)
+    if 'AUDIERESOUND' in env['DRIVERS']:
+        gameenv['AUDIERESOUND']['ENABLE'](gameenv)
 
     if 'POSIXMODULELOADER' in env['LOADERS']:
         gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)

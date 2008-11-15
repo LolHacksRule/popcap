@@ -25,3 +25,15 @@ def PosixModuleLoaderConfigure (env):
     dl_loader = {}
     dl_loader['ENABLE'] = EnablePosixModuleLoader
     env.AppendUnique (POSIXMODULELOADER = dl_loader)
+
+def AudiereSoundAddOptions (opts):
+    pass
+
+def EnableAudiereSound (env):
+    env.AppendUnique (LIBS = ['audiere']);
+
+def AudiereSoundConfigure(env):
+    env.AppendUnique (DRIVERS = ['AUDIERESOUND'])
+    audiere_sound = {}
+    audiere_sound['ENABLE'] = EnableAudiereSound
+    env.AppendUnique (AUDIERESOUND = audiere_sound)
