@@ -72,7 +72,8 @@ if 'GSTSOUND' in env['DRIVERS']:
 
 if 'AUDIERESOUND' in env['DRIVERS']:
     srcs += ["AudiereSoundManager.cpp", 'AudiereSoundInstance.cpp',
-             'AudiereMusicInterface.cpp', 'AudiereLoader.cpp']
+             'AudiereMusicInterface.cpp', 'AudiereLoader.cpp',
+             'AudierePakFile.cpp']
     env['AUDIERESOUND']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_AUDIERE_SOUND_DRIVER'])
 

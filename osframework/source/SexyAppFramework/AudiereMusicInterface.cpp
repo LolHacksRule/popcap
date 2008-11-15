@@ -2,6 +2,7 @@
 
 #include "AudiereMusicInterface.h"
 #include "AudiereLoader.h"
+#include "AudierePakFile.h"
 #include "SexyAppBase.h"
 
 using namespace Sexy;
@@ -51,7 +52,11 @@ bool AudiereMusicInterface::LoadMusic(int theSongId, const std::string& theFileN
 	}
 	else
 	{
-		aMusicInfo.mStream = OpenSound(mDevice, theFileName.c_str(), true);
+		FilePtr file = AudierePakFile::Open(theFileName);
+		if (file)
+			aMusicInfo.mStream = OpenSound(mDevice, file, true);
+		else
+			aMusicInfo.mStream = OpenSound(mDevice, theFileName.c_str(), true);
 		if (!aMusicInfo.mStream)
 			return false;
 	}

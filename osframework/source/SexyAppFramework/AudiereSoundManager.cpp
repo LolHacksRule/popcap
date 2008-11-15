@@ -5,6 +5,7 @@
 #include "AudiereSoundManager.h"
 #include "AudiereSoundInstance.h"
 #include "AudiereMusicInterface.h"
+#include "AudierePakFile.h"
 #include "AudiereLoader.h"
 #include "audiere.h"
 
@@ -103,18 +104,23 @@ bool AudiereSoundManager::LoadSound(unsigned int theSfxID, const std::string& th
 	if (aLastSlashPos < 0)
 		aLastSlashPos = 0;
 
-	mSourceSounds[theSfxID] = OpenSampleSource(aFilename.c_str());
+	static const char* extensions[] = {
+		"", ".wav", ".ogg", ".mp3", NULL
+	};
 
-	if (!mSourceSounds[theSfxID])
-		mSourceSounds[theSfxID] = OpenSampleSource((aFilename + ".wav").c_str());
+	for (int i = 0; extensions[i]; i++)
+	{
+		std::string aAltFileName = aFilename + extensions[i];
+		FilePtr aFile = AudierePakFile::Open(aAltFileName);
+		if (aFile)
+			mSourceSounds[theSfxID] = OpenSampleSource(aFile);
+		else
+			mSourceSounds[theSfxID] = OpenSampleSource(aAltFileName.c_str());
+		if (mSourceSounds[theSfxID])
+			break;
+	}
 
-	if (!mSourceSounds[theSfxID])
-		mSourceSounds[theSfxID] = OpenSampleSource((aFilename + ".ogg").c_str());
-
-	if (!mSourceSounds[theSfxID])
-		mSourceSounds[theSfxID] = OpenSampleSource((aFilename + ".mp3").c_str());
-
-	return (mSourceSounds[theSfxID]);
+	return mSourceSounds[theSfxID];
 }
 
 void AudiereSoundManager::ReleaseSound(unsigned int theSfxID)
