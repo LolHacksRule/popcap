@@ -318,7 +318,7 @@ void GLXInterface::SwapBuffers()
 class GLXVideoDriver: public VideoDriver {
 public:
 	GLXVideoDriver ()
-	 : VideoDriver("GLXInterface", 10)
+	 : VideoDriver("GLX", 10)
 	{
 	}
 

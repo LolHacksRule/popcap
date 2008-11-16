@@ -337,7 +337,7 @@ void WGLInterface::SwapBuffers()
 class WGLVideoDriver: public VideoDriver {
 public:
 	WGLVideoDriver ()
-		: VideoDriver("WGLInterface", 10)
+		: VideoDriver("WGL", 10)
 		{
 		}
 

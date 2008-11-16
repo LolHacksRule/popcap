@@ -284,7 +284,7 @@ bool UdpInputInterface::GetEvent (Event & event)
 class UdpInputDriver: public InputDriver {
 public:
 	UdpInputDriver ()
-	 : InputDriver("UdpInputInterface", 0)
+	 : InputDriver("UdpInput", 0)
 	{
 	}
 

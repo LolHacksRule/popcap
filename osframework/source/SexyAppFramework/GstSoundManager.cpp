@@ -272,7 +272,7 @@ void GstSoundManager::SetCooperativeWindow(HWND theHWnd, bool isWindowed)
 class GstSoundDriver: public SoundDriver {
 public:
 	GstSoundDriver ()
-		: SoundDriver("GstInterface", 0),
+		: SoundDriver("Gst", 0),
 		  mInitialized (false)
 	{
 	}

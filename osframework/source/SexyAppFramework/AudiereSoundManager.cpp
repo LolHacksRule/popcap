@@ -269,7 +269,7 @@ int AudiereSoundManager::GetNumSounds()
 class AudiereSoundDriver: public SoundDriver {
 public:
 	AudiereSoundDriver ()
-		: SoundDriver("AudiereInterface", 0),
+		: SoundDriver("Audiere", 0),
 		  mInitialized (false)
 	{
 	}

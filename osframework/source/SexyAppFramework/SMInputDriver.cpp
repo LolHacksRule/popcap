@@ -272,7 +272,7 @@ bool SMInputInterface::GetEvent (Event & event)
 class SMInputDriver: public InputDriver {
 public:
 	SMInputDriver ()
-	 : InputDriver("SMInputInterface", 0)
+	 : InputDriver("SMInput", 0)
 	{
 	}
 

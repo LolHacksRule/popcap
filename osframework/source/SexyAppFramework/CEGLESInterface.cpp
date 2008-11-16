@@ -376,7 +376,7 @@ void CEGLESInterface::SwapBuffers()
 class CEGLESVideoDriver: public VideoDriver {
 public:
 	CEGLESVideoDriver ()
-	 : VideoDriver("CEGLESInterface", 10)
+	 : VideoDriver("IntelCE", 10)
 	{
 	}
 
