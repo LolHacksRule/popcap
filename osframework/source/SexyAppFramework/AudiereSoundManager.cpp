@@ -198,6 +198,7 @@ void AudiereSoundManager::ReleaseChannels()
 		if (mPlayingSounds[i])
 		{
 			mPlayingSounds[i]->Release();
+			delete mPlayingSounds[i];
 			mPlayingSounds[i] = NULL;
 		}
 }
@@ -205,8 +206,13 @@ void AudiereSoundManager::ReleaseChannels()
 void AudiereSoundManager::ReleaseFreeChannels()
 {
 	for (int i = 0; i < MAX_CHANNELS; i++)
+	{
 		if (mPlayingSounds[i] && mPlayingSounds[i]->IsReleased())
+		{
+			delete mPlayingSounds[i];
 			mPlayingSounds[i] = NULL;
+		}
+	}
 }
 
 void AudiereSoundManager::StopAllSounds()
@@ -223,7 +229,7 @@ void AudiereSoundManager::StopAllSounds()
 
 double AudiereSoundManager::GetMasterVolume()
 {
-	return 1.0;
+	return mMasterVolume;
 }
 
 void AudiereSoundManager::SetMasterVolume(double theVolume)
