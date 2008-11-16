@@ -2830,9 +2830,10 @@ Sexy::Image* SexyAppBase::GetImage(const std::string& theFileName, bool commitBi
 	return anImage;
 }
 
-Sexy::Image* SexyAppBase::CreateCrossfadeImage(Sexy::Image* theImage1, const Rect& theRect1, Sexy::Image* theImage2, const Rect& theRect2, double theFadeFactor)
+Sexy::Image* SexyAppBase::CreateCrossfadeImage(Sexy::Image* theImage1, const Rect& theRect1,
+					       Sexy::Image* theImage2, const Rect& theRect2,
+					       double theFadeFactor)
 {
-#if 0
 	MemoryImage* aMemoryImage1 = dynamic_cast<MemoryImage*>(theImage1);
 	MemoryImage* aMemoryImage2 = dynamic_cast<MemoryImage*>(theImage2);
 
@@ -2858,8 +2859,14 @@ Sexy::Image* SexyAppBase::CreateCrossfadeImage(Sexy::Image* theImage1, const Rec
 	int aWidth = theRect1.mWidth;
 	int aHeight = theRect1.mHeight;
 
-	DDImage* anImage = new DDImage(mDDInterface);
-	anImage->Create(aWidth, aHeight);
+	Image* anResultImage = mDDInterface->CreateImage (this, aWidth, aHeight);
+	MemoryImage * anImage = dynamic_cast<MemoryImage*>(anResultImage);
+
+	if (!anImage)
+	{
+		delete anResultImage;
+		return NULL;
+	}
 
 	uint32* aDestBits = anImage->GetBits();
 	uint32* aSrcBits1 = aMemoryImage1->GetBits();
@@ -2895,9 +2902,6 @@ Sexy::Image* SexyAppBase::CreateCrossfadeImage(Sexy::Image* theImage1, const Rec
 	anImage->BitsChanged();
 
 	return anImage;
-#else
-	return NULL;
-#endif
 }
 
 void SexyAppBase::ColorizeImage(Image* theImage, const Color& theColor)
