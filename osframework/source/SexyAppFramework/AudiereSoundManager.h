@@ -12,6 +12,21 @@ namespace Sexy
 {
 
 class AudiereSoundInstance;
+class AudiereSoundInfo
+{
+public:
+	int             m_stream_length;
+	int             m_channel_count;
+	int             m_sample_rate;
+	SampleFormat    m_sample_format;
+
+	unsigned char * m_buffer;
+
+public:
+	AudiereSoundInfo();
+	~AudiereSoundInfo();
+	void Reset();
+};
 
 class AudiereSoundManager : public SoundManager
 {
@@ -19,6 +34,7 @@ class AudiereSoundManager : public SoundManager
 
 protected:
 	SampleSourcePtr			        mSourceSounds[MAX_SOURCE_SOUNDS];
+	AudiereSoundInfo			mSourceInfos[MAX_SOURCE_SOUNDS];
 	float					mBaseVolumes[MAX_SOURCE_SOUNDS];
 	int					mBasePans[MAX_SOURCE_SOUNDS];
 	float					mBasePitches[MAX_SOURCE_SOUNDS];

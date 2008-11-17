@@ -8,12 +8,34 @@
 using namespace Sexy;
 using namespace audiere;
 
-AudiereSoundInstance::AudiereSoundInstance(AudiereSoundManager* theSoundManager, SampleSourcePtr theSourceSound)
+AudiereSoundInstance::AudiereSoundInstance(AudiereSoundManager* theSoundManager,
+					   SampleSourcePtr theSourceSound)
 {
 	mAudiereSoundManagerP = theSoundManager;
 
 	mStream = mAudiereSoundManagerP->mDevice->openStream(theSourceSound.get());
+	mReleased = false;
+	mAutoRelease = false;
+	mHasPlayed = false;
 
+	mBaseVolume = 1.0;
+	mBasePan = 0.0;
+
+	mVolume = 1.0;
+	mPan = 0.0;
+	mPitch = 1.0;
+
+	mHasPlayed = false;
+
+	RehupVolume();
+}
+
+AudiereSoundInstance::AudiereSoundInstance(AudiereSoundManager* theSoundManager,
+					   OutputStreamPtr theOutStream)
+{
+	mAudiereSoundManagerP = theSoundManager;
+
+	mStream = theOutStream;
 	mReleased = false;
 	mAutoRelease = false;
 	mHasPlayed = false;

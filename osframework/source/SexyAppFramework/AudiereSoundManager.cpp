@@ -12,6 +12,29 @@
 using namespace Sexy;
 using namespace audiere;
 
+AudiereSoundInfo::AudiereSoundInfo()
+{
+	m_stream_length = 0;
+	m_channel_count = 0;
+	m_sample_rate = 0;
+	m_buffer = 0;
+}
+
+AudiereSoundInfo::~AudiereSoundInfo()
+{
+	delete [] m_buffer;
+}
+
+void AudiereSoundInfo::Reset()
+{
+	delete [] m_buffer;
+
+	m_stream_length = 0;
+	m_channel_count = 0;
+	m_sample_rate = 0;
+	m_buffer = 0;
+}
+
 AudiereSoundManager::AudiereSoundManager()
 {
 	mDevice = getAudiereDevice();
@@ -117,7 +140,27 @@ bool AudiereSoundManager::LoadSound(unsigned int theSfxID, const std::string& th
 		else
 			mSourceSounds[theSfxID] = OpenSampleSource(aAltFileName.c_str());
 		if (mSourceSounds[theSfxID])
+		{
+			AudiereSoundInfo& anInfo = mSourceInfos[theSfxID];
+
+			anInfo.Reset();
+
+			anInfo.m_stream_length = mSourceSounds[theSfxID]->getLength();
+			mSourceSounds[theSfxID]->getFormat(anInfo.m_channel_count,
+							   anInfo.m_sample_rate,
+							   anInfo.m_sample_format);
+
+			int stream_length_bytes =
+				anInfo.m_stream_length * anInfo.m_channel_count *
+				GetSampleSize(anInfo.m_sample_format);
+			if (stream_length_bytes < 1024 * 1024)
+			{
+				anInfo.m_buffer = new unsigned char[stream_length_bytes];
+				mSourceSounds[theSfxID]->setPosition(0);
+				mSourceSounds[theSfxID]->read(anInfo.m_stream_length, anInfo.m_buffer);
+			}
 			break;
+		}
 	}
 
 	return mSourceSounds[theSfxID];
@@ -168,14 +211,27 @@ SoundInstance* AudiereSoundManager::GetSoundInstance(unsigned int theSfxID)
 	if (!mDevice)
 	{
 		mPlayingSounds[aFreeChannel] = new
-			AudiereSoundInstance(this, NULL);
+			AudiereSoundInstance(this, OutputStreamPtr(NULL));
 	}
 	else
 	{
 		if (!mSourceSounds[theSfxID])
 			return NULL;
-		mPlayingSounds[aFreeChannel] = new
-			AudiereSoundInstance(this, mSourceSounds[theSfxID]);
+		if (mSourceInfos[theSfxID].m_buffer)
+		{
+			AudiereSoundInfo& anInfo = mSourceInfos[theSfxID];
+			OutputStreamPtr aStream =
+				mDevice->openBuffer(anInfo.m_buffer, anInfo.m_stream_length,
+						    anInfo.m_channel_count, anInfo.m_sample_rate,
+						    anInfo.m_sample_format);
+			mPlayingSounds[aFreeChannel] = new
+				AudiereSoundInstance(this, aStream);
+		}
+		else
+		{
+			mPlayingSounds[aFreeChannel] = new
+				AudiereSoundInstance(this, mSourceSounds[theSfxID]);
+		}
 	}
 
 	mPlayingSounds[aFreeChannel]->SetBasePan(mBasePans[theSfxID]);
@@ -189,7 +245,10 @@ void AudiereSoundManager::ReleaseSounds()
 {
 	for (int i = 0; i < MAX_SOURCE_SOUNDS; i++)
 		if (mSourceSounds[i])
+		{
 			mSourceSounds[i] = NULL;
+			mSourceInfos[i].Reset();
+		}
 }
 
 void AudiereSoundManager::ReleaseChannels()

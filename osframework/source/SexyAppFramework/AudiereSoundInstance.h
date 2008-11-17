@@ -18,9 +18,9 @@ class AudiereSoundInstance : public SoundInstance
 	friend class AudiereSoundManager;
 
 protected:
-	AudiereSoundManager*	mAudiereSoundManagerP;
+	AudiereSoundManager*	                mAudiereSoundManagerP;
 
-	OutputStreamPtr			mStream;
+	OutputStreamPtr			        mStream;
 	bool					mAutoRelease;
 	bool					mReleased;
 
@@ -41,6 +41,7 @@ protected:
 
 public:
 	AudiereSoundInstance(AudiereSoundManager* theSoundManager, SampleSourcePtr theSourceSound);
+	AudiereSoundInstance(AudiereSoundManager* theSoundManager, OutputStreamPtr theOutStream);
 	virtual ~AudiereSoundInstance();
 
 	virtual void			Release();
