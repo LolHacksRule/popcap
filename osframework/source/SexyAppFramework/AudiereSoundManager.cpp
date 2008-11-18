@@ -150,10 +150,11 @@ bool AudiereSoundManager::LoadSound(unsigned int theSfxID, const std::string& th
 							   anInfo.m_sample_rate,
 							   anInfo.m_sample_format);
 
-			int stream_length_bytes =
+			unsigned int stream_length_bytes =
 				anInfo.m_stream_length * anInfo.m_channel_count *
 				GetSampleSize(anInfo.m_sample_format);
-			if (stream_length_bytes < 1024 * 1024)
+			stream_length_bytes = (stream_length_bytes + 4) & ~3;
+			if (stream_length_bytes < 250 * 1024)
 			{
 				anInfo.m_buffer = new unsigned char[stream_length_bytes];
 				mSourceSounds[theSfxID]->setPosition(0);
