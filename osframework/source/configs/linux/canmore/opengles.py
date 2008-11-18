@@ -21,6 +21,8 @@ def Configure (env):
     ### enable generic linux and udp input driver.
     configs.linux.LinuxInputConfigure (env)
     configs.linux.UdpInputConfigure (env)
+    configs.linux.SMInputConfigure (env)
 
     ### gstreamer sound manager
     configs.linux.GstSoundConfigure (env)
+    configs.AudiereSoundConfigure (env)
