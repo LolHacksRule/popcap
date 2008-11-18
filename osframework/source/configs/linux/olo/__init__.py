@@ -24,7 +24,8 @@ def Configure (env):
     env['RANLIB'] = os.path.join (tcdir, 'arm-linux-ranlib')
     env['LD'] = os.path.join (tcdir, 'arm-linux-ld')
     env.AppendUnique (CPPDEFINES = ['SEXY_INTEL_OLO'])
-    env.AppendUnique (CPPPATH = [os.path.join (prefix, 'include')],
+    env.AppendUnique (CPPPATH = [os.path.join (prefix, 'include'),
+                                 os.path.join (olo_src, 'include')],
                       LIBPATH = [os.path.join (prefix, 'lib'),
                                  os.path.join (olo_src, 'lib')],
                       LIBS = [])
