@@ -335,7 +335,7 @@ int AudiereSoundManager::GetNumSounds()
 class AudiereSoundDriver: public SoundDriver {
 public:
 	AudiereSoundDriver ()
-		: SoundDriver("Audiere", 0),
+		: SoundDriver("Audiere", 10),
 		  mInitialized (false)
 	{
 	}
