@@ -1,0 +1,11 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+import os
+import sys
+
+Import('env')
+env = env.Clone()
+srcs = ['PakInterface.cpp']
+env.ConvenienceLibrary('PakLib', srcs)

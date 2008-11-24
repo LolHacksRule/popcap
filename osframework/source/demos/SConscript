@@ -1,0 +1,42 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+import os
+import sys
+
+Import('gameenv')
+env = gameenv.Clone()
+env.PrependUnique(CPPPATH = ['..', os.path.join ('..', 'SexyAppFramework')],
+                    LIBPATH = [os.path.join ('..', 'SexyAppFramework')],
+                    LIBS = ['SexyAppFramework'])
+env.Program('demo1', [os.path.join ('Demo1', 'Board.cpp'),
+                      os.path.join ('Demo1', 'GameApp.cpp'),
+                      os.path.join ('Demo1', 'main.cpp')])
+
+env.Program('demo2', [os.path.join ('Demo2', 'Board.cpp'),
+                      os.path.join ('Demo2', 'GameApp.cpp'),
+                      os.path.join ('Demo2', 'main.cpp')])
+
+env.Program('demo3', [os.path.join ('Demo3', 'Board.cpp'),
+                      os.path.join ('Demo3', 'GameApp.cpp'),
+                      os.path.join ('Demo3', 'main.cpp')])
+env.Program('demo4', [os.path.join ('Demo4', 'Board.cpp'),
+                      os.path.join ('Demo4', 'GameApp.cpp'),
+                      os.path.join ('Demo4', 'TitleScreen.cpp'),
+                      os.path.join ('Demo4', 'Res.cpp'),
+                      os.path.join ('Demo4', 'main.cpp')])
+env.Program('demo5', [os.path.join ('Demo5', 'Board.cpp'),
+                      os.path.join ('Demo5', 'GameApp.cpp'),
+                      os.path.join ('Demo5', 'DemoDialog.cpp'),
+                      os.path.join ('Demo5', 'TitleScreen.cpp'),
+                      os.path.join ('Demo5', 'Res.cpp'),
+                      os.path.join ('Demo5', 'main.cpp')])
+env.Program('hungarr', [os.path.join ('Hun-garr', 'Board.cpp'),
+                        os.path.join ('Hun-garr', 'GameApp.cpp'),
+                        os.path.join ('Hun-garr', 'GameOverEffect.cpp'),
+                        os.path.join ('Hun-garr', 'LevelupEffect.cpp'),
+                        os.path.join ('Hun-garr', 'OptionsDialog.cpp'),
+                        os.path.join ('Hun-garr', 'TitleScreen.cpp'),
+                        os.path.join ('Hun-garr', 'Res.cpp'),
+                        os.path.join ('Hun-garr', 'main.cpp')])

@@ -1,0 +1,130 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+import os
+import sys
+
+Import(['env', 'gameenv'])
+env = env.Clone()
+srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
+        "CritSect.cpp", "CursorWidget.cpp", "Debug.cpp", "DescParser.cpp",
+        "DialogButton.cpp", "Dialog.cpp", "EditWidget.cpp", "Flags.cpp",
+        "Font.cpp", "NativeFont.cpp", "Color.cpp", "Graphics.cpp", "HTTPTransfer.cpp",
+        "HyperlinkWidget.cpp", "Image.cpp", "ImageFont.cpp", "Insets.cpp",
+        "KeyCodes.cpp", "ListWidget.cpp", "MemoryImage.cpp", "ModVal.cpp",
+        "MTRand.cpp", "MusicInterface.cpp", "NativeDisplay.cpp", "PerfTimer.cpp",
+        "PropertiesParser.cpp", "Quantize.cpp", "Ratio.cpp", "ResourceManager.cpp",
+        "ScrollbarWidget.cpp", "ScrollbuttonWidget.cpp", "SEHCatcher.cpp",
+        "SexyAppBase.cpp", "SexyMatrix.cpp", "SharedImage.cpp", "Slider.cpp",
+        "SWTri.cpp", "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp",
+        "WidgetManager.cpp", "XMLParser.cpp", 'DriverFactory.cpp',
+        'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
+        'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
+        'ModuleLoader.cpp', 'ModuleManager.cpp']
+
+#dummy sound manager
+srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
+
+if 'DIRECTFB' in env['DRIVERS']:
+    srcs += ["DFBImage.cpp", "DFBFont.cpp", "DFBInterface.cpp"]
+    env['DIRECTFB']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_DFB_DRIVER'])
+
+if 'GLX' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLInterface.cpp"]
+    srcs += ["GLXInterface.cpp"]
+    env['GLX']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_GLX_DRIVER'])
+
+if 'WGL' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLInterface.cpp"]
+    srcs += ["WGLInterface.cpp"]
+    env['WGL']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_WGL_DRIVER'])
+
+if 'CEGLES' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLInterface.cpp"]
+    srcs += ["CEGLESInterface.cpp"]
+    env['CEGLES']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_CEGLES_DRIVER'])
+
+if 'LINUXINPUT' in env['DRIVERS']:
+    srcs += ["LinuxInputDriver.cpp"]
+    env['LINUXINPUT']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_LINUX_INPUT_DRIVER'])
+
+if 'SMINPUT' in env['DRIVERS']:
+    srcs += ["SMInputDriver.cpp"]
+    env['SMINPUT']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_SM_INPUT_DRIVER'])
+
+if 'UDPINPUT' in env['DRIVERS']:
+    srcs += ["UdpInputDriver.cpp"]
+    env['UDPINPUT']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_UDP_INPUT_DRIVER'])
+
+if 'GSTSOUND' in env['DRIVERS']:
+    srcs += ["GstSoundManager.cpp", 'GstSoundInstance.cpp',
+             'GstMusicInterface.cpp', 'GstPakSrc.cpp']
+    env['GSTSOUND']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_GST_SOUND_DRIVER'])
+
+if 'AUDIERESOUND' in env['DRIVERS']:
+    srcs += ["AudiereSoundManager.cpp", 'AudiereSoundInstance.cpp',
+             'AudiereMusicInterface.cpp', 'AudiereLoader.cpp',
+             'AudierePakFile.cpp']
+    env['AUDIERESOUND']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_AUDIERE_SOUND_DRIVER'])
+
+if 'POSIXMODULELOADER' in env['LOADERS']:
+    srcs += ["PosixModuleLoader.cpp"]
+    env['POSIXMODULELOADER']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_POSIX_MODULE_LOADER'])
+
+#c module input driver
+srcs += ['ModuleInputDriver.cpp']
+
+env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
+                             os.path.join('..', 'PakLib')],
+                  LIBPATH = [os.path.join('..', 'ImageLib'),
+                             os.path.join('..', 'PakLib')],
+                  LIBS = ['PakLib', 'ImageLib'])
+
+if gameenv['BUILD_STATIC']:
+    if 'DIRECTFB' in env['DRIVERS']:
+        gameenv['DIRECTFB']['ENABLE'](gameenv)
+    if 'GLX' in env['DRIVERS']:
+        gameenv['GLX']['ENABLE'](gameenv)
+    if 'WGL' in env['DRIVERS']:
+        gameenv['WGL']['ENABLE'](gameenv)
+    if 'CEGLES' in env['DRIVERS']:
+        gameenv['CEGLES']['ENABLE'](gameenv)
+    if 'LINUXINPUT' in env['DRIVERS']:
+        gameenv['LINUXINPUT']['ENABLE'](gameenv)
+    if 'SMINPUT' in env['DRIVERS']:
+        gameenv['SMINPUT']['ENABLE'](gameenv)
+    if 'GSTSOUND' in env['DRIVERS']:
+        gameenv['GSTSOUND']['ENABLE'](gameenv)
+    if 'AUDIERESOUND' in env['DRIVERS']:
+        gameenv['AUDIERESOUND']['ENABLE'](gameenv)
+
+    if 'POSIXMODULELOADER' in env['LOADERS']:
+        gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)
+
+    gameenv.PrependUnique(LIBPATH = [os.path.join('..', 'ImageLib'),
+                                     os.path.join('..', 'PakLib')],
+                          LIBS = ['PakLib', 'ImageLib'])
+
+if gameenv['BUILD_STATIC']:
+    env.Library('SexyAppFramework', srcs)
+else:
+    env.SharedLibrary('SexyAppFramework', srcs)
+
+if 'LINUXUDPINPUTSERVER' in env['CPPDEFINES']:
+    env = Environment ()
+    env.Program ('luis', 'LinuxUdpInputServer.cpp')
+
+if False:
+    env = Environment ()
+    env.SharedLibrary ('SexyInputModule', 'TestInputModule.c')

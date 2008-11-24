@@ -1,0 +1,11 @@
+*~
+*.o
+*.os
+*.a
+*.so*
+semantic.cache
+.sconsign.dblite
+*.pyc
+*.pyo
+*.obj
+*.pdb

@@ -1,0 +1,1 @@
+config = 'configs.linux.opengl'
