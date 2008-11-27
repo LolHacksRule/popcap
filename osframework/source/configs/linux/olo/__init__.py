@@ -16,6 +16,8 @@ def Configure (env):
     olo_src = '/opt/Intel-Olo/arm-linux-elf'
     env['prefix'] = prefix
     env['PKG_CONFIG_LIBDIR'] = os.path.join (prefix, 'lib', 'pkgconfig')
+    env['PKG_CONFIG_LIBDIR'] += ":" + os.path.join (olo_src,
+                                                    'lib', 'pkgconfig')
     env['CC'] = os.path.join (tcdir, 'arm-linux-gcc')
     env['CXX'] = os.path.join (tcdir, 'arm-linux-g++')
     env['LINK'] = os.path.join (tcdir, 'arm-linux-g++')
