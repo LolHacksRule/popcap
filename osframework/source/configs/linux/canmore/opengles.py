@@ -6,6 +6,7 @@ import configs.linux.canmore
 
 def AddOptions (opts):
     configs.linux.canmore.AddOptions (opts)
+    configs.AudiereSoundAddOptions (opts)
 
 def EnableCEGLES (env):
     env.PrependUnique (CPPDEFINES = ['SEXY_OPENGLES'],

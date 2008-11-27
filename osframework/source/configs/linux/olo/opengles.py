@@ -7,6 +7,7 @@ import os.path
 
 def AddOptions (opts):
     configs.linux.olo.AddOptions (opts)
+    configs.AudiereSoundAddOptions (opts)
 
 def EnableCEGLES (env):
     env.PrependUnique (CPPDEFINES = ['SEXY_OPENGLES'],
