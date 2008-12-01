@@ -1,6 +1,7 @@
 #include "SMInputDriver.h"
 #include "InputDriverFactory.h"
 #include "SexyAppBase.h"
+#include "KeyCodes.h"
 
 #include <cstring>
 #include <unistd.h>
@@ -13,6 +14,16 @@
 #include <cstdlib>
 
 using namespace Sexy;
+
+#define SM_KEY_LEFT           0
+#define SM_KEY_RIGHT          1
+#define SM_KEY_UP             2
+#define SM_KEY_DOWN           3
+#define SM_KEY_LEFT_BUTTON    4
+#define SM_KEY_RIGHT_BUTTON   5
+#define SM_KEY_OK             6
+#define SM_KEY_MAX            (SM_KEY_OK + 1)
+#define SM_KEY_MASK           0x7f
 
 namespace Sexy {
 struct input_event {
@@ -118,19 +129,49 @@ static bool
 handle_key_event (int index, bool pressed,
 		  Event & event)
 {
-	if (pressed)
-		event.type = EVENT_MOUSE_BUTTON_PRESS;
-	else
-		event.type = EVENT_MOUSE_BUTTON_RELEASE;
+	if (index == SM_KEY_LEFT_BUTTON ||
+	    index == SM_KEY_RIGHT_BUTTON)
+	{
+		if (pressed)
+			event.type = EVENT_MOUSE_BUTTON_PRESS;
+		else
+			event.type = EVENT_MOUSE_BUTTON_RELEASE;
 
-	if (index == 0)
-		event.button = 1;
-	else if (index == 1)
-		event.button = 2;
-	else if (index == 6)
-		event.button = 3;
-	else
-		return false;
+		if (index == SM_KEY_LEFT_BUTTON)
+			event.button = 1;
+		else
+			event.button = 2;
+	} else {
+		if (pressed)
+			event.type = EVENT_KEY_DOWN;
+		else
+			event.type = EVENT_KEY_UP;
+		switch (index) {
+		case SM_KEY_LEFT:
+			event.flags = EVENT_FLAGS_KEY_CODE;
+			event.keyCode = KEYCODE_LEFT;
+			break;
+		case SM_KEY_RIGHT:
+			event.flags = EVENT_FLAGS_KEY_CODE;
+			event.keyCode = KEYCODE_RIGHT;
+			break;
+		case SM_KEY_UP:
+			event.flags = EVENT_FLAGS_KEY_CODE;
+			event.keyCode = KEYCODE_UP;
+			break;
+		case SM_KEY_DOWN:
+			event.flags = EVENT_FLAGS_KEY_CODE;
+			event.keyCode = KEYCODE_DOWN;
+			break;
+		case SM_KEY_OK:
+			event.flags = EVENT_FLAGS_KEY_CODE;
+			event.keyCode = KEYCODE_RETURN;
+			break;
+		default:
+			event.type = EVENT_NONE;
+			break;
+		}
+	}
 
 	return true;
 }
@@ -140,12 +181,43 @@ static bool
 handle_rel_event (struct input_event & sm_event,
 		  Event & event)
 {
+	if (!sm_event.x && !sm_event.y)
+		return false;
+
 	event.type = EVENT_MOUSE_MOTION;
 	event.flags = EVENT_FLAGS_REL_AXIS;
 	event.x = sm_event.x;
 	event.y = sm_event.y;
 
 	return true;
+}
+
+static bool
+button_to_keys (unsigned int button,
+		bool *keys)
+{
+	static unsigned int maps[SM_KEY_MAX] = {
+		0x01,
+		0x02,
+		0x10,
+		0x08,
+		0x40,
+		0x60,
+		0x20
+	};
+
+	button &= 0x7f;
+	memset (keys, 0, sizeof(bool) * SM_KEY_MAX);
+	for (int i = 0; i < SM_KEY_MAX; i++)
+	{
+		if (maps[i] == button)
+		{
+			keys[i] = true;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void SMInputInterface::Process (struct input_event& sm_event,
@@ -164,11 +236,9 @@ void SMInputInterface::Process (struct input_event& sm_event,
 	if ((sm_event.button & 0x7f) != (sm_old_event.button & 0x7f))
 	{
 		/* key pressed or released */
-		bool keys[7];
+		bool keys[SM_KEY_MAX];
 
-		for (int i = 0; i < 7; i++)
-			keys[i] = sm_event.button & (1 << i) ? true : false;
-
+		button_to_keys (sm_event.button, keys);
 		for (int i = 0; i < 7; i++)
 		{
 			if (keys[i] != mKeys[i])
