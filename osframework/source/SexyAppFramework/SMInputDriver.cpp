@@ -15,12 +15,12 @@
 
 using namespace Sexy;
 
-#define SM_KEY_LEFT           0
-#define SM_KEY_RIGHT          1
+#define SM_KEY_LEFT_BUTTON    0
+#define SM_KEY_RIGHT_BUTTON   1
 #define SM_KEY_UP             2
 #define SM_KEY_DOWN           3
-#define SM_KEY_LEFT_BUTTON    4
-#define SM_KEY_RIGHT_BUTTON   5
+#define SM_KEY_ESCAPE         4
+#define SM_KEY_BACK           5
 #define SM_KEY_OK             6
 #define SM_KEY_MAX            (SM_KEY_OK + 1)
 #define SM_KEY_MASK           0x7f
@@ -81,7 +81,10 @@ void SMInputInterface::Cleanup()
 
 	mDone = true;
 	if (mThread)
+	{
+		pthread_cancel (*mThread);
 		pthread_join (*mThread, NULL);
+	}
 	delete mThread;
 	mThread = 0;
 
@@ -137,6 +140,7 @@ handle_key_event (int index, bool pressed,
 		else
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
 
+		event.flags = EVENT_FLAGS_BUTTON;
 		if (index == SM_KEY_LEFT_BUTTON)
 			event.button = 1;
 		else
@@ -147,13 +151,13 @@ handle_key_event (int index, bool pressed,
 		else
 			event.type = EVENT_KEY_UP;
 		switch (index) {
-		case SM_KEY_LEFT:
+		case SM_KEY_ESCAPE:
 			event.flags = EVENT_FLAGS_KEY_CODE;
-			event.keyCode = KEYCODE_LEFT;
+			event.keyCode = KEYCODE_ESCAPE;
 			break;
-		case SM_KEY_RIGHT:
+		case SM_KEY_BACK:
 			event.flags = EVENT_FLAGS_KEY_CODE;
-			event.keyCode = KEYCODE_RIGHT;
+			event.keyCode = KEYCODE_BACK;
 			break;
 		case SM_KEY_UP:
 			event.flags = EVENT_FLAGS_KEY_CODE;
@@ -279,8 +283,8 @@ void* SMInputInterface::Run (void * data)
 
 			struct timeval timeout;
 
-			timeout.tv_sec = 1;
-			timeout.tv_usec = 0;
+			timeout.tv_sec = 0;
+			timeout.tv_usec = 100;
 			status = select (fd + 1, &set, NULL, NULL, &timeout);
 			if (status < 0 && errno != EINTR)
 			{
