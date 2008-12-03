@@ -81,10 +81,7 @@ void SMInputInterface::Cleanup()
 
 	mDone = true;
 	if (mThread)
-	{
-		pthread_cancel (*mThread);
 		pthread_join (*mThread, NULL);
-	}
 	delete mThread;
 	mThread = 0;
 
