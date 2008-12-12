@@ -11,7 +11,11 @@ def AddOptions (opts):
 
 def Configure (env):
     configs.linux.Configure (env)
-    prefix = '/opt/STM/STLinux-2.2/devkit/sh4'
+    versions = ["2.3", "2.2"]
+    for version in versions:
+        prefix = '/opt/STM/STLinux-' + version + '/devkit/sh4'
+        if os.path.exists(prefix):
+            break
     tcdir = os.path.join (prefix, 'bin')
     targetdir = os.path.join (prefix, 'target')
     env['prefix'] = prefix
