@@ -86,7 +86,8 @@ if 'POSIXMODULELOADER' in env['LOADERS']:
 srcs += ['ModuleInputDriver.cpp']
 
 env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
-                             os.path.join('..', 'PakLib')],
+                             os.path.join('..', 'PakLib'),
+                             '#SexyAppFramework'],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
                              os.path.join('..', 'PakLib')],
                   LIBS = ['PakLib', 'ImageLib'])
