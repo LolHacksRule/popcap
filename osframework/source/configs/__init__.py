@@ -10,6 +10,7 @@ def AddOptions(opts):
         return
     opts.Add(BoolVariable ('debug', 'build debug version', 'no'))
     opts.Add(BoolVariable ('release', 'build release version', 'no'))
+    opts.Add(BoolVariable ('builddir', 'output to an altnative directory', 'no'))
 
 def Configure(env):
     env.AppendUnique (DRIVERS = [], LOADERS = [])

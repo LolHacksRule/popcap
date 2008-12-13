@@ -67,5 +67,10 @@ sconscripts += [os.path.join ('SexyAppFramework', 'SConscript')]
 sconscripts += [os.path.join ('demos', 'SConscript')]
 
 for sconscript in sconscripts:
-  SConscript (sconscript)
+  if env['builddir']:
+    builddir = os.path.join (modname.replace('configs', 'build'),
+                             os.path.split(sconscript)[0])
+    SConscript (sconscript, variant_dir = builddir, duplicated = False)
+  else:
+    SConscript (sconscript)
 
