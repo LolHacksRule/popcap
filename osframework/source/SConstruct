@@ -70,7 +70,6 @@ for sconscript in sconscripts:
   if env['builddir']:
     builddir = os.path.join (modname.replace('configs', 'build'),
                              os.path.split(sconscript)[0])
-    SConscript (sconscript, variant_dir = builddir, duplicated = False)
+    SConscript (sconscript, variant_dir = builddir, duplicate = False)
   else:
     SConscript (sconscript)
-

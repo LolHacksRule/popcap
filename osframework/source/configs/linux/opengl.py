@@ -22,3 +22,4 @@ def Configure(env):
 
     ### gstreamer sound manager
     configs.linux.GstSoundConfigure (env)
+    configs.AudiereSoundConfigure (env)

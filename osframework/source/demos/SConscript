@@ -5,11 +5,21 @@
 import os
 import sys
 
+srcdir = Dir('.')
+if srcdir.srcdir:
+    srcdir = srcdir.srcdir.abspath
+else:
+    srcdir = srcdir.abspath
+
 Import('gameenv')
+
 env = gameenv.Clone()
-env.PrependUnique(CPPPATH = ['..', os.path.join ('..', 'SexyAppFramework')],
-                    LIBPATH = [os.path.join ('..', 'SexyAppFramework')],
-                    LIBS = ['SexyAppFramework'])
+env.PrependUnique(CPPPATH = ['#', '#SexyAppFramework'],
+                  LIBPATH = [os.path.join ('..', 'SexyAppFramework'),
+                             os.path.join ('..', 'PakLib'),
+                             os.path.join ('..', 'ImageLib'),
+                             os.path.join ('..', 'audiere', 'lib')],
+                  LIBS = ['SexyAppFramework'])
 env.Program('demo1', [os.path.join ('Demo1', 'Board.cpp'),
                       os.path.join ('Demo1', 'GameApp.cpp'),
                       os.path.join ('Demo1', 'main.cpp')])

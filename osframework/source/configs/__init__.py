@@ -8,9 +8,9 @@ def AddOptions(opts):
     from SCons.Variables.BoolVariable import BoolVariable
     if 'debug' in opts.keys ():
         return
-    opts.Add(BoolVariable ('debug', 'build debug version', 'no'))
-    opts.Add(BoolVariable ('release', 'build release version', 'no'))
-    opts.Add(BoolVariable ('builddir', 'output to an altnative directory', 'no'))
+    opts.Add(BoolVariable ('debug', 'build debug version', 'False'))
+    opts.Add(BoolVariable ('release', 'build release version', 'False'))
+    opts.Add(BoolVariable ('builddir', 'output to an alternative directory', 'False'))
 
 def Configure(env):
     env.AppendUnique (DRIVERS = [], LOADERS = [])

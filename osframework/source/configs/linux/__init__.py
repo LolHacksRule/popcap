@@ -55,7 +55,7 @@ def SMInputConfigure(env):
     env.AppendUnique (SMINPUT = sm_input)
 
 def EnableLinuxUdpInputServer(env):
-    env.AppendUnique(CPPDEFINES = ['LINUXUDPINPUTSERVER'])
+    env['LUIS'] = True
 
 def GstSoundAddOptions (opts):
     pass

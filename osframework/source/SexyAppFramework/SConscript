@@ -7,6 +7,7 @@ import sys
 
 Import(['sexyenv', 'gameenv'])
 env = sexyenv.Clone()
+
 srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "CritSect.cpp", "CursorWidget.cpp", "Debug.cpp", "DescParser.cpp",
         "DialogButton.cpp", "Dialog.cpp", "EditWidget.cpp", "Flags.cpp",
@@ -85,8 +86,7 @@ if 'POSIXMODULELOADER' in env['LOADERS']:
 #c module input driver
 srcs += ['ModuleInputDriver.cpp']
 
-env.PrependUnique(CPPPATH = [os.path.join('..', 'ImageLib'),
-                             os.path.join('..', 'PakLib'),
+env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
                              '#SexyAppFramework'],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
                              os.path.join('..', 'PakLib')],
@@ -113,16 +113,14 @@ if gameenv['BUILD_STATIC']:
     if 'POSIXMODULELOADER' in env['LOADERS']:
         gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)
 
-    gameenv.PrependUnique(LIBPATH = [os.path.join('..', 'ImageLib'),
-                                     os.path.join('..', 'PakLib')],
-                          LIBS = ['PakLib', 'ImageLib'])
+    gameenv.PrependUnique(LIBS = ['ImageLib', 'PakLib'])
 
 if gameenv['BUILD_STATIC']:
     env.Library('SexyAppFramework', srcs)
 else:
     env.SharedLibrary('SexyAppFramework', srcs)
 
-if 'LINUXUDPINPUTSERVER' in env['CPPDEFINES']:
+if env.has_key ('LUIS') and env['LUIS']:
     env = Environment ()
     env.Program ('luis', 'LinuxUdpInputServer.cpp')
 
