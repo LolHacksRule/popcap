@@ -64,7 +64,6 @@ def EnableGstSound (env):
     env.ParseConfig('$PKGCONFIG gstreamer-base-0.10 gstreamer-0.10 --cflags --libs')
 
 def GstSoundConfigure(env):
-    configs.linux.Configure (env)
     env.AppendUnique (DRIVERS = ['GSTSOUND'])
     gst_sound = {}
     gst_sound['ENABLE'] = EnableGstSound
