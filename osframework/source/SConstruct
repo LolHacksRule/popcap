@@ -49,17 +49,20 @@ opts = Options ('Config.py')
 
 config.AddOptions (opts)
 
-env = Environment (options = opts, ENV = os.environ)
+env = Environment (options = opts, ENV = os.environ,
+                   tools = [ 'default', 'untar'])
 env['BUILD_STATIC'] = True
 createConvenienceLibBuilder (env)
 config.Configure (env)
 Help (opts.GenerateHelpText (env))
 
+sexyenv = env.Clone ()
 gameenv = env.Clone ()
-Export (['env', 'gameenv'])
+Export (['env', 'gameenv', 'sexyenv'])
 
 sconscripts = [os.path.join ('ImageLib', 'SConscript')]
 sconscripts += [os.path.join ('PakLib', 'SConscript')]
+sconscripts += [os.path.join ('audiere', 'SConscript')]
 sconscripts += [os.path.join ('SexyAppFramework', 'SConscript')]
 sconscripts += [os.path.join ('demos', 'SConscript')]
 

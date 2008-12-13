@@ -5,8 +5,8 @@
 import os
 import sys
 
-Import(['env', 'gameenv'])
-env = env.Clone()
+Import(['sexyenv', 'gameenv'])
+env = sexyenv.Clone()
 srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "CritSect.cpp", "CursorWidget.cpp", "Debug.cpp", "DescParser.cpp",
         "DialogButton.cpp", "Dialog.cpp", "EditWidget.cpp", "Flags.cpp",
