@@ -147,7 +147,8 @@ env.AppendUnique (CPPDEFINES = ['AUDIERE_EXPORTS'])
 env.AppendUnique (LIBS = ['vorbisfile', 'vorbis', 'ogg'])
 
 if 'WIN32' in env['CPPDEFINES']:
-    env.AppendUnique (CPPDEFINES = ['WIN32_LEAN_AND_MEAN', 'NOMINMAX'],
+    env.AppendUnique (CPPDEFINES = ['WIN32_LEAN_AND_MEAN', 'NOMINMAX',
+                                    'HAVE_DSOUND'],
                       LIBS = ['winmm', 'dsound', 'ole32', 'rpcrt4',
                              'user32'])
     srcs += ['device_mm.cpp', 'midi_mci.cpp', 'cd_win32.cpp',
