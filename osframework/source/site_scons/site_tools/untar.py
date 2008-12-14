@@ -16,8 +16,16 @@ def Untar(target, source, env):
     tar = tarfile.open(str(source[0]), "r")
 
     prefix = UntarPrefix(target)
-    tar.extractall(prefix)
-    tar.close()
+    try:
+        try:
+            tar.extractall(prefix)
+        except AttributeError, e:
+            for member in tar.getmembers():
+                tar.extract(member, prefix)
+    finally:
+        tar.close()
+
+    return 0
 
 def UntarStr(target, source, env):
     prefix = UntarPrefix(target)
@@ -29,13 +37,14 @@ def UntarEmitter(target, source, env):
     tar = tarfile.open(str(source[0]), "r")
 
     target = []
-    for member in tar.getmembers():
-        if member.type == tarfile.DIRTYPE:
-            continue
-        entry = env.fs.Entry(member.name)
-        target = target + [entry]
-
-    tar.close()
+    try:
+        for member in tar.getmembers():
+            if member.type == tarfile.DIRTYPE:
+                continue
+            entry = env.fs.Entry(member.name)
+            target = target + [entry]
+    finally:
+        tar.close()
 
     ## for t in target:
     ##     print ("Target(" + repr(t) + "): "+ t.path)
