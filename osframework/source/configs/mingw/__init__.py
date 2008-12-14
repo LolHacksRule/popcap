@@ -9,6 +9,7 @@ def AddOptions(opts):
     configs.AddOptions(opts)
 
 def SetupCompiler(env):
+    env.Tool('mingw')
     prefix = 'i686-pc-mingw32-'
     env['CC'] = prefix + 'gcc'
     env['CXX'] = prefix + 'g++'
@@ -20,6 +21,8 @@ def SetupCompiler(env):
     env['OBJSUFFIX'] = '.o'
     env['LIBPREFIX'] = 'lib'
     env['LIBSUFFIX'] = '.a'
+    env['SHLIBSUFFIX'] = '.dll'
+    env['SHLIBPREFIX'] = ''
     env['PROGSUFFIX'] = '.exe'
     env['SHOBJSUFFIX'] = '.o'
     env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME'] = 1
