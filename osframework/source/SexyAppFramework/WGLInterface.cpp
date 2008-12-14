@@ -148,7 +148,7 @@ int WGLInterface::Init (void)
 		goto fail;
 
 	/* Create the frame */
-	DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX;
+	static const DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX;
 	mWindow = CreateWindow ("SexyGL",
 				mApp->mTitle.c_str(),
 				style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
