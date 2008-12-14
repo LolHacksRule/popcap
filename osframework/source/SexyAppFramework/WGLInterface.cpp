@@ -148,9 +148,10 @@ int WGLInterface::Init (void)
 		goto fail;
 
 	/* Create the frame */
+	DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX;
 	mWindow = CreateWindow ("SexyGL",
-				"SexyGL",
-				WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+				mApp->mTitle.c_str(),
+				style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 				CW_USEDEFAULT,
 				CW_USEDEFAULT,
 				mWidth,
@@ -195,16 +196,13 @@ int WGLInterface::Init (void)
 	GetWindowInfo (mWindow, &wininfo);
 
 	RECT rect;
-	GetClientRect (mWindow, &rect);
-	if (rect.right != mWidth || rect.bottom != mHeight)
-	{
-		MoveWindow (mWindow,
-			    wininfo.rcWindow.left,
-			    wininfo.rcWindow.top,
-			    wininfo.rcWindow.right - rect.right + mWidth,
-			    wininfo.rcWindow.bottom - rect.bottom + mHeight,
-			    FALSE);
-	}
+	rect.left = 0;
+	rect.right = mApp->mWidth;
+	rect.top = 0;
+	rect.bottom = mApp->mHeight;
+	AdjustWindowRect (&rect, wininfo.dwStyle, FALSE);
+	MoveWindow (mWindow, wininfo.rcWindow.left, wininfo.rcWindow.top,
+		    rect.right - rect.left, rect.bottom - rect.top, FALSE);
 
 	GetClientRect (mWindow, &rect);
 	mWidth = rect.right;
