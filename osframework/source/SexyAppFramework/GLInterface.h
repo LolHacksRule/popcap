@@ -9,6 +9,8 @@
 
 #ifdef SEXY_OPENGLES
 #include <GLES/gl.h>
+#elif defined(SEXY_AGL_DRIVER)
+#include <OpenGL/gl.h>
 #else
 #include <GL/gl.h>
 #endif
