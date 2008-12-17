@@ -41,6 +41,8 @@
 #include <direct.h>
 #include <regstr.h>
 #include <shlobj.h>
+#else
+#include <sys/time.h>
 #endif
 
 #include "memmgr.h"
@@ -3493,13 +3495,21 @@ DWORD SexyAppBase::GetTickCount()
 {
 #ifdef WIN32
 	return ::GetTickCount();
-#else
+#elif defined(__linux__)
 	struct timespec now;
 	DWORD ticks;
 
 	clock_gettime(CLOCK_MONOTONIC, &now);
 	ticks = now.tv_sec * 1000L +
 		now.tv_nsec / 1000000L;
+	return ticks;
+#else
+	struct timeval now;
+	DWORD ticks;
+
+	gettimeofday(&now, NULL);
+	ticks = now.tv_sec * 1000L +
+	  now.tv_usec;
 	return ticks;
 #endif
 }
