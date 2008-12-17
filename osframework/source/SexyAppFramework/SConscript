@@ -32,6 +32,12 @@ if 'DIRECTFB' in env['DRIVERS']:
     env['DIRECTFB']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_DFB_DRIVER'])
 
+if 'AGL' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLInterface.cpp"]
+    srcs += ["AGLInterface.mm"]
+    env['AGL']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_AGL_DRIVER'])
+
 if 'GLX' in env['DRIVERS']:
     srcs += ["GLImage.cpp", "GLInterface.cpp"]
     srcs += ["GLXInterface.cpp"]
@@ -95,6 +101,8 @@ env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
 if gameenv['BUILD_STATIC']:
     if 'DIRECTFB' in env['DRIVERS']:
         gameenv['DIRECTFB']['ENABLE'](gameenv)
+    if 'AGL' in env['DRIVERS']:
+        gameenv['AGL']['ENABLE'](gameenv)
     if 'GLX' in env['DRIVERS']:
         gameenv['GLX']['ENABLE'](gameenv)
     if 'WGL' in env['DRIVERS']:
