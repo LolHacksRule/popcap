@@ -3,7 +3,7 @@
 
 #define POLYNOMIAL 0x04c11db7L
 
-static BOOL 	     bCrcTableGenerated = FALSE;
+static bool 	     bCrcTableGenerated = false;
 static unsigned long crc_table[256];
 
 using namespace Sexy;
