@@ -33,12 +33,16 @@ VideoDriverFactory*  VideoDriverFactory::GetVideoDriverFactory ()
 /* This is a hack that preventing gcc from striping drivers out of
  * binary.
  */
+extern VideoDriver* GetAGLVideoDriver();
 extern VideoDriver* GetGLXVideoDriver();
 extern VideoDriver* GetDFBVideoDriver();
 extern VideoDriver* GetWGLVideoDriver();
 extern VideoDriver* GetCEGLESVideoDriver();
 typedef VideoDriver* (* VideoDriverGetter)();
 VideoDriverGetter VideoDriverGetters []= {
+#ifdef SEXY_AGL_DRIVER
+	GetAGLVideoDriver,
+#endif
 #ifdef SEXY_GLX_DRIVER
 	GetGLXVideoDriver,
 #endif
