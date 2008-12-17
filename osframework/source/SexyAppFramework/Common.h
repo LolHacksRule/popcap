@@ -39,7 +39,11 @@ typedef unsigned char  BYTE;
 typedef unsigned int DWORD;
 typedef unsigned int UINT;
 typedef void * HWND;
+#ifdef __APPLE__
+typedef signed char BOOL;
+#else
 typedef int BOOL;
+#endif
 #define TRUE 1
 #define FALSE 0
 #define _stricmp(x, y) strcasecmp((x), (y))
