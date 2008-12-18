@@ -42,7 +42,7 @@ env = env.Clone ()
 env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
 
 ### ogg
-ogg_untar = env.Untar ([], os.path.join (srcdir, ogg_tar))
+ogg_untar = env.Untar (os.path.join (srcdir, ogg_tar), ['src', 'include'], ['Makefile'])
 env.SourceCode (ogg_dir, ogg_untar)
 
 headers = []
@@ -77,8 +77,8 @@ env.Clean (ogg, [ogg_dir])
 ### vorbis & vorbisfile
 env = env.Clone ()
 
-vorbis_untar = env.Untar([], os.path.join (srcdir, vorbis_tar))
-env.SourceCode(vorbis_dir, vorbis_untar)
+vorbis_untar = env.Untar (os.path.join (srcdir, vorbis_tar))
+env.SourceCode (vorbis_dir, vorbis_untar)
 
 sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
               ['mdct.c', 'smallft.c', 'block.c', 'envelope.c', 'window.c', 'lsp.c',
@@ -86,7 +86,7 @@ sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
                'floor1.c', 'floor0.c', 'res0.c', 'mapping0.c', 'registry.c',
                'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c'])
 
-env.AppendUnique(CPPPATH = [os.path.join (vorbis_dir, 'include')])
+env.AppendUnique (CPPPATH = [os.path.join (vorbis_dir, 'include')])
 
 vorbis_lib = env.ConvenienceLibrary ('vorbis', sources)
 
@@ -110,7 +110,7 @@ env.Clean (vorbis, [vorbis_dir])
 ### audiere
 env = env.Clone ()
 
-audiere_untar = env.Untar ([], os.path.join (srcdir, audiere_tar))
+audiere_untar = env.Untar (os.path.join (srcdir, audiere_tar))
 env.SourceCode (audiere_dir, audiere_untar)
 
 srcs = [
@@ -174,7 +174,7 @@ audiere_headers = env.Install (header_dir,
                                                          'src', f),
                                    ['audiere.h']))
 
-audiere = env.Install( lib_dir, audiere_lib)
+audiere = env.Install (lib_dir, audiere_lib)
 Depends (audiere, audiere_headers)
 
 env.Alias ('audiere_install', audiere)
