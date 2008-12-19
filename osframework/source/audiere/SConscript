@@ -35,14 +35,14 @@ tarballs = [ogg_tar, vorbis_tar, audiere_tar]
 for tarball in tarballs:
     fpath = os.path.join (srcdir, tarball)
     if not os.path.exists(fpath):
-        print fpath, "isn't exist."
+        print fpath, "doesn't exist."
         Return ()
 
 env = env.Clone ()
 env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
 
 ### ogg
-ogg_untar = env.Untar (os.path.join (srcdir, ogg_tar), ['src', 'include'], ['Makefile'])
+ogg_untar = env.Untar (os.path.join (srcdir, ogg_tar), ['*src*', '*include*'], ['*Makefile*'])
 env.SourceCode (ogg_dir, ogg_untar)
 
 headers = []

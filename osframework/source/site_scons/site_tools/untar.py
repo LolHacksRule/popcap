@@ -4,24 +4,26 @@ import SCons.Defaults
 import SCons.Node.FS
 import SCons.Util
 import os
+import fnmatch
 
-def UntarPrefix(target):
+def UntarPrefix (target):
     targets = [ t.path for t in target ]
     prefix = os.path.commonprefix(targets)
-    return os.path.split(os.path.normpath(prefix))[0]
+    return os.path.split (os.path.normpath(prefix))[0]
 
-def UntarMatch(name, filter_list):
+def UntarMatch (name, filter_list):
     for i in filter_list:
         ### XXX more powerful matcher?
         ### such as fnmacth or regular expression?
-        if i in name:
+        #if i in name:
+        if fnmatch.fnmatch (name, i):
             return True
     return False
 
-def Untar(target, source, env):
+def Untar (target, source, env):
     import tarfile
 
-    tar = tarfile.open(str(source[0]), "r")
+    tar = tarfile.open (str (source[0]), "r")
     if len (source) > 1:
         include = source[1].value
     else:
@@ -31,9 +33,9 @@ def Untar(target, source, env):
     else:
         exclude = []
 
-    prefix = UntarPrefix(target)
+    prefix = UntarPrefix (target)
     try:
-        for member in tar.getmembers():
+        for member in tar.getmembers ():
             if len(include) and not UntarMatch (member.name, include):
                 continue
             if len(exclude) and UntarMatch (member.name, exclude):
@@ -44,14 +46,14 @@ def Untar(target, source, env):
 
     return 0
 
-def UntarStr(target, source, env):
-    prefix = UntarPrefix(target)
+def UntarStr (target, source, env):
+    prefix = UntarPrefix (target)
     print("Untarring: %s to %s" % (source[0].path, prefix))
 
-def UntarEmitter(target, source, env):
+def UntarEmitter (target, source, env):
     import tarfile
 
-    tar = tarfile.open(str(source[0]), "r")
+    tar = tarfile.open (str(source[0]), "r")
     if len (source) > 1:
         include = source[1].value
     else:
@@ -63,7 +65,7 @@ def UntarEmitter(target, source, env):
 
     target = []
     try:
-        for member in tar.getmembers():
+        for member in tar.getmembers ():
             if member.type == tarfile.DIRTYPE:
                 continue
             if len(include) and not UntarMatch (member.name, include):
@@ -83,7 +85,7 @@ def UntarEmitter(target, source, env):
 
     return (target, source)
 
-UntarAction = SCons.Action.Action(Untar, UntarStr)
+UntarAction = SCons.Action.Action (Untar, UntarStr)
 UntarBuilder = SCons.Builder.Builder (action = UntarAction,
                                       emitter = UntarEmitter,
                                       target_factory = SCons.Node.FS.default_fs.Entry)
