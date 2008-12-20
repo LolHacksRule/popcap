@@ -14,7 +14,7 @@
 
 using namespace Sexy;
 
-@interface AppDelegate : NSObject
+@interface AppDelegate : NSResponder
 {
 	BOOL mQuit;
 	AGLInterface* mInterface;
@@ -74,7 +74,27 @@ using namespace Sexy;
 
 - (BOOL)isQuit
 {
-	return (mQuit);
+	return mQuit;
+}
+
+- (BOOL)AcceptsFirstResponder
+{
+	return YES;
+}
+
+- (BOOL)becomeFirstResponder
+{
+	return YES;
+}
+
+- (void)MouseMoved:(NSEvent *)event
+{
+	printf ("mouse moved\n");
+}
+
+- (void)windowWillClose:(NSNotification *)aNotification
+{
+	mQuit = TRUE;
 }
 @end
 
@@ -95,11 +115,13 @@ AGLInterface::AGLInterface (SexyAppBase* theApp)
 		[NSBundle loadNibNamed:@"MainMenu" owner:[NSApp delegate]];
 		[NSApp finishLaunching];
 
-		//path = [[[NSBundle mainBundle] bundlePath] stringByDeletingLastPathComponent];
-		//printf ("changing working dir to %s\n", path);
-		//chdir([path cString]);
+		path = [[NSBundle mainBundle] bundlePath]; // stringByDeletingLastPathComponent];
+		printf ("changing working dir to %s, %s\n", [path UTF8String], getcwd(NULL, 0));
+		chdir([path UTF8String]);
+                printf ("working dir changed to %s\n", getcwd(NULL, 0));
+		NSLog (path);
 	}
-	mView = NULL;
+	mWindow = NULL;
 	mContext = NULL;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
@@ -120,16 +142,10 @@ int AGLInterface::Init (void)
 	GLInterface::Init();
 
 	int index;
-	CGDisplayErr error;
 	bool result;
 	NSOpenGLPixelFormat* format;
 	CGDirectDisplayID display;
-	CGLPixelFormatObj pixelFormat;
-	CGRect displayRect;
-	CGLPixelFormatAttribute fullattribs[32];
 	NSOpenGLPixelFormatAttribute windowattribs[32];
-	CFDictionaryRef displaymode,olddisplaymode;
-	long numPixelFormats,newSwapInterval;
 	
 	result = false;
 	display = CGMainDisplayID ();
@@ -137,6 +153,8 @@ int AGLInterface::Init (void)
 	mWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, mWidth, mHeight)
 				    styleMask:NSTitledWindowMask + NSClosableWindowMask + NSResizableWindowMask
 				    backing:NSBackingStoreBuffered defer:FALSE];
+	if (!mWindow)
+		goto fail;
 
 	index = 0;
 	windowattribs[index++] = NSOpenGLPFANoRecovery;
@@ -149,16 +167,24 @@ int AGLInterface::Init (void)
 
 	windowattribs[index++] = (NSOpenGLPixelFormatAttribute)NULL;
 	format = [[NSOpenGLPixelFormat alloc] initWithAttributes:windowattribs];
+	if (!format)
+		goto close_window;
 	mContext = [[NSOpenGLContext alloc] initWithFormat:format shareContext:NULL];
 	[format release];
-	
-			
+	if (!mContext)
+		goto close_window;
+
 	[mWindow center];
 	[mWindow setDelegate:[NSApp delegate]];
 	[mContext setView:[mWindow contentView]];
 	[mWindow setAcceptsMouseMovedEvents:TRUE];
+	[mWindow setIgnoresMouseEvents:NO];
 	[mWindow setIsVisible:TRUE];
 	[mWindow makeKeyAndOrderFront:nil];
+
+	NSView* view = [mWindow contentView];
+	[view addTrackingRect:[view bounds] owner:view userData:NULL assumeInside:NO];
+        [mWindow makeFirstResponder:view];
 
 	mCGLContext = (CGLContextObj) [mContext CGLContextObj];
 
@@ -180,7 +206,7 @@ int AGLInterface::Init (void)
 
 	return 0;
  close_window:
-	mView = NULL; 
+	[mWindow release];
  fail:
 	return -1;
 }
@@ -214,7 +240,12 @@ void AGLInterface::Cleanup ()
 		mCGLContext = NULL;
 	}
 
-	mView = NULL;
+	if (mWindow)
+	{
+		[mWindow setReleasedWhenClosed:TRUE];
+		[mWindow release];
+		mWindow = NULL;
+	}
 }
 
 void AGLInterface::RemapMouse(int& theX, int& theY)
@@ -262,7 +293,7 @@ bool AGLInterface::GetEvent(struct Event &event)
 	}
 
 	event.type = EVENT_NONE;
-	
+
 	nsevent = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:nil
 			 inMode:NSDefaultRunLoopMode dequeue:YES];
 	if (nsevent != nil)

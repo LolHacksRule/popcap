@@ -11,8 +11,6 @@
 #include <OpenGL/OpenGL.h>
 #include <Cocoa/Cocoa.h>
 
-@class SexyGLView;
-
 namespace Sexy
 {
 
@@ -42,8 +40,7 @@ public:
         virtual bool                            GetEvent(struct Event &event);
 
 private:
-	SexyGLView*                             mView;
-	void*                                   mWindow;
+	NSWindow*                               mWindow;
         CGLContextObj                           mCGLContext;
 	NSOpenGLContext*                        mContext;
         int                                     mAGLMajor;

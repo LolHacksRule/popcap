@@ -2716,12 +2716,11 @@ void SexyAppBase::Init()
 	if (IsScreenSaver())
 		mOnlyAllowOneCopyToRun = false;
 
-
 	// Change directory
 	if (!ChangeDirHook(mChangeDirTo.c_str()))
 		chdir(mChangeDirTo.c_str());
 
-	gPakInterface->AddPakFile("main.pak");
+        gPakInterface->AddPakFile("main.pak");
 
 	mRandSeed = GetTickCount();
 	SRand(mRandSeed);
@@ -2771,6 +2770,10 @@ void SexyAppBase::Init()
 		mSoundManager = new DummySoundManager();
 	if (mMusicInterface == NULL)
 		mMusicInterface = new MusicInterface();
+
+#ifdef __APPLE__
+	gPakInterface->AddPakFile("Contents/Resources/main.pak");
+#endif
 
 	InitHook();
 
@@ -3508,7 +3511,7 @@ DWORD SexyAppBase::GetTickCount()
 	DWORD ticks;
 
 	gettimeofday(&now, NULL);
-	ticks = now.tv_sec * 1000L + now.tv_usec;
+	ticks = now.tv_sec * 1000L + now.tv_usec / 1000;
 	return ticks;
 #endif
 }
