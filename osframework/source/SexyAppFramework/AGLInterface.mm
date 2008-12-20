@@ -7,72 +7,98 @@
 #include "Debug.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
+#include "InputManager.h"
 #include "VideoDriverFactory.h"
 
 #include <cstdio>
 
 using namespace Sexy;
 
-@interface SexyGLView : NSOpenGLView
+@interface AppDelegate : NSObject
 {
-	@public
-	AGLInterface * iface;
+	BOOL mQuit;
+	AGLInterface* mInterface;
 }
+
+- (id)initWithInterface:(AGLInterface *)aInterface;
 @end
 
-@implementation SexyGLView
+@implementation AppDelegate
 
-- (id)initWithFrame:(NSRect)theFrame
+- (id)initWithInterface:(AGLInterface *)aInterface
 {
-	NSOpenGLContext *ctx;
-	NSOpenGLPixelFormatAttribute attrs[] = {
-        NSOpenGLPFAColorSize, 24,
-        NSOpenGLPFADepthSize, 16,
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFAAccelerated,
-        0
-    };
-
-    // Create our non-FullScreen pixel format.
-    NSOpenGLPixelFormat* pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];	
-    /* Create a GL context */
-    self = [super initWithFrame:theFrame pixelFormat: pixelFormat];
-
-    return self;
+	self = [super init];
+	if (self)
+		mInterface = aInterface;;
+	return (self);
 }
 
-- (void)dealloc
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[super dealloc];
+	mQuit = FALSE;
 }
 
-- (BOOL)isOpaque
+- (void)orderFrontStandardAboutPanel:(id)sender
 {
-	return YES;
+	[NSApp orderFrontStandardAboutPanel:sender];
 }
 
-- (void)reshape
+- (void)unhideAllApplications:(id)sender
 {
-	[super reshape];
+	[NSApp unhideAllApplications:sender];
 }
 
-- (void)drawRect:(NSRect)theRect
+- (void)hide:(id)sender
 {
+	[NSApp hide:sender];
 }
 
-- (void)mouseDown:(NSEvent *)theEvent
+- (void)hideOtherApplications:(id)sender
 {
+	[NSApp hideOtherApplications:sender];
 }
 
-- (void)keyDown:(NSEvent *)theEvent
+- (void)terminate:(id)sender
 {
+	mQuit = TRUE;
+}
+
+- (void)windowDidResize:(NSNotification *)aNotification
+{
+	NSWindow*window;
+	NSRect frame;
+	
+	window = [aNotification object];
+	frame = [window frame];
+}
+
+- (BOOL)isQuit
+{
+	return (mQuit);
 }
 @end
 
 AGLInterface::AGLInterface (SexyAppBase* theApp)
 	: GLInterface (theApp)
 {
+	static bool first = false;
+
+	if (!first)
+	{
+		NSString* path;
+
+		first = true;
+
+		[[NSAutoreleasePool alloc] init];
+		[NSApplication sharedApplication];
+		[NSApp setDelegate:[[[AppDelegate alloc] initWithInterface:this] autorelease]];
+		[NSBundle loadNibNamed:@"MainMenu" owner:[NSApp delegate]];
+		[NSApp finishLaunching];
+
+		//path = [[[NSBundle mainBundle] bundlePath] stringByDeletingLastPathComponent];
+		//printf ("changing working dir to %s\n", path);
+		//chdir([path cString]);
+	}
 	mView = NULL;
 	mContext = NULL;
 	mWidth = mApp->mWidth;
@@ -93,11 +119,55 @@ int AGLInterface::Init (void)
 
 	GLInterface::Init();
 
-	NSRect rect = NSMakeRect(0, 0, mWidth, mHeight);
+	int index;
+	CGDisplayErr error;
+	bool result;
+	NSOpenGLPixelFormat* format;
+	CGDirectDisplayID display;
+	CGLPixelFormatObj pixelFormat;
+	CGRect displayRect;
+	CGLPixelFormatAttribute fullattribs[32];
+	NSOpenGLPixelFormatAttribute windowattribs[32];
+	CFDictionaryRef displaymode,olddisplaymode;
+	long numPixelFormats,newSwapInterval;
 	
-	mView = [[SexyGLView alloc] initWithFrame:rect];
-	mView->iface = this;
-	mContext = [mView openGLContext];
+	result = false;
+	display = CGMainDisplayID ();
+
+	mWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, mWidth, mHeight)
+				    styleMask:NSTitledWindowMask + NSClosableWindowMask + NSResizableWindowMask
+				    backing:NSBackingStoreBuffered defer:FALSE];
+
+	index = 0;
+	windowattribs[index++] = NSOpenGLPFANoRecovery;
+	windowattribs[index++] = NSOpenGLPFADoubleBuffer;
+	windowattribs[index++] = NSOpenGLPFAAccelerated;
+	windowattribs[index++] = NSOpenGLPFADepthSize;
+	windowattribs[index++] = (NSOpenGLPixelFormatAttribute)16;
+	windowattribs[index++] = NSOpenGLPFAColorSize;
+	windowattribs[index++] = (NSOpenGLPixelFormatAttribute)32;
+
+	windowattribs[index++] = (NSOpenGLPixelFormatAttribute)NULL;
+	format = [[NSOpenGLPixelFormat alloc] initWithAttributes:windowattribs];
+	mContext = [[NSOpenGLContext alloc] initWithFormat:format shareContext:NULL];
+	[format release];
+	
+			
+	[mWindow center];
+	[mWindow setDelegate:[NSApp delegate]];
+	[mContext setView:[mWindow contentView]];
+	[mWindow setAcceptsMouseMovedEvents:TRUE];
+	[mWindow setIsVisible:TRUE];
+	[mWindow makeKeyAndOrderFront:nil];
+
+	mCGLContext = (CGLContextObj) [mContext CGLContextObj];
+
+	[mWindow setTitle:[NSString stringWithCString:mApp->mTitle.c_str()
+				    length:mApp->mTitle.length()]];
+
+
+	CGLSetCurrentContext (mCGLContext);
+	
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	InitGL ();
 
@@ -127,12 +197,23 @@ void AGLInterface::Cleanup ()
 		delete mScreenImage;
 	mScreenImage = NULL;
 
-	//if (mContext)
-	//	[mContext clearDrawable];
+	if (mWindow)
+		[mWindow setIsVisible:FALSE];
+	if (mContext)
+	{
+		[mContext clearDrawable];
+		[mContext release];
+	}
 	mContext = NULL;
 
-	if (mView)
-		[mView dealloc];
+	if (mCGLContext)
+	{
+		CGLSetCurrentContext (NULL);
+		CGLClearDrawable (mCGLContext);
+		CGLDestroyContext (mCGLContext);
+		mCGLContext = NULL;
+	}
+
 	mView = NULL;
 }
 
@@ -172,7 +253,101 @@ bool AGLInterface::HasEvent()
 
 bool AGLInterface::GetEvent(struct Event &event)
 {
-	return false;
+	NSEvent* nsevent;
+	
+	if ([[NSApp delegate] isQuit])
+	{
+		event.type = EVENT_QUIT;
+		mApp->mInputManager->PushEvent (event);
+	}
+
+	event.type = EVENT_NONE;
+	
+	nsevent = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:nil
+			 inMode:NSDefaultRunLoopMode dequeue:YES];
+	if (nsevent != nil)
+	{
+		switch ([nsevent type])
+		{
+		case NSKeyDown:
+			if ([nsevent modifierFlags] & NSCommandKeyMask)
+				[NSApp sendEvent:nsevent];
+			break;
+			
+		case NSKeyUp:
+			if ([nsevent modifierFlags] & NSCommandKeyMask)
+                                [NSApp sendEvent:nsevent];
+			break;
+
+		case NSLeftMouseDown:
+			event.type = EVENT_MOUSE_BUTTON_PRESS;
+			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
+			event.button = 1;
+                        event.x = int([nsevent locationInWindow].x);
+                        event.y = mHeight - int([nsevent locationInWindow].y);
+                        [NSApp sendEvent:nsevent];
+			break;
+
+		case NSLeftMouseUp:
+                        event.type = EVENT_MOUSE_BUTTON_RELEASE;
+                        event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
+                        event.button = 1;
+                        event.x = int([nsevent locationInWindow].x);
+                        event.y = mHeight - int([nsevent locationInWindow].y);
+                        [NSApp sendEvent:nsevent];
+			break;
+
+                case NSRightMouseDown:
+			event.type = EVENT_MOUSE_BUTTON_PRESS;
+                        event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
+                        event.button = 2;
+                        event.x = int([nsevent locationInWindow].x);
+			event.y = mHeight - int([nsevent locationInWindow].y);
+			[NSApp sendEvent:nsevent];
+			break;
+
+		case NSRightMouseUp:
+                        event.type = EVENT_MOUSE_BUTTON_RELEASE;
+                        event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
+                        event.button = 2;
+                        event.x = int([nsevent locationInWindow].x);
+                        event.y = mHeight - int([nsevent locationInWindow].y);
+                        [NSApp sendEvent:nsevent];
+                        break;
+
+		case NSMouseMoved:
+			event.type = EVENT_MOUSE_MOTION;
+			event.flags = EVENT_FLAGS_AXIS;
+			event.x = int([nsevent locationInWindow].x);
+			event.y = mHeight - int([nsevent locationInWindow].y);
+			[NSApp sendEvent:nsevent];
+			break;
+
+		case NSScrollWheel:
+			break;
+
+		case NSMouseEntered:
+			event.type = EVENT_ACTIVE;
+			event.flags = 0;
+			event.active = true;
+			break;
+
+		case NSMouseExited:
+			event.type = EVENT_ACTIVE;
+			event.flags = 0;
+			event.active = true;
+                        break;
+
+		default:
+			[NSApp sendEvent:nsevent];
+			break;
+		}
+	}
+
+	if (event.type == EVENT_NONE)
+		return false;
+
+	return true;
 }
 
 void AGLInterface::SwapBuffers()

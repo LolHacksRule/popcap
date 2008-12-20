@@ -3508,8 +3508,7 @@ DWORD SexyAppBase::GetTickCount()
 	DWORD ticks;
 
 	gettimeofday(&now, NULL);
-	ticks = now.tv_sec * 1000L +
-	  now.tv_usec;
+	ticks = now.tv_sec * 1000L + now.tv_usec;
 	return ticks;
 #endif
 }

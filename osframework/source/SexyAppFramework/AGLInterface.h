@@ -8,6 +8,7 @@
 #include "Ratio.h"
 
 #include <OpenGL/gl.h>
+#include <OpenGL/OpenGL.h>
 #include <Cocoa/Cocoa.h>
 
 @class SexyGLView;
@@ -42,9 +43,13 @@ public:
 
 private:
 	SexyGLView*                             mView;
-        NSOpenGLContext*                        mContext;
+	void*                                   mWindow;
+        CGLContextObj                           mCGLContext;
+	NSOpenGLContext*                        mContext;
         int                                     mAGLMajor;
         int                                     mAGLMinor;
+
+	std::map<int, int>                      mKeyMap;
 };
 
 }
