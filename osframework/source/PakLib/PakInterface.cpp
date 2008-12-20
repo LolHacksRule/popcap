@@ -27,6 +27,8 @@ enum
 	FILEFLAGS_END = 0x80
 };
 
+
+static void FixFileName(const char* theFileName, char* theUpperName);
 PakInterface* gPakInterface = new PakInterface();
 
 static PakInterfaceBase* gPakInterfaceP = 0;
@@ -112,7 +114,11 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 	aPakCollection->mMappingHandle = (PakHandle)aFileMapping;
 	aPakCollection->mDataPtr = aFileMapping;
 #endif
-	PakRecordMap::iterator aRecordItr = mPakRecordMap.insert(PakRecordMap::value_type(StringToUpper(theFileName), PakRecord())).first;
+	char anUpperName[1024];
+	FixFileName(theFileName.c_str(), anUpperName);
+	PakRecordMap::iterator aRecordItr =
+		mPakRecordMap.insert(PakRecordMap::value_type(std::string(anUpperName),
+							      PakRecord())).first;
 	PakRecord* aPakRecord = &(aRecordItr->second);
 	aPakRecord->mCollection = aPakCollection;
 	aPakRecord->mFileName = theFileName;
@@ -189,10 +195,10 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 
 static void FixFileName(const char* theFileName, char* theUpperName)
 {
-	if ((theFileName[0] != 0) && (theFileName[1] == ':'))
+	if ((isalpha(theFileName[0] != 0)) && (theFileName[1] == ':'))
 	{
-		char aDir[256];
-		getcwd(aDir, 256);
+		char aDir[1024];
+		getcwd(aDir, 1024);
 		int aLen = strlen(aDir);
 		aDir[aLen++] = '\\';
 		aDir[aLen] = 0;
@@ -237,7 +243,7 @@ PFILE* PakInterface::FOpen(const char* theFileName, const char* anAccess)
 {
 	if ((stricmp(anAccess, "r") == 0) || (stricmp(anAccess, "rb") == 0) || (stricmp(anAccess, "rt") == 0))
 	{
-		char anUpperName[256];
+		char anUpperName[1024];
 		FixFileName(theFileName, anUpperName);
 
 		PakRecordMap::iterator anItr = mPakRecordMap.find(anUpperName);
@@ -525,7 +531,7 @@ PakHandle PakInterface::FindFirstFile(PakFileNamePtr lpFileName, PakFindDataPtr 
 #ifdef WIN32
 	PFindData* aFindData = new PFindData;
 
-	char anUpperName[256];
+	char anUpperName[1024];
 	FixFileName(lpFileName, anUpperName);
 	aFindData->mFindCriteria = anUpperName;
 	aFindData->mWHandle = INVALID_HANDLE_VALUE;
