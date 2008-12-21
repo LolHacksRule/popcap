@@ -371,6 +371,8 @@ void AudiereMusicInterface::Update()
 
 		++anItr;
 	}
-	mDevice->update();
+
+	if (mDevice)
+	  mDevice->update();
 }
 
