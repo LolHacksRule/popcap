@@ -8,6 +8,7 @@ def AddOptions(opts):
     from SCons.Variables.BoolVariable import BoolVariable
     if 'debug' in opts.keys ():
         return
+    opts.Add('config', 'configuration used to build the framework', '')
     opts.Add(BoolVariable ('debug', 'build debug version', 'False'))
     opts.Add(BoolVariable ('release', 'build release version', 'False'))
     opts.Add(BoolVariable ('builddir', 'output to an alternative directory', 'False'))
