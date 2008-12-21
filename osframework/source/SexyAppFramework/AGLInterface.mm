@@ -67,7 +67,7 @@ using namespace Sexy;
 {
 	NSWindow*window;
 	NSRect frame;
-	
+
 	window = [aNotification object];
 	frame = [window frame];
 }
@@ -89,7 +89,6 @@ using namespace Sexy;
 
 - (void)MouseMoved:(NSEvent *)event
 {
-	printf ("mouse moved\n");
 }
 
 - (void)windowWillClose:(NSNotification *)aNotification
@@ -115,10 +114,8 @@ AGLInterface::AGLInterface (SexyAppBase* theApp)
 		[NSBundle loadNibNamed:@"MainMenu" owner:[NSApp delegate]];
 		[NSApp finishLaunching];
 
-		path = [[NSBundle mainBundle] bundlePath]; // stringByDeletingLastPathComponent];
-		printf ("changing working dir to %s, %s\n", [path UTF8String], getcwd(NULL, 0));
+		path = [[NSBundle mainBundle] bundlePath];
 		chdir([path UTF8String]);
-                printf ("working dir changed to %s\n", getcwd(NULL, 0));
 		NSLog (path);
 	}
 	mWindow = NULL;
@@ -146,12 +143,13 @@ int AGLInterface::Init (void)
 	NSOpenGLPixelFormat* format;
 	CGDirectDisplayID display;
 	NSOpenGLPixelFormatAttribute windowattribs[32];
-	
+
 	result = false;
 	display = CGMainDisplayID ();
 
 	mWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, mWidth, mHeight)
-				    styleMask:NSTitledWindowMask + NSClosableWindowMask + NSResizableWindowMask
+				    styleMask:NSTitledWindowMask + NSClosableWindowMask +
+				    NSResizableWindowMask
 				    backing:NSBackingStoreBuffered defer:FALSE];
 	if (!mWindow)
 		goto fail;
@@ -169,7 +167,8 @@ int AGLInterface::Init (void)
 	format = [[NSOpenGLPixelFormat alloc] initWithAttributes:windowattribs];
 	if (!format)
 		goto close_window;
-	mContext = [[NSOpenGLContext alloc] initWithFormat:format shareContext:NULL];
+	mContext = [[NSOpenGLContext alloc] initWithFormat:format
+					    shareContext:NULL];
 	[format release];
 	if (!mContext)
 		goto close_window;
@@ -183,7 +182,8 @@ int AGLInterface::Init (void)
 	[mWindow makeKeyAndOrderFront:nil];
 
 	NSView* view = [mWindow contentView];
-	[view addTrackingRect:[view bounds] owner:view userData:NULL assumeInside:NO];
+	[view addTrackingRect:[view bounds] owner:view userData:NULL
+	      assumeInside:NO];
         [mWindow makeFirstResponder:view];
 
 	mCGLContext = (CGLContextObj) [mContext CGLContextObj];
@@ -193,13 +193,11 @@ int AGLInterface::Init (void)
 
 
 	CGLSetCurrentContext (mCGLContext);
-	
+
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	InitGL ();
 
-	mScreenImage->mFlags =
-		(ImageFlags)(IMAGE_FLAGS_DOUBLE_BUFFER |
-			     IMAGE_FLAGS_FLIP_AS_COPY);
+	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
 
 	mInitCount++;
 	mInitialized = true;
@@ -285,7 +283,7 @@ bool AGLInterface::HasEvent()
 bool AGLInterface::GetEvent(struct Event &event)
 {
 	NSEvent* nsevent;
-	
+
 	if ([[NSApp delegate] isQuit])
 	{
 		event.type = EVENT_QUIT;
@@ -304,7 +302,7 @@ bool AGLInterface::GetEvent(struct Event &event)
 			if ([nsevent modifierFlags] & NSCommandKeyMask)
 				[NSApp sendEvent:nsevent];
 			break;
-			
+
 		case NSKeyUp:
 			if ([nsevent modifierFlags] & NSCommandKeyMask)
                                 [NSApp sendEvent:nsevent];
