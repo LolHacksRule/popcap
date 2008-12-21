@@ -155,10 +155,22 @@ if 'WIN32' in env['CPPDEFINES']:
              'timer_win32.cpp', 'threads_win32.cpp']
     srcs += [ 'device_ds_buffer.cpp', 'device_ds_stream.cpp',
               'device_ds.cpp', 'dxguid.cpp' ]
-else:
+elif 'linux' in env['config']:
     env.AppendUnique (CPPDEFINES = ['HAVE_ALSA'],
                       LIBS = ['asound'])
     srcs += ['device_alsa.cpp', 'midi_null.cpp', 'cd_null.cpp',
+             'timer_posix.cpp', 'threads_posix.cpp']
+elif 'darwin' in env['config']:
+    env.AppendUnique (CPPDEFINES = ['HAVE_CORE_AUDIO'],
+                      LINKFLAGS = [('-framework', 'CoreAudio'),
+                                   ('-framework', 'Cocoa'),
+                                   ('-framework', 'AudioUnit'),
+                                   ('-framework', 'AudioToolbox')],
+                      CCFLAGS = [('-framework', 'CoreAudio')])
+    srcs += ['device_coreaudio.cpp', 'midi_null.cpp', 'cd_null.cpp',
+             'timer_posix.cpp', 'threads_posix.cpp']
+else:
+    srcs += ['midi_null.cpp', 'cd_null.cpp',
              'timer_posix.cpp', 'threads_posix.cpp']
 
 sources = map(lambda f:os.path.join (audiere_dir, 'src', f), srcs)
