@@ -19,7 +19,7 @@ PosixModuleLoader::~PosixModuleLoader ()
 #endif
 
 #ifdef __APPLE__
-#define MODULE_SUFFIX ".dyld"
+#define MODULE_SUFFIX ".dylib"
 #else
 #define MODULE_SUFFIX ".so"
 #endif
