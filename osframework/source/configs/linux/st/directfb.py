@@ -21,3 +21,7 @@ def Configure (env):
     directfb = {}
     directfb['ENABLE'] = EnableDirecFB
     env.AppendUnique (DIRECTFB = directfb)
+
+    configs.linux.LinuxInputConfigure (env)
+    configs.linux.UdpInputConfigure (env)
+
