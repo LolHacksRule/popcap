@@ -43,18 +43,6 @@ public:
 	Ratio					mDisplayAspect;
 
 	Rect					mPresentationRect;
-	int					mFullscreenBits;
-	DWORD					mRefreshRate;
-	DWORD					mMillisecondsPerFrame;
-	int					mScanLineFailCount;
-
-	int*					mRedAddTable;
-	int*					mGreenAddTable;
-	int*					mBlueAddTable;
-
-	uint32					mRedConvTable[256];
-	uint32					mGreenConvTable[256];
-	uint32					mBlueConvTable[256];
 
 	bool					mInitialized;
 	bool					mIsWindowed;
@@ -62,19 +50,6 @@ public:
 	DFBImageSet				mImageSet;
 	bool					mVideoOnlyDraw;
 	ulong					mInitCount;
-
-	int						mCursorWidth;
-	int						mCursorHeight;
-	int						mNextCursorX;
-	int						mNextCursorY;
-	int						mCursorX;
-	int						mCursorY;
-	IDirectFBSurface*			mCursorImage;
-	int					mCursorHotX;
-	int					mCursorHotY;
-	bool					mHasOldCursorArea;
-	DFBImage*				mOldCursorAreaImage;
-	DFBImage*				mNewCursorAreaImage;
 
 	std::string				mErrorString;
 
@@ -101,6 +76,8 @@ public:
 	virtual bool				EnableCursor(bool enable);
 	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
 	virtual void				SetCursorPos(int theCursorX, int theCursorY);
+        virtual bool                            UpdateCursor(int theCursorX, int theCursorY);
+        virtual bool                            DrawCursor(Graphics* g);
 
 	virtual Image*				CreateImage(SexyAppBase * theApp,
 							    int width, int height);
@@ -115,6 +92,16 @@ public:
 	IDirectFBEventBuffer		      * mBuffer;
 	int					mMouseX;
 	int					mMouseY;
+        int                                     mCursorX;
+        int                                     mCursorY;
+        int                                     mCursorOldX;
+        int                                     mCursorOldY;
+        int                                     mCursorHotX;
+        int                                     mCursorHotY;
+        bool                                    mCursorEnabled;
+        bool                                    mSoftCursor;
+        DFBImage*                               mCursorImage;
+        IDirectFBSurface                      * mDFBCursorImage;
 
 	IDirectFBDisplayLayer		      * mLayer;
 	IDirectFBWindow			      * mWindow;

@@ -18,47 +18,29 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 	mApp = theApp;
 	mDFB = NULL;
 	mScreenImage = NULL;
-	mRedAddTable = NULL;
-	mGreenAddTable = NULL;
-	mBlueAddTable = NULL;
 	mInitialized = false;
 	mVideoOnlyDraw = false;
-	mScanLineFailCount = 0;
 
-	//TODO: Standards, anyone?
-	mNextCursorX = 0;
-	mNextCursorY = 0;
-	mCursorX = 0;
-	mCursorY = 0;
 	mInRedraw = false;
-	//mCursorWidth = 54;
-	//mCursorHeight = 54;
-	mCursorWidth = 64;
-	mCursorHeight = 64;
-	mHasOldCursorArea = false;
-	mNewCursorAreaImage = NULL;
-	mOldCursorAreaImage = NULL;
 	mInitCount = 0;
-	mRefreshRate = 60;
-	mMillisecondsPerFrame = 1000 / mRefreshRate;
 
 	mInput = NULL;
 	mBuffer = NULL;
 	mMouseX = 0;
 	mMouseY = 0;
+	mCursorX = 0;
+	mCursorY = 0;
+	mCursorOldX = 0;
+	mCursorOldY = 0;
+	mCursorHotX = 0;
+	mCursorHotY = 0;
 	mLayer = NULL;
 	mWindow = NULL;
 	mCursorImage = NULL;
-	mCursorHotX = 0;
-	mCursorHotY = 0;
 }
 
 DFBInterface::~DFBInterface()
 {
-	delete [] mRedAddTable;
-	delete [] mGreenAddTable;
-	delete [] mBlueAddTable;
-
 	Cleanup();
 
 	if (mDFB)
@@ -97,6 +79,7 @@ int DFBInterface::Init(void)
 	DFBDisplayLayerConfig layer_config;
 	mLayer->GetConfiguration (mLayer, &layer_config);
 
+#if 0
 	layer_config.flags = (DFBDisplayLayerConfigFlags)
 		(DLCONF_BUFFERMODE | DLCONF_OPTIONS);
 	layer_config.buffermode = DLBM_BACKVIDEO;
@@ -104,6 +87,7 @@ int DFBInterface::Init(void)
 
 	ret = mLayer->SetConfiguration (mLayer, &layer_config);
 	/* DBG_ASSERT (ret == DFB_OK); */
+#endif
 
 	DFBDisplayLayerDescription layer_desc;
 	mLayer->GetDescription (mLayer, &layer_desc);
@@ -117,7 +101,7 @@ int DFBInterface::Init(void)
 
 	IDirectFBSurface * surface = 0;
 
-#if !defined(SEXY_INTEL_CANMORE) && !defined(SEXY_INTEL_OLO)
+#if !defined(SEXY_INTEL_CANMORE) && !defined(SEXY_INTEL_OLO) && !defined(SEXY_ST_SH4)
 	DFBWindowDescription window_desc;
 
 	window_desc.flags =
@@ -137,6 +121,10 @@ int DFBInterface::Init(void)
 
 	ret = mWindow->GetSurface (mWindow, &surface);
 	DBG_ASSERT (ret == DFB_OK);
+
+#else
+	mLayer->EnableCursor (mLayer, DFB_FALSE);
+	mSoftCursor = true;
 #endif
 
 	DFBSurfaceDescription surface_desc;
@@ -159,7 +147,11 @@ int DFBInterface::Init(void)
 	DBG_ASSERT(surface != NULL);
 #endif
 	surface->GetSize (surface, &width, &height);
-	//surface->Clear (surface, 0, 0, 0, 0);
+	surface->Clear (surface, 0, 0, 0, 0);
+	surface->Flip (surface, 0,
+		       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
+	surface->Clear (surface, 0, 0, 0, 0);
+
 	mPrimarySurface = surface;
 	mWidth = width;
 	mHeight = height;
@@ -167,9 +159,8 @@ int DFBInterface::Init(void)
 	mApp->mHeight = height;
 
 	mScreenImage = new DFBImage(surface, this);
-	mScreenImage->mFlags =
-		(ImageFlags)(IMAGE_FLAGS_DOUBLE_BUFFER |
-			     IMAGE_FLAGS_FLIP_AS_COPY);
+	mScreenImage->mFlags = (ImageFlags)IMAGE_FLAGS_DOUBLE_BUFFER;
+
 #if 0
 	DFBInputDeviceID id = (DFBInputDeviceID)0xffffffff;
 	ret = mDFB->GetInputDevice (mDFB, id, &mInput);
@@ -199,11 +190,6 @@ void DFBInterface::SetVideoOnlyDraw(bool videoOnlyDraw)
 
 void DFBInterface::RemapMouse(int& theX, int& theY)
 {
-	if (mInitialized)
-	{
-		theX = ( theX - mPresentationRect.mX ) * mWidth / mPresentationRect.mWidth;
-		theY = ( theY - mPresentationRect.mY ) * mHeight / mPresentationRect.mHeight;
-	}
 }
 
 ulong DFBInterface::GetColorRef(ulong theRGB)
@@ -213,15 +199,11 @@ ulong DFBInterface::GetColorRef(ulong theRGB)
 
 void DFBInterface::AddImage(Image* theImage)
 {
-	//AutoCrit anAutoCrit(mCritSect);
-
 	mImageSet.insert((DFBImage*)theImage);
 }
 
 void DFBInterface::RemoveImage(Image* theImage)
 {
-	//AutoCrit anAutoCrit(mCritSect);
-
 	DFBImageSet::iterator anItr = mImageSet.find((DFBImage*)theImage);
 	if (anItr != mImageSet.end())
 		mImageSet.erase(anItr);
@@ -243,8 +225,9 @@ void DFBInterface::Cleanup()
 	if (mBuffer)
 		mBuffer->Release(mBuffer);
 
-	if (mCursorImage)
-		mCursorImage->Release(mCursorImage);
+	if (mDFBCursorImage)
+		mDFBCursorImage->Release(mDFBCursorImage);
+	mDFBCursorImage = 0;
 	mCursorImage = NULL;
 
 	if (mScreenImage != NULL)
@@ -263,6 +246,13 @@ void DFBInterface::Cleanup()
 	if (mLayer)
 		mLayer->Release (mLayer);
 	mLayer = NULL;
+
+	mCursorX = 0;
+	mCursorY = 0;
+	mCursorOldX = 0;
+	mCursorOldY = 0;
+	mCursorHotX = 0;
+	mCursorHotY = 0;
 }
 
 bool DFBInterface::Redraw(Rect* theClipRect)
@@ -281,15 +271,19 @@ bool DFBInterface::Redraw(Rect* theClipRect)
 
 bool DFBInterface::EnableCursor(bool enable)
 {
+	mCursorEnabled = enable;
 	if (mWindow)
 	{
 		mWindow->SetCursorShape (mWindow, NULL, 0, 0);
 		return true;
 	}
-	else if (mLayer)
+	else
 	{
-		mLayer->EnableCursor (mLayer, enable);
-		return true;
+		if (!mSoftCursor && mLayer)
+		{
+			mLayer->EnableCursor (mLayer, enable);
+			return true;
+		}
 	}
 
 	return false;
@@ -299,20 +293,22 @@ bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
 	AutoCrit anAutoCrit(mCritSect);
 
-	if (mCursorImage)
-		mCursorImage->Release(mCursorImage);
+	if (mDFBCursorImage)
+		mDFBCursorImage->Release(mDFBCursorImage);
+	mDFBCursorImage = NULL;
 	mCursorImage = NULL;
 
 	DFBImage * anImage = dynamic_cast<DFBImage*>(theImage);
 	if (anImage)
-		mCursorImage = anImage->EnsureSurface();
-	if (mCursorImage)
-		mCursorImage->AddRef(mCursorImage);
+		mDFBCursorImage = anImage->EnsureSurface();
+	if (mDFBCursorImage)
+		mDFBCursorImage->AddRef(mDFBCursorImage);
+	mCursorImage = anImage;
 	mCursorHotX = theHotX;
 	mCursorHotY = theHotY;
 
 	if (mWindow)
-		mWindow->SetCursorShape (mWindow, mCursorImage,
+		mWindow->SetCursorShape (mWindow, mDFBCursorImage,
 					 mCursorHotX, mCursorHotY);
 
 	return true;
@@ -320,15 +316,36 @@ bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 
 void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
-	mNextCursorX = theCursorX;
-	mNextCursorY = theCursorY;
-
 	AutoCrit anAutoCrit(mCritSect);
 
 	mCursorX = theCursorX;
 	mCursorY = theCursorY;
-	if (mLayer)
+	if (!mSoftCursor && mLayer)
 		mLayer->WarpCursor (mLayer, mCursorX, mCursorY);
+}
+
+bool DFBInterface::UpdateCursor(int theCursorX, int theCursorY)
+{
+	SetCursorPos (theCursorX, theCursorY);
+	if (mSoftCursor && mCursorImage &&
+	    (mCursorOldX != mCursorX || mCursorOldY != mCursorY))
+		return true;
+	return false;
+}
+
+bool DFBInterface::DrawCursor(Graphics* g)
+{
+	if (!mCursorImage)
+		return false;
+
+	if (mSoftCursor)
+		g->DrawImage (mCursorImage,
+			      mCursorX - mCursorHotX,
+			      mCursorY - mCursorHotY);
+
+	mCursorOldX = mCursorX;
+	mCursorOldY = mCursorY;
+	return true;
 }
 
 IDirectFBSurface* DFBInterface::CreateDFBSurface(int width, int height)
