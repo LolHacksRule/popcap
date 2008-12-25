@@ -37,6 +37,7 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 	mLayer = NULL;
 	mWindow = NULL;
 	mCursorImage = NULL;
+	mSoftCursor = false;
 }
 
 DFBInterface::~DFBInterface()
@@ -97,7 +98,6 @@ int DFBInterface::Init(void)
 
 	ret = mLayer->SetCooperativeLevel (mLayer, DLSCL_ADMINISTRATIVE);
 	DBG_ASSERT (ret == DFB_OK);
-	//ret = mLayer->EnableCursor (mLayer, 1);
 
 	IDirectFBSurface * surface = 0;
 
@@ -253,6 +253,7 @@ void DFBInterface::Cleanup()
 	mCursorOldY = 0;
 	mCursorHotX = 0;
 	mCursorHotY = 0;
+	mSoftCursor = false;
 }
 
 bool DFBInterface::Redraw(Rect* theClipRect)
