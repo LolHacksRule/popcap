@@ -10,7 +10,7 @@ def AddOptions (opts):
 
 def EnableCEGLES (env):
     env.PrependUnique (CPPDEFINES = ['SEXY_OPENGLES'],
-                       LIBS = ['GLES_CM', 'IMGegl', 'srv_um', 'gdl', 'osal'])
+                       LIBS = ['GLES_CM', 'EGL', 'IMGegl', 'srv_um', 'gdl', 'osal'])
 
 def Configure (env):
     configs.linux.canmore.Configure (env)
