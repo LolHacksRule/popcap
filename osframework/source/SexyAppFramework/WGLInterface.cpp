@@ -109,6 +109,14 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
 		break;
+	case WM_KILLFOCUS:
+		event.type = EVENT_ACTIVE;
+		event.active = false;
+		break;
+	case WM_SETFOCUS:
+		event.type = EVENT_ACTIVE;
+		event.active = true;
+		break;
 	default:
 		ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
 		break;
