@@ -1,7 +1,12 @@
+#include "Common.h"
 #include "ModuleManager.h"
 
 #if defined(SEXY_POSIX_MODULE_LOADER)
 #include "PosixModuleLoader.h"
+#endif
+
+#if defined(SEXY_WIN32_MODULE_LOADER)
+#include "Win32ModuleLoader.h"
 #endif
 
 using namespace Sexy;
@@ -10,6 +15,8 @@ ModuleManager::ModuleManager ()
 {
 #if defined(SEXY_POSIX_MODULE_LOADER)
 	mLoader = new PosixModuleLoader ();
+#elif defined(SEXY_WIN32_MODULE_LOADER)
+	mLoader = new Win32ModuleLoader ();
 #else
 	mLoader = 0;
 #endif

@@ -36,3 +36,4 @@ def Configure(env):
                      CXXFLAGS = ['-g', '-Wall'],
                      LINKFLAGS = ['-g', '-fno-unit-at-a-time'],
                      LIBS = ['stdc++', 'm'])
+    configs.Win32ModuleLoaderConfigure (env)

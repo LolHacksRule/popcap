@@ -27,10 +27,22 @@ def EnablePosixModuleLoader (env):
     env.AppendUnique (LIBS = ['dl'])
 
 def PosixModuleLoaderConfigure (env):
-    env.AppendUnique (LOADERS = ['POSIXMODULELOADER'])
+    env.AppendUnique (LOADERS = ['POSIX_MODULE_LOADER'])
     dl_loader = {}
     dl_loader['ENABLE'] = EnablePosixModuleLoader
-    env.AppendUnique (POSIXMODULELOADER = dl_loader)
+    env.AppendUnique (POSIX_MODULE_LOADER = dl_loader)
+
+def Win32ModuleLoaderAddOptions (opts):
+    pass
+
+def EnableWin32ModuleLoader (env):
+    env.AppendUnique (LIBS = ['dl'])
+
+def Win32ModuleLoaderConfigure (env):
+    env.AppendUnique (LOADERS = ['WIN32_MODULE_LOADER'])
+    dl_loader = {}
+    dl_loader['ENABLE'] = EnableWin32ModuleLoader
+    env.AppendUnique (WIN32_MODULE_LOADER = dl_loader)
 
 def AudiereSoundAddOptions (opts):
     from SCons.Variables.PathVariable import PathVariable

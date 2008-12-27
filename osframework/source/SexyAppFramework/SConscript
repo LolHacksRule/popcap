@@ -84,10 +84,15 @@ if 'AUDIERESOUND' in env['DRIVERS']:
     env['AUDIERESOUND']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_AUDIERE_SOUND_DRIVER'])
 
-if 'POSIXMODULELOADER' in env['LOADERS']:
+if 'POSIX_MODULE_LOADER' in env['LOADERS']:
     srcs += ["PosixModuleLoader.cpp"]
-    env['POSIXMODULELOADER']['ENABLE'](env)
+    env['POSIX_MODULE_LOADER']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_POSIX_MODULE_LOADER'])
+
+if 'WIN32_MODULE_LOADER' in env['LOADERS']:
+    srcs += ["Win32ModuleLoader.cpp"]
+    env['WIN32_MODULE_LOADER']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_WIN32_MODULE_LOADER'])
 
 #c module input driver
 srcs += ['ModuleInputDriver.cpp']
