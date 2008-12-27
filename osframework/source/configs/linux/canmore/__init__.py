@@ -21,22 +21,23 @@ def Configure (env):
     if 'i686-cm-linux-gcc' in env['CC']:
         return
     configs.linux.Configure (env)
-    if env.has_key ('pdk_path'):
-        pdkroot = env ['pdk_path']
+    if env.has_key ('pdk_path') and env['pdk_path']:
+        pdkroot = os.path.expanduser (env ['pdk_path'])
     else:
         if os.path.exists ('/opt/Intel-Canmore'):
             pdkroot = '/opt/Intel-Canmore'
         else:
             home = os.path.expanduser ("~")
             pdkroot = None
-            for version in ('1.1066', '1.1050', '1.586'):
+            for version in ('1.1078', '1.1073', '1.1066',
+                            '1.1050', '1.586'):
                 pdkroot = os.path.join (home, 'Canmore-' + version)
-                if os.path.exists ('/opt/Intel-Canmore'):
+                if os.path.exists (pdkroot):
                     break;
     if not pdkroot:
-        print "pdk path isn't found."
-        Exit (-1)
-    pdkroot = os.path.expanduser (pdkroot)
+        print "PDK for Canmore not found, please set the pak_path " \
+              "to an appropriate path."
+        return
     prefix = os.path.join (pdkroot, 'i686-linux-elf')
     tcdir = os.path.join (prefix, 'bin')
     env['prefix'] = prefix
