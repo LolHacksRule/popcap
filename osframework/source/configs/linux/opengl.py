@@ -6,6 +6,7 @@ import configs
 
 def AddOptions (opts):
     configs.linux.AddOptions (opts)
+    configs.AudiereSoundAddOptions (opts)
 
 def EnableGLX(env):
     env.PrependUnique (LIBS = ['GL', 'X11'])
