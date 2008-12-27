@@ -34,19 +34,15 @@ def PosixModuleLoaderConfigure (env):
 
 def AudiereSoundAddOptions (opts):
     from SCons.Variables.PathVariable import PathVariable
-    if 'audieredir' in opts.keys ():
+    if 'audiere_ccflags' in opts.keys ():
         return
-    opts.Add(PathVariable ('audieredir', "where the root of audiere is installed.",
-                           '', PathVariable.PathAccept))
-    opts.Add(PathVariable ('audiere_includes', "where the audiere includes are installed.",
-                           os.path.join ('$audieredir', 'include'),
-                           PathVariable.PathAccept))
-    opts.Add(PathVariable ('audiere_libraries', "where the audiere library is installed.",
-                           os.path.join ('$audieredir', 'lib'),
-                           PathVariable.PathAccept))
+    opts.Add ('audiere_ccflags', "c/c++ compiler flags for audiere.", '')
+    opts.Add ('audiere_ldflags', "link flags for audiere", '')
 
 def EnableAudiereSound (env):
     env.AppendUnique (LIBS = ['audiere']);
+    env.AppendUnique (CCFLAGS = env['audiere_ccflags'].split(','),
+                      LINKFLAGS = env['audiere_ldflags'].split(','))
 
 def AudiereSoundConfigure(env):
     env.AppendUnique (DRIVERS = ['AUDIERESOUND'])
@@ -54,6 +50,3 @@ def AudiereSoundConfigure(env):
     audiere_sound['ENABLE'] = EnableAudiereSound
     env.AppendUnique (AUDIERESOUND = audiere_sound)
 
-    if env.has_key ('audieredir') and env['audieredir']:
-        env.AppendUnqiue (CPPPATH = ['$audiere_includes'],
-                          LIBPATH = ['$audiere_libraries'])
