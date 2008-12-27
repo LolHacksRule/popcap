@@ -11,6 +11,7 @@
 #include "NativeDisplay.h"
 #include "SharedImage.h"
 #include "Ratio.h"
+#include "SexyTimer.h"
 
 namespace ImageLib
 {
@@ -592,8 +593,6 @@ public:
 	void					ClearUpdateBacklog(bool relaxForASecond = false);
 	bool					IsScreenSaver();
 	virtual bool				AppCanRestore();
-
-        static DWORD                            GetTickCount();
 };
 
 extern SexyAppBase* gSexyAppBase;

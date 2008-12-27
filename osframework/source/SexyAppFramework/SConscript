@@ -22,7 +22,7 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "WidgetManager.cpp", "XMLParser.cpp", 'DriverFactory.cpp',
         'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
-        'ModuleLoader.cpp', 'ModuleManager.cpp']
+        'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp']
 
 #dummy sound manager
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
