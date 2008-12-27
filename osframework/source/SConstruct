@@ -45,7 +45,7 @@ def createConvenienceLibBuilder (env):
 
     return convenience_lib
 
-opts = Options ('Config.py')
+opts = Variables ('Config.py')
 
 config.AddOptions (opts)
 
