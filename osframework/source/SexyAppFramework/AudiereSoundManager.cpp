@@ -59,16 +59,15 @@ AudiereSoundManager::~AudiereSoundManager()
 	ReleaseSounds();
 }
 
-int	AudiereSoundManager::FindFreeChannel()
+int AudiereSoundManager::FindFreeChannel()
 {
-#if 0
-	Uint32 aTick = SDL_GetTicks();
-	if (aTick-mLastReleaseTick > 1000)
+	DWORD aTick = GetTickCount();
+	if (aTick - mLastReleaseTick > 1000)
 	{
 		ReleaseFreeChannels();
 		mLastReleaseTick = aTick;
 	}
-#endif
+
 	for (int i = 0; i < MAX_CHANNELS; i++)
 	{
 		if (mPlayingSounds[i] == NULL)
