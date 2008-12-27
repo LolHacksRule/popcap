@@ -8,6 +8,7 @@
 #include "AudierePakFile.h"
 #include "AudiereLoader.h"
 #include "audiere.h"
+#include "SexyTimer.h"
 
 using namespace Sexy;
 using namespace audiere;
