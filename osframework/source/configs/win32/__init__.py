@@ -6,6 +6,7 @@ import configs
 
 def AddOptions(opts):
     configs.AddOptions (opts)
+    configs.Win32ModuleLoaderAddOptions (opts)
 
 def Configure(env):
     configs.Configure (env)
@@ -25,3 +26,4 @@ def Configure(env):
         env.AppendUnique (CFLAGS = ['/O2'],
                           CXXFLAGS = ['/O2'],
                           LINKFLAGS = [])
+    configs.Win32ModuleLoaderConfigure (env)
