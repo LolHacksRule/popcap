@@ -1,6 +1,10 @@
 #include "Common.h"
 #include "SexyTimer.h"
 
+#ifndef WIN32
+#include <sys/time.h>
+#endif
+
 DWORD Sexy::GetTickCount()
 {
 #ifdef WIN32
