@@ -206,7 +206,10 @@ bool DFBImage::PolyFill3D(const Point theVertices[], int theNumVertices, const R
 
 void DFBImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
 {
-	if (!mSurface)
+	IDirectFBSurface * dst;
+
+	dst = EnsureSurface();
+	if (!dst)
 		return;
 
 	TRACE_THIS();
@@ -216,11 +219,11 @@ void DFBImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawM
 	       theColor.GetBlue(), theColor.GetAlpha(),
 	       theRect.mX, theRect.mY, theRect.mWidth, theRect.mHeight);
 #endif
-	mSurface->SetDrawingFlags(mSurface, DSDRAW_BLEND);
-	mSurface->SetColor(mSurface,
-			   theColor.GetRed(), theColor.GetGreen(),
-			   theColor.GetBlue(), theColor.GetAlpha());
-	mSurface->FillRectangle(mSurface, theRect.mX, theRect.mY, theRect.mWidth, theRect.mHeight);
+	dst->SetDrawingFlags(dst, DSDRAW_BLEND);
+	dst->SetColor(dst,
+		      theColor.GetRed(), theColor.GetGreen(),
+		      theColor.GetBlue(), theColor.GetAlpha());
+	dst->FillRectangle(dst, theRect.mX, theRect.mY, theRect.mWidth, theRect.mHeight);
 	mDirty |= SURFACE_DIRTY;
 }
 
@@ -236,14 +239,17 @@ void DFBImage::AdditiveDrawLine(double theStartX, double theStartY, double theEn
 
 void DFBImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
 {
-	if (!mSurface)
+	IDirectFBSurface * dst;
+
+	dst = EnsureSurface();
+	if (!dst)
 		return;
-	mSurface->SetDrawingFlags(mSurface, DSDRAW_BLEND);
-	mSurface->SetColor(mSurface,
-			   theColor.GetRed(), theColor.GetGreen(),
-			   theColor.GetBlue(), theColor.GetAlpha());
-	mSurface->DrawLine(mSurface, floor(theStartX), floor(theStartY),
-			   ceil(theEndX), ceil(theEndY));
+	dst->SetDrawingFlags(dst, DSDRAW_BLEND);
+	dst->SetColor(dst,
+		      theColor.GetRed(), theColor.GetGreen(),
+		      theColor.GetBlue(), theColor.GetAlpha());
+	dst->DrawLine(dst, floor(theStartX), floor(theStartY),
+		      ceil(theEndX), ceil(theEndY));
 	mDirty |= SURFACE_DIRTY;
 }
 
@@ -336,21 +342,54 @@ uint32* DFBImage::GetBits()
 	return bits;
 }
 
+void DFBImage::ClearRect(const Rect& theRect)
+{
+	IDirectFBSurface * dst;
+
+	TRACE_THIS();
+
+	dst = EnsureSurface();
+	if (!dst)
+		return;
+
+	DFBRegion   clip_rect;
+	clip_rect.x1 = theRect.mX;
+	clip_rect.y1 = theRect.mY;
+	clip_rect.x2 = theRect.mX + theRect.mWidth;
+	clip_rect.y2 = theRect.mY + theRect.mHeight;
+
+	dst->SetClip (dst, &clip_rect);
+	dst->Clear (dst, 0, 0, 0, 0);
+	dst->SetClip (dst, NULL);
+	mDirty |= SURFACE_DIRTY;
+}
+
 void DFBImage::Clear()
 {
+	IDirectFBSurface * dst;
+
 	TRACE_THIS();
-	MemoryImage::Clear();
+
+	dst = EnsureSurface();
+	if (!dst)
+		return;
+
+	dst->Clear (dst, 0, 0, 0, 0);
+	mDirty |= SURFACE_DIRTY;
 }
 
 void DFBImage::NormalFillRect(const Rect& theRect, const Color& theColor)
 {
-	if (!mSurface)
+	IDirectFBSurface * dst;
+
+	dst = EnsureSurface();
+	if (!dst)
 		return;
-	mSurface->SetDrawingFlags(mSurface, DSDRAW_BLEND);
-	mSurface->SetColor(mSurface,
-			   theColor.GetRed(), theColor.GetGreen(),
-			   theColor.GetBlue(), theColor.GetAlpha());
-	mSurface->FillRectangle(mSurface, theRect.mX, theRect.mY, theRect.mWidth, theRect.mHeight);
+	dst->SetDrawingFlags(dst, DSDRAW_BLEND);
+	dst->SetColor(dst,
+		      theColor.GetRed(), theColor.GetGreen(),
+		      theColor.GetBlue(), theColor.GetAlpha());
+	dst->FillRectangle(dst, theRect.mX, theRect.mY, theRect.mWidth, theRect.mHeight);
 	mDirty |= SURFACE_DIRTY;
 }
 
@@ -510,7 +549,7 @@ void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcR
 	src_rect.h = theSrcRect.mHeight;
 
 	DFBRegion clip_reg;
-	clip_reg.x1 = theClipRect.mY;
+	clip_reg.x1 = theClipRect.mX;
 	clip_reg.y1 = theClipRect.mY;
 	clip_reg.x2 = clip_reg.x1 + theClipRect.mWidth;
 	clip_reg.y2 = clip_reg.y1 + theClipRect.mHeight;
@@ -575,7 +614,7 @@ void DFBImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Re
 	dest_rect.w = theDestRectOrig.mWidth;
 	dest_rect.h = theDestRectOrig.mHeight;
 
-	clip_reg.x1 = theClipRect.mY;
+	clip_reg.x1 = theClipRect.mX;
 	clip_reg.y1 = theClipRect.mY;
 	clip_reg.x2 = clip_reg.x1 + theClipRect.mWidth;
 	clip_reg.y2 = clip_reg.y1 + theClipRect.mHeight;
