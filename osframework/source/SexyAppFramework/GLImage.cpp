@@ -1530,6 +1530,58 @@ uint32* GLImage::GetBits()
 void GLImage::Clear()
 {
 	TRACE_THIS();
+	ClearRect(Rect (0, 0, mWidth, mHeight));
+}
+
+void GLImage::ClearRect(const Rect& theRect)
+{
+	if (mInterface->GetScreenImage () != this)
+	{
+		MemoryImage::ClearRect (theRect);
+		return;
+	}
+
+	glDisable (GL_TEXTURE_2D);
+	glDisable (GL_BLEND);
+
+	SexyRGBA aColor = Color(0, 0, 0, 0).ToRGBA();
+	float x = theRect.mX;// - 0.5f;
+	float y = theRect.mY;// - 0.5f;
+	float aWidth = theRect.mWidth;
+	float aHeight = theRect.mHeight;
+
+
+	glColor4ub (0, 0, 0, 0);
+#ifdef SEXY_OPENGLES
+	GLfloat verts[4 * 2];
+	verts[0] = x;	       verts[1] = y;
+	verts[2] = x;	       verts[3] = y + aHeight;
+	verts[4] = x + aWidth; verts[5] = y;
+	verts[6] = x + aWidth; verts[7] = y + aHeight;
+
+	glEnableClientState (GL_VERTEX_ARRAY);
+
+	glVertexPointer (2, GL_FLOAT, 0, verts);
+	glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
+	glDisableClientState (GL_VERTEX_ARRAY);
+#else
+	SexyGLVertex aVertex[4] =
+	{
+		{ 0, 0, aColor, x,	    y,		 0},
+		{ 0, 0, aColor, x,	    y + aHeight, 0},
+		{ 0, 0, aColor, x + aWidth, y,		 0},
+		{ 0, 0, aColor, x + aWidth, y + aHeight, 0}
+	};
+
+	glBegin (GL_TRIANGLE_STRIP);
+	glVertex2f (aVertex[0].sx, aVertex[0].sy);
+	glVertex2f (aVertex[1].sx, aVertex[1].sy);
+	glVertex2f (aVertex[2].sx, aVertex[2].sy);
+	glVertex2f (aVertex[3].sx, aVertex[3].sy);
+	glEnd ();
+#endif
+	glEnable (GL_BLEND);
 }
 
 void GLImage::NormalFillRect(const Rect& theRect, const Color& theColor)
