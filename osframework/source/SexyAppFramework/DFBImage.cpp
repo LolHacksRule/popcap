@@ -730,6 +730,7 @@ IDirectFBSurface* DFBImage::EnsureSurface()
 	mSurface->GetCapabilities(mSurface, &mCaps);
 	if (mBits)
 		BitsChanged();
+	DeleteAllNonSurfaceData();
 	mDirty = 0;
 	return mSurface;
 }
