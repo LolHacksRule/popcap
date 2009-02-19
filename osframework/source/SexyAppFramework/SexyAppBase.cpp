@@ -1650,6 +1650,7 @@ void SexyAppBase::MakeWindow()
 					       gArrowCursorData + sizeof(gArrowCursorData) / 2,
 					       32, 32);
 	mArrowCursorHot = Point(0, 0);
+	EnforceCursor();
 }
 
 void SexyAppBase::DeleteNativeImageData()
@@ -2461,13 +2462,13 @@ bool SexyAppBase::LoadProperties(const std::string& theFileName, bool required, 
 	PropertiesParser aPropertiesParser(this);
 
 	// Load required language-file properties
-		if (!aPropertiesParser.ParsePropertiesBuffer(aBuffer))
-		{
-			Popup(aPropertiesParser.GetErrorText());
-			return false;
-		}
-		else
-			return true;
+	if (!aPropertiesParser.ParsePropertiesBuffer(aBuffer))
+	{
+		Popup(aPropertiesParser.GetErrorText());
+		return false;
+	}
+	else
+		return true;
 }
 
 bool SexyAppBase::LoadProperties()
