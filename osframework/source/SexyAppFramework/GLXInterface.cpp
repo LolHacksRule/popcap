@@ -177,6 +177,29 @@ bool GLXInterface::HasEvent()
 	return false;
 }
 
+static int XKsymToKeyCode(KeySym keysym)
+{
+    static const struct {
+	KeySym keySym;
+	int    keyCode;
+    } keymap[] = {
+	{ XK_Left, KEYCODE_LEFT },
+	{ XK_Right, KEYCODE_RIGHT },
+	{ XK_Up, KEYCODE_UP },
+	{ XK_Down, KEYCODE_DOWN },
+	{ XK_Return, KEYCODE_RETURN },
+	{ XK_Escape, KEYCODE_ESCAPE },
+	{ 0, 0 }
+    };
+    int i;
+
+    for (i = 0; keymap[i].keySym; i++)
+	if (keymap[i].keySym == keysym)
+	    return keymap[i].keyCode;
+
+    return 0;
+}
+
 bool GLXInterface::GetEvent(struct Event &event)
 {
 	if (!mDpy)
@@ -196,38 +219,19 @@ bool GLXInterface::GetEvent(struct Event &event)
         switch (xevent.type) {
         case KeyPress:
                 XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
-		switch (key) {
-		case XK_Left:
-			break;
-		case XK_Right:
-			break;
-		case XK_Up:
-			break;
-		case XK_Down:
-			break;
-		case XK_Escape:
-			break;
-		}
+		event.type = EVENT_KEY_DOWN;
+		event.keyCode = XKsymToKeyCode (key);
 		break;
 	case KeyRelease:
 	{
 		XKeyEvent * ke = (XKeyEvent *)&xevent;
 
                 XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
-		switch (key) {
-		case XK_Left:
-			break;
-		case XK_Right:
-			break;
-		case XK_Up:
-			break;
-		case XK_Down:
-			break;
-		case XK_Escape:
-			if ((ke->state & (ControlMask | ShiftMask)) == (ControlMask | ShiftMask))
-				event.type = EVENT_QUIT;
-			break;
-		}
+		event.type = EVENT_KEY_UP;
+		event.keyCode = XKsymToKeyCode (key);
+		if (key == XK_Escape &&
+		    (ke->state & (ControlMask | ShiftMask)) == (ControlMask | ShiftMask))
+		    event.type = EVENT_QUIT;
 		break;
 	}
 	case ButtonPress:
