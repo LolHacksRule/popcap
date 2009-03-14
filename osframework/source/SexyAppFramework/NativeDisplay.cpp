@@ -1,4 +1,5 @@
 #include "NativeDisplay.h"
+#include "MemoryImage.h"
 #include "Font.h"
 
 using namespace Sexy;
@@ -86,4 +87,8 @@ bool NativeDisplay::UpdateCursor(int theCursorX, int theCursorY)
 bool NativeDisplay::DrawCursor(Sexy::Graphics* g)
 {
 	return false;
+}
+
+void NativeDisplay::RemoveImageData(MemoryImage * theMemoryImage)
+{
 }
