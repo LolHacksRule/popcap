@@ -84,6 +84,14 @@ if 'AUDIERESOUND' in env['DRIVERS']:
     env['AUDIERESOUND']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_AUDIERE_SOUND_DRIVER'])
 
+if 'WIN32' in env['CPPDEFINES']:
+    srcs += ["DSoundManager.cpp", 'DSoundInstance.cpp',
+             'BassMusicInterface.cpp', 'BassLoader.cpp']
+    srcs += Glob('ogg/*.c')
+    env.AppendUnique(LIBS = ['winmm'])
+    gameenv.AppendUnique(LIBS = ['winmm'])
+    env.AppendUnique(CPPDEFINES = ['SEXY_DIRECT_SOUND_DRIVER'])
+
 if 'POSIX_MODULE_LOADER' in env['LOADERS']:
     srcs += ["PosixModuleLoader.cpp"]
     env['POSIX_MODULE_LOADER']['ENABLE'](env)

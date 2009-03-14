@@ -3,6 +3,7 @@
 
 #include "dsoundversion.h"
 #include "SoundManager.h"
+#include "SoundDriverFactory.h"
 
 namespace Sexy
 {

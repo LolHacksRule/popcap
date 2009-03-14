@@ -27,13 +27,13 @@ BASS_INSTANCE::BASS_INSTANCE(const char *dllName)
 	if (!mModule)
 		return;
 
-#define GETPROC(_x) CheckBassFunction(*((unsigned int *)&_x) = (unsigned int)GetProcAddress(mModule, #_x),#_x)    
+#define GETPROC(_x) CheckBassFunction(*((unsigned int *)&_x) = (unsigned int)GetProcAddress(mModule, #_x),#_x)
 
 	GETPROC(BASS_Init);
 	GETPROC(BASS_Free);
 	GETPROC(BASS_Stop);
 	GETPROC(BASS_Start);
-	
+
 	*((unsigned int*) &BASS_SetGlobalVolumes) = (unsigned int) GetProcAddress(mModule, "BASS_SetGlobalVolumes");
 	*((unsigned int*) &BASS_SetVolume) = (unsigned int) GetProcAddress(mModule, "BASS_SetVolume");
 
@@ -41,7 +41,7 @@ BASS_INSTANCE::BASS_INSTANCE(const char *dllName)
 	{
 		MessageBoxA(NULL,"Neither BASS_SetGlobalVolumes or BASS_SetVolume found in bass.dll","Error",MB_OK | MB_ICONERROR);
 		exit(0);
-	}	
+	}
 
 	*((unsigned int*) &BASS_SetConfig) = (unsigned int) GetProcAddress(mModule, "BASS_SetConfig");
 	*((unsigned int*) &BASS_GetConfig) = (unsigned int) GetProcAddress(mModule, "BASS_GetConfig");
@@ -61,7 +61,7 @@ BASS_INSTANCE::BASS_INSTANCE(const char *dllName)
 	GETPROC(BASS_ChannelSetFlags);
 	GETPROC(BASS_ChannelSlideAttributes);
 	GETPROC(BASS_ChannelIsSliding);
-	GETPROC(BASS_ChannelGetLevel);	
+	GETPROC(BASS_ChannelGetLevel);
 	GETPROC(BASS_ChannelSetSync);
 	GETPROC(BASS_ChannelRemoveSync);
 	GETPROC(BASS_ChannelGetData);

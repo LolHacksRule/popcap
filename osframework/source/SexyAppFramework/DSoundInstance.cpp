@@ -1,5 +1,6 @@
 #include "DSoundInstance.h"
 #include "DSoundManager.h"
+#include <math.h>
 
 using namespace Sexy;
 

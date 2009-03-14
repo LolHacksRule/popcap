@@ -41,6 +41,7 @@ SoundDriverFactory*  SoundDriverFactory::GetSoundDriverFactory ()
 extern SoundDriver* GetDummySoundDriver();
 extern SoundDriver* GetGstSoundDriver();
 extern SoundDriver* GetAudiereSoundDriver();
+extern SoundDriver* GetDSoundDriver();
 typedef SoundDriver* (* SoundDriverGetter)();
 SoundDriverGetter SoundDriverGetters []= {
 #ifdef SEXY_GST_SOUND_DRIVER
@@ -48,6 +49,9 @@ SoundDriverGetter SoundDriverGetters []= {
 #endif
 #ifdef SEXY_AUDIERE_SOUND_DRIVER
 	GetAudiereSoundDriver,
+#endif
+#ifdef SEXY_DIRECT_SOUND_DRIVER
+	GetDSoundDriver,
 #endif
 	GetDummySoundDriver,
 	NULL

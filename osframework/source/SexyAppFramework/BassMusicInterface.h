@@ -29,7 +29,7 @@ typedef std::map<int, BassMusicInfo> BassMusicMap;
 
 class BassMusicInterface : public MusicInterface
 {
-public:	
+public:
 	BassMusicMap			mMusicMap;
 	int						mMaxMusicVolume;
 	int						mMusicLoadFlags;
@@ -37,17 +37,17 @@ public:
 public:
 	BassMusicInterface(HWND theHWnd);
 	virtual ~BassMusicInterface();
-	
+
 	virtual bool			LoadMusic(int theSongId, const std::string& theFileName);
 	virtual void			PlayMusic(int theSongId, int theOffset = 0, bool noLoop = false);
 	virtual void			StopMusic(int theSongId);
-	virtual void			StopAllMusic();		
+	virtual void			StopAllMusic();
 	virtual void			UnloadMusic(int theSongId);
 	virtual void			UnloadAllMusic();
 	virtual void			PauseAllMusic();
 	virtual void			ResumeAllMusic();
 	virtual void			PauseMusic(int theSongId);
-	virtual void			ResumeMusic(int theSongId);	
+	virtual void			ResumeMusic(int theSongId);
 	virtual void			FadeIn(int theSongId, int theOffset = -1, double theSpeed = 0.002, bool noLoop = false);
 	virtual void			FadeOut(int theSongId, bool stopSong = true, double theSpeed = 0.004);
 	virtual void			FadeOutAll(bool stopSong = true, double theSpeed = 0.004);
