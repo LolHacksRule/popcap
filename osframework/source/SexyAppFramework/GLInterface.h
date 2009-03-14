@@ -43,21 +43,21 @@ public:
 
 	GLImage*				mScreenImage;
 
-        bool                                    mCursorEnabled;
-        int                                     mCursorX;
-        int                                     mCursorY;
-        int                                     mCursorDrawnX;
-        int                                     mCursorDrawnY;
-        int                                     mCursorOldX;
-        int                                     mCursorOldY;
-        int                                     mCursorHotX;
-        int                                     mCursorHotY;
+	bool					mCursorEnabled;
+	int					mCursorX;
+	int					mCursorY;
+	int					mCursorDrawnX;
+	int					mCursorDrawnY;
+	int					mCursorOldX;
+	int					mCursorOldY;
+	int					mCursorHotX;
+	int					mCursorHotY;
 
-        GLImage*                                mCursorImage;
-        bool                                    mCursorDrawn;
+	GLImage*				mCursorImage;
+	bool					mCursorDrawn;
 
-	int                                     mWindowWidth;
-	int                                     mWindowHeight;
+	int					mWindowWidth;
+	int					mWindowHeight;
 
 	GLint					mMinTextureWidth;
 	GLint					mMinTextureHeight;
@@ -68,9 +68,9 @@ public:
 	const char*				mGLExtensions;
 
 public:
-        GLint                                   mGLMajor;
-        GLint                                   mGLMinor;
-        GLboolean                               mTexBGRA;
+	GLint					mGLMajor;
+	GLint					mGLMinor;
+	GLboolean				mTexBGRA;
 
 public:
 	GLInterface(SexyAppBase* theApp);
@@ -89,11 +89,11 @@ public:
 	void					CalulateBestTexDimensions (int & theWidth, int & theHeight,
 									   bool isEdge, bool usePOT);
 
-        virtual bool                            EnableCursor(bool enable);
+	virtual bool				EnableCursor(bool enable);
 	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
 	virtual void				SetCursorPos(int theCursorX, int theCursorY);
-        virtual bool                            DrawCursor(Graphics* g);
-        virtual bool                            UpdateCursor(int theCursorX, int theCursorY);
+	virtual bool				DrawCursor(Graphics* g);
+	virtual bool				UpdateCursor(int theCursorX, int theCursorY);
 };
 
 }

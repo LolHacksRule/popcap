@@ -1611,8 +1611,6 @@ void SexyAppBase::MakeWindow()
 	if (mDDInterface)
 	{
 		DeleteExtraImageData();
-
-		//mDDInterface->Cleanup();
 	}
 	else
 	{

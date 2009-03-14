@@ -37,7 +37,7 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 
 	mGLExtensions = NULL;
 	mGLMajor = 1;
-        mGLMinor = 1;
+	mGLMinor = 1;
 	mTexBGRA = GL_FALSE;
 }
 
@@ -70,7 +70,7 @@ void GLInterface::Cleanup()
 
 	mGLExtensions = NULL;
 	mGLMajor = 1;
-        mGLMinor = 1;
+	mGLMinor = 1;
 	mTexBGRA = GL_FALSE;
 
 	mCursorHotX = 0;
@@ -283,8 +283,8 @@ bool GLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 
 void GLInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
-        mCursorOldX = mCursorX;
-        mCursorOldY = mCursorY;
+	mCursorOldX = mCursorX;
+	mCursorOldY = mCursorY;
 	mCursorX = theCursorX;
 	mCursorY = theCursorY;
 }

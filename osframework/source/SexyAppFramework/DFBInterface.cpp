@@ -349,7 +349,7 @@ void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 
 	mCursorX = theCursorX;
 	mCursorY = theCursorY;
-	if (!mSoftCursor && mLayer && true)
+	if (!mSoftCursor && mLayer)
 	{
 		if (mWindow)
 		{
@@ -377,7 +377,7 @@ bool DFBInterface::DrawCursor(Graphics* g)
 	if (!mCursorImage)
 		return false;
 
-	if (mSoftCursor && mApp->mScreenBounds.Contains (mCursorX, mCursorY))
+	if (mSoftCursor)
 		g->DrawImage (mCursorImage,
 			      mCursorX - mCursorHotX,
 			      mCursorY - mCursorHotY);
