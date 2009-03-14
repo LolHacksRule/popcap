@@ -194,6 +194,15 @@ int AGLInterface::Init (void)
 
 	CGLSetCurrentContext (mCGLContext);
 
+	mWindowWidth = mWidth;
+	mWindowHeight = mHeight;
+	mDisplayWidth = mWidth;
+	mDisplayHeight = mHeight;
+	mPresentationRect.mX = 0;
+	mPresentationRect.mY = 0;
+	mPresentationRect.mWidth = mDisplayWidth;
+	mPresentationRect.mHeight = mDisplayHeight;
+
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	InitGL ();
 
@@ -247,20 +256,6 @@ void AGLInterface::Cleanup ()
 }
 
 void AGLInterface::RemapMouse(int& theX, int& theY)
-{
-}
-
-bool AGLInterface::EnableCursor(bool enable)
-{
-	return false;
-}
-
-bool AGLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
-{
-	return false;
-}
-
-void AGLInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
 }
 
