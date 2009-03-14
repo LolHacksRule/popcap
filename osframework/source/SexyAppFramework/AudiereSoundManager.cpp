@@ -52,6 +52,7 @@ AudiereSoundManager::AudiereSoundManager()
 		mPlayingSounds[i] = NULL;
 
 	mMasterVolume = 1.0;
+	mLastReleaseTick = GetTickCount();
 }
 
 AudiereSoundManager::~AudiereSoundManager()
