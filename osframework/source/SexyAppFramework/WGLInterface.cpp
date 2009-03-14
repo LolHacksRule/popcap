@@ -271,6 +271,7 @@ int WGLInterface::Init (void)
 	wglMakeCurrent (mHDC, mContext);
 
 	SetCursor (NULL);
+	ShowCursor (FALSE);
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
 
