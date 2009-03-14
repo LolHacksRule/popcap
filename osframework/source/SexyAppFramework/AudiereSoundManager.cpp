@@ -353,15 +353,15 @@ public:
 	{
 		Init ();
 		return new AudiereSoundManager ();
-        }
+	}
 
 	MusicInterface* CreateMusicInterface (SexyAppBase * theApp)
 	{
 		Init ();
 		return new AudiereMusicInterface ();
-        }
+	}
 private:
-	bool     mInitialized;
+	bool	 mInitialized;
 };
 
 static AudiereSoundDriver aAudiereSoundDriver;
