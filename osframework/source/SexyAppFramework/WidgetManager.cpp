@@ -433,8 +433,12 @@ bool WidgetManager::DrawScreen()
 	//surfaceLocked = aImage->LockSurface();
 
 	NativeDisplay * aInterface = mApp->mDDInterface;
-	bool cursorChanged = aInterface->UpdateCursor(mLastMouseX,
-						      mLastMouseY);
+	int aCursorX = mLastMouseX;
+	int aCursorY = mLastMouseY;
+	aCursorX = (aCursorX - mMouseDestRect.mX) * mMouseSourceRect.mWidth / mMouseDestRect.mWidth + mMouseSourceRect.mX;
+	aCursorY = (aCursorY - mMouseDestRect.mY) * mMouseSourceRect.mHeight / mMouseDestRect.mHeight + mMouseSourceRect.mY;
+	bool cursorChanged = aInterface->UpdateCursor(aCursorX, aCursorY);
+
 	bool redrawAll = false;
 	if ((mImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER) &&
 	    !(mImage->mFlags & IMAGE_FLAGS_FLIP_AS_COPY))
@@ -470,7 +474,14 @@ bool WidgetManager::DrawScreen()
 			++anItr;
 		}
 
-		if (aInterface->DrawCursor (&g))
+		g.Translate(mMouseDestRect.mX, mMouseDestRect.mY);
+		Rect aVisibleRect;
+		aVisibleRect.mX = -mMouseDestRect.mX;
+		aVisibleRect.mY = -mMouseDestRect.mY;
+		aVisibleRect.mWidth = mWidth;
+		aVisibleRect.mHeight = mHeight;
+		g.ClipRect(aVisibleRect);
+		if (aVisibleRect.Contains (aCursorX, aCursorY) && aInterface->DrawCursor (&g))
 			drewStuff = true;
 		aImage->Flip(FLIP_WAIT_SYNC);
 	}

@@ -31,27 +31,12 @@ public:
 	bool					mIs3D;
 
 	bool					mInRedraw;
-	int					mWidth;
-	int					mHeight;
-	Ratio					mAspect;
-	int					mDesktopWidth;
-	int					mDesktopHeight;
-	Ratio					mDesktopAspect;
-	bool					mIsWidescreen;
-	int					mDisplayWidth;
-	int					mDisplayHeight;
-	Ratio					mDisplayAspect;
-
-	Rect					mPresentationRect;
 
 	bool					mInitialized;
-	bool					mIsWindowed;
 	DFBImage*				mScreenImage;
 	DFBImageSet				mImageSet;
 	bool					mVideoOnlyDraw;
 	ulong					mInitCount;
-
-	std::string				mErrorString;
 
 public:
 	ulong					GetColorRef(ulong theRGB);
@@ -64,8 +49,6 @@ public:
 public:
 	DFBInterface(SexyAppBase* theApp);
 	virtual ~DFBInterface();
-
-	static std::string		ResultToString(int theResult);
 
 	Image*					GetScreenImage();
 	int					Init();

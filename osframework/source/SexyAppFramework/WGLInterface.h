@@ -28,9 +28,6 @@ public:
 	virtual void				SwapBuffers();
 
 	virtual void				RemapMouse(int& theX, int& theY);
-	virtual bool				EnableCursor(bool enable);
-	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
-	virtual void				SetCursorPos(int theCursorX, int theCursorY);
 
 	virtual Image*				CreateImage(SexyAppBase * theApp,
 							    int width, int height);

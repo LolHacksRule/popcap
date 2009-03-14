@@ -30,6 +30,7 @@ private:
 
  private:
         int                   mFd;
+	bool                  mGrabed;
         volatile int          mDone;
         pthread_t*            mThread;
         int                   mX;

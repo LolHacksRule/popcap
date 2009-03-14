@@ -53,6 +53,7 @@ public:
 	virtual void			DeleteSWBuffers();
 	virtual void			Delete3DBuffers();
 	virtual void			DeleteExtraBuffers();
+	virtual void                    ReAttach(NativeDisplay *theNative);
 	virtual void			ReInit();
 
 	virtual void			BitsChanged();

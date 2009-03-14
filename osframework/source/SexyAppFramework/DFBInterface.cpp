@@ -48,11 +48,6 @@ DFBInterface::~DFBInterface()
 		mDFB->Release(mDFB);
 }
 
-std::string DFBInterface::ResultToString(int theResult)
-{
-	return "RESULT_UNKNOWN";
-}
-
 Image* DFBInterface::GetScreenImage()
 {
 	return mScreenImage;
@@ -74,11 +69,20 @@ int DFBInterface::Init(void)
 		//mDFB->SetCooperativeLevel(mDFB, DFSCL_EXCLUSIVE);
 	}
 
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
+
 	ret = mDFB->GetDisplayLayer (mDFB, DLID_PRIMARY, &mLayer);
 	DBG_ASSERT (ret == DFB_OK);
 
 	DFBDisplayLayerConfig layer_config;
 	mLayer->GetConfiguration (mLayer, &layer_config);
+
+	DFBDisplayLayerDescription layer_desc;
+	mLayer->GetDescription (mLayer, &layer_desc);
+	printf ("Display layer name: %s\n", layer_desc.name);
+	printf ("\t width = %d\n", layer_config.width);
+	printf ("\t height = %d\n", layer_config.height);
 
 #if 0
 	layer_config.flags = (DFBDisplayLayerConfigFlags)
@@ -90,42 +94,57 @@ int DFBInterface::Init(void)
 	/* DBG_ASSERT (ret == DFB_OK); */
 #endif
 
-	DFBDisplayLayerDescription layer_desc;
-	mLayer->GetDescription (mLayer, &layer_desc);
-	printf ("Display layer name: %s\n", layer_desc.name);
-	printf ("\t width = %d\n", layer_config.width);
-	printf ("\t height = %d\n", layer_config.height);
-
 	ret = mLayer->SetCooperativeLevel (mLayer, DLSCL_ADMINISTRATIVE);
 	DBG_ASSERT (ret == DFB_OK);
 
 	IDirectFBSurface * surface = 0;
+	bool perferWindow = true;
 
-#if !defined(SEXY_INTEL_CANMORE) && !defined(SEXY_INTEL_OLO) && !defined(SEXY_ST_SH4)
-	DFBWindowDescription window_desc;
-
-	window_desc.flags =
-		(DFBWindowDescriptionFlags)(DWDESC_CAPS | DWDESC_WIDTH |  DWDESC_HEIGHT |
-					    DWDESC_POSX | DWDESC_POSY);
-	window_desc.caps = (DFBWindowCapabilities)(DWCAPS_ALPHACHANNEL | DWCAPS_DOUBLEBUFFER |
-						   DWCAPS_NODECORATION);
-	window_desc.width = layer_config.width;
-	window_desc.height = layer_config.height;
-	window_desc.posx = 0;
-	window_desc.posy = 0;
-
-	ret = mLayer->CreateWindow (mLayer, &window_desc, &mWindow);
-	DBG_ASSERT (ret == DFB_OK);
-	mWindow->SetOpacity (mWindow, 255);
-	mWindow->RaiseToTop (mWindow);
-
-	ret = mWindow->GetSurface (mWindow, &surface);
-	DBG_ASSERT (ret == DFB_OK);
-
-#else
-	mLayer->EnableCursor (mLayer, DFB_FALSE);
-	mSoftCursor = true;
+#if defined(SEXY_INTEL_CANMORE) || defined(SEXY_INTEL_OLO) || defined(SEXY_ST_SH4)
+	perferwindow = false;
+	if (getenv ("SEXY_DFB_PERFER_WINDOW"))
+		perferWindow = true;
 #endif
+	if (getenv ("SEXY_DFB_NO_WINDOW"))
+		perferWindow = false;
+
+	if (perferWindow)
+	{
+		DFBWindowDescription window_desc;
+
+		window_desc.flags =
+			(DFBWindowDescriptionFlags)(DWDESC_CAPS | DWDESC_WIDTH |  DWDESC_HEIGHT |
+						    DWDESC_POSX | DWDESC_POSY);
+		window_desc.caps = (DFBWindowCapabilities)(DWCAPS_ALPHACHANNEL | DWCAPS_DOUBLEBUFFER |
+							   DWCAPS_NODECORATION);
+		if (mApp->mIsWindowed)
+		{
+			window_desc.width = mWidth;
+			window_desc.height = mHeight;
+			window_desc.posx = (layer_config.width - mWidth) / 2;
+			window_desc.posy = (layer_config.height - mHeight) / 2;
+		}
+		else
+		{
+			window_desc.width = layer_config.width;
+			window_desc.height = layer_config.height;
+			window_desc.posx = 0;
+			window_desc.posy = 0;
+		}
+
+		ret = mLayer->CreateWindow (mLayer, &window_desc, &mWindow);
+		DBG_ASSERT (ret == DFB_OK);
+		mWindow->SetOpacity (mWindow, 255);
+		mWindow->RaiseToTop (mWindow);
+
+		ret = mWindow->GetSurface (mWindow, &surface);
+		DBG_ASSERT (ret == DFB_OK);
+	}
+	else
+	{
+		mLayer->EnableCursor (mLayer, DFB_FALSE);
+		mSoftCursor = true;
+	}
 
 	DFBSurfaceDescription surface_desc;
 	int width, height;
@@ -151,12 +170,18 @@ int DFBInterface::Init(void)
 	surface->Flip (surface, 0,
 		       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
 	surface->Clear (surface, 0, 0, 0, 0);
+	surface->Flip (surface, 0,
+		       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
 
 	mPrimarySurface = surface;
 	mWidth = width;
 	mHeight = height;
-	mApp->mWidth = width;
-	mApp->mHeight = height;
+	mDisplayWidth = mWidth;
+	mDisplayHeight = mHeight;
+	mPresentationRect.mX = 0;
+	mPresentationRect.mY = 0;
+	mPresentationRect.mWidth = mDisplayWidth;
+	mPresentationRect.mHeight = mDisplayHeight;
 
 	mScreenImage = new DFBImage(surface, this);
 	mScreenImage->mFlags = (ImageFlags)IMAGE_FLAGS_DOUBLE_BUFFER;
@@ -319,10 +344,23 @@ void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
 	AutoCrit anAutoCrit(mCritSect);
 
+	if (mCursorX == theCursorX && mCursorY == theCursorY)
+		return;
+
 	mCursorX = theCursorX;
 	mCursorY = theCursorY;
-	if (!mSoftCursor && mLayer)
-		mLayer->WarpCursor (mLayer, mCursorX, mCursorY);
+	if (!mSoftCursor && mLayer && true)
+	{
+		if (mWindow)
+		{
+			int x, y;
+
+			mWindow->GetPosition (mWindow, &x, &y);
+			theCursorX += x;
+			theCursorY += y;
+		}
+		mLayer->WarpCursor (mLayer, theCursorX, theCursorY);
+	}
 }
 
 bool DFBInterface::UpdateCursor(int theCursorX, int theCursorY)
@@ -339,7 +377,7 @@ bool DFBInterface::DrawCursor(Graphics* g)
 	if (!mCursorImage)
 		return false;
 
-	if (mSoftCursor)
+	if (mSoftCursor && mApp->mScreenBounds.Contains (mCursorX, mCursorY))
 		g->DrawImage (mCursorImage,
 			      mCursorX - mCursorHotX,
 			      mCursorY - mCursorHotY);
@@ -556,6 +594,16 @@ bool DFBInterface::GetEvent(struct Event &event)
 		case DWET_BUTTONDOWN:
 			event.x = mMouseX;
 			event.y = mMouseY;
+
+			if (mWindow)
+			{
+				int x, y;
+
+				mWindow->GetPosition (mWindow, &x, &y);
+				event.x -= x;
+				event.y -= y;
+			}
+
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
@@ -575,6 +623,16 @@ bool DFBInterface::GetEvent(struct Event &event)
 		case DWET_BUTTONUP:
 			event.x = mMouseX;
 			event.y = mMouseY;
+
+			if (mWindow)
+			{
+				int x, y;
+
+				mWindow->GetPosition (mWindow, &x, &y);
+				event.x -= x;
+				event.y -= y;
+			}
+
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
@@ -596,6 +654,15 @@ bool DFBInterface::GetEvent(struct Event &event)
 			mMouseY = e->cy;
 			event.x = mMouseX;
 			event.y = mMouseY;
+
+			if (mWindow)
+			{
+				int x, y;
+
+				mWindow->GetPosition (mWindow, &x, &y);
+				event.x -= x;
+				event.y -= y;
+			}
 			event.type = EVENT_MOUSE_MOTION;
 			event.flags = EVENT_FLAGS_AXIS;
 			break;

@@ -1607,48 +1607,59 @@ MemoryImage* SexyAppBase::CreateCursorFromAndMask(unsigned char * data, unsigned
 
 void SexyAppBase::MakeWindow()
 {
+	mWidgetManager->mImage = NULL;
+	if (mDDInterface)
+	{
+		DeleteExtraImageData();
+
+		//mDDInterface->Cleanup();
+	}
+	else
+	{
+
 #ifdef _WIN32_WCE
-	std::string driver("auto");
+		std::string driver("auto");
 #else
-	char* video_driver = getenv ("SEXY_VIDEO_DRIVER");
-	std::string driver(video_driver ? video_driver : "auto");
+		char* video_driver = getenv ("SEXY_VIDEO_DRIVER");
+		std::string driver(video_driver ? video_driver : "auto");
 #endif
-	VideoDriver* aVideoDriver = dynamic_cast<VideoDriver*>
-		(VideoDriverFactory::GetVideoDriverFactory ()->Find (driver));
-	if (aVideoDriver == NULL && driver != "auto")
-	{
-		std::cout<<"Video driver \'"<<driver<<"\'"<<" doesn't available."<<std::endl;
-		aVideoDriver = dynamic_cast<VideoDriver*>
-			(VideoDriverFactory::GetVideoDriverFactory ()->Find ());
+		VideoDriver* aVideoDriver = dynamic_cast<VideoDriver*>
+			(VideoDriverFactory::GetVideoDriverFactory ()->Find (driver));
+		if (aVideoDriver == NULL && driver != "auto")
+		{
+			std::cout<<"Video driver \'"<<driver<<"\'"<<" doesn't available."<<std::endl;
+			aVideoDriver = dynamic_cast<VideoDriver*>
+				(VideoDriverFactory::GetVideoDriverFactory ()->Find ());
+		}
+		if (!aVideoDriver)
+		{
+			std::cout<<"Video driver doesn't available."<<std::endl;
+			DoExit (1);
+		}
+		DBG_ASSERT (aVideoDriver != NULL);
+		mDDInterface = aVideoDriver->Create(this);
 	}
-	if (!aVideoDriver)
-	{
-		std::cout<<"Video driver doesn't available."<<std::endl;
-		DoExit (1);
-	}
-	DBG_ASSERT (aVideoDriver != NULL);
-	mDDInterface = aVideoDriver->Create(this);
 	InitDDInterface();
 	mWidgetManager->mImage =
 		dynamic_cast<MemoryImage*>(mDDInterface->GetScreenImage());
 
-	mHandCursor = 0;
-	mDraggingCursor = 0;
-	mArrowCursor = 0;
-
-	mHandCursor =  CreateCursorFromAndMask(gFingerCursorData,
-					       gFingerCursorData + sizeof(gFingerCursorData) / 2,
-					       32, 32);
+	ReInitImages();
+	if (!mHandCursor)
+		mHandCursor =  CreateCursorFromAndMask(gFingerCursorData,
+						       gFingerCursorData + sizeof(gFingerCursorData) / 2,
+						       32, 32);
 	mHandCursorHot = Point(11, 4);
 
-	mDraggingCursor = CreateCursorFromAndMask(gDraggingCursorData,
-						  gDraggingCursorData + sizeof(gDraggingCursorData) / 2,
-						  32, 32);
+	if (!mDraggingCursor)
+		mDraggingCursor = CreateCursorFromAndMask(gDraggingCursorData,
+							  gDraggingCursorData + sizeof(gDraggingCursorData) / 2,
+							  32, 32);
 	mDraggingCursorHot = Point(15, 10);
 
-	mArrowCursor = CreateCursorFromAndMask(gArrowCursorData,
-					       gArrowCursorData + sizeof(gArrowCursorData) / 2,
-					       32, 32);
+	if (!mArrowCursor)
+		mArrowCursor = CreateCursorFromAndMask(gArrowCursorData,
+						       gArrowCursorData + sizeof(gArrowCursorData) / 2,
+						       32, 32);
 	mArrowCursorHot = Point(0, 0);
 	EnforceCursor();
 }
@@ -1666,7 +1677,6 @@ void SexyAppBase::DeleteNativeImageData()
 
 void SexyAppBase::DeleteExtraImageData()
 {
-#if 0
 	AutoCrit anAutoCrit(mDDInterface->mCritSect);
 	MemoryImageSet::iterator anItr = mMemoryImageSet.begin();
 	while (anItr != mMemoryImageSet.end())
@@ -1675,7 +1685,6 @@ void SexyAppBase::DeleteExtraImageData()
 		aMemoryImage->DeleteExtraBuffers();
 		++anItr;
 	}
-#endif
 }
 
 void SexyAppBase::ReInitImages()
@@ -1684,6 +1693,7 @@ void SexyAppBase::ReInitImages()
 	while (anItr != mMemoryImageSet.end())
 	{
 		MemoryImage* aMemoryImage = *anItr;
+		aMemoryImage->ReAttach(mDDInterface);
 		aMemoryImage->ReInit();
 		++anItr;
 	}
@@ -1728,37 +1738,52 @@ void SexyAppBase::StartLoadingThread()
 }
 void SexyAppBase::CursorThreadProc()
 {
-	while (!mShutdown)
-		Sleep(10);
-
-	mCursorThreadRunning = false;
 }
 
 void SexyAppBase::CursorThreadProcStub(void *theArg)
 {
-	SexyAppBase* aSexyApp = (SexyAppBase*) theArg;
-	aSexyApp->CursorThreadProc();
 }
 
 void SexyAppBase::StartCursorThread()
 {
-	if (!mCursorThreadRunning)
-	{
-		//mCursorThreadRunning = true;
-		//_beginthread(CursorThreadProcStub, 0, this);
-	}
 }
 
 void SexyAppBase::SwitchScreenMode(bool wantWindowed, bool is3d, bool force)
 {
+	if (mForceFullscreen)
+		wantWindowed = false;
+
+	if (mIsWindowed == wantWindowed && !force)
+	{
+		Set3DAcclerated(is3d);
+		return;
+	}
+
+	// Set 3d acceleration preference
+	Set3DAcclerated(is3d, false);
+
+	// Always make the app windowed when playing demos, in order to
+	//  make it easier to track down bugs.  We place this after the
+	//  sanity check just so things get re-initialized and stuff
+	//if (mPlayingDemoBuffer)
+	//	wantWindowed = true;
+	mIsWindowed = wantWindowed;
+
+	MakeWindow();
+
+	// We need to do this check to allow IE to get focus instead of
+	//  stealing it away for ourselves
+	mLastTime = GetTickCount();
 }
 
 void SexyAppBase::SwitchScreenMode(bool wantWindowed)
 {
+	SwitchScreenMode(wantWindowed, Is3DAccelerated());
 }
 
 void SexyAppBase::SwitchScreenMode()
 {
+	SwitchScreenMode(mIsWindowed, Is3DAccelerated(), true);
 }
 
 void SexyAppBase::SetAlphaDisabled(bool isDisabled)
@@ -2219,21 +2244,41 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 				break;
 
                         case EVENT_MOUSE_BUTTON_PRESS:
+				mDDInterface->mCursorX = event.x;
+				mDDInterface->mCursorY = event.y;
+				mWidgetManager->RemapMouse(mDDInterface->mCursorX,
+							   mDDInterface->mCursorY);
+
+				mLastUserInputTick = mLastTimerTime;
+
 				if (event.button == 1)
-					mWidgetManager->MouseDown(event.x, event.y, 1);
+					mWidgetManager->MouseDown(mDDInterface->mCursorX,
+								  mDDInterface->mCursorY, 1);
 				else if (event.button == 2)
-					mWidgetManager->MouseDown(event.x, event.y, -1);
+					mWidgetManager->MouseDown(mDDInterface->mCursorX,
+								  mDDInterface->mCursorY, -1);
 				else if (event.button == 3)
-					mWidgetManager->MouseDown(event.x, event.y, 3);
+					mWidgetManager->MouseDown(mDDInterface->mCursorX,
+								  mDDInterface->mCursorY, 3);
 				break;
 
                         case EVENT_MOUSE_BUTTON_RELEASE:
+				mDDInterface->mCursorX = event.x;
+				mDDInterface->mCursorY = event.y;
+				mWidgetManager->RemapMouse(mDDInterface->mCursorX,
+							   mDDInterface->mCursorY);
+
+				mLastUserInputTick = mLastTimerTime;
+
 				if (event.button == 1)
-					mWidgetManager->MouseUp(event.x, event.y, 1);
+					mWidgetManager->MouseUp(mDDInterface->mCursorX,
+								mDDInterface->mCursorY, 1);
 				else if (event.button == 2)
-					mWidgetManager->MouseUp(event.x, event.y, -1);
+					mWidgetManager->MouseUp(mDDInterface->mCursorX,
+								mDDInterface->mCursorY, -1);
 				else if (event.button == 3)
-					mWidgetManager->MouseUp(event.x, event.y, 3);
+					mWidgetManager->MouseUp(mDDInterface->mCursorX,
+								mDDInterface->mCursorY, 3);
 				break;
 
                         case EVENT_KEY_DOWN:
@@ -2251,13 +2296,24 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 				break;
 
                         case EVENT_MOUSE_MOTION:
+				if (!mHasFocus)
+				{
+					mHasFocus = true;
+					GotFocus();
+
+					if (mMuteOnLostFocus)
+						Unmute(true);
+				}
+
 				mDDInterface->mCursorX = event.x;
 				mDDInterface->mCursorY = event.y;
-				mWidgetManager->RemapMouse(mDDInterface->mCursorX, mDDInterface->mCursorY);
+				mWidgetManager->RemapMouse(mDDInterface->mCursorX,
+							   mDDInterface->mCursorY);
 
 				mLastUserInputTick = mLastTimerTime;
 
-				mWidgetManager->MouseMove(mDDInterface->mCursorX,mDDInterface->mCursorY);
+				mWidgetManager->MouseMove(mDDInterface->mCursorX,
+							  mDDInterface->mCursorY);
 
 				if (!mMouseIn)
 				{
@@ -2275,7 +2331,8 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 					if (mMuteOnLostFocus)
 						Unmute(true);
 
-					mWidgetManager->MouseMove(mDDInterface->mCursorX, mDDInterface->mCursorY);
+					mWidgetManager->MouseMove(mDDInterface->mCursorX,
+								  mDDInterface->mCursorY);
 
 				}
 				else {
@@ -2283,7 +2340,8 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 					mHasFocus = false;
 					LostFocus();
 
-					mWidgetManager->MouseExit(mDDInterface->mCursorX, mDDInterface->mCursorY);
+					mWidgetManager->MouseExit(mDDInterface->mCursorX,
+								  mDDInterface->mCursorY);
 
 					if (mMuteOnLostFocus)
 						Mute(true);
@@ -2364,6 +2422,13 @@ int SexyAppBase::InitDDInterface()
 	}
 
 	DemoSyncRefreshRate();
+
+	mScreenBounds.mX = (mWidth - mDDInterface->mWidth) / 2;
+	mScreenBounds.mY = (mHeight - mDDInterface->mHeight) / 2;
+	mScreenBounds.mWidth = mDDInterface->mWidth;
+	mScreenBounds.mHeight = mDDInterface->mHeight;
+	mWidgetManager->Resize(mScreenBounds, mDDInterface->mPresentationRect);
+
 	PostDDInterfaceInitHook();
 
 	mInputManager->Init ();
@@ -2747,9 +2812,8 @@ void SexyAppBase::Init()
 	// PreDisplayHook must call mWidgetManager->Resize if it changes mWidth or mHeight.
 	PreDisplayHook();
 
-	MakeWindow();
-
 	mWidgetManager->Resize(Rect(0, 0, mWidth, mHeight), Rect(0, 0, mWidth, mHeight));
+	MakeWindow();
 
 	if (mSoundManager == NULL)
 	{
@@ -3399,12 +3463,15 @@ void SexyAppBase::RemoveMemoryImage(MemoryImage* theMemoryImage)
 
 void SexyAppBase::Remove3DData(MemoryImage* theMemoryImage)
 {
-#if 0
 	if (mDDInterface)
-		mDDInterface->Remove3DData(theMemoryImage);
-#endif
+	{
+		mDDInterface->RemoveImageData(theMemoryImage);
+	}
+	else
+	{
+		theMemoryImage->DeleteExtraBuffers();
+	}
 }
-
 
 bool SexyAppBase::Is3DAccelerated()
 {
@@ -3427,13 +3494,6 @@ void SexyAppBase::DemoSyncRefreshRate()
 
 void SexyAppBase::Set3DAcclerated(bool is3D, bool reinit)
 {
-#if 0
-	if (mDDInterface->mIs3D == is3D)
-		return;
-
-	mUserChanged3DSetting = true;
-	mDDInterface->mIs3D = is3D;
-#endif
 }
 
 SharedImageRef SexyAppBase::GetSharedImage(const std::string& theFileName, const std::string& theVariant, bool* isNew)

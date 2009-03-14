@@ -211,7 +211,11 @@ bool LinuxInputInterface::OpenDevice ()
 	if (ret)
 	{
 		printf ("grab device failed.\n");
-		goto close_fd;
+		mGrabed = false;
+	}
+	else
+	{
+		mGrabed = true;
 	}
 
 	get_device_info (mFd);
@@ -228,7 +232,8 @@ void LinuxInputInterface::CloseDevice ()
 	if (mFd < 0)
 		return;
 
-	ioctl (mFd, EVIOCGRAB, 0);
+	if (mGrabed)
+		ioctl (mFd, EVIOCGRAB, 0);
 	close (mFd);
 	mFd = -1;
 }

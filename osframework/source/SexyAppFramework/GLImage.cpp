@@ -1153,7 +1153,7 @@ GLImage::GLImage() :
 GLImage::~GLImage()
 {
 	DBG_ASSERTE(mLockCount == 0);
-	delete mTexture;
+	DeleteSurface ();
 }
 
 void GLImage::Init()
@@ -1199,6 +1199,16 @@ bool GLImage::UnlockSurface()
 
 void GLImage::DeleteSurface()
 {
+	if (!mTexture)
+		return;
+
+	delete mTexture;
+	mTexture = 0;
+}
+
+void GLImage::ReAttach(NativeDisplay *theNative)
+{
+	mInterface = (GLInterface*)theNative;
 }
 
 void GLImage::ReInit()
@@ -1240,18 +1250,12 @@ void GLImage::DeleteAllNonSurfaceData()
 
 void GLImage::DeleteNativeData()
 {
-	if (mSurfaceSet)
-		return;
-
 	MemoryImage::DeleteNativeData();
 	DeleteSurface();
 }
 
 void GLImage::DeleteExtraBuffers()
 {
-	if (mSurfaceSet)
-		return;
-
 	MemoryImage::DeleteExtraBuffers();
 	DeleteSurface();
 }
@@ -1265,7 +1269,8 @@ void GLImage::RehupFirstPixelTrans()
 {
 }
 
-bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty, bool convex)
+bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect,
+			 const Color &theColor, int theDrawMode, int tx, int ty, bool convex)
 {
 	if (mInterface->GetScreenImage () != this)
 		return false;
@@ -1278,6 +1283,14 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 		SexyGLVertex vert = {
 			0, 0, aColor, theVertices[i].mX + tx, theVertices[i].mY + ty, 0
 		};
+
+		if (!mTransformStack.empty())
+		{
+			SexyVector2 v(vert.sx, vert.sy);
+			v = mTransformStack.back() * v;
+			vert.sx = v.x;
+			vert.sy = v.y;
+		}
 		aList.push_back (vert);
 	}
 
@@ -1344,6 +1357,24 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 	verts[4] = x + aWidth; verts[5] = y;
 	verts[6] = x + aWidth; verts[7] = y + aHeight;
 
+	if (!mTransformStack.empty())
+	{
+		SexyVector2 p[4] = { SexyVector2(x, y),
+				     SexyVector2(x, y + aHeight),
+				     SexyVector2(x + aWidth, y),
+				     SexyVector2(x + aWidth, y + aHeight) };
+
+		int i;
+		for (i = 0; i < 4; i++)
+		{
+			p[i] = mTransformStack.back()*p[i];
+			p[i].x -= 0.5f;
+			p[i].y -= 0.5f;
+			verts[i * 2 + 0] = p[i].x;
+			verts[i * 2 + 1].sy = p[i].y;
+		}
+	}
+
 	glEnableClientState (GL_VERTEX_ARRAY);
 
 	glVertexPointer (2, GL_FLOAT, 0, verts);
@@ -1358,6 +1389,27 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 		{ 0, 0, aColor, x + aWidth, y,		 0},
 		{ 0, 0, aColor, x + aWidth, y + aHeight, 0}
 	};
+
+	if (!mTransformStack.empty())
+	{
+		SexyVector2 p[4] =
+		{
+			SexyVector2(x, y),
+			SexyVector2(x,y + aHeight),
+			SexyVector2(x + aWidth, y),
+			SexyVector2(x + aWidth, y + aHeight)
+		};
+
+		int i;
+		for (i = 0; i < 4; i++)
+		{
+			p[i] = mTransformStack.back()*p[i];
+			p[i].x -= 0.5f;
+			p[i].y -= 0.5f;
+			aVertex[i].sx = p[i].x;
+			aVertex[i].sy = p[i].y;
+		}
+	}
 
 	glBegin (GL_TRIANGLE_STRIP);
 	glVertex2f (aVertex[0].sx, aVertex[0].sy);
@@ -1399,10 +1451,25 @@ void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, doubl
 	float x1, y1, x2, y2;
 	SexyRGBA aColor = theColor.ToRGBA ();
 
-	x1 = theStartX;
-	y1 = theStartY;
-	x2 = theEndX;
-	y2 = theEndY;
+	if (!mTransformStack.empty())
+	{
+		SexyVector2 p1(theStartX, theStartY);
+		SexyVector2 p2(theEndX, theEndY);
+		p1 = mTransformStack.back() * p1;
+		p2 = mTransformStack.back() * p2;
+
+		x1 = p1.x;
+		y1 = p1.y;
+		x2 = p2.x;
+		y2 = p2.y;
+	}
+	else
+	{
+		x1 = theStartX;
+		y1 = theStartY;
+		x2 = theEndX;
+		y2 = theEndY;
+	}
 
 	glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
 #ifndef SEXY_OPENGLES
@@ -1627,6 +1694,16 @@ void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect,
 		return;
 	}
 
+	if (!mTransformStack.empty ())
+	{
+		SexyTransform2D aTransform;
+		aTransform.Translate(theX, theY);
+
+		BltTransformed(theImage, NULL,theColor, theDrawMode, theSrcRect,
+			       aTransform, true);
+		return;
+	}
+
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
 	if (!srcImage)
 		return;
@@ -1714,8 +1791,36 @@ void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Co
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	else
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
-	srcImage->mTexture->BltTransformed (theTransform, theSrcRect, theColor,
-					    theClipRect, theX, theY, center);
+
+	if (!mTransformStack.empty())
+	{
+		if (theX != 0.0f || theY != 0.0f)
+		{
+			SexyTransform2D aTransform;
+
+			if (center)
+				aTransform.Translate(-theSrcRect.mWidth / 2.0f,
+						     -theSrcRect.mHeight / 2.0f);
+
+			aTransform = theTransform * aTransform;
+			aTransform.Translate(theX, theY);
+			aTransform = mTransformStack.back() * aTransform;
+
+			srcImage->mTexture->BltTransformed(aTransform, theSrcRect,
+							   theColor, theClipRect);
+		}
+		else
+		{
+			SexyTransform2D aTransform = mTransformStack.back()*theTransform;
+			srcImage->mTexture->BltTransformed (aTransform, theSrcRect, theColor,
+							    theClipRect, theX, theY, center);
+		}
+	}
+	else
+	{
+		srcImage->mTexture->BltTransformed (theTransform, theSrcRect, theColor,
+						    theClipRect, theX, theY, center);
+	}
 }
 
 void GLImage::BltRotated (Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect,
@@ -1866,7 +1971,28 @@ void GLImage::Flip(enum FlipFlags flags)
 void GLImage::EnsureTexture()
 {
 	if (!mTexture)
+	{
 		mTexture = new GLTexture();
+	}
 
 	mTexture->CheckCreateTextures (this);
+}
+
+void GLImage::PushTransform(const SexyMatrix3 &theTransform, bool concatenate)
+{
+	if (mTransformStack.empty() || !concatenate)
+	{
+		mTransformStack.push_back(theTransform);
+	}
+	else
+	{
+		SexyMatrix3 &aTrans = mTransformStack.back();
+		mTransformStack.push_back(theTransform*aTrans);
+	}
+}
+
+void GLImage::PopTransform()
+{
+	if (!mTransformStack.empty())
+		mTransformStack.pop_back();
 }

@@ -31,18 +31,6 @@ class GLInterface : public NativeDisplay
 public:
 	SexyAppBase*				mApp;
 
-	int					mWidth;
-	int					mHeight;
-	Ratio					mAspect;
-	int					mDesktopWidth;
-	int					mDesktopHeight;
-	Ratio					mDesktopAspect;
-	bool					mIsWidescreen;
-	int					mDisplayWidth;
-	int					mDisplayHeight;
-	Ratio					mDisplayAspect;
-
-	Rect					mPresentationRect;
 	int					mFullscreenBits;
 	DWORD					mRefreshRate;
 	DWORD					mMillisecondsPerFrame;
@@ -54,6 +42,22 @@ public:
 	ulong					mInitCount;
 
 	GLImage*				mScreenImage;
+
+        bool                                    mCursorEnabled;
+        int                                     mCursorX;
+        int                                     mCursorY;
+        int                                     mCursorDrawnX;
+        int                                     mCursorDrawnY;
+        int                                     mCursorOldX;
+        int                                     mCursorOldY;
+        int                                     mCursorHotX;
+        int                                     mCursorHotY;
+
+        GLImage*                                mCursorImage;
+        bool                                    mCursorDrawn;
+
+	int                                     mWindowWidth;
+	int                                     mWindowHeight;
 
 	GLint					mMinTextureWidth;
 	GLint					mMinTextureHeight;
@@ -84,6 +88,12 @@ public:
 	void					GenGoodTexSize();
 	void					CalulateBestTexDimensions (int & theWidth, int & theHeight,
 									   bool isEdge, bool usePOT);
+
+        virtual bool                            EnableCursor(bool enable);
+	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
+	virtual void				SetCursorPos(int theCursorX, int theCursorY);
+        virtual bool                            DrawCursor(Graphics* g);
+        virtual bool                            UpdateCursor(int theCursorX, int theCursorY);
 };
 
 }

@@ -32,10 +32,14 @@ public:
 	bool				mDrawToBits;
 	int				mLockCount;
 
+	typedef std::list<SexyMatrix3> TransformStack;
+	TransformStack                  mTransformStack;
+
 private:
 	void				Init();
 
 public:
+	virtual void                    ReAttach(NativeDisplay *theNative);
 	virtual void			ReInit();
 	virtual void			SetVideoMemory(bool wantVideoMemory);
 	virtual void			RehupFirstPixelTrans();
@@ -100,6 +104,10 @@ public:
 						       int theDrawMode, const Rect &theSrcRect,
 						       const SexyMatrix3 &theTransform,
 						       float theX = 0, float theY = 0, bool center = false);
+
+
+	void				 PushTransform(const SexyMatrix3 &theTransform, bool concatenate = true);
+	void				 PopTransform();
 };
 
 }

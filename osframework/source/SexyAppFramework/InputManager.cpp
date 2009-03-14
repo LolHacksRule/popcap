@@ -41,8 +41,8 @@ void InputManager::Init ()
 			delete aInput;
 	}
 
-	mWidth = mApp->mWidth;
-	mHeight = mApp->mHeight;
+	mWidth = mApp->mDDInterface->mDisplayWidth;
+	mHeight = mApp->mDDInterface->mDisplayHeight;
 }
 
 void InputManager::Cleanup (void)

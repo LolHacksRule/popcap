@@ -72,6 +72,17 @@ void GLInterface::Cleanup()
 	mGLMajor = 1;
         mGLMinor = 1;
 	mTexBGRA = GL_FALSE;
+
+	mCursorHotX = 0;
+	mCursorHotY = 0;
+	mCursorX = 0;
+	mCursorY = 0;
+	mCursorOldX = 0;
+	mCursorOldY = 0;
+	mCursorEnabled = false;
+	mCursorDrawn = false;
+	mCursorImage = 0;
+
 }
 
 bool GLInterface::Redraw(Rect* theClipRect)
@@ -106,7 +117,7 @@ void GLInterface::SwapBuffers()
 
 void GLInterface::InitGL()
 {
-	glViewport (0, 0, mWidth, mHeight);
+	glViewport (0, 0, mWindowWidth, mWindowHeight);
 
 	const char* version = (const char*)glGetString (GL_VERSION);
 	const char* str = version;
@@ -253,4 +264,51 @@ void GLInterface::CalulateBestTexDimensions (int & theWidth, int & theHeight,
 #endif
 	theWidth = aWidth;
 	theHeight = aHeight;
+}
+
+bool GLInterface::EnableCursor(bool enable)
+{
+	mCursorEnabled = enable;
+	return true;
+}
+
+bool GLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
+{
+	GLImage * aGLImage = dynamic_cast<GLImage*>(theImage);
+	mCursorImage = aGLImage;
+	mCursorHotX = theHotX;
+	mCursorHotY = theHotY;
+	return true;
+}
+
+void GLInterface::SetCursorPos(int theCursorX, int theCursorY)
+{
+        mCursorOldX = mCursorX;
+        mCursorOldY = mCursorY;
+	mCursorX = theCursorX;
+	mCursorY = theCursorY;
+}
+
+bool GLInterface::UpdateCursor(int theCursorX, int theCursorY)
+{
+	SetCursorPos (theCursorX, theCursorY);
+	if (mCursorImage &&
+	    (mCursorOldX != mCursorX ||
+	     mCursorOldY != mCursorY))
+		return true;
+	return false;
+}
+
+bool GLInterface::DrawCursor(Graphics* g)
+{
+	if (!mCursorImage)
+		return false;
+
+	g->DrawImage (mCursorImage,
+		      mCursorX - mCursorHotX,
+		      mCursorY - mCursorHotY);
+
+	mCursorDrawnX = mCursorX;
+	mCursorDrawnY = mCursorY;
+	return true;
 }

@@ -1172,6 +1172,10 @@ void MemoryImage::DeleteExtraBuffers()
 	Delete3DBuffers();
 }
 
+void MemoryImage::ReAttach(NativeDisplay *theNative)
+{
+}
+
 void MemoryImage::ReInit()
 {
 	// Fix any un-palletizing

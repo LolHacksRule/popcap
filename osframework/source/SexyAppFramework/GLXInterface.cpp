@@ -8,6 +8,7 @@
 #include "MemoryImage.h"
 #include "KeyCodes.h"
 #include "VideoDriverFactory.h"
+#include "SexyMatrix.h"
 
 //#include <GL/glu.h>
 #include <X11/keysym.h>
@@ -39,6 +40,20 @@ static Bool WaitForMapNotify(Display *d, XEvent *e, char* arg)
 	return GL_FALSE;
 }
 
+Bool GLXInterface::WaitForSubstructureNotify(Display *d, XEvent *e, char* arg)
+{
+	GLXInterface * interface = (GLXInterface*)arg;
+
+	if ((e->type == ConfigureNotify) &&
+	    (e->xmap.window == interface->mWindow)) {
+	        interface->mWindowWidth = e->xconfigure.width;
+		interface->mWindowHeight = e->xconfigure.height;
+		return GL_TRUE;
+	}
+
+	return GL_FALSE;
+}
+
 int GLXInterface::Init (void)
 {
 	Cleanup();
@@ -52,6 +67,13 @@ int GLXInterface::Init (void)
 	if (!mDpy)
 		goto fail;
 
+	mScreen = DefaultScreen (mDpy);
+	mDesktopWidth = DisplayWidth (mDpy, mScreen);
+	mDesktopHeight = DisplayHeight (mDpy, mScreen);
+	mDisplayWidth = mWidth;
+	mDisplayHeight = mHeight;
+	mWindowWidth = mWidth;
+	mWindowHeight = mHeight;
 	if (!glXQueryExtension (mDpy, NULL, NULL))
 		goto close_dpy;
 
@@ -74,8 +96,9 @@ int GLXInterface::Init (void)
 	swa.event_mask = KeyPressMask | KeyReleaseMask |
 		ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
 		EnterWindowMask | LeaveWindowMask | ExposureMask | StructureNotifyMask;
-	mWindow = XCreateWindow (mDpy, RootWindow (mDpy, visualInfo->screen), 0, 0, mWidth,
-				 mHeight, 0, visualInfo->depth, InputOutput, visualInfo->visual,
+	mWindow = XCreateWindow (mDpy, RootWindow (mDpy, visualInfo->screen), 0, 0,
+				 mWindowWidth, mWindowHeight, 0, visualInfo->depth,
+				 InputOutput, visualInfo->visual,
 				 CWBorderPixel | CWColormap | CWEventMask, &swa);
 
 	/* create an OpenGL rendering context */
@@ -89,12 +112,59 @@ int GLXInterface::Init (void)
 	XEvent event;
 	XIfEvent (mDpy,  &event,  WaitForMapNotify, (char*)mWindow);
 
-	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
-	InitGL ();
+	XSync (mDpy, FALSE);
 
-	mScreenImage->mFlags =
-		(ImageFlags)(IMAGE_FLAGS_DOUBLE_BUFFER |
-			     IMAGE_FLAGS_FLIP_AS_COPY);
+	XIfEvent (mDpy,  &event,  WaitForSubstructureNotify, (char*)this);
+
+	while (XPending (mDpy))
+		XNextEvent (mDpy, &event);
+
+	Atom wm_state, fullscreen;
+
+	wm_state = XInternAtom(mDpy, "_NET_WM_STATE", False);
+	fullscreen = XInternAtom(mDpy, "_NET_WM_STATE_FULLSCREEN", False);
+
+	if (!mApp->mIsWindowed) {
+		memset(&event, 0, sizeof(event));
+		event.type = ClientMessage;
+		event.xclient.window = mWindow;
+		event.xclient.message_type = wm_state;
+		event.xclient.format = 32;
+		event.xclient.data.l[0] = 1;
+		event.xclient.data.l[1] = fullscreen;
+		event.xclient.data.l[2] = 0;
+
+		XSendEvent (mDpy, DefaultRootWindow(mDpy), False,
+			    SubstructureNotifyMask, &event);
+		XIfEvent (mDpy,  &event,  WaitForSubstructureNotify, (char*)this);
+	}
+	XStoreName (mDpy, mWindow, mApp->mTitle.c_str ());
+
+	mScreenImage = static_cast<GLImage*>(CreateImage (mApp, mWidth, mHeight));
+
+	mScreenImage->mFlags = (ImageFlags)(IMAGE_FLAGS_DOUBLE_BUFFER);
+
+	if (mWidth != mWindowWidth || mHeight != mWindowHeight) {
+		mTrans[0].LoadIdentity ();
+		mTrans[0].Translate (0, 0);
+		mTrans[0].Scale (((float)mWindowWidth) / mWidth,
+				 ((float)mWindowHeight) / mHeight);
+
+		mTrans[1].LoadIdentity ();
+		mTrans[1].Scale (mWidth / ((float)mWindowWidth),
+				 mHeight / ((float)mWindowHeight));
+		mTrans[1].Translate (0, 0);
+	} else {
+		mTrans[0].LoadIdentity ();
+		mTrans[1].LoadIdentity ();
+	}
+
+	mPresentationRect.mX = 0;
+	mPresentationRect.mY = 0;
+	mPresentationRect.mWidth = mWidth;
+	mPresentationRect.mHeight = mHeight;
+
+	InitGL ();
 
 	mInitCount++;
 	mInitialized = true;
@@ -140,20 +210,8 @@ void GLXInterface::Cleanup ()
 
 void GLXInterface::RemapMouse(int& theX, int& theY)
 {
-}
-
-bool GLXInterface::EnableCursor(bool enable)
-{
-	return false;
-}
-
-bool GLXInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
-{
-	return false;
-}
-
-void GLXInterface::SetCursorPos(int theCursorX, int theCursorY)
-{
+	theX *= (float)mWidth / mDisplayWidth;
+	theY *= (float)mHeight / mDisplayHeight;
 }
 
 Image* GLXInterface::CreateImage(SexyAppBase * theApp,
@@ -255,6 +313,12 @@ bool GLXInterface::GetEvent(struct Event &event)
 			}
 			event.x = be->x;
 			event.y = be->y;
+
+			SexyVector2 v(be->x, be->y);
+			v = mTrans[1] * v;
+
+			event.x = v.x;
+			event.y = v.y;
 		}
 		break;
 	}
@@ -277,8 +341,12 @@ bool GLXInterface::GetEvent(struct Event &event)
 			default:
 				break;
 			}
-			event.x = be->x;
-			event.y = be->y;
+
+			SexyVector2 v(be->x, be->y);
+			v = mTrans[1] * v;
+
+			event.x = v.x;
+			event.y = v.y;
 		}
 		break;
 	}
@@ -289,6 +357,12 @@ bool GLXInterface::GetEvent(struct Event &event)
 		event.flags = EVENT_FLAGS_AXIS;
 		event.x = me->x;
 		event.y = me->y;
+
+		SexyVector2 v(me->x, me->y);
+		v = mTrans[1] * v;
+
+		event.x = v.x;
+		event.y = v.y;
 		break;
 	}
 	case Expose:

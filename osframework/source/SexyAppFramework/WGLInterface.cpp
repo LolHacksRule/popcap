@@ -8,6 +8,7 @@
 #include "MemoryImage.h"
 #include "KeyCodes.h"
 #include "VideoDriverFactory.h"
+#include "SexyMatrix.h"
 
 #include "windowsx.h"
 
@@ -67,6 +68,7 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.button = 1;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.x, event.y);
 		break;
 	case WM_LBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
@@ -74,6 +76,7 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.button = 1;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.x, event.y);
 		break;
 	case WM_MBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
@@ -81,6 +84,8 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.button = 3;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.x, event.y);
+
 		break;
 	case WM_MBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
@@ -88,6 +93,7 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.button = 3;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.x, event.y);
 		break;
 	case WM_RBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
@@ -95,6 +101,7 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.button = 2;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.x, event.y);
 		break;
 	case WM_RBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
@@ -102,12 +109,14 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.button = 2;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.x, event.y);
 		break;
 	case WM_MOUSEMOVE:
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_AXIS;
 		event.x = GET_X_LPARAM (lParam);
 		event.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.x, event.y);
 		break;
 	case WM_KILLFOCUS:
 		event.type = EVENT_ACTIVE;
@@ -136,6 +145,18 @@ int WGLInterface::Init (void)
 	mInitialized = false;
 
 	GLInterface::Init();
+
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
+	mAspect.Set(mWidth, mHeight);
+	mDesktopWidth = GetSystemMetrics (SM_CXSCREEN);
+	mDesktopHeight = GetSystemMetrics (SM_CYSCREEN);
+	mDesktopAspect.Set (mDesktopWidth, mDesktopHeight);
+	mDisplayWidth = mWidth;
+	mDisplayHeight = mHeight;
+	mDisplayAspect = mAspect;
+	mPresentationRect = Rect (0, 0, mWidth, mHeight);
+	mApp->mScreenBounds = mPresentationRect;
 
 	HINSTANCE  hInstance = GetModuleHandle (NULL);
 	WNDCLASS   wndclass;
@@ -200,27 +221,56 @@ int WGLInterface::Init (void)
 
 	SetWindowLongPtr (mWindow, GWLP_USERDATA, (LONG_PTR)this);
 
-	WINDOWINFO wininfo;
-	GetWindowInfo (mWindow, &wininfo);
-
 	RECT rect;
-	rect.left = 0;
-	rect.right = mApp->mWidth;
-	rect.top = 0;
-	rect.bottom = mApp->mHeight;
-	AdjustWindowRect (&rect, wininfo.dwStyle, FALSE);
-	MoveWindow (mWindow, wininfo.rcWindow.left, wininfo.rcWindow.top,
-		    rect.right - rect.left, rect.bottom - rect.top, FALSE);
+	if (mApp->mIsWindowed) {
+		WINDOWINFO wininfo;
+		GetWindowInfo (mWindow, &wininfo);
+
+		RECT rect;
+		rect.left = 0;
+		rect.right = mApp->mWidth;
+		rect.top = 0;
+		rect.bottom = mApp->mHeight;
+		AdjustWindowRect (&rect, wininfo.dwStyle, FALSE);
+		MoveWindow (mWindow, wininfo.rcWindow.left, wininfo.rcWindow.top,
+			    rect.right - rect.left, rect.bottom - rect.top, FALSE);
+	} else {
+		WINDOWPLACEMENT placement;
+		int style;
+
+		placement.length = sizeof(WINDOWPLACEMENT);
+		GetWindowPlacement (mWindow, &placement);
+
+		style = WS_CLIPCHILDREN | WS_VISIBLE;
+		SetWindowLong (mWindow, GWL_STYLE, style);
+
+		SetForegroundWindow (mWindow);
+		ShowWindow (mWindow, SW_SHOW);
+
+		placement.showCmd = SW_SHOWNORMAL;
+		placement.rcNormalPosition.left = 0;
+		placement.rcNormalPosition.right = mDesktopWidth;
+		placement.rcNormalPosition.top = 0;
+		placement.rcNormalPosition.bottom = mDesktopHeight;
+		SetWindowPlacement(mWindow, &placement);
+		SetWindowPos(mWindow, 0, 0, 0, 0, 0,
+			     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+	}
 
 	GetClientRect (mWindow, &rect);
-	mWidth = rect.right;
-	mHeight = rect.bottom;
-	mApp->mWidth = mWidth;
-	mApp->mHeight = mHeight;
+	mWindowWidth = rect.right - rect.left;
+	mWindowHeight = rect.bottom - rect.top;
+	mDisplayWidth = mWidth;
+	mDisplayHeight = mHeight;
+	mPresentationRect.mX = 0;
+	mPresentationRect.mY = 0;
+	mPresentationRect.mWidth = mDisplayWidth;
+	mPresentationRect.mHeight = mDisplayHeight;
 
 	mContext = wglCreateContext (mHDC);
 	wglMakeCurrent (mHDC, mContext);
 
+	SetCursor (NULL);
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
 
@@ -263,24 +313,14 @@ void WGLInterface::Cleanup ()
 	if (mWindow)
 		DestroyWindow (mWindow);
 	mWindow = 0;
+
+	UnregisterClass ("SexyGL", GetModuleHandle (NULL));
 }
 
 void WGLInterface::RemapMouse(int& theX, int& theY)
 {
-}
-
-bool WGLInterface::EnableCursor(bool enable)
-{
-	return false;
-}
-
-bool WGLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
-{
-	return false;
-}
-
-void WGLInterface::SetCursorPos(int theCursorX, int theCursorY)
-{
+    theX = (float)theX * mDisplayWidth / mWindowWidth;
+    theY = (float)theY * mDisplayHeight / mWindowHeight;
 }
 
 Image* WGLInterface::CreateImage(SexyAppBase * theApp,
@@ -344,13 +384,13 @@ class WGLVideoDriver: public VideoDriver {
 public:
 	WGLVideoDriver ()
 		: VideoDriver("WGL", 10)
-		{
-		}
+	{
+	}
 
 	NativeDisplay* Create (SexyAppBase * theApp)
-		{
-			return new WGLInterface (theApp);
-		}
+	{
+		return new WGLInterface (theApp);
+	}
 };
 
 static WGLVideoDriver aWGLVideoDriver;

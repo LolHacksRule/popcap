@@ -159,10 +159,14 @@ int CEGLESInterface::Init (void)
 		goto destroy_surface;
 	}
 
-	mWidth = width;
-	mHeight = height;
-	mApp->mWidth = width;
-	mApp->mHeight = height;
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
+	mDisplayWidth = width;
+	mDisplayHeight = height;
+	mPresentationRect.mX = 0;
+	mPresentationRect.mY = 0;
+	mPresentationRect.mWidth = mDisplayWidth;
+	mPresentationRect.mHeight = mDisplayHeight;
 
 #if 0
 	EGLint SwapBehavior;
@@ -285,7 +289,7 @@ bool CEGLESInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 	mCursorImage = aGLImage;
 	mCursorHotX = theHotX;
 	mCursorHotY = theHotY;
-	return false;
+	return true;
 }
 
 void CEGLESInterface::SetCursorPos(int theCursorX, int theCursorY)
