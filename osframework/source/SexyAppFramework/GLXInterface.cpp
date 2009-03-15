@@ -119,6 +119,19 @@ int GLXInterface::Init (void)
 	while (XPending (mDpy))
 		XNextEvent (mDpy, &event);
 
+	Pixmap pixmap;
+        Cursor cursor;
+        XColor black, dummy;
+        static char cursor_data[] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+        XAllocNamedColor (mDpy, colorMap, "black", &black, &dummy);
+        pixmap = XCreateBitmapFromData (mDpy, mWindow, cursor_data, 8, 8);
+        cursor = XCreatePixmapCursor (mDpy, pixmap, pixmap, &black, &black, 0, 0);
+
+        XDefineCursor (mDpy, mWindow, cursor);
+        XFreeCursor (mDpy, cursor);
+	XFreePixmap (mDpy, pixmap);
+
 	Atom wm_state, fullscreen;
 
 	wm_state = XInternAtom(mDpy, "_NET_WM_STATE", False);
