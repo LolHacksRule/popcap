@@ -3,6 +3,7 @@
 
 #include "Common.h"
 #include "KeyCodes.h"
+#include "Event.h"
 #include "WidgetContainer.h"
 
 namespace Sexy
@@ -123,6 +124,7 @@ public:
 	bool					KeyChar(SexyChar theChar);
 	bool					KeyDown(KeyCode key);
 	bool					KeyUp(KeyCode key);
+	bool                                    UserEvent(const Event event);
 
 	bool					IsLeftButtonDown();
 	bool					IsMiddleButtonDown();

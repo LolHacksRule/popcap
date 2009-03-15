@@ -440,8 +440,9 @@ bool WidgetManager::DrawScreen()
 	bool cursorChanged = aInterface->UpdateCursor(aCursorX, aCursorY);
 
 	bool redrawAll = false;
-	if ((mImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER) &&
-	    !(mImage->mFlags & IMAGE_FLAGS_FLIP_AS_COPY))
+	if (((mImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER) &&
+	     !(mImage->mFlags & IMAGE_FLAGS_FLIP_AS_COPY)) ||
+	    !(mImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER))
 		redrawAll = true;
 
 	if (aDirtyCount > 0 || cursorChanged)
@@ -826,6 +827,16 @@ bool WidgetManager::KeyUp(KeyCode key)
 
 	if (mFocusWidget != NULL)
 		mFocusWidget->KeyUp(key);
+
+	return true;
+}
+
+bool WidgetManager::UserEvent(const Event event)
+{
+    	mLastInputUpdateCnt = mUpdateCnt;
+
+	if (mFocusWidget != NULL)
+		mFocusWidget->UserEvent(event);
 
 	return true;
 }

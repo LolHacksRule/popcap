@@ -2215,6 +2215,113 @@ void SexyAppBase::DoMainLoop()
 	}
 }
 
+bool SexyAppBase::ProcessMessage(Event & event)
+{
+	mLastUserInputTick = mLastTimerTime;
+
+	switch(event.type) {
+	case EVENT_NONE:
+		break;
+
+	case EVENT_QUIT:
+		Shutdown();
+		break;
+
+	case EVENT_MOUSE_BUTTON_PRESS:
+		mMouseX = event.u.mouse.x;
+		mMouseY = event.u.mouse.y;
+		mWidgetManager->RemapMouse(mMouseX, mMouseY);
+
+		if (event.u.mouse.button == 1)
+			mWidgetManager->MouseDown(mMouseX, mMouseY, 1);
+		else if (event.u.mouse.button == 2)
+			mWidgetManager->MouseDown(mMouseX, mMouseY, -1);
+		else if (event.u.mouse.button == 3)
+			mWidgetManager->MouseDown(mMouseX, mMouseY, 3);
+		break;
+
+	case EVENT_MOUSE_BUTTON_RELEASE:
+		mMouseX = event.u.mouse.x;
+		mMouseY = event.u.mouse.y;
+		mWidgetManager->RemapMouse(mMouseX, mMouseY);
+
+		if (event.u.mouse.button == 1)
+			mWidgetManager->MouseUp(mMouseX, mMouseY, 1);
+		else if (event.u.mouse.button == 2)
+			mWidgetManager->MouseUp(mMouseX, mMouseY, -1);
+		else if (event.u.mouse.button == 3)
+			mWidgetManager->MouseUp(mMouseX, mMouseY, 3);
+		break;
+
+	case EVENT_KEY_DOWN:
+		mWidgetManager->KeyDown((KeyCode)event.u.key.keyCode);
+		if ((event.u.key.keyCode >= 'a' && event.u.key.keyCode <= 'z') ||
+		    (event.u.key.keyCode >= '0' && event.u.key.keyCode <= '9'))
+			mWidgetManager->KeyChar((SexyChar)event.u.key.keyCode);
+
+		break;
+
+	case EVENT_KEY_UP:
+		mWidgetManager->KeyUp((KeyCode)event.u.key.keyCode);
+		break;
+
+	case EVENT_MOUSE_MOTION:
+		if (!mHasFocus)
+		{
+			mHasFocus = true;
+			GotFocus();
+
+			if (mMuteOnLostFocus)
+				Unmute(true);
+		}
+
+		mMouseX = event.u.mouse.x;
+		mMouseY = event.u.mouse.y;
+		mWidgetManager->RemapMouse(mMouseX, mMouseY);
+
+		mWidgetManager->MouseMove(mMouseX, mMouseY);
+
+		if (!mMouseIn)
+		{
+			mMouseIn = true;
+			EnforceCursor();
+		}
+		break;
+
+	case EVENT_ACTIVE:
+		if (event.u.active.active) {
+
+			mHasFocus = true;
+			GotFocus();
+
+			if (mMuteOnLostFocus)
+				Unmute(true);
+
+			mWidgetManager->MouseMove(mMouseX, mMouseY);
+
+		}
+		else {
+
+			mHasFocus = false;
+			LostFocus();
+
+			mWidgetManager->MouseExit(mMouseX, mMouseY);
+
+			if (mMuteOnLostFocus)
+				Mute(true);
+		}
+		break;
+	case EVENT_EXPOSE:
+		mWidgetManager->MarkAllDirty();
+		break;
+	default:
+		mWidgetManager->UserEvent(event);
+		break;
+	}
+
+	return true;
+}
+
 bool SexyAppBase::UpdateAppStep(bool* updated)
 {
 	if (updated != NULL)
@@ -2235,124 +2342,8 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 		Sexy::Event event;
 
 		mInputManager->Update ();
-		while (mInputManager->PopEvent(event)) {
-			switch(event.type) {
-			case EVENT_QUIT:
-				Shutdown();
-				break;
-
-                        case EVENT_MOUSE_BUTTON_PRESS:
-				mDDInterface->mCursorX = event.x;
-				mDDInterface->mCursorY = event.y;
-				mWidgetManager->RemapMouse(mDDInterface->mCursorX,
-							   mDDInterface->mCursorY);
-
-				mLastUserInputTick = mLastTimerTime;
-
-				if (event.button == 1)
-					mWidgetManager->MouseDown(mDDInterface->mCursorX,
-								  mDDInterface->mCursorY, 1);
-				else if (event.button == 2)
-					mWidgetManager->MouseDown(mDDInterface->mCursorX,
-								  mDDInterface->mCursorY, -1);
-				else if (event.button == 3)
-					mWidgetManager->MouseDown(mDDInterface->mCursorX,
-								  mDDInterface->mCursorY, 3);
-				break;
-
-                        case EVENT_MOUSE_BUTTON_RELEASE:
-				mDDInterface->mCursorX = event.x;
-				mDDInterface->mCursorY = event.y;
-				mWidgetManager->RemapMouse(mDDInterface->mCursorX,
-							   mDDInterface->mCursorY);
-
-				mLastUserInputTick = mLastTimerTime;
-
-				if (event.button == 1)
-					mWidgetManager->MouseUp(mDDInterface->mCursorX,
-								mDDInterface->mCursorY, 1);
-				else if (event.button == 2)
-					mWidgetManager->MouseUp(mDDInterface->mCursorX,
-								mDDInterface->mCursorY, -1);
-				else if (event.button == 3)
-					mWidgetManager->MouseUp(mDDInterface->mCursorX,
-								mDDInterface->mCursorY, 3);
-				break;
-
-                        case EVENT_KEY_DOWN:
-				mLastUserInputTick = mLastTimerTime;
-				mWidgetManager->KeyDown((KeyCode)event.keyCode);
-				if ((event.keyCode >= 'a' && event.keyCode <= 'z') ||
-				    (event.keyCode >= '0' && event.keyCode <= '9'))
-					mWidgetManager->KeyChar((SexyChar)event.keyCode);
-
-				break;
-
-                        case EVENT_KEY_UP:
-				mLastUserInputTick = mLastTimerTime;
-				mWidgetManager->KeyUp((KeyCode)event.keyCode);
-				break;
-
-                        case EVENT_MOUSE_MOTION:
-				if (!mHasFocus)
-				{
-					mHasFocus = true;
-					GotFocus();
-
-					if (mMuteOnLostFocus)
-						Unmute(true);
-				}
-
-				mDDInterface->mCursorX = event.x;
-				mDDInterface->mCursorY = event.y;
-				mWidgetManager->RemapMouse(mDDInterface->mCursorX,
-							   mDDInterface->mCursorY);
-
-				mLastUserInputTick = mLastTimerTime;
-
-				mWidgetManager->MouseMove(mDDInterface->mCursorX,
-							  mDDInterface->mCursorY);
-
-				if (!mMouseIn)
-				{
-					mMouseIn = true;
-					EnforceCursor();
-				}
-				break;
-
-                        case EVENT_ACTIVE:
-				if (event.active) {
-
-					mHasFocus = true;
-					GotFocus();
-
-					if (mMuteOnLostFocus)
-						Unmute(true);
-
-					mWidgetManager->MouseMove(mDDInterface->mCursorX,
-								  mDDInterface->mCursorY);
-
-				}
-				else {
-
-					mHasFocus = false;
-					LostFocus();
-
-					mWidgetManager->MouseExit(mDDInterface->mCursorX,
-								  mDDInterface->mCursorY);
-
-					if (mMuteOnLostFocus)
-						Mute(true);
-				}
-				break;
-			case EVENT_EXPOSE:
-				mWidgetManager->MarkAllDirty();
-				break;
-			default:
-				break;
-			}
-		}
-
+		while (mInputManager->PopEvent(event))
+			ProcessMessage (event);
 		ProcessDemo();
 		if (!ProcessDeferredMessages(true))
 		{

@@ -306,18 +306,18 @@ bool AGLInterface::GetEvent(struct Event &event)
 		case NSLeftMouseDown:
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-			event.button = 1;
-                        event.x = int([nsevent locationInWindow].x);
-                        event.y = mHeight - int([nsevent locationInWindow].y);
+			event.u.mouse.button = 1;
+                        event.u.mouse.x = int([nsevent locationInWindow].x);
+                        event.u.mouse.y = mHeight - int([nsevent locationInWindow].y);
                         [NSApp sendEvent:nsevent];
 			break;
 
 		case NSLeftMouseUp:
                         event.type = EVENT_MOUSE_BUTTON_RELEASE;
                         event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-                        event.button = 1;
-                        event.x = int([nsevent locationInWindow].x);
-                        event.y = mHeight - int([nsevent locationInWindow].y);
+                        event.u.mouse.button = 1;
+                        event.u.mouse.x = int([nsevent locationInWindow].x);
+                        event.u.mouse.y = mHeight - int([nsevent locationInWindow].y);
                         [NSApp sendEvent:nsevent];
 			break;
 
@@ -333,17 +333,17 @@ bool AGLInterface::GetEvent(struct Event &event)
 		case NSRightMouseUp:
                         event.type = EVENT_MOUSE_BUTTON_RELEASE;
                         event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-                        event.button = 2;
-                        event.x = int([nsevent locationInWindow].x);
-                        event.y = mHeight - int([nsevent locationInWindow].y);
+                        event.u.mouse.button = 2;
+                        event.u.mouse.x = int([nsevent locationInWindow].x);
+                        event.u.mouse.y = mHeight - int([nsevent locationInWindow].y);
                         [NSApp sendEvent:nsevent];
                         break;
 
 		case NSMouseMoved:
 			event.type = EVENT_MOUSE_MOTION;
 			event.flags = EVENT_FLAGS_AXIS;
-			event.x = int([nsevent locationInWindow].x);
-			event.y = mHeight - int([nsevent locationInWindow].y);
+			event.u.mouse.x = int([nsevent locationInWindow].x);
+			event.u.mouse.y = mHeight - int([nsevent locationInWindow].y);
 			[NSApp sendEvent:nsevent];
 			break;
 
@@ -353,13 +353,13 @@ bool AGLInterface::GetEvent(struct Event &event)
 		case NSMouseEntered:
 			event.type = EVENT_ACTIVE;
 			event.flags = 0;
-			event.active = true;
+			event.u.active.active = true;
 			break;
 
 		case NSMouseExited:
 			event.type = EVENT_ACTIVE;
 			event.flags = 0;
-			event.active = true;
+			event.u.active.active = true;
                         break;
 
 		default:

@@ -6,6 +6,7 @@
 #include "Insets.h"
 #include "Graphics.h"
 #include "KeyCodes.h"
+#include "Event.h"
 #include "WidgetContainer.h"
 
 namespace Sexy
@@ -77,6 +78,7 @@ public:
 	virtual void			MouseUp(int x, int y, int theBtnNum, int theClickCount);
 	virtual void			MouseDrag(int x, int y);
 	virtual void			MouseWheel(int theDelta);
+	virtual void                    UserEvent(const Event event);
 	virtual bool			IsPointVisible(int x, int y);
 	
 	//////// Helper functions

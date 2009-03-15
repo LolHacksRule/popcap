@@ -252,6 +252,9 @@ public:
         Point                                   mHandCursorHot;
         Point                                   mDraggingCursorHot;
 
+	int                                     mMouseX;
+	int                                     mMouseY;
+
 	WidgetSafeDeleteList	                mSafeDeleteList;
 	bool					mMouseIn;
 	bool					mRunning;
@@ -355,6 +358,7 @@ public:
 protected:
 	void					RehupFocus();
 	void					ClearKeysDown();
+	virtual bool                            ProcessMessage(Event &event);
 	bool					ProcessDeferredMessages(bool singleMessage);
 	void					UpdateFTimeAcc();
 	virtual bool			Process(bool allowSleep = true);

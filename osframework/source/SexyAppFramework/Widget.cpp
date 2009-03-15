@@ -311,6 +311,10 @@ void Widget::MouseWheel(int theDelta)
 {
 }
 
+void Widget::UserEvent(const Event event)
+{
+}
+
 //////// Helper functions
 
 Rect Widget::WriteCenteredLine(Graphics* g, int anOffset, const SexyString& theLine)

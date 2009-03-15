@@ -286,7 +286,7 @@ bool GLXInterface::GetEvent(struct Event &event)
 
                 XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
 		event.type = EVENT_KEY_UP;
-		event.keyCode = XKsymToKeyCode (key);
+		event.u.key.keyCode = XKsymToKeyCode (key);
 		if (key == XK_Escape &&
 		    (ke->state & (ControlMask | ShiftMask)) == (ControlMask | ShiftMask))
 		    event.type = EVENT_QUIT;
@@ -300,25 +300,25 @@ bool GLXInterface::GetEvent(struct Event &event)
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (be->button) {
 			case Button1:
-				event.button = 1;
+				event.u.mouse.button = 1;
 				break;
 			case Button2:
-				event.button = 3;
+				event.u.mouse.button = 3;
 				break;
 			case Button3:
-				event.button = 2;
+				event.u.mouse.button = 2;
 				break;
 			default:
 				break;
 			}
-			event.x = be->x;
-			event.y = be->y;
+			event.u.mouse.x = be->x;
+			event.u.mouse.y = be->y;
 
 			SexyVector2 v(be->x, be->y);
 			v = mTrans[1] * v;
 
-			event.x = v.x;
-			event.y = v.y;
+			event.u.mouse.x = v.x;
+			event.u.mouse.y = v.y;
 		}
 		break;
 	}
@@ -330,13 +330,13 @@ bool GLXInterface::GetEvent(struct Event &event)
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (be->button) {
 			case Button1:
-				event.button = 1;
+				event.u.mouse.button = 1;
 				break;
 			case Button2:
-				event.button = 3;
+				event.u.mouse.button = 3;
 				break;
 			case Button3:
-				event.button = 2;
+				event.u.mouse.button = 2;
 				break;
 			default:
 				break;
@@ -345,8 +345,8 @@ bool GLXInterface::GetEvent(struct Event &event)
 			SexyVector2 v(be->x, be->y);
 			v = mTrans[1] * v;
 
-			event.x = v.x;
-			event.y = v.y;
+			event.u.mouse.x = v.x;
+			event.u.mouse.y = v.y;
 		}
 		break;
 	}
@@ -355,14 +355,14 @@ bool GLXInterface::GetEvent(struct Event &event)
 		XMotionEvent * me = (XMotionEvent*)&xevent;
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_AXIS;
-		event.x = me->x;
-		event.y = me->y;
+		event.u.mouse.x = me->x;
+		event.u.mouse.y = me->y;
 
 		SexyVector2 v(me->x, me->y);
 		v = mTrans[1] * v;
 
-		event.x = v.x;
-		event.y = v.y;
+		event.u.mouse.x = v.x;
+		event.u.mouse.y = v.y;
 		break;
 	}
 	case Expose:
@@ -374,11 +374,11 @@ bool GLXInterface::GetEvent(struct Event &event)
 		break;
 	case EnterNotify:
 		event.type = EVENT_ACTIVE;
-		event.active = true;
+		event.u.active.active = true;
 		break;
 	case LeaveNotify:
 		event.type = EVENT_ACTIVE;
-		event.active = false;
+		event.u.active.active = false;
 		break;
 	default:
 		break;

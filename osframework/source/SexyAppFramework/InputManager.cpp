@@ -96,8 +96,8 @@ bool InputManager::PopEvent (Event &event)
 	{
 		int x, y;
 
-		x = event.x;
-		y = event.y;
+		x = event.u.mouse.x;
+		y = event.u.mouse.y;
 		if (event.flags & EVENT_FLAGS_REL_AXIS)
 		{
 			mX += x;
@@ -117,8 +117,8 @@ bool InputManager::PopEvent (Event &event)
 			mX = mWidth - 1;
 		if (mY > mHeight)
 			mY = mHeight - 1;
-		event.x = mX;
-		event.y = mY;
+		event.u.mouse.x = mX;
+		event.u.mouse.y = mY;
 		event.flags |= EVENT_FLAGS_AXIS;
 		event.flags &= ~EVENT_FLAGS_REL_AXIS;
 	}
@@ -128,8 +128,8 @@ bool InputManager::PopEvent (Event &event)
 		printf ("event.type: %d\n", event.type);
 		if (event.flags & EVENT_FLAGS_AXIS)
 		{
-			printf ("event.x: %d\n", event.x);
-			printf ("event.y: %d\n", event.y);
+			printf ("event.x: %d\n", event.u.mouse.x);
+			printf ("event.y: %d\n", event.u.mouse.y);
 		}
 	}
 	return true;

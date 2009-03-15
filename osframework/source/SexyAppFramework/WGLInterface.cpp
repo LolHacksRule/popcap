@@ -65,66 +65,66 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 	case WM_LBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
 		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-		event.button = 1;
-		event.x = GET_X_LPARAM (lParam);
-		event.y = GET_Y_LPARAM (lParam);
-		interface->RemapMouse(event.x, event.y);
+		event.u.mouse.button = 1;
+		event.u.mouse.x = GET_X_LPARAM (lParam);
+		event.u.mouse.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
 		break;
 	case WM_LBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
 		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-		event.button = 1;
-		event.x = GET_X_LPARAM (lParam);
-		event.y = GET_Y_LPARAM (lParam);
-		interface->RemapMouse(event.x, event.y);
+		event.u.mouse.button = 1;
+		event.u.mouse.x = GET_X_LPARAM (lParam);
+		event.u.mouse.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
 		break;
 	case WM_MBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
 		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-		event.button = 3;
-		event.x = GET_X_LPARAM (lParam);
-		event.y = GET_Y_LPARAM (lParam);
-		interface->RemapMouse(event.x, event.y);
+		event.u.mouse.button = 3;
+		event.u.mouse.x = GET_X_LPARAM (lParam);
+		event.u.mouse.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
 
 		break;
 	case WM_MBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
 		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-		event.button = 3;
-		event.x = GET_X_LPARAM (lParam);
-		event.y = GET_Y_LPARAM (lParam);
-		interface->RemapMouse(event.x, event.y);
+		event.u.mouse.button = 3;
+		event.u.mouse.x = GET_X_LPARAM (lParam);
+		event.u.mouse.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
 		break;
 	case WM_RBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
 		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-		event.button = 2;
-		event.x = GET_X_LPARAM (lParam);
-		event.y = GET_Y_LPARAM (lParam);
-		interface->RemapMouse(event.x, event.y);
+		event.u.mouse.button = 2;
+		event.u.mouse.x = GET_X_LPARAM (lParam);
+		event.u.mouse.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
 		break;
 	case WM_RBUTTONUP:
 		event.type = EVENT_MOUSE_BUTTON_RELEASE;
 		event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-		event.button = 2;
-		event.x = GET_X_LPARAM (lParam);
-		event.y = GET_Y_LPARAM (lParam);
-		interface->RemapMouse(event.x, event.y);
+		event.u.mouse.button = 2;
+		event.u.mouse.x = GET_X_LPARAM (lParam);
+		event.u.mouse.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
 		break;
 	case WM_MOUSEMOVE:
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_AXIS;
-		event.x = GET_X_LPARAM (lParam);
-		event.y = GET_Y_LPARAM (lParam);
-		interface->RemapMouse(event.x, event.y);
+		event.u.mouse.x = GET_X_LPARAM (lParam);
+		event.u.mouse.y = GET_Y_LPARAM (lParam);
+		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
 		break;
 	case WM_KILLFOCUS:
 		event.type = EVENT_ACTIVE;
-		event.active = false;
+		event.u.active.active = false;
 		break;
 	case WM_SETFOCUS:
 		event.type = EVENT_ACTIVE;
-		event.active = true;
+		event.u.active.active = true;
 		break;
 	default:
 		ret = DefWindowProc (hWnd, uMsg, wParam, lParam);

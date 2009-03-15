@@ -26,15 +26,34 @@ enum EventType {
 #define EVENT_FLAGS_KEY_CODE (1U << 3)
 #define EVENT_FLAGS_KEY_CHAR (1U << 4)
 
-struct Event {
-        enum EventType type;
-        unsigned int   flags;
-        int            keyCode;
-        int            keyChar;
+struct MouseEvent {
         int            x;
         int            y;
         int            button;
+};
+
+struct KeyEvent {
+        int            keyCode;
+        int            keyChar;
+};
+
+struct ActiveEvent {
         int            active;
+};
+
+struct UserEvent {
+	int            reserved[8];
+};
+
+struct Event {
+        enum EventType               type;
+        unsigned int                 flags;
+        union {
+		struct MouseEvent    mouse;
+		struct KeyEvent      key;
+		struct ActiveEvent   active;
+		struct UserEvent     user;
+	}                            u;
 };
 
 #ifdef __cplusplus

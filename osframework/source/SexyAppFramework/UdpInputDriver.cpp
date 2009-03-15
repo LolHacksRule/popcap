@@ -170,12 +170,12 @@ static void handle_event (struct UdpInput &input,
 {
 	event.type = (EventType)read32 (input.type);
 	event.flags = read32 (input.flags);
-	event.x = read32 (input.x);
-	event.y = read32 (input.y);
-	event.button = read32 (input.button);
-	event.keyCode = read32 (input.key_code);
-	event.keyChar = read32 (input.key_char);
-	event.active = !!read32 (input.active);
+	event.u.mouse.x = read32 (input.x);
+	event.u.mouse.y = read32 (input.y);
+	event.u.mouse.button = read32 (input.button);
+	event.u.key.keyCode = read32 (input.key_code);
+	event.u.key.keyChar = read32 (input.key_char);
+	event.u.active.active = !!read32 (input.active);
 }
 
 void* UdpInputInterface::Run (void * data)
@@ -242,8 +242,8 @@ void* UdpInputInterface::Run (void * data)
 
 			event.type = EVENT_NONE;
 			event.flags = 0;
-			event.x = driver->mX;
-			event.y = driver->mY;
+			event.u.mouse.x = driver->mX;
+			event.u.mouse.y = driver->mY;
 
 			handle_event (input[i], event);
 
@@ -251,8 +251,8 @@ void* UdpInputInterface::Run (void * data)
 			{
 				if (event.flags & EVENT_FLAGS_AXIS)
 				{
-					driver->mX = event.x;
-					driver->mY = event.y;
+					driver->mX = event.u.mouse.x;
+					driver->mY = event.u.mouse.y;
 				}
 			}
 			if (event.type != EVENT_NONE)
@@ -260,8 +260,8 @@ void* UdpInputInterface::Run (void * data)
 				if (0)
 				{
 					printf ("event.type: %d\n", event.type);
-					printf ("event.x: %d\n", event.x);
-					printf ("event.y: %d\n", event.y);
+					printf ("event.x: %d\n", event.u.mouse.x);
+					printf ("event.y: %d\n", event.u.mouse.y);
 				}
 				driver->PostEvent (event);
 			}

@@ -472,38 +472,38 @@ bool DFBInterface::GetEvent(struct Event &event)
 		//printf ("type %d\n", (int)e->type);
 		switch (e->type) {
 		case DIET_BUTTONPRESS:
-			event.x = mMouseX;
-			event.y = mMouseY;
+			event.u.mouse.x = mMouseX;
+			event.u.mouse.y = mMouseY;
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
 			case DIBI_LEFT:
-				event.button = 1;
+				event.u.mouse.button = 1;
 				break;
 			case DIBI_MIDDLE:
-				event.button = 3;
+				event.u.mouse.button = 3;
 				break;
 			case DIBI_RIGHT:
-				event.button = 2;
+				event.u.mouse.button = 2;
 				break;
 			default:
 				break;
 			}
 			break;
 		case DIET_BUTTONRELEASE:
-			event.x = mMouseX;
-			event.y = mMouseY;
+			event.u.mouse.x = mMouseX;
+			event.u.mouse.y = mMouseY;
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
 			case DIBI_LEFT:
-				event.button = 1;
+				event.u.mouse.button = 1;
 				break;
 			case DIBI_MIDDLE:
-				event.button = 3;
+				event.u.mouse.button = 3;
 				break;
 			case DIBI_RIGHT:
-				event.button = 2;
+				event.u.mouse.button = 2;
 				break;
 			default:
 				break;
@@ -528,8 +528,8 @@ bool DFBInterface::GetEvent(struct Event &event)
 			}
 
 			if (!(e->flags & DIEF_FOLLOW)) {
-				event.x = mMouseX;
-				event.y = mMouseY;
+				event.u.mouse.x = mMouseX;
+				event.u.mouse.y = mMouseY;
 				event.type = EVENT_MOUSE_MOTION;
 				event.flags = EVENT_FLAGS_AXIS;
 			}
@@ -546,34 +546,34 @@ bool DFBInterface::GetEvent(struct Event &event)
 			else
 				event.type = EVENT_KEY_UP;
 			if (id == DIKI_UP) {
-				event.keyCode = (int)KEYCODE_UP;
+				event.u.key.keyCode = (int)KEYCODE_UP;
 			} else if(id ==	 DIKI_DOWN) {
-				event.keyCode = (int)KEYCODE_DOWN;
+				event.u.key.keyCode = (int)KEYCODE_DOWN;
 			} else if (id ==  DIKI_LEFT) {
-				event.keyCode = (int)KEYCODE_LEFT;
+				event.u.key.keyCode = (int)KEYCODE_LEFT;
 			} else if (id == DIKI_RIGHT) {
-				event.keyCode = (int)KEYCODE_RIGHT;
+				event.u.key.keyCode = (int)KEYCODE_RIGHT;
 			} else if (id == DIKI_ENTER) {
 				event.keyCode = (int)KEYCODE_RETURN;
 			} else if (id == DIKI_SPACE) {
-				event.keyCode = (int)KEYCODE_SPACE;
+				event.u.key.keyCode = (int)KEYCODE_SPACE;
 			} else if (id == DIKI_BACKSPACE) {
-				event.keyCode = (int)KEYCODE_BACK;
+				event.u.key.keyCode = (int)KEYCODE_BACK;
 			} else if (id == DIKI_ESCAPE) {
 				if ((e->modifiers & (DIMM_SHIFT | DIMM_CONTROL)) == (DIMM_SHIFT | DIMM_CONTROL))
 					event.type = EVENT_QUIT;
 				else
-					event.keyCode = (int)KEYCODE_ESCAPE;
+					event.u.key.keyCode = (int)KEYCODE_ESCAPE;
 			} else if (id == DIKI_SHIFT_L || id == DIKI_SHIFT_R) {
-				event.keyCode = (int)KEYCODE_SHIFT;
+				event.u.key.keyCode = (int)KEYCODE_SHIFT;
 			} else if (id == DIKI_CONTROL_L || id == DIKI_CONTROL_R) {
-				event.keyCode = (int)KEYCODE_CONTROL;
+				event.u.key.keyCode = (int)KEYCODE_CONTROL;
 			} else if (id >= DIKI_A && id < DIKI_Z) {
-				event.keyCode = (int)('a' + id - DIKI_A);
-				event.keyChar = (int)sym;
+				event.u.key.keyCode = (int)('a' + id - DIKI_A);
+				event.u.key.keyChar = (int)sym;
 			} else if (id >= DIKI_0 && id < DIKI_9) {
-				event.keyCode = (int)('0' + id - DIKI_0);
-				event.keyChar = (int)sym;
+				event.u.key.keyCode = (int)('0' + id - DIKI_0);
+				event.u.key.keyChar = (int)sym;
 			} else {
 				event.type = EVENT_NONE;
 			}
@@ -592,58 +592,58 @@ bool DFBInterface::GetEvent(struct Event &event)
 		//printf ("type %d\n", (int)e->type);
 		switch (e->type) {
 		case DWET_BUTTONDOWN:
-			event.x = mMouseX;
-			event.y = mMouseY;
+			event.u.mouse.x = mMouseX;
+			event.u.mouse.y = mMouseY;
 
 			if (mWindow)
 			{
 				int x, y;
 
 				mWindow->GetPosition (mWindow, &x, &y);
-				event.x -= x;
-				event.y -= y;
+				event.u.mouse.x -= x;
+				event.u.mouse.y -= y;
 			}
 
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
 			case DIBI_LEFT:
-				event.button = 1;
+				event.u.mouse.button = 1;
 				break;
 			case DIBI_MIDDLE:
-				event.button = 3;
+				event.u.mouse.button = 3;
 				break;
 			case DIBI_RIGHT:
-				event.button = 2;
+				event.u.mouse.button = 2;
 				break;
 			default:
 				break;
 			}
 			break;
 		case DWET_BUTTONUP:
-			event.x = mMouseX;
-			event.y = mMouseY;
+			event.u.mouse.x = mMouseX;
+			event.u.mouse.y = mMouseY;
 
 			if (mWindow)
 			{
 				int x, y;
 
 				mWindow->GetPosition (mWindow, &x, &y);
-				event.x -= x;
-				event.y -= y;
+				event.u.mouse.x -= x;
+				event.u.mouse.y -= y;
 			}
 
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			switch (e->button) {
 			case DIBI_LEFT:
-				event.button = 1;
+				event.u.mouse.button = 1;
 				break;
 			case DIBI_MIDDLE:
-				event.button = 3;
+				event.u.mouse.button = 3;
 				break;
 			case DIBI_RIGHT:
-				event.button = 2;
+				event.u.mouse.button = 2;
 				break;
 			default:
 				break;
@@ -652,16 +652,16 @@ bool DFBInterface::GetEvent(struct Event &event)
 		case DWET_MOTION:
 			mMouseX = e->cx;
 			mMouseY = e->cy;
-			event.x = mMouseX;
-			event.y = mMouseY;
+			event.u.mouse.x = mMouseX;
+			event.u.mouse.y = mMouseY;
 
 			if (mWindow)
 			{
 				int x, y;
 
 				mWindow->GetPosition (mWindow, &x, &y);
-				event.x -= x;
-				event.y -= y;
+				event.u.mouse.x -= x;
+				event.u.mouse.y -= y;
 			}
 			event.type = EVENT_MOUSE_MOTION;
 			event.flags = EVENT_FLAGS_AXIS;
@@ -678,34 +678,34 @@ bool DFBInterface::GetEvent(struct Event &event)
 			else
 				event.type = EVENT_KEY_UP;
 			if (id == DIKI_UP) {
-				event.keyCode = (int)KEYCODE_UP;
+				event.u.key.keyCode = (int)KEYCODE_UP;
 			} else if(id ==	 DIKI_DOWN) {
-				event.keyCode = (int)KEYCODE_DOWN;
+				event.u.key.keyCode = (int)KEYCODE_DOWN;
 			} else if (id ==  DIKI_LEFT) {
-				event.keyCode = (int)KEYCODE_LEFT;
+				event.u.key.keyCode = (int)KEYCODE_LEFT;
 			} else if (id == DIKI_RIGHT) {
-				event.keyCode = (int)KEYCODE_RIGHT;
+				event.u.key.keyCode = (int)KEYCODE_RIGHT;
 			} else if (id == DIKI_ENTER) {
-				event.keyCode = (int)KEYCODE_RETURN;
+				event.u.key.keyCode = (int)KEYCODE_RETURN;
 			} else if (id == DIKI_SPACE) {
-				event.keyCode = (int)KEYCODE_SPACE;
+				event.u.key.keyCode = (int)KEYCODE_SPACE;
 			} else if (id == DIKI_BACKSPACE) {
-				event.keyCode = (int)KEYCODE_BACK;
+				event.u.key.keyCode = (int)KEYCODE_BACK;
 			} else if (id == DIKI_ESCAPE) {
 				if ((e->modifiers & (DIMM_SHIFT | DIMM_CONTROL)) == (DIMM_SHIFT | DIMM_CONTROL))
 					event.type = EVENT_QUIT;
 				else
-					event.keyCode = (int)KEYCODE_ESCAPE;
+					event.u.key.keyCode = (int)KEYCODE_ESCAPE;
 			} else if (id == DIKI_SHIFT_L || id == DIKI_SHIFT_R) {
-				event.keyCode = (int)KEYCODE_SHIFT;
+				event.u.key.keyCode = (int)KEYCODE_SHIFT;
 			} else if (id == DIKI_CONTROL_L || id == DIKI_CONTROL_R) {
-				event.keyCode = (int)KEYCODE_CONTROL;
+				event.u.key.keyCode = (int)KEYCODE_CONTROL;
 			} else if (id >= DIKI_A && id < DIKI_Z) {
-				event.keyCode = (int)('a' + id - DIKI_A);
-				event.keyChar = (int)sym;
+				event.u.key.keyCode = (int)('a' + id - DIKI_A);
+				event.u.key.keyChar = (int)sym;
 			} else if (id >= DIKI_0 && id < DIKI_9) {
-				event.keyCode = (int)('0' + id - DIKI_0);
-				event.keyChar = (int)sym;
+				event.u.key.keyCode = (int)('0' + id - DIKI_0);
+				event.u.key.keyChar = (int)sym;
 			} else {
 				event.type = EVENT_NONE;
 			}

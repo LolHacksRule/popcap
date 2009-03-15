@@ -139,9 +139,9 @@ handle_key_event (int index, bool pressed,
 
 		event.flags = EVENT_FLAGS_BUTTON;
 		if (index == SM_KEY_LEFT_BUTTON)
-			event.button = 1;
+			event.u.mouse.button = 1;
 		else
-			event.button = 2;
+			event.u.mouse.button = 2;
 	} else {
 		if (pressed)
 			event.type = EVENT_KEY_DOWN;
@@ -150,23 +150,23 @@ handle_key_event (int index, bool pressed,
 		switch (index) {
 		case SM_KEY_ESCAPE:
 			event.flags = EVENT_FLAGS_KEY_CODE;
-			event.keyCode = KEYCODE_ESCAPE;
+			event.u.key.keyCode = KEYCODE_ESCAPE;
 			break;
 		case SM_KEY_BACK:
 			event.flags = EVENT_FLAGS_KEY_CODE;
-			event.keyCode = KEYCODE_BACK;
+			event.u.key.keyCode = KEYCODE_BACK;
 			break;
 		case SM_KEY_UP:
 			event.flags = EVENT_FLAGS_KEY_CODE;
-			event.keyCode = KEYCODE_UP;
+			event.u.key.keyCode = KEYCODE_UP;
 			break;
 		case SM_KEY_DOWN:
 			event.flags = EVENT_FLAGS_KEY_CODE;
-			event.keyCode = KEYCODE_DOWN;
+			event.u.key.keyCode = KEYCODE_DOWN;
 			break;
 		case SM_KEY_OK:
 			event.flags = EVENT_FLAGS_KEY_CODE;
-			event.keyCode = KEYCODE_RETURN;
+			event.u.key.keyCode = KEYCODE_RETURN;
 			break;
 		default:
 			event.type = EVENT_NONE;
@@ -187,8 +187,8 @@ handle_rel_event (struct input_event & sm_event,
 
 	event.type = EVENT_MOUSE_MOTION;
 	event.flags = EVENT_FLAGS_REL_AXIS;
-	event.x = sm_event.x;
-	event.y = sm_event.y;
+	event.u.mouse.x = sm_event.x;
+	event.u.mouse.y = sm_event.y;
 
 	return true;
 }

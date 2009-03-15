@@ -254,11 +254,11 @@ handle_key_event (struct input_event & linux_event,
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
 		event.flags = EVENT_FLAGS_BUTTON;
 		if (linux_event.code == BTN_MOUSE)
-			event.button = 1;
+			event.u.mouse.button = 1;
 		else if (linux_event.code == (BTN_MOUSE + 1))
-			event.button = 2;
+			event.u.mouse.button = 2;
 		else if (linux_event.code == (BTN_MOUSE + 2))
-			event.button = 3;
+			event.u.mouse.button = 3;
 	}
 
 	return true;
@@ -274,12 +274,12 @@ handle_rel_event (struct input_event & linux_event,
 	case REL_X:
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_REL_AXIS;
-		event.x = linux_event.value;
+		event.u.mouse.x = linux_event.value;
 		break;
 	case REL_Y:
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_REL_AXIS;
-		event.y = linux_event.value;
+		event.u.mouse.y = linux_event.value;
 		break;
 	default:
 		break;
@@ -297,12 +297,12 @@ handle_abs_event (struct input_event & linux_event,
 	case ABS_X:
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_AXIS;
-		event.x = linux_event.value;
+		event.u.mouse.x = linux_event.value;
 		break;
 	case ABS_Y:
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_AXIS;
-		event.y = linux_event.value;
+		event.u.mouse.y = linux_event.value;
 		break;
 	default:
 		break;
@@ -397,8 +397,8 @@ void* LinuxInputInterface::Run (void * data)
 
 			event.type = EVENT_NONE;
 			event.flags = 0;
-			event.x = driver->mX;
-			event.y = driver->mY;
+			event.u.mouse.x = driver->mX;
+			event.u.mouse.y = driver->mY;
 
 			handle_event (linux_event[i], event);
 
@@ -406,8 +406,8 @@ void* LinuxInputInterface::Run (void * data)
 			{
 				if (event.flags & EVENT_FLAGS_AXIS)
 				{
-					driver->mX = event.x;
-					driver->mY = event.y;
+					driver->mX = event.u.mouse.x;
+					driver->mY = event.u.mouse.y;
 				}
 			}
 			if (event.type != EVENT_NONE)
@@ -415,8 +415,8 @@ void* LinuxInputInterface::Run (void * data)
 				if (0)
 				{
 					printf ("event.type: %d\n", event.type);
-					printf ("event.x: %d\n", event.x);
-					printf ("event.y: %d\n", event.y);
+					printf ("event.x: %d\n", event.u.mouse.x);
+					printf ("event.y: %d\n", event.u.mouse.y);
 				}
 				driver->PostEvent (event);
 			}
