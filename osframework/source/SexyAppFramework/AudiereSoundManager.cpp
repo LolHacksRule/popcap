@@ -77,6 +77,7 @@ int AudiereSoundManager::FindFreeChannel()
 
 		if (mPlayingSounds[i]->IsReleased())
 		{
+			delete mPlayingSounds[i];
 			mPlayingSounds[i] = NULL;
 			return i;
 		}
