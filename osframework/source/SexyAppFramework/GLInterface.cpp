@@ -87,28 +87,7 @@ void GLInterface::Cleanup()
 
 bool GLInterface::Redraw(Rect* theClipRect)
 {
-	AutoCrit anAutoCrit(mCritSect);
-
-	if (!mInitialized)
-		return false;
-
-	if (!mScreenImage)
-		return false;
-
-	if ((mScreenImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER) &&
-	    !(mScreenImage->mFlags & IMAGE_FLAGS_FLIP_AS_COPY))
-	{
-		Event event;
-
-		event.type = EVENT_EXPOSE;
-		mApp->mInputManager->PushEvent (event);
-	}
-	else
-	{
-		SwapBuffers ();
-	}
-
-	return true;
+    return false;
 }
 
 void GLInterface::SwapBuffers()
