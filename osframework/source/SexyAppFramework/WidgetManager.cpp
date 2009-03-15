@@ -416,7 +416,7 @@ bool WidgetManager::DrawScreen()
 	while (anItr != mWidgets.end())
 	{
 		Widget* aWidget = *anItr;
-		if (aWidget->mDirty)
+		if (aWidget->mDirty && aWidget->mVisible)
 			aDirtyCount++;
 		++anItr;
 	}
