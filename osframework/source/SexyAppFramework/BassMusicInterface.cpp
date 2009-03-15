@@ -1,6 +1,6 @@
 #include "BassMusicInterface.h"
 #include "BassLoader.h"
-#include "..\PakLib\PakInterface.h"
+#include "../PakLib/PakInterface.h"
 
 using namespace Sexy;
 
