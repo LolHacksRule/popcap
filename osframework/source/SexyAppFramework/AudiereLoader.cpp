@@ -2,6 +2,8 @@
 #include "AudiereLoader.h"
 #include "audiere.h"
 
+#include <cstdlib>
+
 audiere::AudioDevicePtr gAudiereDevice;
 audiere::MIDIDevicePtr gAudiereMIDIDevice;
 
