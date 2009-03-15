@@ -1371,7 +1371,7 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 			p[i].x -= 0.5f;
 			p[i].y -= 0.5f;
 			verts[i * 2 + 0] = p[i].x;
-			verts[i * 2 + 1].sy = p[i].y;
+			verts[i * 2 + 1] = p[i].y;
 		}
 	}
 
