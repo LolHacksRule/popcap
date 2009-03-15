@@ -38,6 +38,7 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 	mWindow = NULL;
 	mCursorImage = NULL;
 	mSoftCursor = false;
+	mDFBCursorImage = NULL;
 }
 
 DFBInterface::~DFBInterface()
