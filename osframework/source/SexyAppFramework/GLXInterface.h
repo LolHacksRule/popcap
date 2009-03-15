@@ -45,6 +45,7 @@ private:
 
 	int                                     mScreen;
 
+	Atom                                    mWMDeleteMessage;
 	SexyTransform2D                         mTrans[2];
 
 	static Bool                             WaitForSubstructureNotify(Display *d,

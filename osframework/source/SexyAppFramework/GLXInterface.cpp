@@ -132,22 +132,25 @@ int GLXInterface::Init (void)
         XFreeCursor (mDpy, cursor);
 	XFreePixmap (mDpy, pixmap);
 
-	Atom wm_state, fullscreen;
+	mWMDeleteMessage = XInternAtom (mDpy, "WM_DELETE_WINDOW", False);
+	XSetWMProtocols (mDpy, mWindow, &mWMDeleteMessage, 1);
 
-	wm_state = XInternAtom(mDpy, "_NET_WM_STATE", False);
-	fullscreen = XInternAtom(mDpy, "_NET_WM_STATE_FULLSCREEN", False);
+	Atom wmState, fullScreen;
+
+	wmState = XInternAtom (mDpy, "_NET_WM_STATE", False);
+	fullScreen = XInternAtom (mDpy, "_NET_WM_STATE_FULLSCREEN", False);
 
 	if (!mApp->mIsWindowed) {
 		memset(&event, 0, sizeof(event));
 		event.type = ClientMessage;
 		event.xclient.window = mWindow;
-		event.xclient.message_type = wm_state;
+		event.xclient.message_type = wmState;
 		event.xclient.format = 32;
 		event.xclient.data.l[0] = 1;
-		event.xclient.data.l[1] = fullscreen;
+		event.xclient.data.l[1] = fullScreen;
 		event.xclient.data.l[2] = 0;
 
-		XSendEvent (mDpy, DefaultRootWindow(mDpy), False,
+		XSendEvent (mDpy, DefaultRootWindow (mDpy), False,
 			    SubstructureNotifyMask, &event);
 		XIfEvent (mDpy,  &event,  WaitForSubstructureNotify, (char*)this);
 	}
@@ -392,6 +395,10 @@ bool GLXInterface::GetEvent(struct Event &event)
 	case LeaveNotify:
 		event.type = EVENT_ACTIVE;
 		event.u.active.active = false;
+		break;
+	case ClientMessage:
+		if (xevent.xclient.data.l[0] == mWMDeleteMessage)
+			event.type = EVENT_QUIT;
 		break;
 	default:
 		break;
