@@ -44,7 +44,7 @@
 #  include <stdint.h>
    typedef int64_t ogg_int64_t;
    typedef int32_t ogg_int32_t;
-   typedef int32_t ogg_uint32_t;
+   typedef uint32_t ogg_uint32_t;
    typedef int16_t ogg_int16_t;
 #  else
    /* Cygwin */
