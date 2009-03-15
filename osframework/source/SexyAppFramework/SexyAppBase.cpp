@@ -1642,6 +1642,9 @@ void SexyAppBase::MakeWindow()
 		dynamic_cast<MemoryImage*>(mDDInterface->GetScreenImage());
 
 	ReInitImages();
+
+	mMouseX = 0;
+	mMouseY = 0;
 	if (!mHandCursor)
 		mHandCursor =  CreateCursorFromAndMask(gFingerCursorData,
 						       gFingerCursorData + sizeof(gFingerCursorData) / 2,
