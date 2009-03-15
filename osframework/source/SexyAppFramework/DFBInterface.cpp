@@ -554,7 +554,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 			} else if (id == DIKI_RIGHT) {
 				event.u.key.keyCode = (int)KEYCODE_RIGHT;
 			} else if (id == DIKI_ENTER) {
-				event.keyCode = (int)KEYCODE_RETURN;
+				event.u.key.keyCode = (int)KEYCODE_RETURN;
 			} else if (id == DIKI_SPACE) {
 				event.u.key.keyCode = (int)KEYCODE_SPACE;
 			} else if (id == DIKI_BACKSPACE) {

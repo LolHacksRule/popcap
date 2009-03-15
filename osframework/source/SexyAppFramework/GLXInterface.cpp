@@ -278,7 +278,7 @@ bool GLXInterface::GetEvent(struct Event &event)
         case KeyPress:
                 XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
 		event.type = EVENT_KEY_DOWN;
-		event.keyCode = XKsymToKeyCode (key);
+		event.u.key.keyCode = XKsymToKeyCode (key);
 		break;
 	case KeyRelease:
 	{
