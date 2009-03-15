@@ -42,6 +42,7 @@ private:
 	NSOpenGLContext*                        mContext;
         int                                     mAGLMajor;
         int                                     mAGLMinor;
+	bool                                    mScreenCapture;
 
 	std::map<int, int>                      mKeyMap;
 };

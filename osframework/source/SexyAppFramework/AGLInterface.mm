@@ -120,6 +120,7 @@ AGLInterface::AGLInterface (SexyAppBase* theApp)
 	}
 	mWindow = NULL;
 	mContext = NULL;
+	mScreenCapture = false;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
 }
@@ -142,19 +143,49 @@ int AGLInterface::Init (void)
 	bool result;
 	NSOpenGLPixelFormat* format;
 	CGDirectDisplayID display;
+	CGRect displayRect;
 	NSOpenGLPixelFormatAttribute windowattribs[32];
 
 	result = false;
 	display = CGMainDisplayID ();
+	displayRect = CGDisplayBounds (display);
 
-	mWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, mWidth, mHeight)
-				    styleMask:NSTitledWindowMask + NSClosableWindowMask +
-				    NSResizableWindowMask
-				    backing:NSBackingStoreBuffered defer:FALSE];
-	if (!mWindow)
-		goto fail;
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
+	mDesktopWidth = displayRect.size.width;
+	mDesktopHeight = displayRect.size.height;
+
+	if (mApp->mIsWindowed)
+	{
+		mWindowWidth = mWidth;
+		mWindowHeight = mHeight;
+	}
+	else
+	{
+		mWindowWidth = mDesktopWidth;
+		mWindowHeight = mDesktopHeight;
+	}
+	
+	if (mApp->mIsWindowed)
+	{
+		mWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, mWindowWidth, mWindowHeight)
+					    styleMask:NSTitledWindowMask + NSClosableWindowMask +
+					    NSResizableWindowMask
+					    backing:NSBackingStoreBuffered defer:FALSE];
+		if (!mWindow)
+			goto fail;
+	}
+	else
+	{
+		mWindow = 0;
+	}
 
 	index = 0;
+	if (!mApp->mIsWindowed)
+	{
+		windowattribs[index++] = NSOpenGLPFAScreenMask;
+		windowattribs[index++] = CGDisplayIDToOpenGLDisplayMask (display);
+	}
 	windowattribs[index++] = NSOpenGLPFANoRecovery;
 	windowattribs[index++] = NSOpenGLPFADoubleBuffer;
 	windowattribs[index++] = NSOpenGLPFAAccelerated;
@@ -162,8 +193,8 @@ int AGLInterface::Init (void)
 	windowattribs[index++] = (NSOpenGLPixelFormatAttribute)16;
 	windowattribs[index++] = NSOpenGLPFAColorSize;
 	windowattribs[index++] = (NSOpenGLPixelFormatAttribute)32;
-
 	windowattribs[index++] = (NSOpenGLPixelFormatAttribute)NULL;
+
 	format = [[NSOpenGLPixelFormat alloc] initWithAttributes:windowattribs];
 	if (!format)
 		goto close_window;
@@ -173,29 +204,48 @@ int AGLInterface::Init (void)
 	if (!mContext)
 		goto close_window;
 
-	[mWindow center];
-	[mWindow setDelegate:[NSApp delegate]];
-	[mContext setView:[mWindow contentView]];
-	[mWindow setAcceptsMouseMovedEvents:TRUE];
-	[mWindow setIgnoresMouseEvents:NO];
-	[mWindow setIsVisible:TRUE];
-	[mWindow makeKeyAndOrderFront:nil];
+	NSView* view;
 
-	NSView* view = [mWindow contentView];
-	[view addTrackingRect:[view bounds] owner:view userData:NULL
-	      assumeInside:NO];
-        [mWindow makeFirstResponder:view];
+	if (!mApp->mIsWindowed)
+	{
+		CGCaptureAllDisplays ();
+		mScreenCapture = true;
+		[mContext setFullScreen];
+		view = 0;
+		mWindowWidth = mDesktopWidth;
+		mWindowHeight = mDesktopHeight;
+	}
+	else
+	{
+		view = [mWindow contentView];
+		[mWindow center];
+		[mWindow setDelegate:[NSApp delegate]];
+		[mContext setView:[mWindow contentView]];
+		[mWindow setAcceptsMouseMovedEvents:TRUE];
+		[mWindow setIgnoresMouseEvents:NO];
+		[mWindow setIsVisible:TRUE];
+		[mWindow makeKeyAndOrderFront:nil];
+
+		NSRect frame = [view bounds];
+		mWindowWidth = frame.size.width;
+		mWindowHeight = frame.size.height;
+		[mContext setView:view];
+		[view addTrackingRect:[view bounds] owner:view userData:NULL
+		      assumeInside:NO];
+		[mWindow makeFirstResponder:view];
+		[mContext setView:view];
+		[view addTrackingRect:[view bounds] owner:view userData:NULL
+		      assumeInside:NO];
+		[mWindow makeFirstResponder:view];
+
+		[mWindow setTitle:[NSString stringWithCString:mApp->mTitle.c_str()
+					    length:mApp->mTitle.length()]];
+		[NSCursor hide];
+	}
 
 	mCGLContext = (CGLContextObj) [mContext CGLContextObj];
-
-	[mWindow setTitle:[NSString stringWithCString:mApp->mTitle.c_str()
-				    length:mApp->mTitle.length()]];
-
-
 	CGLSetCurrentContext (mCGLContext);
 
-	mWindowWidth = mWidth;
-	mWindowHeight = mHeight;
 	mDisplayWidth = mWidth;
 	mDisplayHeight = mHeight;
 	mPresentationRect.mX = 0;
@@ -230,8 +280,14 @@ void AGLInterface::Cleanup ()
 		delete mScreenImage;
 	mScreenImage = NULL;
 
+	if (mScreenCapture)
+		CGReleaseAllDisplays ();
+
 	if (mWindow)
+	{
 		[mWindow setIsVisible:FALSE];
+	}
+
 	if (mContext)
 	{
 		[mContext clearDrawable];
@@ -257,6 +313,8 @@ void AGLInterface::Cleanup ()
 
 void AGLInterface::RemapMouse(int& theX, int& theY)
 {
+	theX = theX * (float)mDisplayWidth / mWindowWidth;
+	theY = theY * (float)mDisplayHeight / mWindowHeight;
 }
 
 Image* AGLInterface::CreateImage(SexyAppBase * theApp,
@@ -308,7 +366,8 @@ bool AGLInterface::GetEvent(struct Event &event)
 			event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
 			event.u.mouse.button = 1;
                         event.u.mouse.x = int([nsevent locationInWindow].x);
-                        event.u.mouse.y = mHeight - int([nsevent locationInWindow].y);
+                        event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
+			RemapMouse (event.u.mouse.x, event.u.mouse.y);
                         [NSApp sendEvent:nsevent];
 			break;
 
@@ -317,16 +376,18 @@ bool AGLInterface::GetEvent(struct Event &event)
                         event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
                         event.u.mouse.button = 1;
                         event.u.mouse.x = int([nsevent locationInWindow].x);
-                        event.u.mouse.y = mHeight - int([nsevent locationInWindow].y);
+                        event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
+			RemapMouse (event.u.mouse.x, event.u.mouse.y);
                         [NSApp sendEvent:nsevent];
 			break;
 
                 case NSRightMouseDown:
 			event.type = EVENT_MOUSE_BUTTON_PRESS;
                         event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
-                        event.button = 2;
-                        event.x = int([nsevent locationInWindow].x);
-			event.y = mHeight - int([nsevent locationInWindow].y);
+                        event.u.mouse.button = 2;
+                        event.u.mouse.x = int([nsevent locationInWindow].x);
+			event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
+			RemapMouse (event.u.mouse.x, event.u.mouse.y);
 			[NSApp sendEvent:nsevent];
 			break;
 
@@ -335,15 +396,17 @@ bool AGLInterface::GetEvent(struct Event &event)
                         event.flags = EVENT_FLAGS_AXIS | EVENT_FLAGS_BUTTON;
                         event.u.mouse.button = 2;
                         event.u.mouse.x = int([nsevent locationInWindow].x);
-                        event.u.mouse.y = mHeight - int([nsevent locationInWindow].y);
-                        [NSApp sendEvent:nsevent];
+                        event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
+                        RemapMouse (event.u.mouse.x, event.u.mouse.y);
+			[NSApp sendEvent:nsevent];
                         break;
 
 		case NSMouseMoved:
 			event.type = EVENT_MOUSE_MOTION;
 			event.flags = EVENT_FLAGS_AXIS;
 			event.u.mouse.x = int([nsevent locationInWindow].x);
-			event.u.mouse.y = mHeight - int([nsevent locationInWindow].y);
+			event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
+			RemapMouse (event.u.mouse.x, event.u.mouse.y);
 			[NSApp sendEvent:nsevent];
 			break;
 
