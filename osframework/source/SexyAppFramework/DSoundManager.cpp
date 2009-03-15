@@ -1,12 +1,12 @@
 #include "DSoundManager.h"
 #include <io.h>
 #include <fcntl.h>
-#include "debug.h"
+#include "Debug.h"
 #include "DSoundInstance.h"
 #include "BassMusicInterface.h"
 #include "FModLoader.h"
 #include <math.h>
-#include "..\PakLib\PakInterface.h"
+#include "../PakLib/PakInterface.h"
 
 using namespace Sexy;
 
