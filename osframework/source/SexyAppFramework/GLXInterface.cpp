@@ -327,9 +327,6 @@ bool GLXInterface::GetEvent(struct Event &event)
 			default:
 				break;
 			}
-			event.u.mouse.x = be->x;
-			event.u.mouse.y = be->y;
-
 			SexyVector2 v(be->x, be->y);
 			v = mTrans[1] * v;
 
@@ -371,8 +368,6 @@ bool GLXInterface::GetEvent(struct Event &event)
 		XMotionEvent * me = (XMotionEvent*)&xevent;
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_AXIS;
-		event.u.mouse.x = me->x;
-		event.u.mouse.y = me->y;
 
 		SexyVector2 v(me->x, me->y);
 		v = mTrans[1] * v;
