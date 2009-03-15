@@ -131,7 +131,7 @@ void DSoundInstance::Stop()
 	}
 }
 
-#include "DirectXErrorString.h"
+//#include "DirectXErrorString.h"
 void DSoundInstance::AdjustPitch(double theNumSteps)
 {
 	if (mSoundBuffer != NULL)
