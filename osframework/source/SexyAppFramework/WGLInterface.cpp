@@ -36,6 +36,32 @@ WGLInterface::~WGLInterface ()
 #define GET_Y_LPARAM(l) ((l) >> 16)
 #endif
 
+static int WinKeyToKeyCode(WPARAM winKey)
+{
+    static const struct {
+	WPARAM winKey;
+	int    keyCode;
+    } keymap[] = {
+	{ VK_LEFT, KEYCODE_LEFT },
+	{ VK_RIGHT, KEYCODE_RIGHT },
+	{ VK_UP, KEYCODE_UP },
+	{ VK_DOWN, KEYCODE_DOWN },
+	{ VK_RETURN, KEYCODE_RETURN },
+	{ VK_ESCAPE, KEYCODE_ESCAPE },
+	{ 0, 0 }
+    };
+    int i;
+
+    for (i = 0; keymap[i].winKey; i++)
+	if (keymap[i].winKey == winKey)
+	    return keymap[i].keyCode;
+
+    if (isalnum (winKey))
+	    return winKey;
+
+    return 0;
+}
+
 LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 				   UINT	   uMsg,
 				   WPARAM  wParam,
@@ -59,8 +85,18 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.type = EVENT_QUIT;
 		break;
 	case WM_KEYDOWN:
+		event.type = EVENT_KEY_DOWN;
+		event.flags = EVENT_FLAGS_KEY_CODE;
+		event.u.key.keyCode = WinKeyToKeyCode (wParam);
+		if (isalnum (wParam))
+			event.flags |= EVENT_FLAGS_KEY_CHAR;
 		break;
 	case WM_KEYUP:
+		event.type = EVENT_KEY_UP;
+		event.flags = EVENT_FLAGS_KEY_CODE;
+		event.u.key.keyCode = WinKeyToKeyCode (wParam);
+		if (isalnum (wParam))
+			event.flags |= EVENT_FLAGS_KEY_CHAR;
 		break;
 	case WM_LBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
