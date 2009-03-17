@@ -713,7 +713,7 @@ void SexyAppBase::ReadFromRegistry()
 bool SexyAppBase::WriteBytesToFile(const std::string& theFileName, const void *theData, unsigned long theDataLen)
 {
 	FILE* aFP = fopen(theFileName.c_str(), "w+b");
-	if (aFP)
+	if (!aFP)
 		return false;
 	fwrite(theData, 1, theDataLen, aFP);
 	fclose(aFP);
