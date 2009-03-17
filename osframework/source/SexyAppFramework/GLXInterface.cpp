@@ -46,7 +46,7 @@ Bool GLXInterface::WaitForSubstructureNotify(Display *d, XEvent *e, char* arg)
 
 	if ((e->type == ConfigureNotify) &&
 	    (e->xmap.window == interface->mWindow)) {
-	        interface->mWindowWidth = e->xconfigure.width;
+		interface->mWindowWidth = e->xconfigure.width;
 		interface->mWindowHeight = e->xconfigure.height;
 		return GL_TRUE;
 	}
@@ -102,7 +102,7 @@ int GLXInterface::Init (void)
 				 CWBorderPixel | CWColormap | CWEventMask, &swa);
 
 	/* create an OpenGL rendering context */
-	mContext = glXCreateContext (mDpy, visualInfo,  None, GL_TRUE);
+	mContext = glXCreateContext (mDpy, visualInfo,	None, GL_TRUE);
 	if (!mContext)
 		goto close_window;
 	glXMakeCurrent (mDpy, mWindow, mContext);
@@ -110,26 +110,26 @@ int GLXInterface::Init (void)
 	XMapWindow (mDpy, mWindow);
 
 	XEvent event;
-	XIfEvent (mDpy,  &event,  WaitForMapNotify, (char*)mWindow);
+	XIfEvent (mDpy,	 &event,  WaitForMapNotify, (char*)mWindow);
 
 	XSync (mDpy, FALSE);
 
-	XIfEvent (mDpy,  &event,  WaitForSubstructureNotify, (char*)this);
+	XIfEvent (mDpy,	 &event,  WaitForSubstructureNotify, (char*)this);
 
 	while (XPending (mDpy))
 		XNextEvent (mDpy, &event);
 
 	Pixmap pixmap;
-        Cursor cursor;
-        XColor black, dummy;
-        static char cursor_data[] = {0, 0, 0, 0, 0, 0, 0, 0};
+	Cursor cursor;
+	XColor black, dummy;
+	static char cursor_data[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-        XAllocNamedColor (mDpy, colorMap, "black", &black, &dummy);
-        pixmap = XCreateBitmapFromData (mDpy, mWindow, cursor_data, 8, 8);
-        cursor = XCreatePixmapCursor (mDpy, pixmap, pixmap, &black, &black, 0, 0);
+	XAllocNamedColor (mDpy, colorMap, "black", &black, &dummy);
+	pixmap = XCreateBitmapFromData (mDpy, mWindow, cursor_data, 8, 8);
+	cursor = XCreatePixmapCursor (mDpy, pixmap, pixmap, &black, &black, 0, 0);
 
-        XDefineCursor (mDpy, mWindow, cursor);
-        XFreeCursor (mDpy, cursor);
+	XDefineCursor (mDpy, mWindow, cursor);
+	XFreeCursor (mDpy, cursor);
 	XFreePixmap (mDpy, pixmap);
 
 	mWMDeleteMessage = XInternAtom (mDpy, "WM_DELETE_WINDOW", False);
@@ -152,7 +152,7 @@ int GLXInterface::Init (void)
 
 		XSendEvent (mDpy, DefaultRootWindow (mDpy), False,
 			    SubstructureNotifyMask, &event);
-		XIfEvent (mDpy,  &event,  WaitForSubstructureNotify, (char*)this);
+		XIfEvent (mDpy,	 &event,  WaitForSubstructureNotify, (char*)this);
 	}
 	XStoreName (mDpy, mWindow, mApp->mTitle.c_str ());
 
@@ -186,13 +186,13 @@ int GLXInterface::Init (void)
 	mInitialized = true;
 
 	return 0;
- close_window:
+close_window:
 	XDestroyWindow (mDpy, mWindow);
 	mWindow = None;
- close_dpy:
+close_dpy:
 	XCloseDisplay (mDpy);
 	mDpy = NULL;
- fail:
+fail:
 	return -1;
 }
 
@@ -212,7 +212,7 @@ void GLXInterface::Cleanup ()
 		glXMakeCurrent (mDpy, None, NULL);
 
 	if (mContext)
-	    glXDestroyContext (mDpy, mContext);
+		glXDestroyContext (mDpy, mContext);
 	mContext = NULL;
 
 	if (mWindow)
@@ -253,25 +253,29 @@ bool GLXInterface::HasEvent()
 
 static int XKsymToKeyCode(KeySym keysym)
 {
-    static const struct {
-	KeySym keySym;
-	int    keyCode;
-    } keymap[] = {
-	{ XK_Left, KEYCODE_LEFT },
-	{ XK_Right, KEYCODE_RIGHT },
-	{ XK_Up, KEYCODE_UP },
-	{ XK_Down, KEYCODE_DOWN },
-	{ XK_Return, KEYCODE_RETURN },
-	{ XK_Escape, KEYCODE_ESCAPE },
-	{ 0, 0 }
-    };
-    int i;
+	static const struct {
+		KeySym keySym;
+		int    keyCode;
+	} keymap[] = {
+		{ XK_Left, KEYCODE_LEFT },
+		{ XK_Right, KEYCODE_RIGHT },
+		{ XK_Up, KEYCODE_UP },
+		{ XK_Down, KEYCODE_DOWN },
+		{ XK_Return, KEYCODE_RETURN },
+		{ XK_Escape, KEYCODE_ESCAPE },
+		{ 0, 0 }
+	};
+	int i;
 
-    for (i = 0; keymap[i].keySym; i++)
-	if (keymap[i].keySym == keysym)
-	    return keymap[i].keyCode;
+	for (i = 0; keymap[i].keySym; i++)
+		if (keymap[i].keySym == keysym)
+			return keymap[i].keyCode;
 
-    return 0;
+	if (keysym >= XK_A && keysym <= XK_Z)
+		return 'a' + keysym - XK_A;
+	if (keysym >= XK_0 && keysym <= XK_9)
+		return '0' + keysym - XK_0;
+	return 0;
 }
 
 bool GLXInterface::GetEvent(struct Event &event)
@@ -290,9 +294,9 @@ bool GLXInterface::GetEvent(struct Event &event)
 	KeySym key;
 
 	//printf ("XEvent type %d\n", xevent.type);
-        switch (xevent.type) {
-        case KeyPress:
-                XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
+	switch (xevent.type) {
+	case KeyPress:
+		XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
 		event.type = EVENT_KEY_DOWN;
 		event.u.key.keyCode = XKsymToKeyCode (key);
 		break;
@@ -300,12 +304,12 @@ bool GLXInterface::GetEvent(struct Event &event)
 	{
 		XKeyEvent * ke = (XKeyEvent *)&xevent;
 
-                XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
+		XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
 		event.type = EVENT_KEY_UP;
 		event.u.key.keyCode = XKsymToKeyCode (key);
 		if (key == XK_Escape &&
 		    (ke->state & (ControlMask | ShiftMask)) == (ControlMask | ShiftMask))
-		    event.type = EVENT_QUIT;
+			event.type = EVENT_QUIT;
 		break;
 	}
 	case ButtonPress:
@@ -380,7 +384,7 @@ bool GLXInterface::GetEvent(struct Event &event)
 		event.type = EVENT_EXPOSE;
 		Redraw (NULL);
 		break;
-        case ConfigureNotify:
+	case ConfigureNotify:
 		/* resize (xevent.xconfigure.width, xevent.xconfigure.height); */
 		break;
 	case EnterNotify:
@@ -397,7 +401,7 @@ bool GLXInterface::GetEvent(struct Event &event)
 		break;
 	default:
 		break;
-        }
+	}
 
 	return true;
 }
@@ -411,14 +415,14 @@ void GLXInterface::SwapBuffers()
 class GLXVideoDriver: public VideoDriver {
 public:
 	GLXVideoDriver ()
-	 : VideoDriver("GLX", 10)
-	{
+	: VideoDriver("GLX", 10)
+        {
 	}
 
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
 		return new GLXInterface (theApp);
-        }
+	}
 };
 
 static GLXVideoDriver aGLXVideoDriver;
