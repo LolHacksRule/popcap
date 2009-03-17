@@ -25,6 +25,7 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 	mVideoOnlyDraw = false;
 	mScanLineFailCount = 0;
 
+	mOverScan = 1.0;
 	mInitCount = 0;
 	mRefreshRate = 60;
 	mMillisecondsPerFrame = 1000 / mRefreshRate;
@@ -96,7 +97,13 @@ void GLInterface::SwapBuffers()
 
 void GLInterface::InitGL()
 {
-	glViewport (0, 0, mWindowWidth, mWindowHeight);
+	float x, y, w, h;
+
+	x = mWindowWidth * (1.0f - mOverScan) / 2.0f;
+	y = mWindowHeight * (1.0f - mOverScan) / 2.0f;
+	w = mWindowWidth * mOverScan;
+	h = mWindowHeight * mOverScan;
+	glViewport (x, y, w, h);
 
 	const char* version = (const char*)glGetString (GL_VERSION);
 	const char* str = version;

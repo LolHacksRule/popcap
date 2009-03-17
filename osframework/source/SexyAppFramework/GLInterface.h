@@ -31,6 +31,7 @@ class GLInterface : public NativeDisplay
 public:
 	SexyAppBase*				mApp;
 
+	float                                   mOverScan;
 	int					mFullscreenBits;
 	DWORD					mRefreshRate;
 	DWORD					mMillisecondsPerFrame;

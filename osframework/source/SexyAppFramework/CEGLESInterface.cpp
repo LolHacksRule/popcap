@@ -16,6 +16,7 @@ using namespace Sexy;
 CEGLESInterface::CEGLESInterface (SexyAppBase* theApp)
 	: GLInterface (theApp)
 {
+	mOverScan = 0.9;
 	mDpy = NULL;
 	mWindow = NULL;
 	mContext = EGL_NO_CONTEXT;
