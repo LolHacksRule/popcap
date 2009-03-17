@@ -275,16 +275,7 @@ void DFBImage::CommitBits()
 
 void DFBImage::Create(int theWidth, int theHeight)
 {
-	delete [] mBits;
-
-	mWidth = theWidth;
-	mHeight = theHeight;
-	mNumRows = theWidth;
-	mNumCols = theHeight;
-
-	mBits = NULL;
-
-	BitsChanged();
+	MemoryImage::Create(theWidth, theHeight);
 }
 
 void DFBImage::BitsChanged()
