@@ -32,6 +32,21 @@ NativeDisplay::~NativeDisplay()
 {
 }
 
+bool NativeDisplay::Is3DAccelerated()
+{
+    return false;
+}
+
+bool NativeDisplay::Is3DAccelerationSupported()
+{
+    return false;
+}
+
+bool NativeDisplay::Is3DAccelerationRecommended()
+{
+    return false;
+}
+
 int NativeDisplay::Init()
 {
 	return -1;

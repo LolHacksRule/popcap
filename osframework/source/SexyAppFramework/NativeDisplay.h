@@ -54,6 +54,11 @@ public:
 
  public:
         virtual int                                Init();
+
+	virtual bool				   Is3DAccelerated();
+	virtual bool				   Is3DAccelerationSupported();
+	virtual bool				   Is3DAccelerationRecommended();
+
         virtual Font *                             CreateFont(SexyAppBase * theApp,
                                                               const std::string theFace,
                                                               int thePointSize,
