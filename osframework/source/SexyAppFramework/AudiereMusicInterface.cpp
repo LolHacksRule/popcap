@@ -52,6 +52,9 @@ bool AudiereMusicInterface::LoadMusic(int theSongId, const std::string& theFileN
 	}
 	else
 	{
+		if (theFileName.find(".mo3") != std::string::npos)
+			return false;
+
 		FilePtr file = AudierePakFile::Open(theFileName);
 		if (file)
 			aMusicInfo.mStream = OpenSound(mDevice, file, true);
