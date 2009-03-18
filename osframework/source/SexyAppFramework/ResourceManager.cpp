@@ -645,14 +645,14 @@ bool ResourceManager::LoadAlphaGridImage(ImageRes *theRes, MemoryImage *theImage
 	if (anAlphaImage->mWidth!=aCelWidth || anAlphaImage->mHeight!=aCelHeight)
 		return Fail(StrFormat("GridAlphaImage size mismatch between %s and %s",theRes->mPath.c_str(),theRes->mAlphaGridImage.c_str()));
 
-	uint32 *aMasterRowPtr = theImage->mBits;
+	uint32 *aMasterRowPtr = theImage->GetBits();
 	for (int i=0; i < aNumRows; i++)
 	{
 		uint32 *aMasterColPtr = aMasterRowPtr;
 		for (int j=0; j < aNumCols; j++)
 		{
 			uint32* aRowPtr = aMasterColPtr;
-			uint32* anAlphaBits = anAlphaImage->mBits;
+			uint32* anAlphaBits = anAlphaImage->GetBits();
 			for (int y=0; y<aCelHeight; y++)
 			{
 				uint32 *aDestPtr = aRowPtr;
@@ -690,8 +690,8 @@ bool ResourceManager::LoadAlphaImage(ImageRes *theRes, MemoryImage *theImage)
 	if (anAlphaImage->mWidth!=theImage->mWidth || anAlphaImage->mHeight!=theImage->mHeight)
 		return Fail(StrFormat("AlphaImage size mismatch between %s and %s",theRes->mPath.c_str(),theRes->mAlphaImage.c_str()));
 
-	uint32* aBits1 = theImage->mBits;
-	uint32* aBits2 = anAlphaImage->mBits;
+	uint32* aBits1 = theImage->GetBits();
+	uint32* aBits2 = anAlphaImage->GetBits();
 	int aSize = theImage->mWidth*theImage->mHeight;
 
 	for (int i = 0; i < aSize; i++)
