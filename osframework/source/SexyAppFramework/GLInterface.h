@@ -77,6 +77,10 @@ public:
 	GLInterface(SexyAppBase* theApp);
 	virtual ~GLInterface();
 
+	virtual bool				Is3DAccelerated();
+	virtual bool				Is3DAccelerationSupported();
+	virtual bool				Is3DAccelerationRecommended();
+
 	virtual Image*				GetScreenImage();
 	virtual int				Init();
 	virtual void				Cleanup();

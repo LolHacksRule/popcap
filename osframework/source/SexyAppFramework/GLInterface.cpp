@@ -47,6 +47,21 @@ GLInterface::~GLInterface()
 	Cleanup();
 }
 
+bool GLInterface::Is3DAccelerated()
+{
+    return true;
+}
+
+bool GLInterface::Is3DAccelerationSupported()
+{
+    return true;
+}
+
+bool GLInterface::Is3DAccelerationRecommended()
+{
+    return true;
+}
+
 Image* GLInterface::GetScreenImage()
 {
 	return mScreenImage;
