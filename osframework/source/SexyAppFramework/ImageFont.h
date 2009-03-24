@@ -16,7 +16,7 @@ class CharData
 public:
 	Rect					mImageRect;
 	Point					mOffset;
-	char					mKerningOffsets[256];
+	int					mKerningOffsets[256];
 	int						mWidth;
 	int						mOrder;
 
