@@ -2160,7 +2160,7 @@ bool SexyAppBase::Process(bool allowSleep)
 			int anElapsedTime = (anEndTime - aStartTime) - aCumSleepTime;
 			int aLoadingYieldSleepTime = std::min(250, (anElapsedTime * 2) - aCumSleepTime);
 
-			if (aLoadingYieldSleepTime >= 0)
+			if (aLoadingYieldSleepTime > 0)
 			{
 				if (!allowSleep)
 					return false;
