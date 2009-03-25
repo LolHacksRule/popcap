@@ -195,8 +195,14 @@ void WidgetManager::DoMouseUps(Widget* theWidget, ulong theDownCode)
 
 void WidgetManager::RemapMouse(int& theX, int& theY)
 {
-	theX = ( theX - mMouseSourceRect.mX ) * mMouseDestRect.mWidth / mMouseSourceRect.mWidth + mMouseDestRect.mX;
-	theY = ( theY - mMouseSourceRect.mY ) * mMouseDestRect.mHeight / mMouseSourceRect.mHeight + mMouseDestRect.mY;
+	theX = (theX - mMouseSourceRect.mX) * mMouseDestRect.mWidth / mMouseSourceRect.mWidth + mMouseDestRect.mX;
+	theY = (theY - mMouseSourceRect.mY) * mMouseDestRect.mHeight / mMouseSourceRect.mHeight + mMouseDestRect.mY;
+}
+
+void WidgetManager::UnmapMouse(int& theX, int& theY)
+{
+	theX = (theX - mMouseDestRect.mX) * mMouseSourceRect.mWidth / mMouseDestRect.mWidth + mMouseSourceRect.mX;
+	theY = (theY - mMouseDestRect.mY) * mMouseSourceRect.mHeight / mMouseDestRect.mHeight + mMouseSourceRect.mY;
 }
 
 void WidgetManager::MouseEnter(Widget* theWidget)

@@ -115,6 +115,7 @@ public:
 	void					MousePosition(int x, int y);	
 	void					RehupMouse();
 	void					RemapMouse(int& theX, int& theY);
+	void					UnmapMouse(int& theX, int& theY);
 	bool					MouseUp(int x, int y, int theClickCount);
 	bool					MouseDown(int x, int y, int theClickCount);
 	bool					MouseMove(int x, int y);
