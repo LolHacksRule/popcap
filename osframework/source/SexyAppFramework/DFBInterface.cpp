@@ -60,7 +60,6 @@ int DFBInterface::Init(void)
 
 	mMainThread = pthread_self();
 	DFBResult ret;
-	AutoCrit anAutoCrit(mCritSect);
 	mInitialized = false;
 
 	if (!mDFB) {
@@ -210,8 +209,6 @@ int DFBInterface::Init(void)
 
 void DFBInterface::SetVideoOnlyDraw(bool videoOnlyDraw)
 {
-	AutoCrit anAutoCrit(mCritSect);
-
 	mVideoOnlyDraw = videoOnlyDraw;
 }
 
@@ -242,8 +239,6 @@ void DFBInterface::Remove3DData(MemoryImage* theImage) // for 3d texture cleanup
 
 void DFBInterface::Cleanup()
 {
-	AutoCrit anAutoCrit(mCritSect);
-
 	mInitialized = false;
 
 	if (mInput)
@@ -285,8 +280,6 @@ void DFBInterface::Cleanup()
 
 bool DFBInterface::Redraw(Rect* theClipRect)
 {
-	AutoCrit anAutoCrit(mCritSect);
-
 	if (!mInitialized)
 		return false;
 
@@ -319,8 +312,6 @@ bool DFBInterface::EnableCursor(bool enable)
 
 bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
-	AutoCrit anAutoCrit(mCritSect);
-
 	if (mDFBCursorImage)
 		mDFBCursorImage->Release(mDFBCursorImage);
 	mDFBCursorImage = NULL;
@@ -344,8 +335,6 @@ bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 
 void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 {
-	AutoCrit anAutoCrit(mCritSect);
-
 	if (mCursorX == theCursorX && mCursorY == theCursorY)
 		return;
 
@@ -399,8 +388,6 @@ IDirectFBSurface* DFBInterface::CreateDFBSurface(int width, int height)
 	}
 	else if (width && height)
 	{
-		AutoCrit anAutoCrit(mCritSect);
-
 		DFBSurfaceDescription desc;
 
 		desc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_WIDTH |
@@ -429,8 +416,6 @@ Image* DFBInterface::CreateImage(SexyAppBase * theApp,
 	}
 	else if (width && height && IsMainThread())
 	{
-		AutoCrit anAutoCrit(mCritSect);
-
 		DFBSurfaceDescription desc;
 
 		desc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_WIDTH |
