@@ -17,6 +17,7 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 {
 	mApp = theApp;
 	mDFB = NULL;
+	mPrimarySurface = NULL;
 	mScreenImage = NULL;
 	mInitialized = false;
 	mVideoOnlyDraw = false;
