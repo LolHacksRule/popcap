@@ -58,6 +58,7 @@ int DFBInterface::Init(void)
 {
 	Cleanup();
 
+	mMainThread = pthread_self();
 	DFBResult ret;
 	AutoCrit anAutoCrit(mCritSect);
 	mInitialized = false;
@@ -102,7 +103,7 @@ int DFBInterface::Init(void)
 	bool perferWindow = true;
 
 #if defined(SEXY_INTEL_CANMORE) || defined(SEXY_INTEL_OLO) || defined(SEXY_ST_SH4)
-	perferwindow = false;
+	perferWindow = false;
 	if (getenv ("SEXY_DFB_PERFER_WINDOW"))
 		perferWindow = true;
 #endif
@@ -420,12 +421,13 @@ Image* DFBInterface::CreateImage(SexyAppBase * theApp,
 				 int width, int height)
 {
 	IDirectFBSurface * aSurface;
+	DFBImage * aDFBImage;
 
 	if (!mInitialized)
 	{
 		return 0;
 	}
-	else if (width && height)
+	else if (width && height && IsMainThread())
 	{
 		AutoCrit anAutoCrit(mCritSect);
 
@@ -439,10 +441,17 @@ Image* DFBInterface::CreateImage(SexyAppBase * theApp,
 		desc.pixelformat = DSPF_ARGB;
 		if (mDFB->CreateSurface(mDFB, &desc, &aSurface))
 			return 0;
+		aDFBImage = new DFBImage(aSurface, this);
 	} else {
-		aSurface = 0;
+		aDFBImage = new DFBImage(this);
 	}
-	return new DFBImage(aSurface, this);
+
+	if (!aDFBImage)
+		return 0;
+
+	aDFBImage->Create(width, height);
+
+	return aDFBImage;
 }
 
 bool DFBInterface::HasEvent()
@@ -723,6 +732,11 @@ bool DFBInterface::GetEvent(struct Event &event)
 		break;
 	}
 	return true;
+}
+
+bool DFBInterface::IsMainThread(void)
+{
+	return pthread_equal(mMainThread, pthread_self());
 }
 
 class DFBVideoDriver: public VideoDriver {
