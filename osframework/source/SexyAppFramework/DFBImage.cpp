@@ -21,27 +21,6 @@ using namespace Sexy;
 #define SURFACE_DIRTY (1 << 0)
 #define BITS_DIRTY    (1 << 1)
 
-namespace Sexy {
-class DFBImageAutoFallback
-{
-public:
-	DFBImageAutoFallback(DFBImage * dst, DFBImage * src) :
-		mSrc(src), mDst(dst)
-	{
-		mDst->GetBits();
-		if (mSrc)
-			mSrc->GetBits();
-	};
-
-	~DFBImageAutoFallback()
-	{
-	}
-private:
-	DFBImage * mSrc;
-	DFBImage * mDst;
-};
-}
-
 DFBImage::DFBImage(DFBInterface* theInterface) :
 	MemoryImage(theInterface->mApp),
 	mInterface(theInterface),
@@ -70,17 +49,12 @@ DFBImage::DFBImage() :
 
 DFBImage::~DFBImage()
 {
-	mInterface->RemoveImage(this);
-
-	if (mSurface)
-		mSurface->Release(mSurface);
+	DeleteSurface();
 	DBG_ASSERTE(mLockCount == 0);
 }
 
 void DFBImage::Init()
 {
-	mInterface->AddImage(this);
-
 	if (mSurface) {
 		int width, height;
 		mSurface->GetSize(mSurface, &width, &height);
@@ -132,6 +106,9 @@ bool DFBImage::UnlockSurface()
 
 void DFBImage::DeleteSurface()
 {
+        if (mSurface)
+		mSurface->Release(mSurface);
+	mSurface = 0;
 }
 
 void DFBImage::ReInit()
@@ -173,32 +150,28 @@ void DFBImage::DeleteAllNonSurfaceData()
 
 void DFBImage::DeleteNativeData()
 {
-	if (mSurfaceSet)
-		return;
-
+	GetBits();
 	MemoryImage::DeleteNativeData();
 	DeleteSurface();
 }
 
 void DFBImage::DeleteExtraBuffers()
 {
-	if (mSurfaceSet)
-		return;
-
+	GetBits();
 	MemoryImage::DeleteExtraBuffers();
 	DeleteSurface();
 }
 
 void DFBImage::SetVideoMemory(bool wantVideoMemory)
 {
-	TRACE_THIS();
 }
 
 void DFBImage::RehupFirstPixelTrans()
 {
 }
 
-bool DFBImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty, bool convex)
+bool DFBImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect,
+			  const Color &theColor, int theDrawMode, int tx, int ty, bool convex)
 {
 	TRACE_THIS();
 	return false;
@@ -210,7 +183,10 @@ void DFBImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawM
 
 	dst = EnsureSurface();
 	if (!dst)
+	{
+		MemoryImage::FillRect(theRect, theColor, theDrawMode);
 		return;
+	}
 
 	TRACE_THIS();
 #if 0
@@ -237,13 +213,19 @@ void DFBImage::AdditiveDrawLine(double theStartX, double theStartY, double theEn
 	TRACE_THIS();
 }
 
-void DFBImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
+void DFBImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY,
+			const Color& theColor, int theDrawMode)
 {
 	IDirectFBSurface * dst;
 
 	dst = EnsureSurface();
 	if (!dst)
+	{
+		MemoryImage::DrawLine(theStartX, theStartY, theEndX, theEndY,
+				      theColor, theDrawMode);
 		return;
+	}
+
 	dst->SetDrawingFlags(dst, DSDRAW_BLEND);
 	dst->SetColor(dst,
 		      theColor.GetRed(), theColor.GetGreen(),
@@ -281,11 +263,13 @@ void DFBImage::Create(int theWidth, int theHeight)
 void DFBImage::BitsChanged()
 {
 	MemoryImage::BitsChanged();
-	if (mSurface) {
+	if (mSurface && mInterface->IsMainThread()) {
 		DFBResult ret;
 		int i, pitch;
 		unsigned char * dst, * src;
 
+		if (!mBits)
+			MemoryImage::GetBits();
 		src = (unsigned char*)mBits;
 		if (!src)
 			return;
@@ -312,12 +296,13 @@ uint32* DFBImage::GetBits()
 		return 0;
 	TRACE_THIS();
 	mDirty |= SURFACE_DIRTY;
-	if (mSurface && (mDirty & SURFACE_DIRTY)) {
+	if (mSurface && (mDirty & SURFACE_DIRTY) && mInterface->IsMainThread() ) {
 		DFBResult ret;
 		int i, pitch;
 		unsigned char * dst, * src;
 
-		ret = mSurface->Lock(mSurface, (DFBSurfaceLockFlags)(DSLF_READ | DSLF_WRITE), (void **)&src, &pitch);
+		ret = mSurface->Lock(mSurface, (DFBSurfaceLockFlags)(DSLF_READ | DSLF_WRITE),
+				     (void **)&src, &pitch);
 		if (ret != DFB_OK)
 			return bits;
 		dst = (unsigned char*)bits;
@@ -341,7 +326,10 @@ void DFBImage::ClearRect(const Rect& theRect)
 
 	dst = EnsureSurface();
 	if (!dst)
+	{
+		MemoryImage::ClearRect(theRect);
 		return;
+	}
 
 	DFBRegion   clip_rect;
 	clip_rect.x1 = theRect.mX;
@@ -363,7 +351,10 @@ void DFBImage::Clear()
 
 	dst = EnsureSurface();
 	if (!dst)
+	{
+		MemoryImage::Clear();
 		return;
+	}
 
 	dst->Clear (dst, 0, 0, 0, 0);
 	mDirty |= SURFACE_DIRTY;
@@ -376,6 +367,7 @@ void DFBImage::NormalFillRect(const Rect& theRect, const Color& theColor)
 	dst = EnsureSurface();
 	if (!dst)
 		return;
+
 	dst->SetDrawingFlags(dst, DSDRAW_BLEND);
 	dst->SetColor(dst,
 		      theColor.GetRed(), theColor.GetGreen(),
@@ -429,7 +421,8 @@ void DFBImage::NormalBlt(Image* theImage, int theX, int theY, const Rect& theSrc
 	TRACE_THIS();
 }
 
-void DFBImage::NormalBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
+void DFBImage::NormalBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig,
+			       const Color& theColor)
 {
 	TRACE_THIS();
 }
@@ -474,7 +467,8 @@ void DFBImage::AdditiveBlt(Image* theImage, int theX, int theY, const Rect& theS
 	TRACE_THIS();
 }
 
-void DFBImage::AdditiveBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig, const Color& theColor)
+void DFBImage::AdditiveBltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRectOrig,
+				 const Color& theColor)
 {
 	TRACE_THIS();
 }
@@ -510,25 +504,24 @@ void DFBImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, 
 
 void DFBImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode)
 {
-	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
-	if (!srcImage)
-		return;
-
-	DFBImageAutoFallback fallback(this, srcImage);
 	MemoryImage::BltMirror(theImage, theX, theY, theSrcRect, theColor, theDrawMode);
 }
 
-void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect, const Color& theColor, int theDrawMode)
+void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect,
+		    const Rect &theClipRect, const Color& theColor, int theDrawMode)
 {
+	if (true)
+		MemoryImage::BltF(theImage, theX, theY, theSrcRect, theClipRect,
+				  theColor, theDrawMode);
+
 	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
 	IDirectFBSurface * src, * dst;
 
 	src = srcImage->EnsureSurface();
 	dst = EnsureSurface();
 	if (src == NULL || dst == NULL) {
-		this->GetBits();
-		theImage->GetBits();
-		MemoryImage::NormalBlt(theImage, theX, theY, theSrcRect, theColor);
+		MemoryImage::BltF(theImage, theX, theY, theSrcRect, theClipRect,
+				  theColor, theDrawMode);
 		return;
 	}
 
@@ -568,18 +561,16 @@ void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcR
 	mDirty |= SURFACE_DIRTY;
 }
 
-void DFBImage::BltRotated(Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
+void DFBImage::BltRotated(Image* theImage, float theX, float theY, const Rect &theSrcRect,
+			  const Rect& theClipRect, const Color& theColor, int theDrawMode,
+			  double theRot, float theRotCenterX, float theRotCenterY)
 {
-	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
-	if (!srcImage)
-		return;
-
-	DFBImageAutoFallback fallback(this, srcImage);
 	MemoryImage::BltRotated(theImage, theX, theY, theSrcRect, theClipRect, theColor,
 				theDrawMode, theRot, theRotCenterX, theRotCenterY);
 }
 
-void DFBImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRectOrig, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
+void DFBImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRectOrig,
+			  const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
 {
 	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
 	IDirectFBSurface * src, * dst;
@@ -589,8 +580,11 @@ void DFBImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Re
 
 	src = srcImage->EnsureSurface();
 	dst = EnsureSurface();
-	if (src == NULL || dst == NULL)
+	if (src == NULL || dst == NULL) {
+		MemoryImage::StretchBlt(theImage, theDestRectOrig, theSrcRectOrig,
+					theClipRect, theColor, theDrawMode, fastStretch);
 		return;
+	}
 
 	theImage->mDrawn = true;
 	DFBRectangle src_rect, dest_rect;
@@ -633,36 +627,27 @@ void DFBImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Re
 	mDirty |= SURFACE_DIRTY;
 }
 
-void DFBImage::StretchBltMirror(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRectOrig, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
+void DFBImage::StretchBltMirror(Image* theImage, const Rect& theDestRectOrig, const Rect& theSrcRectOrig,
+				const Rect& theClipRect, const Color& theColor, int theDrawMode,
+				bool fastStretch)
 {
-	theImage->mDrawn = true;
-
-	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
-	if (!srcImage)
-		return;
-
-	DFBImageAutoFallback fallback(this, srcImage);
-	MemoryImage::StretchBltMirror(theImage, theDestRectOrig, theSrcRectOrig, theClipRect, theColor, theDrawMode, fastStretch);
+	MemoryImage::StretchBltMirror(theImage, theDestRectOrig, theSrcRectOrig, theClipRect,
+				      theColor, theDrawMode, fastStretch);
 }
 
-void DFBImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix, const Rect& theClipRect, const Color& theColor, int theDrawMode, const Rect &theSrcRect, bool blend)
+void DFBImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix,
+			 const Rect& theClipRect, const Color& theColor, int theDrawMode,
+			 const Rect &theSrcRect, bool blend)
 {
-	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
-	if (!srcImage)
-		return;
-
-	DFBImageAutoFallback fallback(this, srcImage);
 	MemoryImage::BltMatrix(theImage, x, y, theMatrix, theClipRect, theColor, theDrawMode, theSrcRect, blend);
 }
 
-void DFBImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3], int theNumTriangles, const Rect& theClipRect, const Color &theColor, int theDrawMode, float tx, float ty, bool blend)
+void DFBImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3], int theNumTriangles,
+			       const Rect& theClipRect, const Color &theColor, int theDrawMode,
+			       float tx, float ty, bool blend)
 {
-	DFBImage * srcImage = dynamic_cast<DFBImage*>(theTexture);
-	if (!srcImage)
-		return;
-
-	DFBImageAutoFallback fallback(this, srcImage);
-	MemoryImage::BltTrianglesTex(theTexture, theVertices, theNumTriangles, theClipRect, theColor, theDrawMode, tx, ty, blend);
+	MemoryImage::BltTrianglesTex(theTexture, theVertices, theNumTriangles, theClipRect, theColor,
+				     theDrawMode, tx, ty, blend);
 }
 
 bool DFBImage::Palletize()
@@ -670,12 +655,13 @@ bool DFBImage::Palletize()
 	return false;
 }
 
-void DFBImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const Color& theColor, int theDrawMode, const BYTE* theCoverage, int theCoverX, int theCoverY, int theCoverWidth, int theCoverHeight)
+void DFBImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const Color& theColor,
+					 int theDrawMode, const BYTE* theCoverage, int theCoverX,
+					 int theCoverY, int theCoverWidth, int theCoverHeight)
 {
 	if (theSpanCount == 0)
 		return;
 
-	DFBImageAutoFallback fallback(this, 0);
 	MemoryImage::FillScanLinesWithCoverage(theSpans, theSpanCount, theColor, theDrawMode, theCoverage,
 					       theCoverX, theCoverY, theCoverWidth, theCoverHeight);
 }
@@ -711,6 +697,9 @@ void DFBImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commit
 
 IDirectFBSurface* DFBImage::EnsureSurface()
 {
+	if (!mInterface->IsMainThread())
+		return 0;
+
 	if (mSurface)
 		return mSurface;
 

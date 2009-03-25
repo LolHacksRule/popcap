@@ -9,7 +9,6 @@ namespace Sexy
 
 class DFBInterface;
 class DFBFont;
-class DFBImageAutoFallback;
 
 class DFBImage : public MemoryImage
 {
