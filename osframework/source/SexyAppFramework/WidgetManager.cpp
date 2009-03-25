@@ -445,11 +445,7 @@ bool WidgetManager::DrawScreen()
 	aCursorY = (aCursorY - mMouseDestRect.mY) * mMouseSourceRect.mHeight / mMouseDestRect.mHeight + mMouseSourceRect.mY;
 	bool cursorChanged = aInterface->UpdateCursor(aCursorX, aCursorY);
 
-	bool redrawAll = false;
-	if (((mImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER) &&
-	     !(mImage->mFlags & IMAGE_FLAGS_FLIP_AS_COPY)) ||
-	    !(mImage->mFlags & IMAGE_FLAGS_DOUBLE_BUFFER))
-		redrawAll = true;
+	bool redrawAll = cursorChanged;
 
 	if (aDirtyCount > 0 || cursorChanged)
 	{
