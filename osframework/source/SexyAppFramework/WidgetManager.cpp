@@ -441,15 +441,22 @@ bool WidgetManager::DrawScreen()
 	NativeDisplay * aInterface = mApp->mDDInterface;
 	int aCursorX = mLastMouseX;
 	int aCursorY = mLastMouseY;
-	aCursorX = (aCursorX - mMouseDestRect.mX) * mMouseSourceRect.mWidth / mMouseDestRect.mWidth + mMouseSourceRect.mX;
-	aCursorY = (aCursorY - mMouseDestRect.mY) * mMouseSourceRect.mHeight / mMouseDestRect.mHeight + mMouseSourceRect.mY;
+	UnmapMouse(aCursorX, aCursorY);
+
 	bool cursorChanged = aInterface->UpdateCursor(aCursorX, aCursorY);
 
 	bool redrawAll = cursorChanged;
 
 	if (aDirtyCount > 0 || cursorChanged)
 	{
+		Rect aVisibleRect;
+		aVisibleRect.mX = -mMouseDestRect.mX;
+		aVisibleRect.mY = -mMouseDestRect.mY;
+		aVisibleRect.mWidth = mWidth;
+		aVisibleRect.mHeight = mHeight;
+
 		Graphics g(aScrG);
+		g.ClipRect(aVisibleRect);
 		g.Translate(-mMouseDestRect.mX, -mMouseDestRect.mY);
 		bool is3D = mApp->Is3DAccelerated();
 
@@ -478,12 +485,6 @@ bool WidgetManager::DrawScreen()
 		}
 
 		g.Translate(mMouseDestRect.mX, mMouseDestRect.mY);
-		Rect aVisibleRect;
-		aVisibleRect.mX = -mMouseDestRect.mX;
-		aVisibleRect.mY = -mMouseDestRect.mY;
-		aVisibleRect.mWidth = mWidth;
-		aVisibleRect.mHeight = mHeight;
-		g.ClipRect(aVisibleRect);
 		if (aVisibleRect.Contains (aCursorX, aCursorY) && aInterface->DrawCursor (&g))
 			drewStuff = true;
 		aImage->Flip(FLIP_WAIT_SYNC);
