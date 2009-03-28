@@ -263,6 +263,7 @@ static int XKsymToKeyCode(KeySym keysym)
 		{ XK_Down, KEYCODE_DOWN },
 		{ XK_Return, KEYCODE_RETURN },
 		{ XK_Escape, KEYCODE_ESCAPE },
+		{ XK_BackSpace, KEYCODE_BACK },
 		{ 0, 0 }
 	};
 	int i;
@@ -275,6 +276,8 @@ static int XKsymToKeyCode(KeySym keysym)
 		return 'a' + keysym - XK_A;
 	if (keysym >= XK_0 && keysym <= XK_9)
 		return '0' + keysym - XK_0;
+	if (isalnum (keysym))
+		return keysym;
 	return 0;
 }
 
@@ -299,6 +302,9 @@ bool GLXInterface::GetEvent(struct Event &event)
 		XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
 		event.type = EVENT_KEY_DOWN;
 		event.u.key.keyCode = XKsymToKeyCode (key);
+		event.u.key.keyChar = XKsymToKeyCode (key);
+		if (isalnum (event.u.key.keyChar))
+			event.flags |= EVENT_FLAGS_KEY_CHAR;
 		break;
 	case KeyRelease:
 	{
