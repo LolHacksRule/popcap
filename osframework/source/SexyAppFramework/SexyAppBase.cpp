@@ -2288,6 +2288,7 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		mLastUserInputTick = mLastTimerTime;
 		mWidgetManager->KeyDown((KeyCode)event.u.key.keyCode);
 		if ((event.u.key.keyCode >= 'a' && event.u.key.keyCode <= 'z') ||
+		    (event.u.key.keyCode >= 'A' && event.u.key.keyCode <= 'Z') ||
 		    (event.u.key.keyCode >= '0' && event.u.key.keyCode <= '9'))
 			mWidgetManager->KeyChar((SexyChar)event.u.key.keyCode);
 
