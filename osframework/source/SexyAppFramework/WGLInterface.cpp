@@ -24,6 +24,8 @@ WGLInterface::WGLInterface (SexyAppBase* theApp)
 	mWindow = 0;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
+	mSysCursor = TRUE;
+	mBlankCursor = 0;
 }
 
 WGLInterface::~WGLInterface ()
@@ -306,8 +308,11 @@ int WGLInterface::Init (void)
 	mContext = wglCreateContext (mHDC);
 	wglMakeCurrent (mHDC, mContext);
 
-	SetCursor (NULL);
 	ShowCursor (FALSE);
+	mSysCursor = 0;
+
+	mBlankCursor = CreateImage (mApp, 1, 1);
+
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
 
@@ -331,6 +336,14 @@ void WGLInterface::Cleanup ()
 	mInitialized = false;
 
 	GLInterface::Cleanup ();
+
+	if (!mSysCursor)
+		ShowCursor (TRUE);
+	mSysCursor = TRUE;
+
+	if (mBlankCursor)
+		delete mBlankCursor;
+	mBlankCursor = 0;
 
 	mEventQueue.clear ();
 	if (mScreenImage)
@@ -415,6 +428,30 @@ void WGLInterface::SwapBuffers()
 {
 	if (mHDC)
 		::SwapBuffers (mHDC);
+}
+
+bool WGLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
+{
+	if (theImage == mApp->mArrowCursor)
+	{
+		if (mSysCursor)
+			return true;
+
+		ShowCursor (TRUE);
+		mSysCursor = true;
+
+		theImage = mBlankCursor;
+		theHotX = 0;
+		theHotY = 0;
+	}
+	else
+	{
+		if (mSysCursor)
+			ShowCursor (FALSE);
+		mSysCursor = false;
+	}
+
+	return GLInterface::SetCursorImage(theImage, theHotX, theHotY);
 }
 
 class WGLVideoDriver: public VideoDriver {

@@ -34,6 +34,8 @@ public:
 	virtual bool				HasEvent();
 	virtual bool				GetEvent(struct Event &event);
 
+	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
+
 private:
 	typedef std::list<Event> EventQueue;
 	HDC					mHDC;
@@ -43,6 +45,9 @@ private:
 	int					mGLXMinor;
 
 	EventQueue				mEventQueue;
+
+	int                                     mSysCursor;
+	Image                                 * mBlankCursor;
 
 	static LONG WINAPI			WndProc (HWND	 hWnd,
 							 UINT	 uMsg,
