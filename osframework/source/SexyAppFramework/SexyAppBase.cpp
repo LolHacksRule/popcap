@@ -1715,8 +1715,10 @@ void SexyAppBase::LoadingThreadProcStub(void *theArg)
 
 	aSexyApp->LoadingThreadProc();
 
+#if defined(SEXY_DEBUG) || defined(DEBUG)
 	fprintf(stderr, "Resource Loading Time: %u\r\n",
 		(GetTickCount() - aSexyApp->mTimeLoaded));
+#endif
 
 	aSexyApp->mLoadingThreadCompleted = true;
 }
@@ -2220,8 +2222,6 @@ void SexyAppBase::DoMainLoop()
 
 bool SexyAppBase::ProcessMessage(Event & event)
 {
-	mLastUserInputTick = mLastTimerTime;
-
 	switch(event.type) {
 	case EVENT_NONE:
 		break;
@@ -2231,6 +2231,7 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_MOUSE_BUTTON_PRESS:
+		mLastUserInputTick = mLastTimerTime;
 		mMouseX = event.u.mouse.x;
 		mMouseY = event.u.mouse.y;
 		mWidgetManager->RemapMouse(mMouseX, mMouseY);
@@ -2257,6 +2258,7 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_KEY_DOWN:
+		mLastUserInputTick = mLastTimerTime;
 		mWidgetManager->KeyDown((KeyCode)event.u.key.keyCode);
 		if ((event.u.key.keyCode >= 'a' && event.u.key.keyCode <= 'z') ||
 		    (event.u.key.keyCode >= '0' && event.u.key.keyCode <= '9'))
@@ -2269,14 +2271,10 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_MOUSE_MOTION:
-		if (!mHasFocus)
-		{
-			mHasFocus = true;
-			GotFocus();
+		mLastUserInputTick = mLastTimerTime;
 
-			if (mMuteOnLostFocus)
-				Unmute(true);
-		}
+		if (!mHasFocus)
+			RehupFocus();
 
 		mMouseX = event.u.mouse.x;
 		mMouseY = event.u.mouse.y;
@@ -2292,30 +2290,8 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_ACTIVE:
-		if (event.u.active.active) {
-
-			mHasFocus = true;
-			GotFocus();
-
-			if (mMuteOnLostFocus)
-				Unmute(true);
-
-			mWidgetManager->MouseMove(mMouseX, mMouseY);
-
-		}
-		else {
-
-			mHasFocus = false;
-			LostFocus();
-
-			mWidgetManager->MouseExit(mMouseX, mMouseY);
-
-			if (mMuteOnLostFocus)
-				Mute(true);
-		}
-		break;
-	case EVENT_EXPOSE:
-		mWidgetManager->MarkAllDirty();
+		mActive = event.u.active.active;
+		RehupFocus();
 		break;
 	default:
 		mWidgetManager->UserEvent(event);
@@ -3467,16 +3443,22 @@ void SexyAppBase::Remove3DData(MemoryImage* theMemoryImage)
 
 bool SexyAppBase::Is3DAccelerated()
 {
+	if (mDDInterface)
+		return mDDInterface->Is3DAccelerated();
 	return false;
 }
 
 bool SexyAppBase::Is3DAccelerationSupported()
 {
+	if (mDDInterface)
+		return mDDInterface->Is3DAccelerationSupported();
 	return false;
 }
 
 bool SexyAppBase::Is3DAccelerationRecommended()
 {
+	if (mDDInterface)
+		return mDDInterface->Is3DAccelerationRecommended();
 	return false;
 }
 
