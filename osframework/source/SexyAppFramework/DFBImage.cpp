@@ -155,6 +155,7 @@ void DFBImage::DeleteNativeData()
 
 void DFBImage::DeleteExtraBuffers()
 {
+	mDFBCount++;
 	GetBits();
 	MemoryImage::DeleteExtraBuffers();
 	DeleteSurface();
@@ -227,17 +228,20 @@ void DFBImage::DrawLine(double theStartX, double theStartY, double theEndX, doub
 	mDFBCount++;
 }
 
-void DFBImage::NormalDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
+void DFBImage::NormalDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY,
+				const Color& theColor)
 {
 	TRACE_THIS();
 }
 
-void DFBImage::AdditiveDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor)
+void DFBImage::AdditiveDrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY,
+				  const Color& theColor)
 {
 	TRACE_THIS();
 }
 
-void DFBImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode)
+void DFBImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY,
+			  const Color& theColor, int theDrawMode)
 {
 	TRACE_THIS();
 }
@@ -288,7 +292,7 @@ uint32* DFBImage::GetBits()
 	if (!bits)
 		return 0;
 	TRACE_THIS();
-	if (mSurface && mDFBCount && mInterface->IsMainThread() ) {
+	if (mSurface && mDFBCount && mInterface->IsMainThread()) {
 		DFBResult ret;
 		int i, pitch;
 		unsigned char * dst, * src;
@@ -697,10 +701,7 @@ IDirectFBSurface* DFBImage::EnsureSurface()
 	mSurface = mInterface->CreateDFBSurface(mWidth, mHeight);
 	mSurface->GetCapabilities(mSurface, &mCaps);
 	if (mBits)
-	{
-		mMemoryCount = mBitsChangedCount - 1;
-		BitsChanged();
-	}
+		SetBits(mBits, mWidth, mHeight);
 	DeleteAllNonSurfaceData();
 
 	return mSurface;
