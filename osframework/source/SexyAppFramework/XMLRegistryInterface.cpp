@@ -119,7 +119,6 @@ void XMLRegistryInterface::Load()
 			{
 				if (e.mSection == "Registry/Key")
 				{
-					printf ("%s -> %s\n", key.c_str(), value.c_str());
 					mRegistry[key] = value;
 				}
 			}
@@ -150,8 +149,9 @@ bool XMLRegistryInterface::ReadKey(const std::string& theValueName, ulong* theTy
 		return false;
 
 	uchar* c_str = (uchar*)(SexyStringToString(s)).c_str();
-	if (*theType == REG_SZ) {
-		memcpy(theValue, c_str, 1023);
+	if (*theType == REG_SZ)
+	{
+		strncpy((char *)theValue, (char *)c_str, 1023);
 	}
 	else if (*theType == REG_DWORD)
 	{
