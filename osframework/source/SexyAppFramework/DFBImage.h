@@ -22,16 +22,19 @@ public:
 	DFBInterface*			mInterface;
 	IDirectFBSurface*		mSurface;
 	DFBSurfaceCapabilities		mCaps;
-	int				mDirty;
 	bool				mSurfaceSet;
 	bool				mNoLock;
-	bool					mVideoMemory;
-	bool					mFirstPixelTrans;
-	bool					mWantDDSurface;
-	bool					mDrawToBits;
-	int						mLockCount;
+	bool				mVideoMemory;
+	bool				mFirstPixelTrans;
+	bool				mWantDDSurface;
+	bool				mDrawToBits;
+	int				mLockCount;
+
+	int                             mDFBCount;
+	int                             mMemoryCount;
+
 private:
-	void					Init();
+	void				Init();
 
 public:	
 	virtual void			ReInit();
