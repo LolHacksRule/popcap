@@ -55,6 +55,7 @@ public:
 	int					mCursorHotY;
 
 	GLImage*				mCursorImage;
+	bool                                    mCursorDirty;
 	bool					mCursorDrawn;
 
 	int					mWindowWidth;

@@ -7,7 +7,6 @@
 #include "Debug.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
-#include "InputManager.h"
 
 #include <cstdio>
 
@@ -104,7 +103,7 @@ void GLInterface::Cleanup()
 	mCursorEnabled = false;
 	mCursorDrawn = false;
 	mCursorImage = 0;
-
+	mCursorDirty = true;
 }
 
 bool GLInterface::Redraw(Rect* theClipRect)
@@ -142,7 +141,6 @@ void GLInterface::InitGL()
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureWidth);
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureHeight);
 
-	
 	if (SEXY_GL_IS_DEBUG ())
 		printf ("Maximium texture size: %d\n", mMaxTextureHeight);
 
@@ -281,12 +279,15 @@ void GLInterface::CalulateBestTexDimensions (int & theWidth, int & theHeight,
 bool GLInterface::EnableCursor(bool enable)
 {
 	mCursorEnabled = enable;
+	mCursorDirty = true;
 	return true;
 }
 
 bool GLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
 	GLImage * aGLImage = dynamic_cast<GLImage*>(theImage);
+
+	mCursorDirty = true;
 	mCursorImage = aGLImage;
 	mCursorHotX = theHotX;
 	mCursorHotY = theHotY;
@@ -304,21 +305,19 @@ void GLInterface::SetCursorPos(int theCursorX, int theCursorY)
 bool GLInterface::UpdateCursor(int theCursorX, int theCursorY)
 {
 	SetCursorPos (theCursorX, theCursorY);
-	if (mCursorImage &&
-	    (mCursorOldX != mCursorX ||
-	     mCursorOldY != mCursorY))
-		return true;
-	return false;
+	if (mCursorDrawnX != mCursorX || mCursorDrawnY != mCursorY)
+	    mCursorDirty = true;
+	return mCursorDirty;
 }
 
 bool GLInterface::DrawCursor(Graphics* g)
 {
-	if (!mCursorImage)
-		return false;
+	mCursorDirty = false;
 
-	g->DrawImage (mCursorImage,
-		      mCursorX - mCursorHotX,
-		      mCursorY - mCursorHotY);
+	if (mCursorImage && mCursorEnabled)
+		g->DrawImage (mCursorImage,
+			      mCursorX - mCursorHotX,
+			      mCursorY - mCursorHotY);
 
 	mCursorDrawnX = mCursorX;
 	mCursorDrawnY = mCursorY;
