@@ -24,6 +24,13 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
         'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp']
 
+srcs += ['RegistryInterface.cpp', 'RegistryInterfaceFactory.cpp',
+         'XMLWriter.cpp']
+if 'WIN32' in env['CPPDEFINES']:
+    srcs += ['Win32RegistryInterface.cpp']
+else:
+    srcs += ['XMLRegistryInterface.cpp']
+
 #dummy sound manager
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
 
