@@ -202,7 +202,9 @@ bool LinuxInputInterface::OpenDevice ()
 		device = "/dev/input/event0";
 	mFd = open (device, O_RDWR);
 	if (mFd < 0) {
+#if defined(SEXY_DEBUG) || defined(DEBUG)
 		printf ("open mouse device failed.\n");
+#endif
 		goto open_failed;
 	}
 
