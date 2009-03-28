@@ -14,6 +14,7 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('builddir', 'output to an alternative directory', 'False'))
 
 def Configure(env):
+    env['WIN_PROG_FLAGS'] = ''
     env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [])
     env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'include')],
                       LIBPATH = [os.path.join ('#', 'extra', 'lib')])
