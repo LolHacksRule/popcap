@@ -2838,6 +2838,9 @@ void SexyAppBase::Init()
 	if (mMusicInterface == NULL)
 		mMusicInterface = new MusicInterface();
 
+	SetSfxVolume(mSfxVolume);
+ 	SetMusicVolume(mMusicVolume);
+
 #ifdef __APPLE__
 	gPakInterface->AddPakFile("Contents/Resources/main.pak");
 #endif
