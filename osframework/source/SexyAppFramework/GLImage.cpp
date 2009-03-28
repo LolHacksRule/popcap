@@ -12,7 +12,7 @@
 
 using namespace Sexy;
 
-#if 1
+#if 0
 #define TRACE() printf ("%s:%d\n", __FUNCTION__, __LINE__);
 #define TRACE_THIS() printf ("%s:%d this = %p\n", __FUNCTION__, __LINE__, this);
 #else
