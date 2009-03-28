@@ -8,9 +8,14 @@ import SCons
 def AddOptions(opts):
     configs.AddOptions(opts)
 
+res_action = SCons.Action.Action('$RCCOM', '$RCCOMSTR')
+res_builder = SCons.Builder.Builder(action = res_action, suffix = '.res.o',
+                                    source_scanner=SCons.Tool.SourceFileScanner)
+
 def SetupCompiler(env):
     env.Tool('mingw')
     prefix = 'i686-pc-mingw32-'
+    env['BUILDERS']['RES'] = res_builder
     env['CC'] = prefix + 'gcc'
     env['CXX'] = prefix + 'g++'
     env['AR'] = prefix + 'ar'
@@ -31,6 +36,7 @@ def SetupCompiler(env):
 def Configure(env):
     SetupCompiler(env)
     configs.Configure(env)
+    env['WIN_PROG_FLAGS'] = '-mwindows'
     env.AppendUnique(CPPDEFINES = ['WIN32'])
     env.AppendUnique(CFLAGS = ['-g', '-fno-unit-at-a-time', '-Wall'],
                      CXXFLAGS = ['-g', '-Wall'],
