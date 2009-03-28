@@ -50,6 +50,9 @@ static int WinKeyToKeyCode(WPARAM winKey)
 	{ VK_DOWN, KEYCODE_DOWN },
 	{ VK_RETURN, KEYCODE_RETURN },
 	{ VK_ESCAPE, KEYCODE_ESCAPE },
+	{ VK_BACK, KEYCODE_BACK },
+	{ VK_TAB, KEYCODE_TAB },
+	{ VK_SPACE, KEYCODE_SPACE },
 	{ 0, 0 }
     };
     int i;
@@ -90,6 +93,7 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.type = EVENT_KEY_DOWN;
 		event.flags = EVENT_FLAGS_KEY_CODE;
 		event.u.key.keyCode = WinKeyToKeyCode (wParam);
+		event.u.key.keyChar = WinKeyToKeyCode (wParam);
 		if (isalnum (wParam))
 			event.flags |= EVENT_FLAGS_KEY_CHAR;
 		break;
@@ -97,8 +101,6 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.type = EVENT_KEY_UP;
 		event.flags = EVENT_FLAGS_KEY_CODE;
 		event.u.key.keyCode = WinKeyToKeyCode (wParam);
-		if (isalnum (wParam))
-			event.flags |= EVENT_FLAGS_KEY_CHAR;
 		break;
 	case WM_LBUTTONDOWN:
 		event.type = EVENT_MOUSE_BUTTON_PRESS;
