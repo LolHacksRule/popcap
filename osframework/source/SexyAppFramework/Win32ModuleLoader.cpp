@@ -73,8 +73,10 @@ Module* Win32ModuleLoader::Load (const char* thePath)
 			std::string msg;
 
 			GetLastErrorMessage (msg);
+#if defined(SEXY_DEBUG) || defined(DEBUG)
 			fprintf (stderr, "LoadLibrary error: %s (%s)\n",
 				 msg.c_str(), altName.c_str ());
+#endif
 		}
 	}
 

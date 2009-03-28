@@ -56,7 +56,9 @@ Module* PosixModuleLoader::Load (const char* thePath)
 		handle = dlopen (altName.c_str (), RTLD_LOCAL | RTLD_LAZY);
 		if (!handle)
 		{
+#if defined(SEXY_DEBUG) || defined(DEBUG)
 			printf ("dlerror: %s\n", dlerror ());
+#endif
 			return 0;
 		}
 	}
