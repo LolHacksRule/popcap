@@ -17,6 +17,12 @@ using namespace Sexy;
 #define ftofix(f) (GLfixed)(f * 65536.0f)
 #endif
 
+#if defined(DEBUG) || defined(SEXY_GL_DEBUG) 
+#define SEXY_GL_IS_DEBUG() true
+#else
+#define SEXY_GL_IS_DEBUG() getenv("SEXY_GL_DEBUG")
+#endif
+
 GLInterface::GLInterface(SexyAppBase* theApp)
 {
 	mApp = theApp;
@@ -130,15 +136,20 @@ void GLInterface::InitGL()
 		str = strchr (str, '.') + 1;
 		mGLMinor = atoi (str);
 	}
-	printf ("GL version: %s(%d.%d)\n", version, mGLMajor, mGLMinor);
+	if (SEXY_GL_IS_DEBUG ())
+		printf ("GL version: %s(%d.%d)\n", version, mGLMajor, mGLMinor);
 
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureWidth);
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureHeight);
 
-	printf ("Maximium texture size: %d\n", mMaxTextureHeight);
+	
+	if (SEXY_GL_IS_DEBUG ())
+		printf ("Maximium texture size: %d\n", mMaxTextureHeight);
 
 	mGLExtensions = (const char*)glGetString (GL_EXTENSIONS);
-	printf ("GL extensions: %s\n", mGLExtensions);
+
+	if (SEXY_GL_IS_DEBUG ())
+		printf ("GL extensions: %s\n", mGLExtensions);
 
 	if (mGLExtensions) {
 		if (strstr (mGLExtensions, "GL_ARB_texture_non_power_of_two") ||
