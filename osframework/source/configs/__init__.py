@@ -14,7 +14,7 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('builddir', 'output to an alternative directory', 'False'))
 
 def Configure(env):
-    env.AppendUnique (DRIVERS = [], LOADERS = [])
+    env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [])
     env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'include')],
                       LIBPATH = [os.path.join ('#', 'extra', 'lib')])
     if not env.has_key ('PKGCONFIG'):
