@@ -259,8 +259,7 @@ void DFBImage::Create(int theWidth, int theHeight)
 void DFBImage::BitsChanged()
 {
 	MemoryImage::BitsChanged();
-	if (mSurface && mMemoryCount != mBitsChangedCount &&
-	    mInterface->IsMainThread()) {
+	if (mSurface && mInterface->IsMainThread()) {
 		DFBResult ret;
 		int i, pitch;
 		unsigned char * dst, * src;
@@ -693,7 +692,11 @@ IDirectFBSurface* DFBImage::EnsureSurface()
 		return 0;
 
 	if (mSurface)
+	{
+		if (mMemoryCount != mBitsChangedCount && mBits)
+			SetBits(mBits, mWidth, mHeight);
 		return mSurface;
+	}
 
 	if (!mWidth || !mHeight)
 		return 0;
