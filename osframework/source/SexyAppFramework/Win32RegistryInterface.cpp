@@ -64,6 +64,8 @@ void Win32RegistryInterface::Load()
 
 bool Win32RegistryInterface::ReadKey(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength, HKEY theKey)
 {
+	Load();
+
 	if (mRegKey.length() == 0)
 		return false;
 
