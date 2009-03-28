@@ -28,6 +28,9 @@ srcs += ['RegistryInterface.cpp', 'RegistryInterfaceFactory.cpp',
          'XMLWriter.cpp']
 if 'WIN32' in env['CPPDEFINES']:
     srcs += ['Win32RegistryInterface.cpp']
+    env.AppendUnique(LIBS = ['advapi32'])
+    if gameenv['BUILD_STATIC']:
+       gameenv.AppendUnique(LIBS = ['advapi32'])
 else:
     srcs += ['XMLRegistryInterface.cpp']
 
