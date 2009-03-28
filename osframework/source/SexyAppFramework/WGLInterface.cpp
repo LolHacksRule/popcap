@@ -150,11 +150,26 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
 		break;
 	case WM_MOUSEMOVE:
+		if (interface->mCursorImage != interface->mBlankCursor && interface->mSysCursor)
+		{
+			ShowCursor (FALSE);
+			interface->mSysCursor = false;
+		}
+
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_AXIS;
 		event.u.mouse.x = GET_X_LPARAM (lParam);
 		event.u.mouse.y = GET_Y_LPARAM (lParam);
 		interface->RemapMouse(event.u.mouse.x, event.u.mouse.y);
+		break;
+	case WM_NCMOUSEMOVE:
+		if (!interface->mSysCursor)
+		{
+			ShowCursor (TRUE);
+			interface->mSysCursor = true;
+		}
+
+		ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
 		break;
 	case WM_KILLFOCUS:
 		event.type = EVENT_ACTIVE;
