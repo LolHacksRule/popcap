@@ -2301,7 +2301,10 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		mLastUserInputTick = mLastTimerTime;
 
 		if (!mHasFocus)
+		{
+			mActive = true;
 			RehupFocus();
+		}
 
 		mMouseX = event.u.mouse.x;
 		mMouseY = event.u.mouse.y;
@@ -2319,6 +2322,10 @@ bool SexyAppBase::ProcessMessage(Event & event)
 	case EVENT_ACTIVE:
 		mActive = event.u.active.active;
 		RehupFocus();
+		break;
+
+	case EVENT_EXPOSE:
+		mWidgetManager->MarkDirtyFull();
 		break;
 	default:
 		mWidgetManager->UserEvent(event);
