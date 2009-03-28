@@ -31,6 +31,7 @@
 
 #include "ResourceManager.h"
 #include "InputManager.h"
+#include "RegistryInterfaceFactory.h"
 #include "AutoCrit.h"
 #include "Debug.h"
 #include "../PakLib/PakInterface.h"
@@ -312,6 +313,7 @@ SexyAppBase::SexyAppBase()
 	mWidgetManager = new WidgetManager(this);
 	mResourceManager = new ResourceManager(this);
 	mInputManager = new InputManager (this);
+	mRegistryInterface = RegistryInterfaceFactory::GetInterface(this);
 
 	mPrimaryThreadId = 0;
 	mTabletPC = false;
@@ -335,6 +337,7 @@ SexyAppBase::~SexyAppBase()
 	delete mResourceManager;
 	delete mInputManager;
 
+
 	SharedImageMap::iterator aSharedImageItr = mSharedImageMap.begin();
 	while (aSharedImageItr != mSharedImageMap.end())
 	{
@@ -354,6 +357,7 @@ SexyAppBase::~SexyAppBase()
 
 	WaitForLoadingThread();
 
+	delete mRegistryInterface;
 	gSexyAppBase = NULL;
 
 	WriteDemoBuffer();
@@ -631,27 +635,27 @@ double SexyAppBase::GetLoadingThreadProgress()
 
 bool SexyAppBase::RegistryWrite(const std::string& theValueName, ulong theType, const uchar* theValue, ulong theLength)
 {
-	return true;
+	return mRegistryInterface->Write(theValueName, theType, theValue, theLength);
 }
 
 bool SexyAppBase::RegistryWriteString(const std::string& theValueName, const std::string& theString)
 {
-	return false;
+	return mRegistryInterface->WriteString(theValueName, theString);
 }
 
 bool SexyAppBase::RegistryWriteInteger(const std::string& theValueName, int theValue)
 {
-	return false;
+	return mRegistryInterface->WriteInteger(theValueName, theValue);
 }
 
 bool SexyAppBase::RegistryWriteBoolean(const std::string& theValueName, bool theValue)
 {
-	return false;
+	return mRegistryInterface->WriteBoolean(theValueName, theValue);
 }
 
 bool SexyAppBase::RegistryWriteData(const std::string& theValueName, const uchar* theValue, ulong theLength)
 {
-	return false;
+	return mRegistryInterface->WriteData(theValueName, theValue, theLength);
 }
 
 void SexyAppBase::WriteToRegistry()
@@ -669,45 +673,68 @@ void SexyAppBase::WriteToRegistry()
 
 bool SexyAppBase::RegistryEraseKey(const SexyString& _theKeyName)
 {
-	return true;
+	return mRegistryInterface->EraseKey (_theKeyName);
 }
 
 void SexyAppBase::RegistryEraseValue(const SexyString& _theValueName)
 {
+	mRegistryInterface->EraseValue (_theValueName);
 }
 
 bool SexyAppBase::RegistryGetSubKeys(const std::string& theKeyName, StringVector* theSubKeys)
 {
-	return false;
+	return mRegistryInterface->GetSubKeys (theKeyName, theSubKeys);
 }
 
 bool SexyAppBase::RegistryRead(const std::string& theValueName, ulong* theType, uchar* theValue, ulong* theLength)
 {
-	return false;
+	return  mRegistryInterface->Read(theValueName, theType, theValue, theLength);
 }
 
 bool SexyAppBase::RegistryReadString(const std::string& theKey, std::string* theString)
 {
-	return false;
+	return  mRegistryInterface->ReadString(theKey, theString);
 }
 
 bool SexyAppBase::RegistryReadInteger(const std::string& theKey, int* theValue)
 {
-	return false;
+	return  mRegistryInterface->ReadInteger(theKey, theValue);
 }
 
 bool SexyAppBase::RegistryReadBoolean(const std::string& theKey, bool* theValue)
 {
-	return false;
+	return  mRegistryInterface->ReadBoolean(theKey, theValue);
 }
 
 bool SexyAppBase::RegistryReadData(const std::string& theKey, uchar* theValue, ulong* theLength)
 {
-	return false;
+	return  mRegistryInterface->ReadData(theKey, theValue, theLength);
 }
 
 void SexyAppBase::ReadFromRegistry()
 {
+        mReadFromRegistry = true;
+        mRegKey = SexyStringToString(GetString("RegistryKey", StringToSexyString(mRegKey)));
+
+	int anInt = 0;
+
+	if (RegistryReadInteger("MusicVolume", &anInt))
+		mMusicVolume = anInt / 100.0;
+
+	if (RegistryReadInteger("SfxVolume", &anInt))
+		mSfxVolume = anInt / 100.0;
+
+	if (RegistryReadInteger("Muted", &anInt))
+		mMuteCount = anInt;
+
+	if (RegistryReadInteger("ScreenMode", &anInt))
+		mIsWindowed = anInt == 0;
+
+	RegistryReadInteger("PreferredX", &mPreferredX);
+	RegistryReadInteger("PreferredY", &mPreferredY);
+
+	if (RegistryReadInteger("CustomCursors", &anInt))
+		EnableCustomCursors(anInt != 0);
 }
 
 bool SexyAppBase::WriteBytesToFile(const std::string& theFileName, const void *theData, unsigned long theDataLen)

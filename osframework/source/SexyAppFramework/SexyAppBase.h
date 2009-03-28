@@ -34,6 +34,7 @@ class Dialog;
 
 class ResourceManager;
 class InputManager;
+class RegistryInterface;
 
 class WidgetSafeDeleteInfo
 {
@@ -346,6 +347,7 @@ public:
 	ResourceManager*		mResourceManager;
 
         InputManager*                           mInputManager;
+	RegistryInterface*                      mRegistryInterface;
 
 #ifdef ZYLOM
 	uint					mZylomGameId;
