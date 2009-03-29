@@ -404,7 +404,9 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 			{
 				std::string aLayerName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
 
-				mFontLayerList.push_back(FontLayer(this));
+				FontLayer * aNewFontLayer = new FontLayer(this);
+				mFontLayerList.push_back(*aNewFontLayer);
+				delete aNewFontLayer;
 				FontLayer* aFontLayer = &mFontLayerList.back();
 
 				if (!mFontLayerMap.insert(FontLayerMap::value_type(aLayerName, aFontLayer)).second)
