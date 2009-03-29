@@ -11,6 +11,11 @@ DarwinRegistryInterface::DarwinRegistryInterface(SexyAppBase * theApp)
 	CFPreferencesAppSynchronize (kCFPreferencesCurrentApplication);
 }
 
+DarwinRegistryInterface::~DarwinRegistryInterface()
+{
+	Flush ();
+}
+
 bool DarwinRegistryInterface::Write(const std::string& theValueName, ulong theType, const uchar* theValue, ulong theLength)
 {
 	return false;

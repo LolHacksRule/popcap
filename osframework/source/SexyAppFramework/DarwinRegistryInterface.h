@@ -9,6 +9,7 @@ namespace Sexy
 	{
 	public:
 		DarwinRegistryInterface(SexyAppBase * theApp);
+		virtual ~DarwinRegistryInterface();
 
 	public:
 		// Registry access methods
