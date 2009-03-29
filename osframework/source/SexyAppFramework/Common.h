@@ -158,6 +158,8 @@ extern std::string	StrFormat(const char* fmt ...);
 extern std::wstring	StrFormat(const wchar_t* fmt ...);
 bool				CheckFor98Mill();
 bool				CheckForVista();
+std::string                     GetResourcesFolder();
+void                            SetResourcesFolder(const std::string& thePath);
 std::string			GetAppDataFolder();
 void				SetAppDataFolder(const std::string& thePath);
 std::string			URLEncode(const std::string& theString);

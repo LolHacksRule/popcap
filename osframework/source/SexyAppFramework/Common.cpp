@@ -99,8 +99,71 @@ bool Sexy::CheckForVista()
 	return isVista;
 }
 
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
+#endif
+
+static std::string gResourceFolder = "";
+
+std::string Sexy::GetResourcesFolder()
+{
+#ifdef __APPLE__
+	if (gResourceFolder.length () == 0)
+	{
+		CFBundleRef mainBoundle = CFBundleGetMainBundle();
+		if (mainBoundle)
+		{
+			CFURLRef appURL = CFBundleCopyBundleURL(mainBoundle);
+			CFStringRef appPath = CFURLCopyFileSystemPath(appURL,
+								      kCFURLPOSIXPathStyle);
+			const char * cAppPath = CFStringGetCStringPtr(appPath,
+								      CFStringGetFastestEncoding(appPath));
+			
+			CFURLRef resourceURL = CFBundleCopyResourcesDirectoryURL(mainBoundle);
+			CFStringRef resourcePath = CFURLCopyFileSystemPath(resourceURL,
+									   kCFURLPOSIXPathStyle);
+			const char * cResourcePath = CFStringGetCStringPtr(resourcePath,
+									   CFStringGetFastestEncoding(resourcePath));
+			if (cResourcePath)
+			{
+				std::string path = std::string(cAppPath) + "/" + std::string(cResourcePath) + "/";;
+				gResourceFolder = path;
+			}
+			CFRelease(resourcePath);
+			CFRelease(resourceURL);
+		}
+	}
+#endif
+
+	return gResourceFolder;
+}
+
+void Sexy::SetResourcesFolder(const std::string & theFolder)
+{
+	gResourceFolder = theFolder;
+}
+
 std::string Sexy::GetAppDataFolder()
 {
+#ifdef __APPLE__
+	if (!Sexy::gAppDataFolder.length())
+	{
+		FSRef   fsRef;
+		char    path[1024];
+		OSErr   error;
+
+		error = FSFindFolder(kOnAppropriateDisk, kPreferencesFolderType, kDontCreateFolder, &fsRef);
+		error = FSRefMakePath(&fsRef, (UInt8*)path, 1024);
+		
+		CFBundleRef mainBundle = CFBundleGetMainBundle();
+		CFStringRef identifier = CFBundleGetIdentifier(mainBundle);
+		const char * appId = CFStringGetCStringPtr(identifier,
+							   CFStringGetFastestEncoding(identifier));
+		if (appId)
+			Sexy::gAppDataFolder += std::string(path) + "/" + std::string(appId);
+	}
+#endif
 	return Sexy::gAppDataFolder;
 }
 
