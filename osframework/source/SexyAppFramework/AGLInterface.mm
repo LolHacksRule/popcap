@@ -125,6 +125,45 @@ AGLInterface::AGLInterface (SexyAppBase* theApp)
 	mHeight = mApp->mHeight;
 	mScreenImage = 0;
 	mCGLContext = 0;
+
+	InitKeyMap ();
+}
+
+void AGLInterface::InitKeyMap ()
+{
+	struct {
+		int NSKeyCode;
+		int KeyCode;
+	} keymap[] = {
+		{ NSUpArrowFunctionKey, KEYCODE_UP },
+		{ NSDownArrowFunctionKey, KEYCODE_DOWN },
+		{ NSLeftArrowFunctionKey, KEYCODE_LEFT },
+		{ NSRightArrowFunctionKey, KEYCODE_RIGHT },
+		{ 0x0d, KEYCODE_RETURN },
+		{ 0x1b, KEYCODE_ESCAPE },
+		{ 0x7f, KEYCODE_BACK },
+		{ 0x31, KEYCODE_SPACE },
+		{ 0x33, KEYCODE_BACK },
+		{ 0x35, KEYCODE_ESCAPE },
+		{ 0x7b, KEYCODE_LEFT },
+		{ 0x7c, KEYCODE_RIGHT },
+		{ 0x7d, KEYCODE_DOWN },
+		{ 0x7e, KEYCODE_UP },
+		{ 0, 0 }
+	};
+
+	for (unsigned int i = 0; keymap[i].NSKeyCode; i++)
+		mKeyMap[keymap[i].NSKeyCode] = keymap[i].KeyCode; 
+}
+
+int AGLInterface::KeyCodeFromNSKeyCode (int NSKeyCode)
+{
+	std::map<int, int>::iterator it;
+
+	it = mKeyMap.find (NSKeyCode);
+	if (it == mKeyMap.end())
+		return 0;
+	return it->second;
 }
 
 AGLInterface::~AGLInterface ()
@@ -347,6 +386,9 @@ bool AGLInterface::GetEvent(struct Event &event)
 
 	event.type = EVENT_NONE;
 
+	int keycode;
+	NSString * chars;
+
 	nsevent = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:nil
 			 inMode:NSDefaultRunLoopMode dequeue:YES];
 	if (nsevent != nil)
@@ -356,11 +398,33 @@ bool AGLInterface::GetEvent(struct Event &event)
 		case NSKeyDown:
 			if ([nsevent modifierFlags] & NSCommandKeyMask)
 				[NSApp sendEvent:nsevent];
+			keycode = [nsevent keyCode];
+			NSString * chars = [nsevent characters];
+			event.type = EVENT_KEY_DOWN;
+			event.flags = EVENT_FLAGS_KEY_CODE;
+			event.u.key.keyCode = KeyCodeFromNSKeyCode (keycode); 	
+			if ([chars length])
+			{
+				event.flags |= EVENT_FLAGS_KEY_CHAR;
+				event.u.key.keyChar = [chars characterAtIndex:0];
+				if (isalnum (event.u.key.keyChar))
+				{
+					chars = [nsevent charactersIgnoringModifiers];
+					event.u.key.keyCode = [chars characterAtIndex:0];
+				}
+			}
 			break;
 
 		case NSKeyUp:
 			if ([nsevent modifierFlags] & NSCommandKeyMask)
                                 [NSApp sendEvent:nsevent];
+			keycode = [nsevent keyCode];
+			chars = [nsevent charactersIgnoringModifiers];
+			event.type = EVENT_KEY_UP;
+			event.flags = EVENT_FLAGS_KEY_CODE;
+			event.u.key.keyCode = KeyCodeFromNSKeyCode (keycode); 	
+			if (!event.u.key.keyCode && [chars length])
+				event.u.key.keyCode = [chars characterAtIndex:0];
 			break;
 
 		case NSLeftMouseDown:

@@ -45,6 +45,11 @@ private:
 	bool                                    mScreenCapture;
 
 	std::map<int, int>                      mKeyMap;
+
+private:
+	void                                    InitKeyMap();
+	int                                     KeyCodeFromNSKeyCode(int NSKeyCode);
+
 };
 
 }
