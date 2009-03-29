@@ -145,6 +145,7 @@ SexyAppBase::SexyAppBase()
 	mOnlyAllowOneCopyToRun = true;
 #endif
 
+	mChangeDirTo = GetResourcesFolder();
 	mNoDefer = false;
 	mFullScreenPageFlip = true; // should we page flip in fullscreen?
 	mTimeLoaded = GetTickCount();
@@ -2841,10 +2842,6 @@ void SexyAppBase::Init()
 
 	SetSfxVolume(mSfxVolume);
  	SetMusicVolume(mMusicVolume);
-
-#ifdef __APPLE__
-	gPakInterface->AddPakFile("Contents/Resources/main.pak");
-#endif
 
 	InitHook();
 
