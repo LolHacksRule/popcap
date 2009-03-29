@@ -670,6 +670,8 @@ void SexyAppBase::WriteToRegistry()
 	RegistryWriteInteger("CustomCursors", mCustomCursorsEnabled ? 1 : 0);
 	RegistryWriteInteger("InProgress", 0);
 	RegistryWriteBoolean("WaitForVSync", mWaitForVSync);
+
+	mRegistryInterface->Flush ();
 }
 
 bool SexyAppBase::RegistryEraseKey(const SexyString& _theKeyName)
