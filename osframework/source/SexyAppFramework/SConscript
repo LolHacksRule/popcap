@@ -31,6 +31,8 @@ if 'WIN32' in env['CPPDEFINES']:
     env.AppendUnique(LIBS = ['advapi32'])
     if gameenv['BUILD_STATIC']:
        gameenv.AppendUnique(LIBS = ['advapi32'])
+elif 'SEXY_DARWIN' in env['CPPDEFINES']:
+    srcs += ['DarwinRegistryInterface.cpp']
 else:
     srcs += ['XMLRegistryInterface.cpp']
 
