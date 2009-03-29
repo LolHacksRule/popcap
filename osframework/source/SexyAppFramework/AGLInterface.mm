@@ -115,7 +115,6 @@ AGLInterface::AGLInterface (SexyAppBase* theApp)
 		[NSApp finishLaunching];
 
 		path = [[NSBundle mainBundle] bundlePath];
-		chdir([path UTF8String]);
 		NSLog (path);
 	}
 	mWindow = NULL;
@@ -255,6 +254,7 @@ int AGLInterface::Init (void)
 		view = 0;
 		mWindowWidth = mDesktopWidth;
 		mWindowHeight = mDesktopHeight;
+		[NSCursor hide];
 	}
 	else
 	{
