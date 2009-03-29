@@ -222,7 +222,7 @@ int WGLInterface::Init (void)
 	wndclass.cbClsExtra    = 0;
 	wndclass.cbWndExtra    = 0;
 	wndclass.hInstance     = hInstance;
-	wndclass.hIcon	       = LoadIcon (hInstance, "SexyGL");
+	wndclass.hIcon	       = LoadIcon (hInstance, "IDI_MAIN_ICON");
 	wndclass.hCursor       = LoadCursor (NULL, IDC_ARROW);
 	wndclass.hbrBackground = (HBRUSH)GetStockObject (BLACK_BRUSH);
 	wndclass.lpszMenuName  = "SexyGL";
