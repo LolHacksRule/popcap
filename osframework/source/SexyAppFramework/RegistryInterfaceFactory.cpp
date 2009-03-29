@@ -5,13 +5,19 @@
 #include "Win32RegistryInterface.h"
 #endif
 
+#ifdef __APPLE__
+#include "DarwinRegistryInterface.h"
+#endif
+
 using namespace Sexy;
 
 RegistryInterface* RegistryInterfaceFactory::GetInterface(SexyAppBase * theApp)
 {
-#ifdef WIN32
-    return new Win32RegistryInterface(theApp);
+#if defined(WIN32)
+	return new Win32RegistryInterface(theApp);
+#elif defined (__APPLE__)
+	return new DarwinRegistryInterface(theApp);
 #else
-    return new XMLRegistryInterface(theApp);
+	return new XMLRegistryInterface(theApp);
 #endif
 }
