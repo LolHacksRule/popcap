@@ -100,6 +100,8 @@ void GLInterface::Cleanup()
 	mCursorY = 0;
 	mCursorOldX = 0;
 	mCursorOldY = 0;
+	mCursorDrawnX = 0;
+	mCursorDrawnY = 0;
 	mCursorEnabled = false;
 	mCursorDrawn = false;
 	mCursorImage = 0;
