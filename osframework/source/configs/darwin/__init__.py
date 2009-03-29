@@ -9,7 +9,8 @@ def AddOptions (opts):
 
 def Configure (env):
     configs.Configure (env)
-    env.AppendUnique (CFLAGS = ['-pthread'],
+    env.AppendUnique (CPPDEFINES = ['SEXY_DARWIN'],
+                      CCFLAGS = ['-pthread'],
                       LINKFLAGS = ['-pthread'])
     env.AppendUnique (CFLAGS = ['-g', '-fno-unit-at-a-time', '-Wall'],
                       CXXFLAGS = ['-g', '-Wall'],
