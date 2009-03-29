@@ -44,7 +44,7 @@ static std::string StringFromCFString(CFStringRef theStrRef)
 		return empty;
 
 	CFIndex size = sizeof(UniChar) * CFStringGetLength(theStrRef) + 1;
-        char * cstr;
+	char * cstr;
 
 	cstr = new char[size];
 	if (!CFStringGetCString(theStrRef, cstr, size, kCFStringEncodingASCII))
@@ -55,7 +55,7 @@ static std::string StringFromCFString(CFStringRef theStrRef)
 			return empty;
 		}
 	}
-    
+
 	std::string result = std::string (cstr);
 	delete [] cstr;
 
@@ -101,16 +101,16 @@ bool DarwinRegistryInterface::ReadInteger(const std::string& theKey, int* theVal
 
 bool DarwinRegistryInterface::ReadBoolean(const std::string& theKey, bool* theValue)
 {
-        CFStringRef name = CFStringCreateWithBytes (NULL,
+	CFStringRef name = CFStringCreateWithBytes (NULL,
 						    (UInt8*) theKey.data(), theKey.size(),
 						    kCFStringEncodingMacRoman, false);
-        Boolean valid = false;
+	Boolean valid = false;
 	CFIndex result = CFPreferencesGetAppIntegerValue (name, kCFPreferencesCurrentApplication,
 							  &valid);
 	if (valid)
-                *theValue = !!result;
+		*theValue = !!result;
 
-        CFRelease (name);
+	CFRelease (name);
 	return valid;
 
 }
@@ -129,11 +129,11 @@ bool DarwinRegistryInterface::WriteString(const std::string& theKey, const std::
 						     (UInt8*) theString.data(), theString.size(),
 						     kCFStringEncodingMacRoman, false);
 
-        CFPreferencesSetAppValue (name, value, kCFPreferencesCurrentApplication);
+	CFPreferencesSetAppValue (name, value, kCFPreferencesCurrentApplication);
 	
-        CFRelease (name);
+	CFRelease (name);
 	CFRelease (value);
-        return true;
+	return true;
 }
 
 bool DarwinRegistryInterface::WriteInteger(const std::string& theKey, int theValue)
@@ -143,11 +143,11 @@ bool DarwinRegistryInterface::WriteInteger(const std::string& theKey, int theVal
 						    kCFStringEncodingMacRoman, false);
 	CFNumberRef value = CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &theValue);
 
-        CFPreferencesSetAppValue (name, value, kCFPreferencesCurrentApplication);
+	CFPreferencesSetAppValue (name, value, kCFPreferencesCurrentApplication);
 
 	CFRelease (name);
 	CFRelease (value);
-        return true;
+	return true;
 }
 
 bool DarwinRegistryInterface::WriteBoolean(const std::string& theKey, bool theValue)
@@ -156,11 +156,11 @@ bool DarwinRegistryInterface::WriteBoolean(const std::string& theKey, bool theVa
 						    (UInt8*) theKey.data(), theKey.size(),
 						    kCFStringEncodingMacRoman, false);
 
-        CFPreferencesSetAppValue (name, theValue ? kCFBooleanTrue : kCFBooleanFalse,
+	CFPreferencesSetAppValue (name, theValue ? kCFBooleanTrue : kCFBooleanFalse,
 				  kCFPreferencesCurrentApplication);
 
 	CFRelease (name);
-        return true;
+	return true;
 }
 
 bool DarwinRegistryInterface::WriteData(const std::string& theValueName, const uchar* theValue, ulong theLength)
