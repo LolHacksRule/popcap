@@ -123,6 +123,8 @@ AGLInterface::AGLInterface (SexyAppBase* theApp)
 	mScreenCapture = false;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
+	mScreenImage = 0;
+	mCGLContext = 0;
 }
 
 AGLInterface::~AGLInterface ()
