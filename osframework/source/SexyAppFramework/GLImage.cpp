@@ -64,7 +64,7 @@ public:
 	void			  ReleaseTextures ();
 	void			  CreateTextureDimensions (GLImage *theImage);
 	void			  CreateTextures (GLImage *theImage);
-	void			  CheckCreateTextures (GLImage *theImage);
+	bool			  CheckCreateTextures (GLImage *theImage);
 
 	GLuint			  GetTexture (int x, int y, int &width, int &height, float &u1, float &v1,
 					      float &u2, float &v2);
@@ -385,11 +385,17 @@ void GLTexture::CreateTextures(GLImage* theImage)
 	mBitsChangedCount = theImage->mBitsChangedCount;
 }
 
-void GLTexture::CheckCreateTextures (GLImage *theImage)
+bool GLTexture::CheckCreateTextures (GLImage *theImage)
 {
 	if (theImage->mWidth != mWidth || theImage->mHeight != mHeight ||
 	    theImage->mBitsChangedCount != mBitsChangedCount)
+	{
+		theImage->GetBits();
 		CreateTextures (theImage);
+		return true;
+	}
+
+	return false;
 }
 
 static void GLDrawQuad (float x1, float y1, float x2, float y2,
@@ -1932,7 +1938,7 @@ void GLImage::BltTrianglesTex(Image *theTexture, const TriVertex theVertices[][3
 
 bool GLImage::Palletize()
 {
-	return false;
+	return MemoryImage::Palletize();
 }
 
 void GLImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const Color& theColor,
@@ -1966,7 +1972,8 @@ void GLImage::EnsureTexture()
 		mTexture = new GLTexture();
 	}
 
-	mTexture->CheckCreateTextures (this);
+	if (mTexture->CheckCreateTextures (this) && mWantPal)
+		Palletize();
 }
 
 void GLImage::PushTransform(const SexyMatrix3 &theTransform, bool concatenate)
