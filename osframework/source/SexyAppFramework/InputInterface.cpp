@@ -6,7 +6,7 @@ using namespace Sexy;
 
 
 InputInterface::InputInterface(InputManager* theManager)
-	: mManager (theManager)
+    : mManager (theManager), mId(-1), mInputDriver(0)
 {
 }
 
@@ -23,6 +23,14 @@ void InputInterface::Cleanup()
 {
 }
 
+void InputInterface::Connect()
+{
+}
+
+void InputInterface::Reconnect()
+{
+}
+
 void InputInterface::Update()
 {
 	Event event;
@@ -33,5 +41,6 @@ void InputInterface::Update()
 
 void InputInterface::PostEvent(Event &event)
 {
+	event.id = mId;
 	mManager->PushEvent (event);
 }
