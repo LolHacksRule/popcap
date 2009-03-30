@@ -33,6 +33,7 @@ class InputManager
 	void	      Reconnect(int id);
 
 	InputInterface* Find(int id);
+	InputInterface* Find(const std::string& name);
 
  private:
 	SexyAppBase * mApp;

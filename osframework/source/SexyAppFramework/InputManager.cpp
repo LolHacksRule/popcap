@@ -206,3 +206,14 @@ InputInterface* InputManager::Find(int id)
 
 	return 0;
 }
+
+InputInterface* InputManager::Find(const std::string& name)
+{
+	Drivers::iterator it;
+
+	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
+		if ((*it)->mInputDriver->mName == name)
+			return *it;
+
+	return 0;
+}
