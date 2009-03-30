@@ -36,7 +36,10 @@ void InputInterface::Update()
 	Event event;
 
 	while (GetEvent (event))
+	{
+		event.id = mId;
 		mManager->PushEvent (event);
+	}
 }
 
 void InputInterface::PostEvent(Event &event)
