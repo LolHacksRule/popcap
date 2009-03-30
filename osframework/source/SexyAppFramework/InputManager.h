@@ -27,6 +27,12 @@ class InputManager
         void          PushEvent(Event &event);
         bool          PopEvent(Event &event);
         void          Update(void);
+        void          ConnectAll(void);
+        void          ReconnectAll(void);
+        void          Connect(int id);
+        void          Reconnect(int id);
+
+	InputInterface* Find(int id);
 
  private:
         SexyAppBase * mApp;
@@ -44,6 +50,8 @@ class InputManager
 	int           mY;
 	int           mWidth;
 	int           mHeight;
+
+	int           mId;
 };
 
 }

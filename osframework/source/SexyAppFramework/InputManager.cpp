@@ -13,6 +13,7 @@ InputManager::InputManager (SexyAppBase * theApp,
 {
 	mWidth = 1;
 	mHeight = 1;
+	mId = 0;
 }
 
 InputManager::~InputManager ()
@@ -33,16 +34,28 @@ void InputManager::Init ()
 	for (it = Creators->begin (); it != Creators->end (); ++it)
 	{
 		InputInterface * aInput;
+
 		aInput = dynamic_cast<InputInterface*>
 			(((InputDriver*)(*it))->Create (mApp));
+
+		aInput->mId = mId + 1;
+		aInput->mInputDriver = (InputDriver*)(*it);
+
 		if (aInput->Init ())
+		{
+			mId++;
 			mDrivers.push_back (aInput);
+		}
 		else
+		{
 			delete aInput;
+		}
 	}
 
 	mWidth = mApp->mDDInterface->mDisplayWidth;
 	mHeight = mApp->mDDInterface->mDisplayHeight;
+
+	ConnectAll();
 }
 
 void InputManager::Cleanup (void)
@@ -144,4 +157,49 @@ void InputManager::Update (void)
 	Drivers::iterator it;
 	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
 		(*it)->Update ();
+}
+
+void InputManager::ConnectAll (void)
+{
+	Drivers::iterator it;
+	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
+		(*it)->Connect ();
+}
+
+void InputManager::ReconnectAll (void)
+{
+	Drivers::iterator it;
+	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
+		(*it)->Reconnect ();
+}
+
+void InputManager::Connect (int id)
+{
+	InputInterface* anInput;
+
+	anInput = Find(id);
+	if (!anInput)
+		return;
+	anInput->Connect();
+}
+
+void InputManager::Reconnect (int id)
+{
+	InputInterface* anInput;
+
+	anInput = Find(id);
+	if (!anInput)
+		return;
+	anInput->Reconnect();
+}
+
+InputInterface* InputManager::Find(int id)
+{
+	Drivers::iterator it;
+
+	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
+		if ((*it)->mId == id)
+			return *it;
+
+	return 0;
 }
