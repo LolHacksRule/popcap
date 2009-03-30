@@ -7,18 +7,18 @@ namespace Sexy
 #endif
 
 enum EventType {
-        EVENT_NONE                  = 0,
-        EVENT_KEY_DOWN              = 1,
-        EVENT_KEY_UP                = 2,
-        EVENT_MOUSE_BUTTON_PRESS    = 3,
-        EVENT_MOUSE_BUTTON_RELEASE  = 4,
-        EVENT_MOUSE_WHEEL_UP        = 5,
-        EVENT_MOUSE_WHELL_DOWN      = 6,
-        EVENT_MOUSE_MOTION          = 7,
-        EVENT_ACTIVE                = 8,
-        EVENT_EXPOSE                = 9,
-        EVENT_QUIT                  = 10,
-	EVENT_USER                  = 65536
+	EVENT_NONE		    = 0,
+	EVENT_KEY_DOWN		    = 1,
+	EVENT_KEY_UP		    = 2,
+	EVENT_MOUSE_BUTTON_PRESS    = 3,
+	EVENT_MOUSE_BUTTON_RELEASE  = 4,
+	EVENT_MOUSE_WHEEL_UP	    = 5,
+	EVENT_MOUSE_WHELL_DOWN	    = 6,
+	EVENT_MOUSE_MOTION	    = 7,
+	EVENT_ACTIVE		    = 8,
+	EVENT_EXPOSE		    = 9,
+	EVENT_QUIT		    = 10,
+	EVENT_USER		    = 65536
 };
 
 #define MAKE_USER_EVENT_TYPE(a, b, c)				   \
@@ -31,34 +31,34 @@ enum EventType {
 #define EVENT_FLAGS_KEY_CHAR (1U << 4)
 
 struct MouseEvent {
-        int            x;
-        int            y;
-        int            button;
+	int	       x;
+	int	       y;
+	int	       button;
 };
 
 struct KeyEvent {
-        int            keyCode;
-        int            keyChar;
+	int	       keyCode;
+	int	       keyChar;
 };
 
 struct ActiveEvent {
-        int            active;
+	int	       active;
 };
 
 struct UserEvent {
-	int            reserved[8];
+	int	       reserved[8];
 };
 
 struct Event {
-        enum EventType               type;
-        unsigned int                 flags;
-	int                          id;
-        union {
+	enum EventType		     type;
+	unsigned int		     flags;
+	int			     id;
+	union {
 		struct MouseEvent    mouse;
-		struct KeyEvent      key;
+		struct KeyEvent	     key;
 		struct ActiveEvent   active;
 		struct UserEvent     user;
-	}                            u;
+	}			     u;
 };
 
 #ifdef __cplusplus
