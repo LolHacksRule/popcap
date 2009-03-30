@@ -2885,6 +2885,12 @@ void SexyAppBase::EnableCustomCursors(bool enabled)
 	EnforceCursor();
 }
 
+Sexy::Image* SexyAppBase::CreateImage(int theWidth, int theHeight)
+{
+	Image* anImage = mDDInterface->CreateImage(this, theWidth, theHeight);
+	return anImage;
+}
+
 Sexy::Image* SexyAppBase::GetImage(const std::string& theFileName, bool commitBits)
 {
 	ImageLib::Image* aLoadedImage = ImageLib::GetImage(theFileName, true);

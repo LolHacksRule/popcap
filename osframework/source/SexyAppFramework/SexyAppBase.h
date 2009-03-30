@@ -471,6 +471,7 @@ public:
 	void					EnableCustomCursors(bool enabled);
         MemoryImage*                            CreateCursorFromAndMask(unsigned char * data, unsigned char * mask,
                                                                         int width, int height);
+	Image*                                  CreateImage(int theWidth, int theHeight);
 	virtual Image*		                GetImage(const std::string& theFileName, bool commitBits = true);
 	virtual SharedImageRef	                GetSharedImage(const std::string& theFileName, const std::string& theVariant = "", bool* isNew = NULL);
 
