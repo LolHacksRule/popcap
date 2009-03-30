@@ -17,8 +17,12 @@ enum EventType {
         EVENT_MOUSE_MOTION          = 7,
         EVENT_ACTIVE                = 8,
         EVENT_EXPOSE                = 9,
-        EVENT_QUIT
+        EVENT_QUIT                  = 10,
+	EVENT_USER                  = 65536
 };
+
+#define MAKE_USER_EVENT_TYPE(a, b, c)				   \
+    ((((a) & 0xff) << 24) | (((b) & 0xff) << 16) | ((c) & 0xffff)) \
 
 #define EVENT_FLAGS_AXIS     (1U << 0)
 #define EVENT_FLAGS_REL_AXIS (1U << 1)
@@ -48,6 +52,7 @@ struct UserEvent {
 struct Event {
         enum EventType               type;
         unsigned int                 flags;
+	int                          id;
         union {
 		struct MouseEvent    mouse;
 		struct KeyEvent      key;
