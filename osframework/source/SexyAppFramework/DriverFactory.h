@@ -5,49 +5,50 @@
 #include "NativeDisplay.h"
 
 namespace Sexy {
-class Driver
-{
- public:
-	std::string mName;
-	int	    mPriority;
-
-	Driver (const std::string theName,
-		     int	       thePriority = 0);
-	virtual ~Driver ();
-
-	bool operator< (const Driver& other) const
+	class Driver
 	{
-		return mPriority < other.mPriority;
-	}
-};
+	public:
+		std::string mName;
+		int	    mPriority;
 
-struct DriverCompare {
-	bool operator() (Driver* const & lhs, Driver* const & rhs) const
+		Driver (const std::string theName,
+			int	       thePriority = 0);
+		virtual ~Driver ();
+
+		bool operator< (const Driver& other) const
+		{
+			return mPriority < other.mPriority;
+		}
+	};
+
+	struct DriverCompare
 	{
-		return *lhs < *rhs;
-	}
-};
+		bool operator() (Driver* const & lhs, Driver* const & rhs) const
+		{
+			return *lhs < *rhs;
+		}
+	};
 
-class DriverFactory
-{
- public:
-	typedef std::multiset<Driver*, DriverCompare> Drivers;
+	class DriverFactory
+	{
+	public:
+		typedef std::multiset<Driver*, DriverCompare> Drivers;
 
-	void		       AddDriver (Driver * theDriver);
-	void		       RemoveDriver (Driver * theDriver);
+		void		       AddDriver (Driver * theDriver);
+		void		       RemoveDriver (Driver * theDriver);
 
-	Driver*		       Find (const std::string name = "auto");
+		Driver*		       Find (const std::string name = "auto");
 
- public:
-        const Drivers*         GetDrivers();
+	public:
+		const Drivers*         GetDrivers();
 
- private:
-	Drivers		       mDrivers;
+	private:
+		Drivers		       mDrivers;
 
- public:
-	DriverFactory ();
-	~DriverFactory ();
-};
+	public:
+		DriverFactory ();
+		~DriverFactory ();
+	};
 
 }
 
