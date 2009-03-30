@@ -152,7 +152,10 @@ void InputManager::Update (void)
 {
 	Event event;
 	while (mApp->mDDInterface && mApp->mDDInterface->GetEvent (event))
+	{
+		event.id = 0;
 		PushEvent (event);
+	}
 
 	Drivers::iterator it;
 	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
