@@ -14,6 +14,8 @@ using namespace Sexy;
 OptionsDialog::OptionsDialog(Board* b) :
 Dialog(IMAGE_DIALOG_BOX, IMAGE_DIALOG_BUTTON, OptionsDialog::DIALOG_ID, true, _S("OPTIONS"), _S(""), _S("CLOSE"), Dialog::BUTTONS_FOOTER)
 {
+	mAddToManager = false;
+
 	mContentInsets = Insets(23, 20, 23, 20);
 	mSpaceAfterHeader = 30;
 
@@ -72,18 +74,28 @@ void OptionsDialog::Draw(Graphics* g)
 	// at the top left corner of the widget (our dialog box). So we
 	// just take the difference between the widget locations to produce the 
 	// actual location we want to drawour text at:
-	g->DrawString(_S("Music volume:"), mMusicVolumeSlider->mX - mX, 
-		mMusicVolumeSlider->mY - mY - mMusicVolumeSlider->mHeight);
+	int x, y;
+	if (mAddToManager)
+	{
+		x = mX;
+		y = mY;
+	}
+	else
+	{
+		x = 0;
+		y = 0;
+	}
+	g->DrawString(_S("Music volume:"), mMusicVolumeSlider->mX - x, 
+		mMusicVolumeSlider->mY - y - mMusicVolumeSlider->mHeight);
 
-	g->DrawString(_S("Sound volume:"), mSfxVolumeSlider->mX - mX, 
-		mSfxVolumeSlider->mY - mY - mSfxVolumeSlider->mHeight);
+	g->DrawString(_S("Sound volume:"), mSfxVolumeSlider->mX - x, 
+		mSfxVolumeSlider->mY - y - mSfxVolumeSlider->mHeight);
 
 	// Do the same for the checkboxes:
-	g->DrawString(_S("3D Mode:"), m3DCheckbox->mX - mX - 25, m3DCheckbox->mY - mY - m3DCheckbox->mHeight + 20);
-	g->DrawString(_S("Full Screen:"), mFSCheckbox->mX - mX - 25, mFSCheckbox->mY - mY - mFSCheckbox->mHeight + 20);
-	g->DrawString(_S("Custom Cursors:"), mCustomCursorsCheckbox->mX - mX - 25, 
-					mCustomCursorsCheckbox->mY - mY - mCustomCursorsCheckbox->mHeight + 20);
-
+	g->DrawString(_S("3D Mode:"), m3DCheckbox->mX - x - 25, m3DCheckbox->mY - y - m3DCheckbox->mHeight + 20);
+	g->DrawString(_S("Full Screen:"), mFSCheckbox->mX - x - 25, mFSCheckbox->mY - y - mFSCheckbox->mHeight + 20);
+	g->DrawString(_S("Custom Cursors:"), mCustomCursorsCheckbox->mX - x - 25, 
+					mCustomCursorsCheckbox->mY - y - mCustomCursorsCheckbox->mHeight + 20);
 }
 
 
@@ -92,9 +104,19 @@ void OptionsDialog::Draw(Graphics* g)
 void OptionsDialog::AddedToManager(WidgetManager* theWidgetManager)
 {
 	Dialog::AddedToManager(theWidgetManager);
-	theWidgetManager->AddWidget(mMusicVolumeSlider);
-	theWidgetManager->AddWidget(mSfxVolumeSlider);
-	theWidgetManager->AddWidget(mQuitBtn);
+
+	if (mAddToManager)
+	{
+		theWidgetManager->AddWidget(mMusicVolumeSlider);
+		theWidgetManager->AddWidget(mSfxVolumeSlider);
+		theWidgetManager->AddWidget(mQuitBtn);
+	}
+	else
+	{
+		AddWidget(mMusicVolumeSlider);
+		AddWidget(mSfxVolumeSlider);
+		AddWidget(mQuitBtn);
+	}
 
 	int checkWidth = IMAGE_CHECKBOX->GetWidth() / 2;
 	m3DCheckbox->mUncheckedRect = Rect(0, 0, checkWidth, IMAGE_CHECKBOX->GetHeight());
@@ -110,9 +132,18 @@ void OptionsDialog::AddedToManager(WidgetManager* theWidgetManager)
 	mFSCheckbox->mChecked = !gSexyAppBase->mIsWindowed;
 	mCustomCursorsCheckbox->mChecked = gSexyAppBase->mCustomCursorsEnabled;
 
-	theWidgetManager->AddWidget(m3DCheckbox);
-	theWidgetManager->AddWidget(mFSCheckbox);
-	theWidgetManager->AddWidget(mCustomCursorsCheckbox);
+	if (mAddToManager)
+	{
+		theWidgetManager->AddWidget(m3DCheckbox);
+		theWidgetManager->AddWidget(mFSCheckbox);
+		theWidgetManager->AddWidget(mCustomCursorsCheckbox);
+	}
+	else
+	{
+		AddWidget(m3DCheckbox);
+		AddWidget(mFSCheckbox);
+		AddWidget(mCustomCursorsCheckbox);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -120,12 +151,24 @@ void OptionsDialog::AddedToManager(WidgetManager* theWidgetManager)
 void OptionsDialog::RemovedFromManager(WidgetManager* theWidgetManager)
 {
 	Dialog::RemovedFromManager(theWidgetManager);
-	theWidgetManager->RemoveWidget(mMusicVolumeSlider);
-	theWidgetManager->RemoveWidget(mSfxVolumeSlider);
-	theWidgetManager->RemoveWidget(mQuitBtn);
-	theWidgetManager->RemoveWidget(mCustomCursorsCheckbox);
-	theWidgetManager->RemoveWidget(m3DCheckbox);
-	theWidgetManager->RemoveWidget(mFSCheckbox);
+	if (mAddToManager)
+	{
+		theWidgetManager->RemoveWidget(mMusicVolumeSlider);
+		theWidgetManager->RemoveWidget(mSfxVolumeSlider);
+		theWidgetManager->RemoveWidget(mQuitBtn);
+		theWidgetManager->RemoveWidget(mCustomCursorsCheckbox);
+		theWidgetManager->RemoveWidget(m3DCheckbox);
+		theWidgetManager->RemoveWidget(mFSCheckbox);
+	}
+	else
+	{
+		RemoveWidget(mMusicVolumeSlider);
+		RemoveWidget(mSfxVolumeSlider);
+		RemoveWidget(mQuitBtn);
+		RemoveWidget(mCustomCursorsCheckbox);
+		RemoveWidget(m3DCheckbox);
+		RemoveWidget(mFSCheckbox);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -134,8 +177,12 @@ void OptionsDialog::Resize(int theX, int theY, int theWidth, int theHeight)
 {
 	Dialog::Resize(theX, theY, theWidth, theHeight);
 
-	mMusicVolumeSlider->Resize(theX + mContentInsets.mLeft + 50, 
-		theY + 100, 245, IMAGE_SLIDER_THUMB->GetHeight());
+	if (mAddToManager)
+		mMusicVolumeSlider->Resize(theX + mContentInsets.mLeft + 50, 
+					   theY + 100, 245, IMAGE_SLIDER_THUMB->GetHeight());
+	else
+		mMusicVolumeSlider->Resize(mContentInsets.mLeft + 50, 
+					   100, 245, IMAGE_SLIDER_THUMB->GetHeight());
 
 	mSfxVolumeSlider->Layout(LAY_SameLeft | LAY_Below | LAY_SameWidth | LAY_SameHeight, 
 		mMusicVolumeSlider, 0, 40, 0, 0);

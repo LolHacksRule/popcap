@@ -41,19 +41,22 @@ void TitleScreen::Init(void)
 //////////////////////////////////////////////////////////////////////////
 void TitleScreen::AddedToManager(WidgetManager *theWidgetManager)
 {
-	Widget::AddedToManager(theWidgetManager);	
+	Widget::AddedToManager(theWidgetManager);
 	mContinueLink->SetVisible(false);
 	mContinueLink->SetDisabled(true);
 
 	int labelWidth = FONT_DEFAULT->StringWidth(mContinueLink->mLabel);
 	int labelHeight = FONT_DEFAULT->GetHeight();
-	mContinueLink->Resize(	mWidth / 2 - labelWidth / 2, 
-							mHeight - labelHeight - 40,
-							labelWidth,
-							labelHeight+4);
+	mContinueLink->Resize(mWidth / 2 - labelWidth / 2,
+			      mHeight - labelHeight - 40,
+			      labelWidth + 2,
+			      labelHeight + 4 + 2);
 
 	mContinueLink->mDoFinger = true;
-	theWidgetManager->AddWidget(mContinueLink);
+	if (1)
+	    AddWidget(mContinueLink);
+	else
+	    theWidgetManager->AddWidget(mContinueLink);
 
 }
 
@@ -62,7 +65,10 @@ void TitleScreen::AddedToManager(WidgetManager *theWidgetManager)
 void TitleScreen::RemovedFromManager(WidgetManager *theWidgetManager)
 {
 	Widget::RemovedFromManager(theWidgetManager);
-	theWidgetManager->RemoveWidget(mContinueLink);
+	if (1)
+	    RemoveWidget(mContinueLink);
+	else
+	    theWidgetManager->RemoveWidget(mContinueLink);
 }
 
 //////////////////////////////////////////////////////////////////////////

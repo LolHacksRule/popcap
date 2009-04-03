@@ -121,6 +121,7 @@ void GameApp::Init()
 	mTitleScreen->Init();
 
 	mWidgetManager->AddWidget(mTitleScreen);
+	mWidgetManager->SetFocus(mTitleScreen);
 
 	// This example just uses 1 standard OGG file instead of a tracker file.
 	// Since we aren't cross fading at all, we'll only load it once.

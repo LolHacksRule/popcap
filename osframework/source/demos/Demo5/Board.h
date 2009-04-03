@@ -103,7 +103,7 @@ class Board :	public Widget, public ButtonListener
 		//	differs from KeyChar (described below) in that you can detect non-ASCII
 		//	keys with it, as well as ASCII.
 		//////////////////////////////////////////////////////////////////////////		
-		virtual void KeyDown(KeyCode theKey);
+		virtual bool KeyDown(KeyCode theKey);
 
 		//////////////////////////////////////////////////////////////////////////
 		//	Function: KeyChar
@@ -119,7 +119,7 @@ class Board :	public Widget, public ButtonListener
 		//	here though to illustrate the differences between KeyDown and to 
 		//	help explain its usage.
 		//////////////////////////////////////////////////////////////////////////		
-		//virtual void KeyChar(char theChar);
+		//virtual bool KeyChar(char theChar);
 
         
 		//////////////////////////////////////////////////////////////////////////

@@ -761,6 +761,9 @@ void Board::DrawGrid(Graphics* g)
 	g->FillRect(GRID_START_X, GRID_END_Y, GRID_END_X - GRID_START_X, mHeight - GRID_END_Y);
 
 
+	if (getenv ("HUNGARR_NO_GRID"))
+	    return;
+
 	// To make a weird pattern, a few of the grid pieces will be more brightly
 	// colored than the others, if they are in the normal state.
 	bool startBright = true;
@@ -1189,10 +1192,14 @@ void Board::AddedToManager(WidgetManager* theWidgetManager)
 	mOptionsBtn->mDownImage = IMAGE_BUTTON_DOWN;
 	mOptionsBtn->mButtonImage = IMAGE_BUTTON_NORMAL;
 	mOptionsBtn->mDoFinger = true;
-	mOptionsBtn->Resize(gSexyAppBase->mWidth - IMAGE_BUTTON_NORMAL->GetWidth() - 10, FONT_HUNGARR->GetHeight() * 3 - 20, 
-				IMAGE_BUTTON_NORMAL->GetWidth(), IMAGE_BUTTON_NORMAL->GetHeight());
+	mOptionsBtn->Resize(gSexyAppBase->mWidth - IMAGE_BUTTON_NORMAL->GetWidth() - 10,
+			    FONT_HUNGARR->GetHeight() * 3 - 20,
+			    IMAGE_BUTTON_NORMAL->GetWidth(), IMAGE_BUTTON_NORMAL->GetHeight());
 
-	theWidgetManager->AddWidget(mOptionsBtn);
+	if (1)
+		AddWidget(mOptionsBtn);
+	else
+		theWidgetManager->AddWidget(mOptionsBtn);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1201,7 +1208,10 @@ void Board::RemovedFromManager(WidgetManager* theWidgetManager)
 {
 	Widget::RemovedFromManager(theWidgetManager);
 
-	theWidgetManager->RemoveWidget(mOptionsBtn);
+	if (1)
+		RemoveWidget(mOptionsBtn);
+	else
+		theWidgetManager->RemoveWidget(mOptionsBtn);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1219,6 +1229,7 @@ void Board::ButtonDepress(int theId)
 		OptionsDialog* od = new OptionsDialog(this);
 		od->Resize(mWidth / 2 - 200, mHeight / 2 - 175, 400, 350);
 		mApp->AddDialog(OptionsDialog::DIALOG_ID, od);
+		mApp->mWidgetManager->SetFocus(od);
 	}
 }
 
@@ -1910,10 +1921,12 @@ void Board::Pause(bool p)
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
-void Board::KeyChar(char theChar)
+bool Board::KeyChar(char theChar)
 {
 	if (theChar == ' ')
 		Pause(mPauseLevel == 0);
+
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
