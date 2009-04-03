@@ -54,7 +54,7 @@ public:
 	virtual void MouseDown(int x, int y, int theClickCount);		
 	virtual void MouseDrag(int x, int y);	
 	
-	virtual void KeyDown(KeyCode theKey);
+	virtual bool KeyDown(KeyCode theKey);
 };
 
 }

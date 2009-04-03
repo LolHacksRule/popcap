@@ -88,7 +88,9 @@ public:
 	virtual void				MouseDown(int x, int y, int theClickCount) { Widget::MouseDown(x, y, theClickCount); }
 	virtual void				MouseDown(int x, int y, int theBtnNum, int theClickCount);
 	virtual void				MouseLeave();
+	virtual bool                            KeyDown(KeyCode theKey);
 	virtual void				SetSelect(int theSelectIdx);
+	virtual bool				MoveSelect(int theDelta);
 };
 
 }

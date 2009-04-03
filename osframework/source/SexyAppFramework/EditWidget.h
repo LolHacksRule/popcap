@@ -77,8 +77,8 @@ public:
 	virtual void			LostFocus();
 	virtual void			FocusCursor(bool bigJump);
 
-	virtual void			KeyDown(KeyCode theKey);
-	virtual void			KeyChar(SexyChar theChar);
+	virtual bool			KeyDown(KeyCode theKey);
+	virtual bool			KeyChar(SexyChar theChar);
 
 	virtual void			MouseDown(int x, int y, int theClickCount) { Widget::MouseDown(x, y, theClickCount); }
 	virtual void			MouseDown(int x, int y, int theBtnNum, int theClickCount);

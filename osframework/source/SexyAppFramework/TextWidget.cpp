@@ -410,7 +410,7 @@ SexyString TextWidget::GetSelection()
 	return aSelString;
 }
 
-void TextWidget::KeyDown(KeyCode theKey)
+bool TextWidget::KeyDown(KeyCode theKey)
 {			
 	/*if (theKey == 3)
 	{
@@ -425,5 +425,7 @@ void TextWidget::KeyDown(KeyCode theKey)
 			mEditWidget.KeyDown(theKey, shiftDown, controlDown);
 		}
 	}*/
+
+	return true;
 }
 

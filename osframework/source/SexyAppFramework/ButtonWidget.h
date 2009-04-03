@@ -70,6 +70,9 @@ public:
 	virtual void			MouseUp(int theX, int theY) { Widget::MouseUp(theX, theY); }
 	virtual void			MouseUp(int theX, int theY, int theClickCount) { Widget::MouseUp(theX, theY, theClickCount); }
 	virtual void			MouseUp(int theX, int theY, int theBtnNum, int theClickCount);
+	virtual bool			KeyDown(KeyCode theKey);
+	virtual bool			KeyUp(KeyCode theKey);
+
 	virtual void			Update();
 };
 

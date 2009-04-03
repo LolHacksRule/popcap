@@ -258,6 +258,31 @@ void ButtonWidget::MouseUp(int theX, int theY, int theBtnNum, int theClickCount)
 	MarkDirty();
 }
 
+bool ButtonWidget::KeyDown(KeyCode theKey)
+{
+	if (theKey == KEYCODE_RETURN)
+	{
+		mButtonListener->ButtonPress(mId, 1);
+		MarkDirty();
+	}
+	else
+	{
+		Widget::KeyDown(theKey);
+	}
+}
+
+bool ButtonWidget::KeyUp(KeyCode theKey)
+{
+	if (theKey == KEYCODE_RETURN)
+	{
+		mButtonListener->ButtonDepress(mId);
+		MarkDirty();
+	}
+	else
+	{
+		Widget::KeyUp(theKey);
+	}
+}
 void ButtonWidget::Update()
 {
 	Widget::Update();

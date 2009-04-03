@@ -8,7 +8,7 @@ using namespace Sexy;
 using std::min;
 using std::max;
 
-static int gEditWidgetColors[][3] = 
+static int gEditWidgetColors[][3] =
 {{255, 255, 255},
 {0, 0, 0},
 {0, 0, 0},
@@ -16,9 +16,9 @@ static int gEditWidgetColors[][3] =
 {255, 255, 255}};
 
 EditWidget::EditWidget(int theId, EditListener* theEditListener)
-{		
+{
 	mId = theId;
-	mEditListener = theEditListener;	
+	mEditListener = theEditListener;
 	mFont = NULL;
 
 	mHadDoubleClick = false;
@@ -72,7 +72,7 @@ void EditWidget::SetText(const SexyString& theText, bool leftPosToZero)
 		mLeftPos = 0;
 	else
 		FocusCursor(true);
-	
+
 	MarkDirty();
 }
 
@@ -86,7 +86,7 @@ SexyString& EditWidget::GetDisplayString()
 		mPasswordDisplayString = SexyString(mString.size(), mPasswordChar);
 		//mPasswordDisplayString.resize(mString.size());
 		//for (int i=0; i<(int)mPasswordDisplayString.length(); i++)
-		//	mPasswordDisplayString[i] = mPasswordChar; 
+		//	mPasswordDisplayString[i] = mPasswordChar;
 	}
 
 	return mPasswordDisplayString;
@@ -101,7 +101,7 @@ void EditWidget::Resize(int theX, int theY, int theWidth, int theHeight)
 {
 	Widget::Resize(theX, theY, theWidth, theHeight);
 
-	FocusCursor(false);		
+	FocusCursor(false);
 }
 
 void EditWidget::SetFont(Font* theFont, Font* theWidthCheckFont)
@@ -115,57 +115,57 @@ void EditWidget::SetFont(Font* theFont, Font* theWidthCheckFont)
 }
 
 void EditWidget::Draw(Graphics* g) // Already translated
-{	
+{
 	if (mFont == NULL)
 		mFont = mWidgetManager->mApp->mDDInterface->CreateFont
 			(mWidgetManager->mApp, "Arial Unicode MS", 10, false);
 
 	SexyString &aString = GetDisplayString();
 
-	g->SetColor(mColors[COLOR_BKG]);			
+	g->SetColor(mColors[COLOR_BKG]);
 	g->FillRect(0, 0, mWidth, mHeight);
-	
+
 	for (int i = 0; i < 2; i++)
 	{
-		Graphics* aClipG = g->Create();		
+		Graphics* aClipG = g->Create();
 		aClipG->SetFont(mFont);
-				
+
 		if (i == 1)
 		{
 			int aCursorX = mFont->StringWidth(aString.substr(0, mCursorPos)) - mFont->StringWidth(aString.substr(0, mLeftPos));
 			int aHiliteX = aCursorX+2;
 			if ((mHilitePos != -1) && (mCursorPos != mHilitePos))
 				aHiliteX = mFont->StringWidth(aString.substr(0, mHilitePos)) - mFont->StringWidth(aString.substr(0, mLeftPos));
-			
+
 			if (!mShowingCursor)
-				aCursorX += 2;								
-			
+				aCursorX += 2;
+
 			aCursorX = std::min(std::max(0, aCursorX), mWidth-8);
 			aHiliteX = std::min(std::max(0, aHiliteX), mWidth-8);
-			
+
 			aClipG->ClipRect(4 + std::min(aCursorX, aHiliteX), (mHeight - mFont->GetHeight())/2, abs(aHiliteX - aCursorX), mFont->GetHeight());
 		}
 		else
-			aClipG->ClipRect(4, 0, mWidth-8, mHeight);			
-		
+			aClipG->ClipRect(4, 0, mWidth-8, mHeight);
+
 		bool hasfocus = mHasFocus || mDrawSelOverride;
 		if (i == 1 && hasfocus)
 		{
 			aClipG->SetColor(mColors[COLOR_HILITE]);
 			aClipG->FillRect(0, 0, mWidth, mHeight);
 		}
-	
+
 		if (i == 0 || !hasfocus)
 			aClipG->SetColor(mColors[COLOR_TEXT]);
 		else
-			aClipG->SetColor(mColors[COLOR_HILITE_TEXT]);			
+			aClipG->SetColor(mColors[COLOR_HILITE_TEXT]);
 		aClipG->DrawString(aString.substr(mLeftPos), 4, (mHeight - mFont->GetHeight())/2 + mFont->GetAscent());
-		
+
 		delete aClipG;
-	}		
-			
+	}
+
 	g->SetColor(mColors[COLOR_OUTLINE]);
-	g->DrawRect(0, 0, mWidth-1, mHeight-1);				
+	g->DrawRect(0, 0, mWidth-1, mHeight-1);
 }
 
 void EditWidget::UpdateCaretPos()
@@ -197,10 +197,10 @@ void EditWidget::GotFocus()
 		ShowCaret(anApp->mHWnd);
 #endif
 	}
-	
+
 	mShowingCursor = true;
 	mBlinkAcc = 0;
-	MarkDirty();	
+	MarkDirty();
 }
 
 void EditWidget::LostFocus()
@@ -215,7 +215,7 @@ void EditWidget::LostFocus()
 #endif
 	}
 
-	mShowingCursor = false;	
+	mShowingCursor = false;
 	MarkDirty();
 }
 
@@ -234,9 +234,9 @@ void EditWidget::Update()
 		{
 			MarkDirty();
 			mBlinkAcc = 0;
-			mShowingCursor = !mShowingCursor;			
-		}		
-	}	
+			mShowingCursor = !mShowingCursor;
+		}
+	}
 }
 
 void EditWidget::EnforceMaxPixels()
@@ -251,7 +251,7 @@ void EditWidget::EnforceMaxPixels()
 
 		return;
 	}
-		
+
 	for (WidthCheckList::iterator anItr = mWidthCheckList.begin(); anItr != mWidthCheckList.end(); ++anItr)
 	{
 		int aWidth = anItr->mWidth;
@@ -264,7 +264,7 @@ void EditWidget::EnforceMaxPixels()
 
 		while (anItr->mFont->StringWidth(mString) > aWidth)
 			mString = mString.substr(0,mString.length()-1);
-	} 
+	}
 }
 
 bool EditWidget::IsPartOfWord(SexyChar theChar)
@@ -286,26 +286,26 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 
 	bool bigChange = false;
 	bool removeHilite = !shiftDown;
-	
+
 	if (shiftDown && (mHilitePos == -1))
 		mHilitePos = mCursorPos;
-	
+
 	SexyString anOldString = mString;
 	int anOldCursorPos = mCursorPos;
 	int anOldHilitePos = mHilitePos;
 	if ((theChar == 3) || (theChar == 24))
 	{
 		// Copy	selection
-		
+
 		if ((mHilitePos != -1) && (mHilitePos != mCursorPos))
 		{
 			if (mCursorPos < mHilitePos)
 				mWidgetManager->mApp->CopyToClipboard(SexyStringToString(GetDisplayString().substr(mCursorPos, mHilitePos)));
 			else
 				mWidgetManager->mApp->CopyToClipboard(SexyStringToString(GetDisplayString().substr(mHilitePos, mCursorPos)));
-		
+
 			if (theChar == 3)
-			{				
+			{
 				removeHilite = false;
 			}
 			else
@@ -315,16 +315,16 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 				mHilitePos = -1;
 				bigChange = true;
 			}
-		}				
+		}
 	}
 	else if (theChar == 22)
 	{
 		// Paste selection
-		
+
 		SexyString aBaseString = StringToSexyString(mWidgetManager->mApp->GetClipboard());
-		
+
 		if (aBaseString.length() > 0)
-		{	
+		{
 			SexyString aString;
 
 			for (ulong i = 0; i < aBaseString.length(); i++)
@@ -333,8 +333,8 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 					break;
 
 				if (mFont->CharWidth(aBaseString[i]) != 0 && mEditListener->AllowChar(mId, aBaseString[i]))
-					aString += aBaseString[i];					
-			}			
+					aString += aBaseString[i];
+			}
 
 			if (mHilitePos == -1)
 			{
@@ -348,31 +348,31 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 				mCursorPos = min(mCursorPos, mHilitePos);
 				mHilitePos = -1;
 			}
-		
+
 			mCursorPos += aString.length();
-		
+
 			bigChange = true;
 		}
 	}
 	else if (theChar == 26)
 	{
 		// Undo
-		
+
 		mLastModifyIdx = -1;
-		
+
 		SexyString aSwapString = mString;
 		int aSwapCursorPos = mCursorPos;
-		int aSwapHilitePos = mHilitePos;			
-		
+		int aSwapHilitePos = mHilitePos;
+
 		mString = mUndoString;
 		mCursorPos = mUndoCursor;
 		mHilitePos = mUndoHilitePos;
-					
+
 		mUndoString = aSwapString;
 		mUndoCursor = aSwapCursorPos;
-		mUndoHilitePos = aSwapHilitePos;			
-		
-		removeHilite = false;						
+		mUndoHilitePos = aSwapHilitePos;
+
+		removeHilite = false;
 	}
 	else if (theKey == KEYCODE_LEFT)
 	{
@@ -381,7 +381,7 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 			// Get to a word
 			while ((mCursorPos > 0) && (!IsPartOfWord(mString[mCursorPos-1])))
 				   mCursorPos--;
-			
+
 			// Go beyond the word
 			while ((mCursorPos > 0) && (IsPartOfWord(mString[mCursorPos-1])))
 				   mCursorPos--;
@@ -398,7 +398,7 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 			// Get to whitespace
 			while ((mCursorPos < (int) mString.length()-1) && (IsPartOfWord(mString[mCursorPos+1])))
 				   mCursorPos++;
-			
+
 			// Go beyond the whitespace
 			while ((mCursorPos < (int) mString.length()-1) && (!IsPartOfWord(mString[mCursorPos+1])))
 				   mCursorPos++;
@@ -418,7 +418,7 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 				mString = mString.substr(0, min(mCursorPos, mHilitePos)) + mString.substr(max(mCursorPos, mHilitePos));
 				mCursorPos = min(mCursorPos, mHilitePos);
 				mHilitePos = -1;
-				
+
 				bigChange = true;
 			}
 			else
@@ -430,7 +430,7 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 					mString = mString.substr(mCursorPos);
 				mCursorPos--;
 				mHilitePos = -1;
-				
+
 				if (mCursorPos != mLastModifyIdx)
 					bigChange = true;
 				mLastModifyIdx = mCursorPos-1;
@@ -447,7 +447,7 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 				mString = mString.substr(0, min(mCursorPos, mHilitePos)) + mString.substr(max(mCursorPos, mHilitePos));
 				mCursorPos = min(mCursorPos, mHilitePos);
 				mHilitePos = -1;
-				
+
 				bigChange = true;
 			}
 			else
@@ -455,24 +455,24 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 				// Delete char in front of cursor
 				if (mCursorPos < (int) mString.length())
 					mString = mString.substr(0, mCursorPos) + mString.substr(mCursorPos+1);
-				
+
 				if (mCursorPos != mLastModifyIdx)
 					bigChange = true;
 				mLastModifyIdx = mCursorPos;
 			}
-		}	
+		}
 	}
 	else if (theKey == KEYCODE_HOME)
 	{
-		mCursorPos = 0;	
+		mCursorPos = 0;
 	}
 	else if (theKey == KEYCODE_END)
 	{
-		mCursorPos = mString.length();	
+		mCursorPos = mString.length();
 	}
 	else if (theKey == KEYCODE_RETURN)
 	{
-		mEditListener->EditWidgetText(mId, mString);		
+		mEditListener->EditWidgetText(mId, mString);
 	}
 	else
 	{
@@ -485,34 +485,34 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 		}
 
 		if ((uTheChar >= 32) && (uTheChar <= range) && (mFont->StringWidth(aString) > 0) && mEditListener->AllowChar(mId, theChar))
-		{				
+		{
 			if ((mHilitePos != -1) && (mHilitePos != mCursorPos))
 			{
 				// Replace selection with new character
 				mString = mString.substr(0, min(mCursorPos, mHilitePos)) + SexyString(1, theChar) + mString.substr(max(mCursorPos, mHilitePos));
 				mCursorPos = min(mCursorPos, mHilitePos);
 				mHilitePos = -1;
-				
+
 				bigChange = true;
 			}
 			else
 			{
 				// Insert character where cursor is
 				mString = mString.substr(0, mCursorPos) + SexyString(1, theChar) + mString.substr(mCursorPos);
-				
+
 				if (mCursorPos != mLastModifyIdx+1)
-					bigChange = true;						
+					bigChange = true;
 				mLastModifyIdx = mCursorPos;
 				mHilitePos = -1;
 			}
-											
-			mCursorPos++;				
+
+			mCursorPos++;
 			FocusCursor(false);
 		}
 		else
 			removeHilite = false;
 	}
-	
+
 	if ((mMaxChars != -1) && ((int) mString.length() > mMaxChars))
 		mString = mString.substr(0, mMaxChars);
 
@@ -522,18 +522,18 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 		mCursorPos = 0;
 	else if (mCursorPos > (int) mString.length())
 		mCursorPos = mString.length();
-	
+
 	if (anOldCursorPos != mCursorPos)
 	{
 		mBlinkAcc = 0;
 		mShowingCursor = true;
 	}
-	
+
 	FocusCursor(true);
-	
+
 	if (removeHilite || mHilitePos==mCursorPos)
 		mHilitePos = -1;
-	
+
 	if (!mEditListener->AllowText(mId, mString))
 	{
 		mString = anOldString;
@@ -546,24 +546,28 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 		mUndoCursor = anOldCursorPos;
 		mUndoHilitePos = anOldHilitePos;
 	}
-	
+
 	MarkDirty();
 }
 
-void EditWidget::KeyDown(KeyCode theKey)
+bool EditWidget::KeyDown(KeyCode theKey)
 {
-	if (((theKey < 'A') || (theKey >= 'Z')) && mEditListener->AllowKey(mId, theKey))
+	if (theKey != KEYCODE_ESCAPE && ((theKey < 'A') || (theKey >= 'Z')) &&
+	    mEditListener->AllowKey(mId, theKey))
+	{
 		ProcessKey(theKey, 0);
+		return true;
+	}
 
-	Widget::KeyDown(theKey);
+	return Widget::KeyDown(theKey);
 }
 
-void EditWidget::KeyChar(SexyChar theChar)
+bool EditWidget::KeyChar(SexyChar theChar)
 {
 //	if (mEditListener->AllowChar(mId, theChar))
-		ProcessKey(KEYCODE_UNKNOWN, theChar);
+	ProcessKey(KEYCODE_UNKNOWN, theChar);
 
-	Widget::KeyChar(theChar);
+	return Widget::KeyChar(theChar);
 }
 
 int EditWidget::GetCharAt(int x, int y)
@@ -571,18 +575,18 @@ int EditWidget::GetCharAt(int x, int y)
 	int aPos = 0;
 
 	SexyString &aString = GetDisplayString();
-					
+
 	for (int i = mLeftPos; i < (int) aString.length(); i++)
 	{
 		SexyString aLoSubStr = aString.substr(mLeftPos, i-mLeftPos);
 		SexyString aHiSubStr = aString.substr(mLeftPos, i-mLeftPos+1);
-			
+
 		int aLoLen = mFont->StringWidth(aLoSubStr);
 		int aHiLen = mFont->StringWidth(aHiSubStr);
-		if (x >= (aLoLen+aHiLen)/2 + 5)				
-			aPos = i+1;	
-	}					
-	
+		if (x >= (aLoLen+aHiLen)/2 + 5)
+			aPos = i+1;
+	}
+
 	return aPos;
 }
 
@@ -595,8 +599,8 @@ void EditWidget::FocusCursor(bool bigJump)
 		else
 			mLeftPos = max(0, mLeftPos-1);
 		MarkDirty();
-	}				
-					
+	}
+
 	if (mFont != NULL)
 	{
 		SexyString &aString = GetDisplayString();
@@ -618,15 +622,15 @@ void EditWidget::MouseDown(int x, int y, int theBtnNum, int theClickCount)
 
 	mHilitePos = -1;
 	mCursorPos = GetCharAt(x, y);
-	
+
 	if (theClickCount > 1)
 	{
 		mHadDoubleClick = true;
 		HiliteWord();
 	}
-	
+
 	MarkDirty();
-	
+
 	FocusCursor(false);
 }
 
@@ -635,11 +639,11 @@ void EditWidget::MouseUp(int x, int y, int theBtnNum, int theClickCount)
 	Widget::MouseUp(x,y,theBtnNum,theClickCount);
 	if (mHilitePos==mCursorPos)
 		mHilitePos = -1;
-	
+
 	if (mHadDoubleClick)
-	{		
+	{
 		mHilitePos = -1;
-		mCursorPos = GetCharAt(x, y);		
+		mCursorPos = GetCharAt(x, y);
 
 		mHadDoubleClick = false;
 		HiliteWord();
@@ -673,10 +677,10 @@ void EditWidget::MouseDrag(int x, int y)
 
 	if (mHilitePos == -1)
 		mHilitePos = mCursorPos;
-	
+
 	mCursorPos = GetCharAt(x, y);
 	MarkDirty();
-	
+
 	FocusCursor(false);
 }
 
@@ -688,7 +692,7 @@ void EditWidget::MouseEnter()
 }
 
 void EditWidget::MouseLeave()
-{	
+{
 	Widget::MouseLeave();
 
 	mWidgetManager->mApp->SetCursor(CURSOR_POINTER);

@@ -801,7 +801,8 @@ bool WidgetManager::KeyChar(SexyChar theChar)
 
 	if (mFocusWidget != NULL)
 		mFocusWidget->KeyChar(theChar);
-
+	else if (mBaseModalWidget != NULL)
+		mBaseModalWidget->KeyChar(theChar);
 	return true;
 }
 
@@ -814,7 +815,8 @@ bool WidgetManager::KeyDown(KeyCode key)
 
 	if (mFocusWidget != NULL)
 		mFocusWidget->KeyDown(key);
-
+	else if (mBaseModalWidget != NULL)
+		mBaseModalWidget->KeyDown(key);
 	return true;
 }
 
@@ -830,7 +832,8 @@ bool WidgetManager::KeyUp(KeyCode key)
 
 	if (mFocusWidget != NULL)
 		mFocusWidget->KeyUp(key);
-
+	else if (mBaseModalWidget != NULL)
+		mBaseModalWidget->KeyUp(key);
 	return true;
 }
 
