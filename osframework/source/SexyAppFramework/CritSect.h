@@ -23,6 +23,10 @@ private:
 public:
 	CritSect(void);
 	~CritSect(void);
+
+public:
+	void          Enter();
+	void          Leave();
 };
 
 }

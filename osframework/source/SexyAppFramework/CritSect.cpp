@@ -28,3 +28,21 @@ CritSect::~CritSect(void)
 	pthread_mutex_destroy(&mMutex);
 #endif
 }
+
+void CritSect::Enter(void)
+{
+#ifdef WIN32
+	EnterCriticalSection(mCritSec); 
+#else
+	pthread_mutex_lock(&mMutex);
+#endif
+}
+
+void CritSect::Leave(void)
+{
+#ifdef WIN32
+	LeaveCriticalSection(mCritSec);
+#else
+	pthread_mutex_unlock(&mMutex);
+#endif
+}
