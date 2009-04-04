@@ -1,7 +1,10 @@
 #include "FreeTypeFont.h"
 #include "FreeTypeFontMap.h"
 #include "SexyAppBase.h"
-#include "Image.h"
+#include "MemoryImage.h"
+#include "Graphics.h"
+
+#include "ImageLib.h"
 
 #include <assert.h>
 #include <math.h>
@@ -46,8 +49,8 @@ void FreeTypeFont::Init(SexyAppBase* theApp, const std::string& theFace, int the
 	for (unsigned i = 0; i < MAX_CACHED_IMAGES; i++)
 	{
 		mImages[i] = 0;
-		// default to 256x256
-		mImageSizeOrder[i] = i + 8;
+		// default to 128x128
+		mImageSizeOrder[i] = i + DEFAULT_CACHE_ORDER;
 
 		// setup glyph cache root area
 		FreeTypeGlyphArea* area = &mImageAreas[i];
@@ -83,12 +86,13 @@ FreeTypeFont::FreeTypeFont(const FreeTypeFont& theFreeTypeFont)
 	mLineSpacingOffset = theFreeTypeFont.mLineSpacingOffset;
 
 	mMatrix = theFreeTypeFont.mMatrix;
+	mSize = theFreeTypeFont.mSize;
 
 	for (unsigned i = 0; i < MAX_CACHED_IMAGES; i++)
 	{
 		mImages[i] = 0;
-		// default to 256x256
-		mImageSizeOrder[i] = i + 8;
+		// default to 128x128
+		mImageSizeOrder[i] = i + DEFAULT_CACHE_ORDER;
 
 		// setup glyph cache root area
 		FreeTypeGlyphArea* area = &mImageAreas[i];
@@ -184,7 +188,8 @@ int FreeTypeFont::StringWidth(const SexyString& theString)
 		x += metrics->x_advance;
 		y += metrics->y_advance;
 
-		if (first) {
+		if (first)
+		{
 			min_x = left;
 			max_x = right;
 			min_y = top;
@@ -214,7 +219,54 @@ void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const SexyString&
 	if (!mBaseFont)
 		return;
 
-	
+	LockFace();
+	if (!mFace)
+	{
+		UnlockFace();
+		return;
+	}
+
+	FT_Face face = mFace;
+        float x = theX, y = theY;
+
+	bool colorizeImages = g->GetColorizeImages();
+	g->SetColorizeImages(true);
+	Color anOrigColor = g->GetColor();
+	g->SetColor(theColor);
+	for (unsigned int i = 0; i < theString.length(); i++)
+	{
+		int index = FT_Get_Char_Index (face, theString[i]);
+		FreeTypeGlyphEntry* entry = LookupGlyph(index, true);
+
+		if (!entry)
+			continue;
+
+		if (entry->mImage)
+			g->DrawImage(entry->mImage,
+				     (int)floor(x + entry->mXOffSet),
+				     (int)floor(y + entry->mYOffSet),
+				     Rect(entry->mArea->x, entry->mArea->y,
+					  entry->mArea->width, entry->mArea->height));
+
+		x += entry->mMetrics.x_advance;
+		y += entry->mMetrics.y_advance;
+	}
+
+	g->SetColor(anOrigColor);
+	g->SetColorizeImages(colorizeImages);
+
+#if 0
+	ImageLib::Image anImage;
+	anImage.mWidth = mImages[0]->mWidth;
+	anImage.mHeight = mImages[0]->mHeight;
+	anImage.mBits = mImages[0]->GetBits();
+
+	char filename[1024];
+	snprintf (filename, sizeof(filename), "font-%p-%f.png", this, mSize);
+	WritePNGImage(filename, &anImage );
+	anImage.mBits = 0;
+#endif
+	UnlockFace();
 }
 
 Font* FreeTypeFont::Duplicate()
@@ -278,7 +330,7 @@ FreeTypeGlyphEntry* FreeTypeFont::LoadGlyph(FT_UInt index, bool render)
 		entry = &it->second;
 	}
 
-	if (render || true)
+	if (render)
 	{
 		// FIXME: render the glyph to an Image.
 		error = FT_Render_Glyph (glyph, FT_RENDER_MODE_NORMAL);
@@ -293,9 +345,26 @@ FreeTypeGlyphEntry* FreeTypeFont::LoadGlyph(FT_UInt index, bool render)
 		entry->mArea = FindGlyphArea(bitmap->width, bitmap->rows, index, &entry->mImage);
 		if (entry->mArea)
 		{
-			printf ("index: %d cached at (%d %d %d %d)\n",
-				index, entry->mArea->x, entry->mArea->y,
+#if 0
+			printf ("this: %p index: %d cached at (%d %d %d %d)\n",
+				this, index, entry->mArea->x, entry->mArea->y,
 				entry->mArea->width, entry->mArea->height);
+#endif
+			MemoryImage* anImage = (MemoryImage*)entry->mImage;
+			uint32* bits = anImage->GetBits();
+			if (bits)
+			{
+				bits += entry->mArea->y * anImage->GetWidth() + entry->mArea->x;
+				unsigned char* srcbits = (unsigned char*)bitmap->buffer;
+				for (int i = 0; i < entry->mArea->height; i++)
+				{
+					for (int j = 0; j < bitmap->width; j++)
+						bits[j] = (((uint32)srcbits[j]) << 24) | 0xffffff;
+					srcbits += bitmap->width;
+					bits += anImage->GetWidth();
+				}
+			}
+			anImage->BitsChanged();
 		}
 	}
 
@@ -407,6 +476,9 @@ FreeTypeGlyphArea* FreeTypeFont::FindGlyphAreaInArea(int width, int height, FT_U
 			entry->mArea = 0;
 		}
 		area->state = FREETYPE_GLYPH_AREA_EMPTY;
+#if 0
+		printf ("this %p kicked %d\n", this, area->index);
+#endif
 
 	case FREETYPE_GLYPH_AREA_EMPTY:
 		if (area->level == MAX_CACHE_LEVEL || (area->width == width && area->height == height))
@@ -425,7 +497,7 @@ FreeTypeGlyphArea* FreeTypeFont::FindGlyphAreaInArea(int width, int height, FT_U
 							 area->level + 1);
 			area->children[1] =
 				FreeTypeGlyphAreaCreate (area->x + width, area->y,
-							 leftWidth, leftHeight,
+							 leftWidth, height,
 							 area->level + 1);
 			area->children[2] =
 				FreeTypeGlyphAreaCreate (area->x, area->y + height,
@@ -457,9 +529,11 @@ FreeTypeGlyphArea* FreeTypeFont::FindGlyphAreaInArea(int width, int height, FT_U
 				FreeTypeGlyphArea* child = area->children[i];
 				if (child->width >= width && child->height >= height)
 				{
-					if (FindGlyphAreaInArea (width, height, index,
-								 child, remove))
-						return area;
+					FreeTypeGlyphArea* result;
+					result = FindGlyphAreaInArea (width, height, index,
+								      child, remove);
+					if (result)
+						return result;
 
 					failed = true;
 				}
@@ -488,6 +562,9 @@ FreeTypeGlyphArea* FreeTypeFont::FindGlyphAreaInArea(int width, int height, FT_U
 
 FreeTypeGlyphArea* FreeTypeFont::FindGlyphArea(int width, int height, FT_UInt index, Image** image)
 {
+	if (!width || !height)
+		return 0;
+
 	FreeTypeGlyphArea* area;
 	for (unsigned i = 0; i < MAX_CACHED_IMAGES; i++)
 	{
