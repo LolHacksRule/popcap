@@ -14,7 +14,6 @@ FreeTypePakRead (FT_Stream stream,
 		 unsigned char * buffer,
 		 unsigned long count)
 {
-    char * data;
     PFILE * fp = (PFILE*)stream->descriptor.pointer;
 
     assert (fp != NULL);
@@ -54,10 +53,12 @@ void FreeTypeBaseFont::Ref()
 
 void FreeTypeBaseFont::Unref()
 {
-	AutoCrit anAutoCrit(mRefCritSect);
+	{
+		AutoCrit anAutoCrit(mRefCritSect);
 
-	if (--mRefCnt)
-		return;
+		if (--mRefCnt)
+			return;
+	}
 
 	delete this;
 }
@@ -96,6 +97,7 @@ FT_Face  FreeTypeBaseFont::LockFace(float size, FT_Matrix* matrix)
 		return 0;
 	}
 
+	SetSize(size, matrix);
 	return mFace;
 }
 
