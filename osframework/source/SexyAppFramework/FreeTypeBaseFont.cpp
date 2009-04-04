@@ -71,7 +71,10 @@ FT_Face  FreeTypeBaseFont::LockFace(float size, FT_Matrix* matrix)
 	mLockCnt++;
 
 	if (mFace)
+	{
+		SetSize(size, matrix);
 		return mFace;
+	}
 
 	aFontMap->ReserveFace(this);
 
