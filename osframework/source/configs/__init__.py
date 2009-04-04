@@ -63,3 +63,23 @@ def AudiereSoundConfigure(env):
     audiere_sound['ENABLE'] = EnableAudiereSound
     env.AppendUnique (AUDIERESOUND = audiere_sound)
 
+def FreeTypeAddOptions (opts):
+    from SCons.Variables.PathVariable import PathVariable
+    if 'freetype_ccflags' in opts.keys ():
+        return
+    opts.Add ('freetype_ccflags', "c/c++ compiler flags for freetype.", '')
+    opts.Add ('freetype_ldflags', "link flags for freetype", '')
+
+def EnableFreeType (env):
+    env.AppendUnique (LIBS = ['freetype']);
+    env.AppendUnique (CCFLAGS = env['freetype_ccflags'].split(','),
+                      LINKFLAGS = env['freetype_ldflags'].split(','))
+    if not env['freetype_ccflags'] and not env['freetype_ldflags']:
+        env.ParseConfig('$FREETYPECONFIG --cflags --libs');
+
+def FreeTypeConfigure(env):
+    env.AppendUnique (DRIVERS = ['FREETYPEFONT'])
+    freetype_font = {}
+    freetype_font['ENABLE'] = EnableFreeType
+    env['FREETYPECONFIG'] = 'freetype-config'
+    env.AppendUnique (FREETYPEFONT = freetype_font)
