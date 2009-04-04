@@ -572,8 +572,11 @@ FreeTypeGlyphArea* FreeTypeFont::FindGlyphArea(int width, int height, FT_UInt in
 		if (area)
 		{
 			if (!mImages[i])
+			{
 				mImages[i] =
 					mApp->CreateImage(1 << mImageSizeOrder[i], 1 << mImageSizeOrder[i]);
+				mImages[i]->Palletize();
+			}
 			*image = mImages[i];
 			return area;
 		}
@@ -585,8 +588,11 @@ FreeTypeGlyphArea* FreeTypeFont::FindGlyphArea(int width, int height, FT_UInt in
 		if (area)
 		{
 			if (!mImages[i])
+			{
 				mImages[i] =
 					mApp->CreateImage(1 << mImageSizeOrder[i], 1 << mImageSizeOrder[i]);
+				mImages[i]->Palletize();
+			}
 			*image = mImages[i];
 			return area;
 		}
