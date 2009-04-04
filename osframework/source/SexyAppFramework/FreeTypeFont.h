@@ -45,6 +45,8 @@ namespace Sexy
 
 		FT_Face                         mFace;
 
+		int                             mDescent;
+
 		void                            LockFace();
 		void                            UnlockFace();
 	};
