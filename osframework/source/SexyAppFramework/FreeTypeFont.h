@@ -60,7 +60,8 @@ namespace Sexy
 		FreeTypeGlyphArea * children[4];
 	};
 
-	const unsigned int MAX_CACHED_IMAGES = 2;
+	const unsigned int MAX_CACHED_IMAGES = 3;
+	const unsigned int DEFAULT_CACHE_ORDER = 7;
 	const unsigned int MAX_CACHE_LEVEL = 64;
 
 	class FreeTypeFont : public Font
