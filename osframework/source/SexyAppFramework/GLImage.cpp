@@ -92,7 +92,8 @@ public:
 #define ftofix(f) (GLfixed)(f * 65536.0f)
 #endif
 
-static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int height)
+static GLuint CreateTexture (GLImage* theImage, GLuint old,
+			     int x, int y, int width, int height)
 {
 	GLuint texture;
 	int w, h;
@@ -102,14 +103,17 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 	h = RoundToPOT (height);
 
 	/* Create an OpenGL texture for the image */
-	glGenTextures (1, &texture);
-	if (texture == 0)
+	if (!old)
 	{
-		printf ("Generating a texture failed.");
-		return 0;
+		glGenTextures (1, &texture);
+		if (texture == 0)
+		{
+			printf ("Generating a texture failed.");
+			return 0;
+		}
 	}
 
-	glBindTexture (GL_TEXTURE_2D, texture);
+	glBindTexture (GL_TEXTURE_2D, old ? old : texture);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -181,7 +185,7 @@ static GLuint CreateTexture (GLImage* theImage, int x, int y, int width, int hei
 		delete [] copy;
 	}
 
-	return texture;
+	return old ? old : texture;
 }
 
 GLTexture::GLTexture ()
@@ -370,12 +374,17 @@ void GLTexture::CreateTextures(GLImage* theImage)
 			GLTextureBlock &aBlock = mTextures[i];
 			if (createTextures)
 			{
-				aBlock.mTexture = CreateTexture (theImage, x, y,
+				aBlock.mTexture = CreateTexture (theImage, 0, x, y,
 								 aBlock.mWidth, aBlock.mHeight);
 				if (aBlock.mTexture == 0) // create texture failure
 					return;
 
 				mTexMemSize += aBlock.mWidth * aBlock.mHeight * aFormatSize;
+			}
+			else
+			{
+				aBlock.mTexture = CreateTexture (theImage, aBlock.mTexture, x, y,
+								 aBlock.mWidth, aBlock.mHeight);
 			}
 		}
 	}
