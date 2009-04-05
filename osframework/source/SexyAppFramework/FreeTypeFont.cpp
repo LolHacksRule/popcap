@@ -228,6 +228,15 @@ int FreeTypeFont::Utf8FromString(const std::string& string,
 	return len;
     }
 
+    char* result;
+    len = SexyUtf8FromLocale(string.c_str(), -1, &result);
+    if (len >= 0)
+    {
+	utf8 = std::string(result);
+	delete [] result;
+	return len;
+    }
+
     return -1;
 }
 
@@ -600,7 +609,7 @@ FreeTypeGlyphArea* FreeTypeFont::FindGlyphAreaInArea(int width, int height, FT_U
 		return area;
 
 	case FREETYPE_GLYPH_AREA_PARTIAL:
-		bool failed;
+		bool failed = false;
 
 		for (unsigned i = 0; i < 4; i++) {
 			if (area->children[i])
