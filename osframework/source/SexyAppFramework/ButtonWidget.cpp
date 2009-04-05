@@ -264,10 +264,11 @@ bool ButtonWidget::KeyDown(KeyCode theKey)
 	{
 		mButtonListener->ButtonPress(mId, 1);
 		MarkDirty();
+		return true;
 	}
 	else
 	{
-		Widget::KeyDown(theKey);
+		return Widget::KeyDown(theKey);
 	}
 }
 
@@ -277,10 +278,11 @@ bool ButtonWidget::KeyUp(KeyCode theKey)
 	{
 		mButtonListener->ButtonDepress(mId);
 		MarkDirty();
+		return true;
 	}
 	else
 	{
-		Widget::KeyUp(theKey);
+		return Widget::KeyUp(theKey);
 	}
 }
 void ButtonWidget::Update()
