@@ -1,0 +1,119 @@
+# -*- coding: utf-8 -*-
+# Author: Luo Jinghua
+
+import os
+from SCons.Defaults import *
+
+Import (['env', 'sexyenv', 'gameenv'])
+
+# don't build audiere and its dependences if it's not enabled.
+#if not 'FREETYPEFONT' in env['DRIVERS']:
+#    Return ()
+
+srcdir = Dir('.').srcdir
+if srcdir:
+    srcdir = srcdir.abspath
+else:
+    srcdir = ''
+
+freetype_name = 'freetype'
+freetype_version = '2.3.7'
+freetype_suffix = '.tar.bz2'
+freetype_tar = freetype_name + '-' + freetype_version + freetype_suffix
+freetype_dir = freetype_name + '-' + freetype_version
+
+freetype_env = env.Clone()
+
+### freetype
+freetype_untar = freetype_env.Untar (os.path.join (srcdir, freetype_tar), ['*src*', '*include*'], ['*ftmodule.h'])
+freetype_env.SourceCode (freetype_dir, freetype_untar)
+
+srcs = ['ftsystem.c']
+srcs += ['ftdebug.c']
+srcs += ['ftinit.c']
+srcs += ['ftcalc.c', 'ftdbgmem.c', 'ftgloadr.c', 'ftnames.c', 'ftobjs.c', 'ftoutln.c',
+         'ftrfork.c', 'ftstream.c', 'fttrigon.c', 'ftutil.c']
+
+if 'darwin' in env['config']:
+   srcs += ['ftmac.c']
+   freetype_env.AppendUnique (LINKFLAGS = [('-framework', 'CoreServices'),
+                                           ('-framework', 'ApplicationServices')])
+
+### base
+srcs = map (lambda f: os.path.join (freetype_dir, 'src', 'base',f), srcs)
+
+### autofit
+srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'autofit',f),
+            ['afangles.c', 'afcjk.c', 'afdummy.c', 'afglobal.c', 'afhints.c',
+             'afindic.c', 'aflatin.c', 'afloader.c', 'afmodule.c', 'afwarp.c'])
+
+### base
+srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'cache',f),
+            ['ftcbasic.c', 'ftccache.c', 'ftccmap.c', 'ftcglyph.c', 'ftcimage.c',
+             'ftcmanag.c', 'ftcmru.c', 'ftcsbits.c'])
+
+### raster
+srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'raster', f),
+             ['ftraster.c', 'ftrend1.c'])
+
+### smooth
+srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'smooth', f),
+             ['ftgrays.c', 'ftsmooth.c'])
+
+### truetype
+srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'truetype', f),
+             ['ttobjs.c', 'ttpload.c', 'ttgload.c', 'ttinterp.c', 'ttgxvar.c',
+              'ttdriver.c'])
+
+
+### generate freetype's module intializers
+def GenerateFreetypeModule(env, target, source):
+   f = open (target[0].path, 'w')
+   for i in source[0].value:
+      f.write ('FT_USE_MODULE(' + i + '_class)\n')
+   f.close ()
+
+modules = ['tt_driver', 'autofit_module', 'ft_raster1_renderer',
+           'ft_smooth_renderer', 'ft_smooth_lcd_renderer',
+           'ft_smooth_lcdv_renderer']
+
+ftmodule = os.path.join (freetype_dir, 'include', 'freetype', 'config', 'ftmodule.h')
+freetype_env.Command (ftmodule, [Value (modules)],
+                      GenerateFreetypeModule)
+
+freetype_env.AppendUnique (CPPPATH = [os.path.join (freetype_dir, 'include'),
+                                      os.path.join (freetype_dir, 'include', 'freetype', 'config'),
+                                      os.path.join (freetype_dir, 'src', 'base'),
+                                      os.path.join (freetype_dir, 'src', 'autofit'),
+                                      os.path.join (freetype_dir, 'src', 'cache'),
+                                      os.path.join (freetype_dir, 'src', 'raster'),
+                                      os.path.join (freetype_dir, 'src', 'smooth'),
+                                      os.path.join (freetype_dir, 'src', 'truetype')],
+                           CPPDEFINES = ['FT2_BUILD_LIBRARY'])
+
+freetype_lib = freetype_env.ConvenienceLibrary ('freetype', srcs)
+
+### install freetype header & library
+header_dir = 'include'
+lib_dir = 'lib'
+
+freetype_headers = freetype_env.Install (os.path.join (header_dir, 'freetype2'),
+                                         Glob(os.path.join (freetype_dir,
+                                                            'include', '*')) +
+                                         Glob(os.path.join (freetype_dir,
+                                                            'include', 'freetype', '*')) +
+                                         Glob(os.path.join (freetype_dir,
+                                                            'include', 'freetype', 'config', '*')))
+
+freetype = freetype_env.Install (lib_dir, freetype_lib)
+Depends (freetype, freetype_headers)
+
+freetype_env.Alias ('freetype_install', freetype)
+
+### add our header & library path to SexyAppFramework's env.
+sexyenv.AppendUnique (CPPPATH = [os.path.join ('..', 'freetype', 'include', 'freetype2')],
+                      LIBPATH = [os.path.join ('..', 'freetype', 'lib')])
+gameenv.AppendUnique (LIBPATH = [os.path.join ('..', 'freetype', 'lib')])
+
+env.Clean (freetype, [freetype_dir])
+env.Clean (freetype, ['include', 'lib'])
