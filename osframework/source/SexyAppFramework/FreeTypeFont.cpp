@@ -3,6 +3,7 @@
 #include "SexyAppBase.h"
 #include "MemoryImage.h"
 #include "Graphics.h"
+#include "FontUtils.h"
 
 #include "ImageLib.h"
 
@@ -164,53 +165,127 @@ int FreeTypeFont::StringWidth(const SexyString& theString)
 		return 0;
 	}
 
-	FT_Face face = mFace;
 	bool first = true;
         float x = 0, y = 0;
 	int min_x = 0, max_x = 0;
 	int min_y = 0, max_y = 0;
 
-	for (unsigned int i = 0; i < theString.length(); i++)
+	GlyphVector glyphs;
+	GlyphsFromString(theString, glyphs);
+	for (unsigned int i = 0; i < glyphs.size(); i++)
 	{
-		int index = FT_Get_Char_Index (face, theString[i]);
-		FreeTypeExtents* metrics = LookupGlyphMetrics(index);
-		if (!metrics)
-			continue;
+	    FreeTypeGlyphEntry* entry = glyphs[i].entry;
+	    if (!entry)
+		continue;
 
-		int  left, top;
-		int  right, bottom;
+	    FreeTypeExtents* metrics = &entry->mMetrics;
+	    int  left, top;
+	    int  right, bottom;
 
-		left   = floor(x + metrics->x_bearing);
-		top    = floor(y + metrics->y_bearing);
-		right  = ceil(x + metrics->x_advance);
-		bottom = ceil(y + metrics->y_advance);
+	    left   = floor(x + metrics->x_bearing);
+	    top    = floor(y + metrics->y_bearing);
+	    right  = ceil(x + metrics->x_advance);
+	    bottom = ceil(y + metrics->y_advance);
 
-		x += metrics->x_advance;
-		y += metrics->y_advance;
+	    x += metrics->x_advance;
+	    y += metrics->y_advance;
 
-		if (first)
-		{
-			min_x = left;
-			max_x = right;
-			min_y = top;
-			max_y = bottom;
-			first = false;
-		}
-		else
-		{
-			if (left < min_x)
-				min_x = left;
-			if (right > max_x)
-				max_x = right;
-			if (top < min_y)
-				min_y = top;
-			if (bottom > max_y)
-				max_y = bottom;
-		}
+	    if (first)
+	    {
+		min_x = left;
+		max_x = right;
+		min_y = top;
+		max_y = bottom;
+		first = false;
+	    }
+	    else
+	    {
+		if (left < min_x)
+		    min_x = left;
+		if (right > max_x)
+		    max_x = right;
+		if (top < min_y)
+		    min_y = top;
+		if (bottom > max_y)
+		    max_y = bottom;
+	    }
+
+	    if (entry->mArea)
+		entry->mArea->state &= ~FREETYPE_GLYPH_AREA_LOCKED;
 	}
 
 	UnlockFace();
 	return max_x - min_x;
+}
+
+int FreeTypeFont::Utf8FromString(const std::string& string,
+				  std::string& utf8)
+{
+    int len = SexyUtf8Strlen(string.c_str(), -1);
+    if (len >= 0)
+    {
+	utf8 = string;
+	return len;
+    }
+
+    return -1;
+}
+
+void FreeTypeFont::GlyphsFromString(const std::string& string, GlyphVector& glyphs,
+				    bool render)
+{
+    std::string utf8;
+
+    glyphs.clear();
+
+    FT_Face face = mFace;
+    int len = Utf8FromString(string, utf8);
+    if (len >= 0)
+    {
+	const char* chars = utf8.c_str();
+	int charslen = utf8.length();
+	uint32 unichar;
+	int unicharlen;
+
+	glyphs.reserve(len);
+	for (int i = 0; i < len; i++)
+	{
+	    unicharlen = SexyUtf8ToUcs4Char(chars, &unichar, charslen);
+	    chars += unicharlen;
+	    charslen -= unicharlen;
+
+	    int index = FT_Get_Char_Index (face, unichar);
+	    FreeTypeGlyphEntry* entry = LookupGlyph(index, render);
+
+	    if (!entry)
+		continue;
+
+	    FreeTypeGlyph glyph;
+	    glyph.index = index;
+	    glyph.entry = entry;
+	    glyphs.push_back(glyph);
+	    if (entry->mArea && render)
+		entry->mArea->state |= FREETYPE_GLYPH_AREA_LOCKED;
+	}
+    }
+    else
+    {
+	for (unsigned int i = 0; i < string.length(); i++)
+	{
+	    int index = FT_Get_Char_Index (face, string[i]);
+	    FreeTypeGlyphEntry* entry = LookupGlyph(index, render);
+
+	    if (!entry)
+		continue;
+
+	    FreeTypeGlyph glyph;
+	    glyph.index = index;
+	    glyph.entry = entry;
+	    glyphs.push_back(glyph);
+	    if (entry->mArea && render)
+		entry->mArea->state |= FREETYPE_GLYPH_AREA_LOCKED;
+	}
+    }
 }
 
 void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
@@ -226,30 +301,34 @@ void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const SexyString&
 		return;
 	}
 
-	FT_Face face = mFace;
         float x = theX, y = theY;
 
 	bool colorizeImages = g->GetColorizeImages();
 	g->SetColorizeImages(true);
 	Color anOrigColor = g->GetColor();
 	g->SetColor(theColor);
-	for (unsigned int i = 0; i < theString.length(); i++)
+
+	GlyphVector glyphs;
+	GlyphsFromString(theString, glyphs, true);
+	for (unsigned int i = 0; i < glyphs.size(); i++)
 	{
-		int index = FT_Get_Char_Index (face, theString[i]);
-		FreeTypeGlyphEntry* entry = LookupGlyph(index, true);
+	    FreeTypeGlyphEntry* entry = glyphs[i].entry;
 
-		if (!entry)
-			continue;
+	    if (!entry)
+		continue;
 
-		if (entry->mImage)
-			g->DrawImage(entry->mImage,
-				     (int)floor(x + entry->mXOffSet),
-				     (int)floor(y + entry->mYOffSet),
-				     Rect(entry->mArea->x, entry->mArea->y,
-					  entry->mArea->width, entry->mArea->height));
+	    if (entry->mImage)
+		g->DrawImage(entry->mImage,
+			     (int)floor(x + entry->mXOffSet),
+			     (int)floor(y + entry->mYOffSet),
+			     Rect(entry->mArea->x, entry->mArea->y,
+				  entry->mArea->width, entry->mArea->height));
 
-		x += entry->mMetrics.x_advance;
-		y += entry->mMetrics.y_advance;
+	    x += entry->mMetrics.x_advance;
+	    y += entry->mMetrics.y_advance;
+
+	    if (entry->mArea)
+		entry->mArea->state &= ~FREETYPE_GLYPH_AREA_LOCKED;
 	}
 
 	g->SetColor(anOrigColor);

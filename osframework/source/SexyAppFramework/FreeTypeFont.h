@@ -10,6 +10,7 @@ namespace Sexy
 	class ImageFont;
 	class SexyAppBase;
 	struct FreeTypeGlyphArea;
+	struct FreeTypeGlyphEntry;
 
 	struct  FreeTypeExtents {
 		float x_bearing;
@@ -25,6 +26,8 @@ namespace Sexy
 		float x;
 		float y;
 		FT_UInt index;
+
+		FreeTypeGlyphEntry* entry;
 	};
 
 	struct FreeTypeGlyphEntry
@@ -93,44 +96,50 @@ namespace Sexy
 		virtual Font*			Duplicate();
 
 	private:
-		FreeTypeBaseFont              * mBaseFont;
-		FT_Matrix                       mMatrix;
-		float                           mSize;
+		FreeTypeBaseFont	      * mBaseFont;
+		FT_Matrix			mMatrix;
+		float				mSize;
 
-		FT_Face                         mFace;
+		FT_Face				mFace;
 
-		int                             mDescent;
+		int				mDescent;
 
 		typedef std::map<FT_UInt, FreeTypeGlyphEntry> GlyphMap;
 		typedef std::vector<FreeTypeGlyph>  GlyphVector;
 
 		// Glyph info cache
-		GlyphMap                        mGlyphMap;
+		GlyphMap			mGlyphMap;
 
 		// Glyph Image cache
-		Image*                          mImages[MAX_CACHED_IMAGES];
-		int                             mImageSizeOrder[MAX_CACHED_IMAGES];
-		FreeTypeGlyphArea               mImageAreas[MAX_CACHED_IMAGES];
+		Image*				mImages[MAX_CACHED_IMAGES];
+		int				mImageSizeOrder[MAX_CACHED_IMAGES];
+		FreeTypeGlyphArea		mImageAreas[MAX_CACHED_IMAGES];
 
-		void                            LockFace();
-		void                            UnlockFace();
+		void				LockFace();
+		void				UnlockFace();
 
-		FreeTypeGlyphEntry*	        LoadGlyph(FT_UInt index, bool render = false);
-		FreeTypeGlyphEntry*             LookupGlyph(FT_UInt index, bool render = false);
-		FreeTypeExtents*                LookupGlyphMetrics(FT_UInt index);
+		FreeTypeGlyphEntry*		LoadGlyph(FT_UInt index, bool render = false);
+		FreeTypeGlyphEntry*		LookupGlyph(FT_UInt index, bool render = false);
+		FreeTypeExtents*		LookupGlyphMetrics(FT_UInt index);
 
 		// Glyph cached area
-		FreeTypeGlyphArea*              FindGlyphAreaInArea(int width, int height, FT_UInt index,
+		FreeTypeGlyphArea*		FindGlyphAreaInArea(int width, int height, FT_UInt index,
 								    FreeTypeGlyphArea* area, bool remove = false);
-		FreeTypeGlyphArea*              FindGlyphArea(int width, int height, FT_UInt index, Image** image);
-		FreeTypeGlyphArea*              FindAnAreaToRemove(FreeTypeGlyphArea* area);
+		FreeTypeGlyphArea*		FindGlyphArea(int width, int height, FT_UInt index, Image** image);
+		FreeTypeGlyphArea*		FindAnAreaToRemove(FreeTypeGlyphArea* area);
 
-		void                            RemoveGlyphImage(FT_UInt index);
+		void				RemoveGlyphImage(FT_UInt index);
 
-		FreeTypeGlyphArea*              FreeTypeGlyphAreaCreate(int x, int y, int width, int height, int level);
-		void                            FreeTypeGlyphAreaFree(FreeTypeGlyphArea* area);
+		FreeTypeGlyphArea*		FreeTypeGlyphAreaCreate(int x, int y, int width, int height, int level);
+		void				FreeTypeGlyphAreaFree(FreeTypeGlyphArea* area);
 
-		void                            ShrinkGlyphCache(void);
+		void				ShrinkGlyphCache(void);
+
+		int				Utf8FromString(const std::string& string,
+							       std::string& utf8);
+
+		void				GlyphsFromString(const std::string& string, GlyphVector& glyphs,
+								 bool render = false);
 	};
 
 }
