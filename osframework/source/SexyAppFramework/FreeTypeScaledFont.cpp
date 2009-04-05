@@ -340,7 +340,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 				     (int)floor(x + entry->mXOffSet),
 				     (int)floor(y + entry->mYOffSet),
 				     Rect(entry->mArea->x, entry->mArea->y,
-					  entry->mArea->width, entry->mArea->height));
+					  entry->mWidth, entry->mHeight));
 
 		x += entry->mMetrics.x_advance;
 		y += entry->mMetrics.y_advance;
@@ -498,15 +498,30 @@ FreeTypeGlyphEntry* FreeTypeScaledFont::LoadGlyph(FT_UInt index, bool render)
 			{
 				bits += entry->mArea->y * anImage->GetWidth() + entry->mArea->x;
 				unsigned char* srcbits = (unsigned char*)bitmap->buffer;
-				for (int i = 0; i < entry->mArea->height; i++)
+
+				int i;
+				for (i = 0; i < bitmap->rows; i++)
 				{
-					for (int j = 0; j < bitmap->width; j++)
+					int j;
+					for (j = 0; j < bitmap->width; j++)
 						bits[j] = (((uint32)srcbits[j]) << 24) | 0xffffff;
+					for (; j < entry->mArea->width; j++)
+						bits[j] = 0;
 					srcbits += bitmap->width;
 					bits += anImage->GetWidth();
 				}
+				for (; i < entry->mArea->height; i++)
+				{
+					for (int j = 0; j < entry->mArea->width; j++)
+						bits[j] = 0;
+					bits += anImage->GetWidth();
+				}
+
 			}
 			anImage->BitsChanged();
+
+			entry->mWidth = bitmap->width;
+			entry->mHeight = bitmap->rows;
 		}
 	}
 
@@ -706,6 +721,9 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 {
 	if (!width || !height)
 		return 0;
+
+	width = (width + 4) & ~3;
+	height = (height + 4) & ~3;
 
 	FreeTypeGlyphArea* area;
 	for (unsigned i = 0; i < MAX_CACHED_IMAGES; i++)

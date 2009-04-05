@@ -36,6 +36,9 @@ namespace Sexy
 		Image* mImage;
 		int    mXOffSet;
 		int    mYOffSet;
+		int    mWidth;
+		int    mHeight;
+
 		FreeTypeGlyphArea* mArea;
 
 		// Glyph metrics
