@@ -19,8 +19,8 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "ScrollbarWidget.cpp", "ScrollbuttonWidget.cpp", "SEHCatcher.cpp",
         "SexyAppBase.cpp", "SexyMatrix.cpp", "SharedImage.cpp", "Slider.cpp",
         "SWTri.cpp", "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp",
-        "WidgetManager.cpp", "XMLParser.cpp", 'FontUtils.cpp', 'DriverFactory.cpp',
-        'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
+        "WidgetManager.cpp", "XMLParser.cpp", 'FontUtils.cpp',
+        'DriverFactory.cpp', 'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
         'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp']
 
@@ -99,6 +99,14 @@ if 'AUDIERESOUND' in env['DRIVERS']:
 if 'WIN32' in env['CPPDEFINES']:
     srcs += ["DSoundManager.cpp", 'DSoundInstance.cpp',
              'BassMusicInterface.cpp', 'BassLoader.cpp']
+    ogg_srcs = 	['framing.c', 'bitwise.c']
+    ogg_srcs += ['mdct.c', 'smallft.c', 'block.c', 'envelope.c', 'window.c', 'lsp.c',
+                 'lpc.c', 'analysis.c', 'synthesis.c', 'psy.c', 'info.c',
+                 'floor1.c', 'floor0.c', 'res0.c', 'mapping0.c', 'registry.c',
+                 'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c']
+    ogg_srcs += ['vorbisfile.c']
+
+    #srcs += map(lambda f:os.path.join ('ogg', f), ogg_srcs)
     srcs += Glob('ogg/*.c')
     env.AppendUnique(LIBS = ['winmm'])
     gameenv.AppendUnique(LIBS = ['winmm'])
@@ -114,6 +122,21 @@ if 'WIN32_MODULE_LOADER' in env['LOADERS']:
     env['WIN32_MODULE_LOADER']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_WIN32_MODULE_LOADER'])
 
+env.AppendUnique(DRIVERS = ['REMOTE'])
+if 'REMOTE' in env['DRIVERS']:
+    commondir = os.path.join(Dir('#.').abspath, 'common')
+    srcs += ['RemoteInputDriver.cpp', 'RemoteEvent.cpp',
+             os.path.join(commondir, 'Module','ModuleLoader.cpp'),
+             os.path.join(commondir, 'RemoteController', 'RemoteController.cpp'),
+             os.path.join(commondir, 'RemoteController', 'RemoteInputModule.cpp'),
+             os.path.join(commondir, 'RemoteController', 'RemoteModule.cpp'),
+             os.path.join(commondir, 'RemoteController', 'RemoterFactory.cpp'),
+             os.path.join(commondir, 'utility', 'TimeEval.cpp'),
+             os.path.join(commondir, 'Authorization', 'Encryption', 'bignum.cpp')]
+    srcs += Glob(os.path.join(commondir, "RemoteMap", "*.cpp"))
+    env.AppendUnique(CPPDEFINES = ['SEXY_REMOTE_INPUT_DRIVER'],
+                     CPPPATH = [commondir])
+
 #c module input driver
 srcs += ['ModuleInputDriver.cpp']
 
@@ -128,6 +151,9 @@ env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
                   LIBPATH = [os.path.join('..', 'ImageLib'),
                              os.path.join('..', 'PakLib')],
                   LIBS = ['PakLib', 'ImageLib'])
+
+if 'WIN32' in env['CPPDEFINES']:
+    env.AppendUnique(LIBS = ['ws2_32'])
 
 if gameenv['BUILD_STATIC']:
     if 'DIRECTFB' in env['DRIVERS']:
@@ -153,7 +179,12 @@ if gameenv['BUILD_STATIC']:
         gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)
 
     if 'FREETYPEFONT' in env['DRIVERS']:
-        gameenv['FREETYPEFONT']['ENABLE'](env)
+        gameenv['FREETYPEFONT']['ENABLE'](gameenv)
+
+    gameenv.PrependUnique(LIBS = ['ImageLib', 'PakLib'])
+
+    if 'WIN32' in gameenv['CPPDEFINES']:
+        gameenv.AppendUnique(LIBS = ['ws2_32'])
 
 if gameenv['BUILD_STATIC']:
     env.Library('SexyAppFramework', srcs)
