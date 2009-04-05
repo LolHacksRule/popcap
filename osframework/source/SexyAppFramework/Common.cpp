@@ -273,6 +273,17 @@ std::string Sexy::WStringToString(const std::wstring &theString)
 		wcstombs( aBuffer, theString.c_str(), 16384 );
 		return std::string(aBuffer);
 	}
+	else if (aRequiredLength == (size_t)-1)
+	{
+		char* aBuffer = new char[theString.length() + 1];
+		std::wstring::size_type i;
+		for (i = 0; i < theString.length(); i++)
+			aBuffer[i] = theString[i] & 0xff;
+		aBuffer[i] = '\0';
+		std::string aStr = aBuffer;
+		delete[] aBuffer;
+		return aStr;
+	}
 	else
 	{
 		DBG_ASSERTE(aRequiredLength != (size_t)-1);
