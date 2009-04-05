@@ -38,7 +38,8 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 	mApp = theApp;
 	mSize = thePointSize;
 	mBaseFont = aFontMap->CreateBaseFont(theFace.c_str(), 0);
-
+	if (!mBaseFont)
+		mBaseFont = aFontMap->CreateBaseFont(0, 0);
 	mHeight = 0;
 	mAscent = 0;
 	mDescent = 0;
