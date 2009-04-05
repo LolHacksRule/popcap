@@ -147,8 +147,8 @@ public:
 	ImageFont(Image* theFontImage, const std::string& theFontDescFileName);
 	//ImageFont(const ImageFont& theImageFont, Image* theImage);
 	
-	virtual int				CharWidth(char theChar);
-	virtual int				CharWidthKern(char theChar, char thePrevChar);
+	virtual int				CharWidth(int theChar);
+	virtual int				CharWidthKern(int theChar, int thePrevChar);
 	virtual int				StringWidth(const SexyString& theString);
 	virtual void			DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect);
 

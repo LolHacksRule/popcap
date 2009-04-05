@@ -1356,7 +1356,7 @@ int ImageFont::StringWidth(const SexyString& theString)
 	return aWidth;
 }
 
-int ImageFont::CharWidthKern(char theChar, char thePrevChar)
+int ImageFont::CharWidthKern(int theChar, int thePrevChar)
 {
 	Prepare();
 
@@ -1415,7 +1415,7 @@ int ImageFont::CharWidthKern(char theChar, char thePrevChar)
 	return aMaxXPos;
 }
 
-int ImageFont::CharWidth(char theChar)
+int ImageFont::CharWidth(int theChar)
 {
 	return CharWidthKern(theChar,0);
 }

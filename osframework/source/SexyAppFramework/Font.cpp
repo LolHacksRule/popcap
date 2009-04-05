@@ -4,23 +4,30 @@
 using namespace Sexy;
 
 Font::Font()
-{	
+{
 	mAscent = 0;
 	mHeight = 0;
 	mAscentPadding = 0;
 	mLineSpacingOffset = 0;
+	mSupportUnicode = false;
 }
 
 Font::Font(const Font& theFont) :
 	mAscent(theFont.mAscent),
 	mHeight(theFont.mHeight),
 	mAscentPadding(theFont.mAscentPadding),
-	mLineSpacingOffset(theFont.mLineSpacingOffset)
+	mLineSpacingOffset(theFont.mLineSpacingOffset),
+	mSupportUnicode(theFont.mSupportUnicode)
 {
 }
 
 Font::~Font()
 {
+}
+
+bool    Font::IsSupportUnicode()
+{
+	return mSupportUnicode;
 }
 
 int	Font::GetAscent()
@@ -58,13 +65,13 @@ int Font::StringWidth(const SexyString& theString)
 	return 0;
 }
 
-int Font::CharWidth(SexyChar theChar)
+int Font::CharWidth(int theChar)
 {
 	SexyString aString(1, theChar);
 	return StringWidth(aString);
 }
 
-int Font::CharWidthKern(SexyChar theChar, SexyChar thePrevChar)
+int Font::CharWidthKern(int theChar, int thePrevChar)
 {
 	return CharWidth(theChar);
 }
