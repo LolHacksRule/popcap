@@ -39,14 +39,16 @@ void FreeTypeFont::Init(SexyAppBase* theApp, const std::string& theFace, int the
 	mLineSpacingOffset = mScaledFont->mLineSpacingOffset;
 }
 
-FreeTypeFont::FreeTypeFont(const FreeTypeFont& theFreeTypeFont)
+FreeTypeFont::FreeTypeFont(const FreeTypeFont& theFont)
 {
 	mSupportUnicode = true;
-	mApp = theFreeTypeFont.mApp;
-	mScaledFont = theFreeTypeFont.mScaledFont;
-	mHeight = theFreeTypeFont.mHeight;
-	mAscent = theFreeTypeFont.mAscent;
-	mLineSpacingOffset = theFreeTypeFont.mLineSpacingOffset;
+	mApp = theFont.mApp;
+	mScaledFont = theFont.mScaledFont;
+	mHeight = theFont.mHeight;
+	mAscent = theFont.mAscent;
+	mLineSpacingOffset = theFont.mLineSpacingOffset;
+	mDrawShadow = theFont.mDrawShadow;
+	mSimulateBold =theFont.mSimulateBold;
 	mScaledFont->Ref();
 }
 
@@ -63,7 +65,7 @@ int FreeTypeFont::StringWidth(const SexyString& theString)
 void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
 			      const Color& theColor, const Rect& theClipRect)
 {
-	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect);
+	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect, mDrawShadow);
 }
 
 int FreeTypeFont::CharWidth(int theChar)

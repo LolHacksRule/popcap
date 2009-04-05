@@ -307,7 +307,8 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 }
 
 void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
-				    const Color& theColor, const Rect& theClipRect)
+				    const Color& theColor, const Rect& theClipRect,
+				    bool drawShadow)
 {
 	if (!mBaseFont)
 		return;
@@ -321,6 +322,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 
 	float x = theX, y = theY;
 
+	Color aFontColor = theColor;
 	bool colorizeImages = g->GetColorizeImages();
 	g->SetColorizeImages(true);
 	Color anOrigColor = g->GetColor();
@@ -336,11 +338,23 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 			continue;
 
 		if (entry->mImage)
+		{
+			if (drawShadow)
+			{
+				g->SetColor(Color(0, 0, 0));
+				g->DrawImage(entry->mImage,
+					     (int)floor(x + entry->mXOffSet + 1),
+					     (int)floor(y + entry->mYOffSet + 1),
+					     Rect(entry->mArea->x, entry->mArea->y,
+						  entry->mWidth, entry->mHeight));
+				g->SetColor(aFontColor);
+			}
 			g->DrawImage(entry->mImage,
 				     (int)floor(x + entry->mXOffSet),
 				     (int)floor(y + entry->mYOffSet),
 				     Rect(entry->mArea->x, entry->mArea->y,
 					  entry->mWidth, entry->mHeight));
+		}
 
 		x += entry->mMetrics.x_advance;
 		y += entry->mMetrics.y_advance;

@@ -95,8 +95,10 @@ namespace Sexy
 	public:
 		int				StringWidth(const SexyString& theString);
 		void				DrawString(Graphics* g, int theX, int theY,
-							   const SexyString& theString, const Color& theColor,
-							   const Rect& theClipRect);
+							   const SexyString& theString,
+							   const Color& theColor,
+							   const Rect& theClipRect,
+							   bool drawShadow = false);
 		int				CharWidth(int theChar);
 		int				CharWidthKern(int theChar, int thePrevChar);
 
