@@ -44,10 +44,10 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 	mAscent = 0;
 	mDescent = 0;
 
-        mMatrix.xx = 1 << 16;
-        mMatrix.yx = 0;
-        mMatrix.xy = 0;
-        mMatrix.yy = 1 << 16;
+	mMatrix.xx = 1 << 16;
+	mMatrix.yx = 0;
+	mMatrix.xy = 0;
+	mMatrix.yy = 1 << 16;
 
 	for (unsigned i = 0; i < MAX_CACHED_IMAGES; i++)
 	{
@@ -71,9 +71,9 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 	{
 		float scale = mFace->units_per_EM;
 
-		mAscent  = mFace->ascender * mSize / scale;
+		mAscent	 = mFace->ascender * mSize / scale;
 		mDescent = -mFace->descender * mSize / scale;
-		mHeight  = mFace->height * mSize / scale;
+		mHeight	 = mFace->height * mSize / scale;
 		mLineSpacingOffset = mHeight - mAscent - mDescent;
 	}
 	UnlockFace();
@@ -169,7 +169,7 @@ int FreeTypeScaledFont::StringWidth(const SexyString& theString)
 	}
 
 	bool first = true;
-        float x = 0, y = 0;
+	float x = 0, y = 0;
 	int min_x = 0, max_x = 0;
 	int min_y = 0, max_y = 0;
 
@@ -319,7 +319,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 		return;
 	}
 
-        float x = theX, y = theY;
+	float x = theX, y = theY;
 
 	bool colorizeImages = g->GetColorizeImages();
 	g->SetColorizeImages(true);

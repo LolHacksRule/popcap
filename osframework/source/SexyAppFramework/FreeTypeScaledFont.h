@@ -12,7 +12,7 @@ namespace Sexy
 	struct FreeTypeGlyphArea;
 	struct FreeTypeGlyphEntry;
 
-	struct  FreeTypeExtents {
+	struct	FreeTypeExtents {
 		float x_bearing;
 		float y_bearing;
 		float width;
@@ -81,20 +81,20 @@ namespace Sexy
 
 	public:
 		FreeTypeScaledFont(const std::string& theFace, int thePointSize,
-			     bool bold = false, bool italics = false,
-			     bool underline = false);
+				   bool bold = false, bool italics = false,
+				   bool underline = false);
 
 		FreeTypeScaledFont(SexyAppBase* theApp, const std::string& theFace,
-			     int thePointSize, bool bold = false, bool italics = false,
-			     bool underline = false);
+				   int thePointSize, bool bold = false, bool italics = false,
+				   bool underline = false);
 		FreeTypeScaledFont(const FreeTypeScaledFont& theFreeTypeScaledFont);
 
 	private:
 		~FreeTypeScaledFont();
 
 	public:
-		int			        StringWidth(const SexyString& theString);
-		void			        DrawString(Graphics* g, int theX, int theY,
+		int				StringWidth(const SexyString& theString);
+		void				DrawString(Graphics* g, int theX, int theY,
 							   const SexyString& theString, const Color& theColor,
 							   const Rect& theClipRect);
 		int				CharWidth(int theChar);
@@ -113,12 +113,12 @@ namespace Sexy
 		int				mDescent;
 		int				mAscent;
 		int				mAscentPadding;
-		int			        mHeight;
-		int			        mLineSpacingOffset;
+		int				mHeight;
+		int				mLineSpacingOffset;
 
 	private:
-		CritSect                        mRefCritSect;
-		int                             mRefCnt;
+		CritSect			mRefCritSect;
+		int				mRefCnt;
 
 		typedef std::map<FT_UInt, FreeTypeGlyphEntry> GlyphMap;
 		typedef std::vector<FreeTypeGlyph>  GlyphVector;
@@ -158,8 +158,8 @@ namespace Sexy
 								 bool render = false);
 
 	public:
-		void                            Ref();
-		void                            Unref();
+		void				Ref();
+		void				Unref();
 	};
 
 }
