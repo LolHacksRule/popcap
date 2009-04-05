@@ -867,12 +867,12 @@ bool ResourceManager::DoLoadFont(FontRes* theRes)
 		// 	simulateBold = bold;
 		// 	bold = false;
 		// }
-		aFont = mApp->mDDInterface->CreateFont
-			(mApp, theRes->mPath,theRes->mSize,bold,theRes->mItalic,
-			 theRes->mUnderline);
-		//NativeFont* aNativeFont = (NativeFont*)aFont;
-		//aNativeFont->mDrawShadow = theRes->mShadow;
-		//aNativeFont->mSimulateBold = simulateBold;
+		aFont = mApp->mDDInterface->CreateFont (mApp, theRes->mPath,
+							theRes->mSize, bold,
+							theRes->mItalic,
+							theRes->mUnderline);
+		aFont->mDrawShadow = theRes->mShadow;
+		aFont->mSimulateBold = simulateBold;
 	}
 	else if (theRes->mImagePath.empty())
 	{
