@@ -265,6 +265,9 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 			chars += unicharlen;
 			charslen -= unicharlen;
 
+			if (unichar == '\n' || unichar == '\r')
+				continue;
+
 			int index = FT_Get_Char_Index (face, unichar);
 			FreeTypeGlyphEntry* entry = LookupGlyph(index, render);
 
@@ -283,6 +286,9 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 	{
 		for (unsigned int i = 0; i < string.length(); i++)
 		{
+			if (string[i] == '\n' || string[i] == '\r')
+				continue;
+
 			int index = FT_Get_Char_Index (face, string[i]);
 			FreeTypeGlyphEntry* entry = LookupGlyph(index, render);
 
