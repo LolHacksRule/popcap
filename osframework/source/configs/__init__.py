@@ -15,7 +15,7 @@ def AddOptions(opts):
 
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''
-    env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [])
+    env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [], BUILD_PACKAGES = [])
     env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'include')],
                       LIBPATH = [os.path.join ('#', 'extra', 'lib')])
     if not env.has_key ('PKGCONFIG'):
@@ -74,8 +74,8 @@ def EnableFreeType (env):
     env.AppendUnique (LIBS = ['freetype']);
     env.AppendUnique (CCFLAGS = env['freetype_ccflags'].split(','),
                       LINKFLAGS = env['freetype_ldflags'].split(','))
-    if not env['freetype_ccflags'] and not env['freetype_ldflags']:
-        env.ParseConfig('$FREETYPECONFIG --cflags --libs');
+    if not env['freetype_ccflags'] and not env['freetype_ldflags'] and env['FREETYPECONFIG']:
+        env.ParseConfig('$FREETYPECONFIG --cflags --libs')
 
 def FreeTypeConfigure(env):
     env.AppendUnique (DRIVERS = ['FREETYPEFONT'])
