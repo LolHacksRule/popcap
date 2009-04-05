@@ -63,6 +63,7 @@ Export (['env', 'gameenv', 'sexyenv'])
 sconscripts = [os.path.join ('ImageLib', 'SConscript')]
 sconscripts += [os.path.join ('PakLib', 'SConscript')]
 sconscripts += [os.path.join ('audiere', 'SConscript')]
+sconscripts += [os.path.join ('freetype', 'SConscript')]
 sconscripts += [os.path.join ('SexyAppFramework', 'SConscript')]
 sconscripts += [os.path.join ('demos', 'SConscript')]
 
