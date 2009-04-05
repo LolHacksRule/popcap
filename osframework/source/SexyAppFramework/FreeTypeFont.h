@@ -35,6 +35,8 @@ namespace Sexy
 		virtual void			DrawString(Graphics* g, int theX, int theY,
 							   const SexyString& theString, const Color& theColor,
 							   const Rect& theClipRect);
+		virtual int			CharWidth(int theChar);
+		virtual int			CharWidthKern(int theChar, int thePrevChar);
 
 		virtual Font*			Duplicate();
 

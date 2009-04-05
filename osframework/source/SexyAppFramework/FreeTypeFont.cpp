@@ -33,6 +33,7 @@ void FreeTypeFont::Init(SexyAppBase* theApp, const std::string& theFace, int the
 			bool bold, bool italics, bool underline)
 {
 	mScaledFont = new FreeTypeScaledFont(theApp, theFace, thePointSize, bold, italics, underline);
+	mSupportUnicode = true;
 	mHeight = mScaledFont->mHeight;
 	mAscent = mScaledFont->mAscent;
 	mLineSpacingOffset = mScaledFont->mLineSpacingOffset;
@@ -40,6 +41,7 @@ void FreeTypeFont::Init(SexyAppBase* theApp, const std::string& theFace, int the
 
 FreeTypeFont::FreeTypeFont(const FreeTypeFont& theFreeTypeFont)
 {
+	mSupportUnicode = true;
 	mApp = theFreeTypeFont.mApp;
 	mScaledFont = theFreeTypeFont.mScaledFont;
 	mHeight = theFreeTypeFont.mHeight;
@@ -62,6 +64,16 @@ void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const SexyString&
 			      const Color& theColor, const Rect& theClipRect)
 {
 	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect);
+}
+
+int FreeTypeFont::CharWidth(int theChar)
+{
+	return mScaledFont->CharWidth(theChar);
+}
+
+int FreeTypeFont::CharWidthKern(int theChar, int thePrevChar)
+{
+	return mScaledFont->CharWidthKern(theChar, thePrevChar);
 }
 
 Font* FreeTypeFont::Duplicate()
