@@ -18,10 +18,10 @@ FreeTypePakRead (FT_Stream stream,
 
     assert (fp != NULL);
     if (offset > stream->size)
-        return 0;
+	return 0;
 
     if (offset + count > stream->size)
-        count = stream->size - offset;
+	count = stream->size - offset;
 
     p_fseek(fp, offset, SEEK_SET);
     if (p_fread(buffer, 1, count, fp) != count)
@@ -63,7 +63,7 @@ void FreeTypeBaseFont::Unref()
 	delete this;
 }
 
-FT_Face  FreeTypeBaseFont::LockFace(float size, FT_Matrix* matrix)
+FT_Face	 FreeTypeBaseFont::LockFace(float size, FT_Matrix* matrix)
 {
 	FreeTypeFontMap* aFontMap = FreeTypeFontMap::GetFreeTypeFontMap();
 
@@ -78,7 +78,7 @@ FT_Face  FreeTypeBaseFont::LockFace(float size, FT_Matrix* matrix)
 
 	aFontMap->ReserveFace(this);
 
-        FT_Open_Args args;
+	FT_Open_Args args;
 
 	if (!mStream)
 		mStream = new FT_StreamRec_;
@@ -90,10 +90,10 @@ FT_Face  FreeTypeBaseFont::LockFace(float size, FT_Matrix* matrix)
 	mStream->pos = 0;
 	mStream->size = p_ftell(mFp);
 
-        args.flags = FT_OPEN_STREAM;
+	args.flags = FT_OPEN_STREAM;
 	args.stream = mStream;
-        if (FT_Open_Face(aFontMap->mLibrary, &args,
-                         mIndex, &mFace) != FT_Err_Ok)
+	if (FT_Open_Face(aFontMap->mLibrary, &args,
+			 mIndex, &mFace) != FT_Err_Ok)
 	{
 		mLockCnt--;
 		mCritSect.Leave();
@@ -112,7 +112,7 @@ void  FreeTypeBaseFont::SetSize(float size, FT_Matrix* matrix)
     FT_Matrix ftmatrix;
 
     if (mHasSize && mSize == size && !memcmp (&mMatrix, matrix, sizeof(*matrix)))
-        return;
+	return;
 
     face = mFace;
     assert (face != NULL);
