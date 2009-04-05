@@ -277,7 +277,7 @@ static int XKsymToKeyCode(KeySym keysym)
 	if (keysym >= XK_0 && keysym <= XK_9)
 		return '0' + keysym - XK_0;
 	if (isalnum (keysym))
-		return keysym;
+		return toupper(keysym);
 	return 0;
 }
 
