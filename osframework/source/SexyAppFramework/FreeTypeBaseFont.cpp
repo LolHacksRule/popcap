@@ -84,6 +84,7 @@ FT_Face  FreeTypeBaseFont::LockFace(float size, FT_Matrix* matrix)
 		mStream = new FT_StreamRec_;
 
 	p_fseek(mFp, 0, SEEK_END);
+	memset (mStream, 0, sizeof (*mStream));
 	mStream->descriptor.pointer = (void*)mFp;
 	mStream->read = FreeTypePakRead;
 	mStream->pos = 0;
