@@ -19,7 +19,7 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "ScrollbarWidget.cpp", "ScrollbuttonWidget.cpp", "SEHCatcher.cpp",
         "SexyAppBase.cpp", "SexyMatrix.cpp", "SharedImage.cpp", "Slider.cpp",
         "SWTri.cpp", "TextWidget.cpp", "WidgetContainer.cpp", "Widget.cpp",
-        "WidgetManager.cpp", "XMLParser.cpp", 'DriverFactory.cpp',
+        "WidgetManager.cpp", "XMLParser.cpp", 'FontUtils.cpp', 'DriverFactory.cpp',
         'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
         'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp']
@@ -117,6 +117,12 @@ if 'WIN32_MODULE_LOADER' in env['LOADERS']:
 #c module input driver
 srcs += ['ModuleInputDriver.cpp']
 
+if 'FREETYPEFONT' in env['DRIVERS']:
+    srcs += ["FreeTypeFontMap.cpp", 'FreeTypeBaseFont.cpp',
+             'FreeTypeScaledFont.cpp', 'FreeTypeFont.cpp']
+    env['FREETYPEFONT']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['HAVE_FREETYPE_FONT'])
+
 env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
                              '#SexyAppFramework'],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
@@ -146,7 +152,8 @@ if gameenv['BUILD_STATIC']:
     if 'POSIXMODULELOADER' in env['LOADERS']:
         gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)
 
-    gameenv.PrependUnique(LIBS = ['ImageLib', 'PakLib'])
+    if 'FREETYPEFONT' in env['DRIVERS']:
+        gameenv['FREETYPEFONT']['ENABLE'](env)
 
 if gameenv['BUILD_STATIC']:
     env.Library('SexyAppFramework', srcs)
