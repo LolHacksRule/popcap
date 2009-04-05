@@ -32,7 +32,7 @@ CritSect::~CritSect(void)
 void CritSect::Enter(void)
 {
 #ifdef WIN32
-	EnterCriticalSection(mCritSec); 
+	EnterCriticalSection(&mCriticalSection); 
 #else
 	pthread_mutex_lock(&mMutex);
 #endif
@@ -41,7 +41,7 @@ void CritSect::Enter(void)
 void CritSect::Leave(void)
 {
 #ifdef WIN32
-	LeaveCriticalSection(mCritSec);
+	LeaveCriticalSection(&mCriticalSection);
 #else
 	pthread_mutex_unlock(&mMutex);
 #endif
