@@ -500,21 +500,50 @@ FreeTypeGlyphEntry* FreeTypeScaledFont::LoadGlyph(FT_UInt index, bool render)
 				unsigned char* srcbits = (unsigned char*)bitmap->buffer;
 
 				int i;
-				for (i = 0; i < bitmap->rows; i++)
+				if (bitmap->pixel_mode == FT_PIXEL_MODE_GRAY)
 				{
-					int j;
-					for (j = 0; j < bitmap->width; j++)
-						bits[j] = (((uint32)srcbits[j]) << 24) | 0xffffff;
-					for (; j < entry->mArea->width; j++)
-						bits[j] = 0;
-					srcbits += bitmap->width;
-					bits += anImage->GetWidth();
+					for (i = 0; i < bitmap->rows; i++)
+					{
+						int j;
+						for (j = 0; j < bitmap->width; j++)
+							bits[j] = (((uint32)srcbits[j]) << 24) | 0xffffff;
+						for (; j < entry->mArea->width; j++)
+							bits[j] = 0;
+						srcbits += bitmap->pitch;
+						bits += anImage->GetWidth();
+					}
+					for (; i < entry->mArea->height; i++)
+					{
+						for (int j = 0; j < entry->mArea->width; j++)
+							bits[j] = 0;
+						bits += anImage->GetWidth();
+					}
 				}
-				for (; i < entry->mArea->height; i++)
+				else
 				{
-					for (int j = 0; j < entry->mArea->width; j++)
-						bits[j] = 0;
-					bits += anImage->GetWidth();
+					assert (bitmap->pixel_mode == FT_PIXEL_MODE_MONO);
+
+					for (i = 0; i < bitmap->rows; i++)
+					{
+						int j;
+						for (j = 0; j < bitmap->width; j++)
+						{
+							if (srcbits[(j >> 3)] & (0x80 >> (j & 7)))
+								bits[j] = 0xffffffff;
+							else
+								bits[j] = 0x00ffffff;
+						}
+						for (; j < entry->mArea->width; j++)
+							bits[j] = 0;
+						srcbits += bitmap->pitch;
+						bits += anImage->GetWidth();
+					}
+					for (; i < entry->mArea->height; i++)
+					{
+						for (int j = 0; j < entry->mArea->width; j++)
+							bits[j] = 0;
+						bits += anImage->GetWidth();
+					}
 				}
 
 			}
