@@ -19,6 +19,9 @@ public:
 	int						mLineSpacingOffset; // This plus height should get added between lines
 	bool                                            mSupportUnicode;
 
+	bool					        mDrawShadow;
+	bool					        mSimulateBold;
+
 public:
 	Font();
 	Font(const Font& theFont);

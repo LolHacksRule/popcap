@@ -10,6 +10,8 @@ Font::Font()
 	mAscentPadding = 0;
 	mLineSpacingOffset = 0;
 	mSupportUnicode = false;
+	mDrawShadow = false;
+	mSimulateBold = false;
 }
 
 Font::Font(const Font& theFont) :
@@ -17,7 +19,9 @@ Font::Font(const Font& theFont) :
 	mHeight(theFont.mHeight),
 	mAscentPadding(theFont.mAscentPadding),
 	mLineSpacingOffset(theFont.mLineSpacingOffset),
-	mSupportUnicode(theFont.mSupportUnicode)
+	mSupportUnicode(theFont.mSupportUnicode),
+	mDrawShadow(theFont.mDrawShadow),
+	mSimulateBold(theFont.mSimulateBold)
 {
 }
 
