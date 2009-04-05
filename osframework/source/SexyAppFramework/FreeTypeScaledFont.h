@@ -94,6 +94,8 @@ namespace Sexy
 		void			        DrawString(Graphics* g, int theX, int theY,
 							   const SexyString& theString, const Color& theColor,
 							   const Rect& theClipRect);
+		int				CharWidth(int theChar);
+		int				CharWidthKern(int theChar, int thePrevChar);
 
 		FreeTypeScaledFont*		Duplicate();
 

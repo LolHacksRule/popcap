@@ -366,6 +366,33 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 	UnlockFace();
 }
 
+int FreeTypeScaledFont::CharWidth(int theChar)
+{
+	if (!mBaseFont)
+		return 0;
+
+	LockFace();
+	if (!mFace)
+	{
+		UnlockFace();
+		return 0;
+	}
+
+	int width = 0;
+	int index = FT_Get_Char_Index (mFace, theChar);
+	FreeTypeExtents* metrics = LookupGlyphMetrics(index);
+	if (metrics)
+		width = metrics->x_advance;
+
+	UnlockFace();
+	return width;
+}
+
+int FreeTypeScaledFont::CharWidthKern(int theChar, int thePrevChar)
+{
+	return CharWidth(theChar);
+}
+
 FreeTypeScaledFont* FreeTypeScaledFont::Duplicate()
 {
 	return this;
