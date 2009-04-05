@@ -9,6 +9,57 @@
 
 namespace Sexy
 {
+	int
+	SexyUsc4ToUtf8 (uint32 unichar, char * utf8)
+	{
+		int prefix;
+		int i;
+		unsigned len;
+
+		if (unichar < 0x80)
+		{
+			prefix = 0;
+			len = 1;
+		}
+		else if (unichar < 0x800)
+		{
+			prefix = 0xc0;
+			len = 2;
+		}
+		else if (unichar < 0x10000)
+		{
+			prefix = 0xe0;
+			len = 3;
+		}
+		else if (unichar < 0x200000)
+		{
+			prefix = 0xf0;
+			len = 4;
+		}
+		else if (unichar < 0x4000000)
+		{
+			prefix = 0xf8;
+			len = 5;
+		}
+		else
+		{
+			prefix = 0xfc;
+			len = 6;
+		}
+
+		if (utf8)
+		{
+			for (i = len - 1; i > 0; --i)
+			{
+				utf8[i] = (unichar & 0x3f) | 0x80;
+				unichar >>= 6;
+			}
+			utf8[0] = unichar | prefix;
+		}
+
+		return len;
+	}
+
 
 	int SexyUtf8ToUcs4Char (const char * str, uint32 * ucs4, int len)
 	{
@@ -228,9 +279,61 @@ namespace Sexy
 		return -1;
 	}
 #else
+	int    ConvertUtf16toUtf8 (unsigned short* inbuf, size_t inlen,
+				   char* outbuf)
+	{
+		const uint32 UNI_SUR_HIGH_START = 0xd800;
+		const uint32 UNI_SUR_HIGH_END   = 0xdbff;
+		const uint32 UNI_SUR_LOW_START  = 0xdc00;
+		const uint32 UNI_SUR_LOW_END    = 0xdfff;
+		unsigned short* inbufend = inbuf + inlen;
+		int ret = 0;
+
+		while (inbuf < inbufend) {
+			uint32 ch;
+
+			ch = *inbuf++;
+			if (ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_HIGH_END &&
+			    inbuf < inbufend)
+			{
+				uint32 ch2 = *inbuf;
+				if (ch2 >= UNI_SUR_LOW_START && ch2 <= UNI_SUR_LOW_END)
+				{
+					ch = (ch - UNI_SUR_HIGH_START) << 10;
+					ch +=  ch2 - UNI_SUR_LOW_START + 0x0010000;
+					inbuf++;
+				}
+			}
+
+			ret += SexyUsc4ToUtf8(ch, outbuf + ret);
+		}
+		return ret;
+	}
+
 	static int Utf8FromLocale (const char * str, int len, char** result)
 	{
-		return -1;
+		int utf16len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+		if (utf16len <= 0)
+			return -1;
+
+		unsigned short * utf16 = new unsigned short[utf16len + 1];
+		if (MultiByteToWideChar(CP_ACP, 0, str, -1, (WCHAR*)utf16, utf16len) <= 0)
+		{
+			delete [] utf16;
+			return -1;
+		}
+		int utf8len = ConvertUtf16toUtf8(utf16, utf16len, 0);
+		if (utf8len < 0)
+		{
+			delete [] utf16;
+			return -1;
+		}
+
+		char* utf8 = new char[utf8len + 1];
+		ConvertUtf16toUtf8(utf16, utf16len, utf8);
+		utf8[utf8len] = '\0';
+		delete [] utf16;
+		return utf8len;
 	}
 
 	static int Utf8FallbackConvert (const char * str, int len, char** result)
