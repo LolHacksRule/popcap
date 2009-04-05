@@ -305,7 +305,7 @@ namespace Sexy
 				}
 			}
 
-			ret += SexyUsc4ToUtf8(ch, outbuf + ret);
+			ret += SexyUsc4ToUtf8(ch, outbuf ? outbuf + ret : 0);
 		}
 		return ret;
 	}
@@ -316,13 +316,13 @@ namespace Sexy
 		if (utf16len <= 0)
 			return -1;
 
-		unsigned short * utf16 = new unsigned short[utf16len + 1];
+		unsigned short * utf16 = new unsigned short[utf16len];
 		if (MultiByteToWideChar(CP_ACP, 0, str, -1, (WCHAR*)utf16, utf16len) <= 0)
 		{
 			delete [] utf16;
 			return -1;
 		}
-		int utf8len = ConvertUtf16toUtf8(utf16, utf16len, 0);
+		int utf8len = ConvertUtf16toUtf8(utf16, utf16len - 1, 0);
 		if (utf8len < 0)
 		{
 			delete [] utf16;
@@ -333,7 +333,8 @@ namespace Sexy
 		ConvertUtf16toUtf8(utf16, utf16len, utf8);
 		utf8[utf8len] = '\0';
 		delete [] utf16;
-		return utf8len;
+		*result = utf8;
+		return SexyUtf8Strlen(utf8, utf8len);;
 	}
 
 	static int Utf8FallbackConvert (const char * str, int len, char** result)
