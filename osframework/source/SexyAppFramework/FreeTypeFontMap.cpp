@@ -40,10 +40,17 @@ FreeTypeBaseFont* FreeTypeFontMap::CreateBaseFont(const char * path,
 {
 	AutoCrit anAutoCrit(mCritSect);
 	FreeTypeBaseFont* font;
-	FontKey aKey(std::string(path), index);
 	FontMap::iterator it;
 
-	it = mFontMap.find(aKey);
+	if (path && *path)
+	{
+		FontKey aKey(std::string(path), index);
+		it = mFontMap.find(aKey);
+	}
+	else
+	{
+		it = mFontMap.begin();
+	}
 	if (it != mFontMap.end())
 	{
 		font = it->second;
@@ -51,12 +58,16 @@ FreeTypeBaseFont* FreeTypeFontMap::CreateBaseFont(const char * path,
 		return font;
 	}
 
+	if (!path || !*path)
+		return 0;
+
 	PFILE* fp = p_fopen(path, "rb");
 	if (!fp)
 		return 0;
 
 	font = new FreeTypeBaseFont(fp, index);
-	mFontMap.insert(std::pair<FontKey,FreeTypeBaseFont*>(aKey, font));
+	mFontMap.insert(std::pair<FontKey,FreeTypeBaseFont*>(FontKey(std::string(path), index),
+							     font));
 
 	return font;
 }
