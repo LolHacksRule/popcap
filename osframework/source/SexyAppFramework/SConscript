@@ -122,21 +122,6 @@ if 'WIN32_MODULE_LOADER' in env['LOADERS']:
     env['WIN32_MODULE_LOADER']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_WIN32_MODULE_LOADER'])
 
-env.AppendUnique(DRIVERS = ['REMOTE'])
-if 'REMOTE' in env['DRIVERS']:
-    commondir = os.path.join(Dir('#.').abspath, 'common')
-    srcs += ['RemoteInputDriver.cpp', 'RemoteEvent.cpp',
-             os.path.join(commondir, 'Module','ModuleLoader.cpp'),
-             os.path.join(commondir, 'RemoteController', 'RemoteController.cpp'),
-             os.path.join(commondir, 'RemoteController', 'RemoteInputModule.cpp'),
-             os.path.join(commondir, 'RemoteController', 'RemoteModule.cpp'),
-             os.path.join(commondir, 'RemoteController', 'RemoterFactory.cpp'),
-             os.path.join(commondir, 'utility', 'TimeEval.cpp'),
-             os.path.join(commondir, 'Authorization', 'Encryption', 'bignum.cpp')]
-    srcs += Glob(os.path.join(commondir, "RemoteMap", "*.cpp"))
-    env.AppendUnique(CPPDEFINES = ['SEXY_REMOTE_INPUT_DRIVER'],
-                     CPPPATH = [commondir])
-
 #c module input driver
 srcs += ['ModuleInputDriver.cpp']
 
