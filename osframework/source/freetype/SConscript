@@ -6,9 +6,8 @@ from SCons.Defaults import *
 
 Import (['env', 'sexyenv', 'gameenv'])
 
-# don't build audiere and its dependences if it's not enabled.
-#if not 'FREETYPEFONT' in env['DRIVERS']:
-#    Return ()
+if not 'freetype' in env['BUILD_PACKAGES']:
+    Return ()
 
 srcdir = Dir('.').srcdir
 if srcdir:
@@ -60,6 +59,11 @@ srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'raster', f),
 srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'smooth', f),
              ['ftgrays.c', 'ftsmooth.c'])
 
+### sfnt
+srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'sfnt', f),
+             ['sfobjs.c', 'sfdriver.c', 'ttcmap.c', 'ttpost.c', 'ttload.c',
+              'ttsbit.c', 'ttkern.c', 'ttbdf.c', 'ttmtx.c'])
+
 ### truetype
 srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'truetype', f),
              ['ttobjs.c', 'ttpload.c', 'ttgload.c', 'ttinterp.c', 'ttgxvar.c',
@@ -75,11 +79,13 @@ def GenerateFreetypeModule(env, target, source):
 
 modules = ['tt_driver', 'autofit_module', 'ft_raster1_renderer',
            'ft_smooth_renderer', 'ft_smooth_lcd_renderer',
-           'ft_smooth_lcdv_renderer']
+           'ft_smooth_lcdv_renderer', 'sfnt_module']
 
 ftmodule = os.path.join (freetype_dir, 'include', 'freetype', 'config', 'ftmodule.h')
-freetype_env.Command (ftmodule, [Value (modules)],
-                      GenerateFreetypeModule)
+ftmodule_h = freetype_env.Command (ftmodule, [Value (modules)],
+                                   GenerateFreetypeModule)
+freetype_env.Depends(freetype_env.Object(os.path.join (freetype_dir, 'src', 'base', 'ftinit.c')),
+                     ftmodule_h)
 
 freetype_env.AppendUnique (CPPPATH = [os.path.join (freetype_dir, 'include'),
                                       os.path.join (freetype_dir, 'include', 'freetype', 'config'),
