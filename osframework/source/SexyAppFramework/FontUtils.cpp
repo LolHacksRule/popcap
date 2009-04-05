@@ -1,4 +1,11 @@
 #include "FontUtils.h"
+#include "AutoCrit.h"
+
+#ifndef WIN32
+#include <iconv.h>
+#include <errno.h>
+#include <langinfo.h>
+#endif
 
 namespace Sexy
 {
@@ -105,10 +112,147 @@ namespace Sexy
 		return slen;
 	}
 
-	bool
-	SexyUtf8Validate (const char * utf8, int len)
+	bool SexyUtf8Validate (const char * utf8, int len)
 	{
 		return SexyUtf8Strlen(utf8, len) >= 0;
+	}
+
+#ifndef WIN32
+	static int CharsetConvert(iconv_t cd, const char* inbuf, size_t inlen, char** retoutbuf, size_t* retoutlen)
+	{
+		size_t ret;
+		char* outbuf;
+		size_t left;
+		size_t outleft;
+		size_t outlen;
+		char* out;
+
+		outlen = inlen * 3 / 2 + 1;
+		out = outbuf = new char[outlen];
+		do
+		{
+			char* in = (char *)inbuf;
+			left = inlen;
+			outleft = outlen - 1;
+			ret = iconv(cd, &in, &left, &out, &outleft);
+			if (ret >= 0)
+			{
+				break;
+			}
+			else if (ret == (size_t)-1 && errno != E2BIG)
+			{
+				delete [] outbuf;
+				return -1;
+			}
+			delete [] outbuf;
+			outlen = outlen * 3 / 2 + 1;
+			out = outbuf = new char[outlen];
+		} while (true);
+
+		*retoutbuf = outbuf;
+		*retoutlen = outlen - 1 - outleft;
+		outbuf[*retoutlen] = '\0';
+		return inlen - left;
+	}
+
+	static int Utf8FromLocale (const char * str, int len, char** result)
+	{
+		static CritSect aCritSect;
+		AutoCrit aAutoCrit(aCritSect);
+		static iconv_t cd = (iconv_t)-1;
+
+		if (cd == (iconv_t)-1)
+		{
+			const char* charset = nl_langinfo(CODESET);
+			if (!charset || stricmp (charset, "UTF-8") ||
+			    stricmp (charset, "utf8"))
+				return -1;
+
+			cd = iconv_open("UTF-8", charset);
+			if (cd == (iconv_t)-1)
+				return -1;
+		}
+
+		char* outbuf;
+		size_t outlen;
+		int ret = CharsetConvert(cd, str, len, &outbuf, &outlen);
+		if (ret < 0)
+			return -1;
+		ret = SexyUtf8Strlen(outbuf, outlen);
+		*result = outbuf;
+		return ret;
+	}
+
+	static int Utf8FallbackConvert (const char * str, int len, char** result)
+	{
+		static CritSect aCritSect;
+		AutoCrit aAutoCrit(aCritSect);
+		const unsigned int MAX_CHARSETS = 4;
+		static const char* charsets[MAX_CHARSETS] =
+			{
+				"GB18030",
+				"GBK",
+				"GB2312",
+				"BIG5"
+			};
+		static iconv_t cds[MAX_CHARSETS] =
+			{
+				(iconv_t)-1,
+				(iconv_t)-1,
+				(iconv_t)-1,
+				(iconv_t)-1
+			};
+
+		for (unsigned i = 0; i < MAX_CHARSETS; i++)
+		{
+			if (cds[i] == (iconv_t)-1)
+			{
+				cds[i] = iconv_open("UTF-8", charsets[i]);
+				if (cds[i] == (iconv_t)-1)
+					continue;
+			}
+
+			char* outbuf;
+			size_t outlen;
+			int ret = CharsetConvert(cds[i], str, len, &outbuf, &outlen);
+			if (ret < 0)
+				return -1;
+			ret = SexyUtf8Strlen(outbuf, outlen);
+			if (ret < 0)
+				delete [] outbuf;
+			else
+				*result = outbuf;
+			return ret;
+		}
+
+		return -1;
+	}
+#else
+	static int Utf8FromLocale (const char * str, int len, char** result)
+	{
+		return -1;
+	}
+
+	static int Utf8FallbackConvert (const char * str, int len, char** result)
+	{
+		return -1;
+	}
+#endif
+	int SexyUtf8FromLocale (const char * str, int len, char** result)
+	{
+		int ret;
+
+		if (len < 0)
+			len = strlen(str);
+
+		ret = Utf8FromLocale(str, len, result);
+		if (ret >= 0)
+			return ret;
+
+		ret = Utf8FallbackConvert(str, len, result);
+		if (ret >= 0)
+			return ret;
+		return -1;
 	}
 
 }

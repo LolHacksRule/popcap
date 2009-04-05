@@ -14,6 +14,8 @@ namespace Sexy
 
     bool SexyUtf8Validate (const char * utf8, int len);
 
+    int SexyUtf8FromLocale (const char * str, int len, char** result);
+
 }
 
 #endif
