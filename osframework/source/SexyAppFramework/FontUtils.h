@@ -16,6 +16,7 @@ namespace Sexy
 
     int SexyUtf8FromLocale (const char * str, int len, char** result);
 
+    int SexyUtf8FromString(const std::string& string, std::string& utf8);
 }
 
 #endif

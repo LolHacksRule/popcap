@@ -255,4 +255,26 @@ namespace Sexy
 		return -1;
 	}
 
+	int SexyUtf8FromString(const std::string& string,
+			       std::string& utf8)
+	{
+		int len = SexyUtf8Strlen(string.c_str(), -1);
+		if (len >= 0)
+		{
+			utf8 = string;
+			return len;
+		}
+
+		char* result;
+		len = SexyUtf8FromLocale(string.c_str(), -1, &result);
+		if (len >= 0)
+		{
+			utf8 = std::string(result);
+			delete [] result;
+			return len;
+		}
+
+		return -1;
+	}
+
 }
