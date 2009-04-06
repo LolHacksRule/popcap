@@ -440,6 +440,8 @@ void FreeTypeScaledFont::LockFace()
 {
 	if (mBaseFont)
 		mFace = mBaseFont->LockFace(mSize, &mMatrix);
+	else
+		mFace = 0;
 }
 
 void FreeTypeScaledFont::UnlockFace()
