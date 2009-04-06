@@ -2,6 +2,10 @@
 #include "MemoryImage.h"
 #include "Font.h"
 
+#ifdef HAVE_FREETYPE_FONT
+#include "FreeTypeFont.h"
+#endif
+
 using namespace Sexy;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,6 +64,9 @@ Font* NativeDisplay::CreateFont(SexyAppBase * theApp,
 				 bool italics,
 				 bool underline)
 {
+#ifdef HAVE_FREETYPE_FONT
+	return new FreeTypeFont(theFace, thePointSize * 96 / 72.0f, bold, italics, underline);
+#endif
 	return 0;
 }
 
