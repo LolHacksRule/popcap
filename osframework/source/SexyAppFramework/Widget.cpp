@@ -24,6 +24,8 @@ Widget::Widget()
 	mWantsFocus = false;
 	mIsSelected = false;
 	mFocusable = true;
+	mFocusColor = Color(255, 255, 0);
+	mFocusDrawRect = Rect(0, 0, -1, -1);
 	mAddToManager = false;
 	mTabPrev = NULL;
 	mTabNext = NULL;
@@ -92,6 +94,21 @@ void Widget::SetVisible(bool isVisible)
 
 void Widget::Draw(Graphics* g) // Already translated
 {
+}
+
+void Widget::DrawOther(Graphics* g) // Already translated
+{
+	if (mFocusable && mHasFocus)
+	{
+		if (mParent && mParent == mWidgetManager)
+			return;
+
+		g->SetColor(mFocusColor);
+		if (mFocusDrawRect.mWidth > 0 && mFocusDrawRect.mWidth)
+			g->DrawRect(mFocusDrawRect);
+		else if (mWidth > 0 && mHeight > 0)
+			g->DrawRect(0, 0, mWidth - 1, mHeight - 1);
+	}
 }
 
 void Widget::DrawOverlay(Graphics* g)

@@ -34,6 +34,9 @@ public:
 	bool                                    mIsSelected;
 	bool                                    mFocusable;
 
+	Rect                                    mFocusDrawRect;
+	Color                                   mFocusColor;
+
 	Widget*                                 mTabPrev;
 	Widget*                                 mTabNext;
 
@@ -62,6 +65,7 @@ public:
 	virtual void			Move(int theNewX, int theNewY);
 	virtual bool			WantsFocus();
 	virtual void			Draw(Graphics* g); // Already translated
+	virtual void			DrawOther(Graphics* g); // Already translated
 	virtual void			DrawOverlay(Graphics* g);
 	virtual void			DrawOverlay(Graphics* g, int thePriority);
 	virtual void			Update();
