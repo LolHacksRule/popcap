@@ -146,6 +146,8 @@ SexyAppBase::SexyAppBase()
 #endif
 
 	mChangeDirTo = GetResourcesFolder();
+	mResourceManifest = "properties/resources.xml";
+
 	mNoDefer = false;
 	mFullScreenPageFlip = true; // should we page flip in fullscreen?
 	mTimeLoaded = GetTickCount();
@@ -2550,7 +2552,7 @@ bool SexyAppBase::LoadProperties()
 
 void SexyAppBase::LoadResourceManifest()
 {
-	if (!mResourceManager->ParseResourcesFile("properties/resources.xml"))
+	if (!mResourceManager->ParseResourcesFile(mResourceManifest))
 		ShowResourceError(true);
 }
 
