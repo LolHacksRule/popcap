@@ -80,6 +80,7 @@ public:
 	virtual void			UpdateF(float theFrac);
 	virtual void			UpdateFAll(ModalFlags* theFlags, float theFrac);
 	virtual void			Draw(Graphics* g);
+	virtual void			DrawOther(Graphics* g);
 	virtual void			DrawAll(ModalFlags* theFlags, Graphics* g);
 	virtual void			SysColorChangedAll();
 	virtual void			SysColorChanged();

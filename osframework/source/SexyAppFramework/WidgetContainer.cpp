@@ -594,6 +594,10 @@ void WidgetContainer::Draw(Graphics* g)
 {
 }
 
+void WidgetContainer::DrawOther(Graphics* g)
+{
+}
+
 void WidgetContainer::DrawAll(ModalFlags* theFlags, Graphics* g)
 {
 	if (mPriority > mWidgetManager->mMinDeferredOverlayPriority)
@@ -607,7 +611,10 @@ void WidgetContainer::DrawAll(ModalFlags* theFlags, Graphics* g)
 	if (mWidgets.size() == 0)
 	{
 		if (theFlags->GetFlags() & WIDGETFLAGS_DRAW)
+		{
 			Draw(g);
+			DrawOther(g);
+		}
 		return;
 	}
 
@@ -615,6 +622,7 @@ void WidgetContainer::DrawAll(ModalFlags* theFlags, Graphics* g)
 	{
 		g->PushState();
 		Draw(g);
+		DrawOther(g);
 		g->PopState();
 	}
 
