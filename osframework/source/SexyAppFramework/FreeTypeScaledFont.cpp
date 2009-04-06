@@ -323,6 +323,12 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 	float x = theX, y = theY;
 
 	Color aFontColor = theColor;
+	Color aShadowColor(0, 0, 0);
+	uint32 hsl = mApp->RGBToHSL(theColor.GetRed(), theColor.GetGreen(),
+				    theColor.GetBlue());
+	if (((hsl >> 16) & 0xff) < 127)
+	    aShadowColor = Color(255, 255, 255);
+
 	bool colorizeImages = g->GetColorizeImages();
 	g->SetColorizeImages(true);
 	Color anOrigColor = g->GetColor();
@@ -341,7 +347,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 		{
 			if (drawShadow)
 			{
-				g->SetColor(Color(0, 0, 0));
+				g->SetColor(aShadowColor);
 				g->DrawImage(entry->mImage,
 					     (int)floor(x + entry->mXOffSet + 1),
 					     (int)floor(y + entry->mYOffSet + 1),
