@@ -155,10 +155,8 @@ void UdpInputInterface::CloseDevice ()
 	mFd = -1;
 }
 
-static uint32_t read32(uint32_t i)
+static uint32_t read32(unsigned char * byte)
 {
-	unsigned char *byte = (unsigned char*)&i;
-
 	return  byte[0] << 24 |
 		byte[1] << 16 |
 		byte[2] <<  8 |
@@ -168,14 +166,29 @@ static uint32_t read32(uint32_t i)
 static void handle_event (struct UdpInput &input,
 			  Event &event)
 {
-	event.type = (EventType)read32 (input.type);
-	event.flags = read32 (input.flags);
-	event.u.mouse.x = read32 (input.x);
-	event.u.mouse.y = read32 (input.y);
-	event.u.mouse.button = read32 (input.button);
-	event.u.key.keyCode = read32 (input.key_code);
-	event.u.key.keyChar = read32 (input.key_char);
-	event.u.active.active = !!read32 (input.active);
+	unsigned char* byte = (unsigned char*) &input;
+	event.type = (EventType)read32 (byte);
+	event.flags = read32 (byte + 4);
+	if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
+	    event.type == EVENT_MOUSE_BUTTON_RELEASE ||
+	    event.type == EVENT_MOUSE_WHEEL_UP ||
+	    event.type == EVENT_MOUSE_WHELL_DOWN ||
+	    event.type == EVENT_MOUSE_MOTION)
+	{
+		event.u.mouse.x = read32 (byte + 8);
+		event.u.mouse.y = read32 (byte + 12);
+		event.u.mouse.button = read32 (byte + 16);
+	}
+	else if (event.type == EVENT_KEY_DOWN ||
+		 event.type == EVENT_KEY_UP)
+	{
+		event.u.key.keyCode = read32 (byte + 20);
+		event.u.key.keyChar = read32 (byte + 24);
+	}
+	else if (event.type == EVENT_ACTIVE)
+	{
+		event.u.active.active = !!read32 (byte + 28);
+	}
 }
 
 void* UdpInputInterface::Run (void * data)
