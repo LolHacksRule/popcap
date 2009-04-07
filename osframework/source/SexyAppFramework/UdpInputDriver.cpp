@@ -172,7 +172,7 @@ static void handle_event (struct UdpInput &input,
 	if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
 	    event.type == EVENT_MOUSE_BUTTON_RELEASE ||
 	    event.type == EVENT_MOUSE_WHEEL_UP ||
-	    event.type == EVENT_MOUSE_WHELL_DOWN ||
+	    event.type == EVENT_MOUSE_WHEEL_DOWN ||
 	    event.type == EVENT_MOUSE_MOTION)
 	{
 		event.u.mouse.x = read32 (byte + 8);
