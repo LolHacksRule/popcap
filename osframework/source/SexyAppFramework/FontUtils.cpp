@@ -169,7 +169,8 @@ namespace Sexy
 	}
 
 #ifndef WIN32
-	static int CharsetConvert(iconv_t cd, const char* inbuf, size_t inlen, char** retoutbuf, size_t* retoutlen)
+	static int CharsetConvert(iconv_t cd, const char* inbuf, size_t inlen,
+				  char** retoutbuf, size_t* retoutlen)
 	{
 		size_t ret;
 		char* outbuf;
@@ -186,14 +187,14 @@ namespace Sexy
 			left = inlen;
 			outleft = outlen - 1;
 			ret = iconv(cd, &in, &left, &out, &outleft);
-			if (ret >= 0)
-			{
-				break;
-			}
-			else if (ret == (size_t)-1 && errno != E2BIG)
+			if (ret == (size_t)-1 && errno != E2BIG)
 			{
 				delete [] outbuf;
 				return -1;
+			}
+			else if (ret >= 0)
+			{
+				break;
 			}
 			delete [] outbuf;
 			outlen = outlen * 3 / 2 + 1;
@@ -215,8 +216,8 @@ namespace Sexy
 		if (cd == (iconv_t)-1)
 		{
 			const char* charset = nl_langinfo(CODESET);
-			if (!charset || stricmp (charset, "UTF-8") ||
-			    stricmp (charset, "utf8"))
+			if (!charset || !stricmp (charset, "UTF-8") ||
+			    !stricmp (charset, "utf8"))
 				return -1;
 
 			cd = iconv_open("UTF-8", charset);
