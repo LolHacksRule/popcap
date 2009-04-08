@@ -12,7 +12,7 @@ namespace Sexy
 class SexyAppBase;
 class LinuxInputInterface: public InputInterface {
 public:
-        LinuxInputInterface (InputManager* theManager);
+	LinuxInputInterface (InputManager* theManager, const char* theName);
         virtual ~LinuxInputInterface ();
 
 public:
@@ -32,11 +32,14 @@ private:
         int                   mFd;
 	bool                  mGrabed;
         volatile int          mDone;
-        pthread_t*            mThread;
+        pthread_t             mThread;
+	bool                  mInitialized;
         int                   mX;
         int                   mY;
 
         int                   mRetry;
+
+	std::string         * mDeviceName;
 };
 
 }
