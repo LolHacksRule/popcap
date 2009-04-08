@@ -1,0 +1,17 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+env = Environment()
+srcs = ['codecs_cn.c', 'codecs_hk.c',  'codecs_iso2022.c',
+        'codecs_jp.c', 'codecs_kr.c',  'codecs_tw.c',
+        'multibytecodec.c']
+
+env.AppendUnique(CCFLAGS = ['-Wall', '-g'],
+                 LINKFLAGS = ['-g'])
+cjkcodecs = env.Library ('cjkcodecs', srcs)
+test = env.Program ('test', 'main.c',
+                    LIBS = ['cjkcodecs'],
+                    LIBPATH = ['.'],
+                    CPPPATH = ['.'])
+
