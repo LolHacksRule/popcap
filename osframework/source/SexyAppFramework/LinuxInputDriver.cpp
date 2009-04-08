@@ -1,5 +1,6 @@
 #include "LinuxInputDriver.h"
 #include "InputDriverFactory.h"
+#include "InputManager.h"
 #include "SexyAppBase.h"
 
 #include <cstring>
@@ -61,19 +62,32 @@ struct touchpad_fsm_state {
      struct timeval timeout;
 };
 
+struct input_info {
+     int num_keys;
+     int num_ext_keys;
+     int num_buttons;
+     int num_rels;
+     int num_abs;
+};
+
 using namespace Sexy;
 
-LinuxInputInterface::LinuxInputInterface (InputManager* theManager)
+LinuxInputInterface::LinuxInputInterface (InputManager* theManager,
+					  const char * theName)
 	: InputInterface (theManager), mFd (-1), mDone (false)
 {
 	mX = 0;
 	mY = 0;
 	mThread = NULL;
+	if (theName)
+		mDeviceName = new std::string(theName);
+	else
+		mDeviceName = 0;
 }
 
 LinuxInputInterface::~LinuxInputInterface ()
 {
-    Cleanup ();
+	Cleanup ();
 }
 
 bool LinuxInputInterface::Init()
@@ -121,14 +135,15 @@ void LinuxInputInterface::Cleanup()
 	mY = 0;
 }
 
-static void
-get_device_info (int              fd)
+static bool
+get_device_info (int fd, struct input_info* info, bool silent = true)
 {
      unsigned int  num_keys     = 0;
      unsigned int  num_ext_keys = 0;
      unsigned int  num_buttons  = 0;
      unsigned int  num_rels     = 0;
      unsigned int  num_abs      = 0;
+     int ret;
 
      char name[256];
      unsigned long eventbit[NBITS(EV_MAX)];
@@ -137,11 +152,17 @@ get_device_info (int              fd)
      unsigned long absbit[NBITS(ABS_MAX)];
 
      /* get device name */
-     ioctl (fd, EVIOCGNAME(255), name);
-     printf ("device name: %s\n", name);
+     ret = ioctl (fd, EVIOCGNAME(255), name);
+     if (ret < 0)
+	     return false;
+
+     if (!silent)
+	     printf ("device name: %s\n", name);
 
      /* get event type bits */
-     ioctl (fd, EVIOCGBIT(0, sizeof(eventbit)), eventbit);
+     ret = ioctl (fd, EVIOCGBIT(0, sizeof(eventbit)), eventbit);
+     if (ret < 0)
+	     return false;
 
      if (test_bit (EV_KEY, eventbit))
      {
@@ -169,7 +190,9 @@ get_device_info (int              fd)
           int i;
 
           /* get bits for relative axes */
-          ioctl (fd, EVIOCGBIT (EV_REL, sizeof(relbit)), relbit);
+          ret = ioctl (fd, EVIOCGBIT (EV_REL, sizeof(relbit)), relbit);
+	  if (ret < 0)
+		  return false;
 
           for (i = 0; i < REL_MAX; i++)
                if (test_bit (i, relbit))
@@ -181,23 +204,44 @@ get_device_info (int              fd)
           int i;
 
           /* get bits for absolute axes */
-          ioctl (fd, EVIOCGBIT (EV_ABS, sizeof (absbit)), absbit);
+          ret = ioctl (fd, EVIOCGBIT (EV_ABS, sizeof (absbit)), absbit);
+	  if (ret < 0)
+		  return false;
 
           for (i = 0; i < ABS_PRESSURE; i++)
                if (test_bit (i, absbit))
                     num_abs++;
      }
 
-     printf ("keys: %d\n", num_keys);
-     printf ("extend keys: %d\n", num_ext_keys);
-     printf ("buttons: %d\n", num_buttons);
-     printf ("relative events: %d\n", num_rels);
-     printf ("absolute events: %d\n", num_abs);
+     if (!silent)
+     {
+	     printf ("keys: %d\n", num_keys);
+	     printf ("extend keys: %d\n", num_ext_keys);
+	     printf ("buttons: %d\n", num_buttons);
+	     printf ("relative events: %d\n", num_rels);
+	     printf ("absolute events: %d\n", num_abs);
+     }
+
+     if (info)
+     {
+	     info->num_keys = num_keys;
+	     info->num_ext_keys = num_ext_keys;
+	     info->num_buttons = num_buttons;
+	     info->num_rels = num_rels;
+	     info->num_abs = num_abs;
+     }
+
+     return true;
 }
 
 bool LinuxInputInterface::OpenDevice ()
 {
-	const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
+	const char * device = 0;
+
+	if (mDeviceName)
+		device = mDeviceName->c_str();
+	if (!device)
+		device = getenv ("SEXY_LINUX_INPUT_DEVICE");
 	if (!device)
 		device = "/dev/input/event0";
 	mFd = open (device, O_RDWR);
@@ -212,7 +256,7 @@ bool LinuxInputInterface::OpenDevice ()
 	ret = ioctl (mFd, EVIOCGRAB, 1);
 	if (ret)
 	{
-		printf ("grab device failed.\n");
+	    printf ("grab %s failed.\n", device);
 		mGrabed = false;
 	}
 	else
@@ -220,7 +264,7 @@ bool LinuxInputInterface::OpenDevice ()
 		mGrabed = true;
 	}
 
-	get_device_info (mFd);
+	get_device_info (mFd, 0);
 	return true;
  close_fd:
 	close (mFd);
@@ -447,7 +491,36 @@ public:
 
 	InputInterface* Create (SexyAppBase * theApp)
 	{
-		return new LinuxInputInterface (theApp->mInputManager);
+		const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
+		if (device)
+			return new LinuxInputInterface (theApp->mInputManager, device);
+
+		for (unsigned i = 0; i < 256; i++)
+		{
+			struct input_info info;
+			int fd;
+			char name[1024];
+
+			snprintf (name, sizeof(name), "/dev/input/event%d", i);
+			fd = open (name, O_RDWR);
+			if (fd < 0)
+				continue;
+
+			if (!get_device_info (fd, &info, true) ||
+			    (!info.num_rels && !info.num_abs))
+			{
+				close (fd);
+				continue;
+			}
+			close (fd);
+
+			InputInterface * anInput;
+			anInput = new LinuxInputInterface (theApp->mInputManager, name);
+			if (!theApp->mInputManager->Add(anInput, this))
+				delete anInput;
+		}
+
+		return 0;
         }
 };
 
