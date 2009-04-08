@@ -7,6 +7,8 @@
 #include <langinfo.h>
 #endif
 
+#include "cjkcodecs/multibytecodec.h"
+
 namespace Sexy
 {
 	int
@@ -166,6 +168,86 @@ namespace Sexy
 	bool SexyUtf8Validate (const char * utf8, int len)
 	{
 		return SexyUtf8Strlen(utf8, len) >= 0;
+	}
+
+	static int CJKCodecsConvert(const char * modname, const char* charset,
+				    const char* inbuf, size_t inlen,
+				    char** retoutbuf, size_t* retoutlen)
+	{
+		MultibyteCodecState state;
+		const char* inp;
+		char * utf8;
+		char * utf8p;
+		size_t utf8len;
+		ucs4_t *ucs4;
+		ucs4_t *outp;
+		int ret;
+
+		ret = mbcs_init(&state, modname, charset);
+		if (ret < 0)
+			return -1;
+
+		ucs4 = new ucs4_t[inlen];
+		outp = ucs4;
+		inp = inbuf;
+		ret = mbcs_decode(&state, &inp, inlen, &outp, inlen);
+		if (ret != 0)
+		{
+			delete [] ucs4;
+			return -1;
+		}
+
+		utf8len = 0;
+		for (int i = 0; i < outp - ucs4; i++)
+		{
+			int chlen = SexyUsc4ToUtf8(ucs4[i], 0);
+			assert(chlen > 0);
+			utf8len += chlen;
+		}
+
+		utf8p = utf8 = new char[utf8len + 1];
+		for (int i = 0; i < outp - ucs4; i++)
+		{
+			int chlen = SexyUsc4ToUtf8(ucs4[i], utf8p);
+			assert(chlen > 0);
+			utf8p += chlen;
+		}
+		utf8p[0] = '\0';
+		*retoutbuf = utf8;
+		*retoutlen = utf8len;
+		return inp - inbuf;
+	}
+
+	static int CJKCodecsUtf8FallbackConvert (const char * str, int len,
+						 char** result)
+	{
+		static struct
+		{
+			const char* module;
+			const char* charset;
+		} charsets[] = {
+			{ "cn", "gb18030" },
+			{ "cn", "gbk" },
+			{ "tw", "big5" },
+			{ "tw", "cp950" },
+			{ 0, 0 }
+		};
+
+		for (unsigned i = 0; charsets[i].module; i++)
+		{
+			char* outbuf;
+			size_t outlen;
+			int ret = CJKCodecsConvert(charsets[i].module,
+						   charsets[i].charset,
+						   str, len, &outbuf, &outlen);
+			if (ret < 0)
+				return -1;
+			ret = SexyUtf8Strlen(outbuf, outlen);
+			*result = outbuf;
+			return ret;
+		}
+
+		return -1;
 	}
 
 #ifndef WIN32
@@ -355,6 +437,10 @@ namespace Sexy
 			return ret;
 
 		ret = Utf8FallbackConvert(str, len, result);
+		if (ret >= 0)
+			return ret;
+
+		ret = CJKCodecsUtf8FallbackConvert(str, len, result);
 		if (ret >= 0)
 			return ret;
 		return -1;
