@@ -32,6 +32,9 @@ class InputManager
 	void	      Connect(int id);
 	void	      Reconnect(int id);
 
+	bool          Add(InputInterface* interface,
+			  InputDriver* driver);
+
 	InputInterface* Find(int id);
 	InputInterface* Find(const std::string& name);
 

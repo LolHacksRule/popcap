@@ -25,6 +25,9 @@ void InputManager::Init ()
 {
 	Cleanup ();
 
+	mWidth = mApp->mDDInterface->mDisplayWidth;
+	mHeight = mApp->mDDInterface->mDisplayHeight;
+
 	InputDriverFactory* factory;
 
 	factory = InputDriverFactory::GetInputDriverFactory ();
@@ -38,22 +41,9 @@ void InputManager::Init ()
 		aInput = dynamic_cast<InputInterface*>
 			(((InputDriver*)(*it))->Create (mApp));
 
-		aInput->mId = mId + 1;
-		aInput->mInputDriver = (InputDriver*)(*it);
-
-		if (aInput->Init ())
-		{
-			mId++;
-			mDrivers.push_back (aInput);
-		}
-		else
-		{
+		if (aInput && !Add (aInput, (InputDriver*)(*it)))
 			delete aInput;
-		}
 	}
-
-	mWidth = mApp->mDDInterface->mDisplayWidth;
-	mHeight = mApp->mDDInterface->mDisplayHeight;
 
 	ConnectAll();
 }
@@ -216,4 +206,20 @@ InputInterface* InputManager::Find(const std::string& name)
 			return *it;
 
 	return 0;
+}
+
+bool InputManager::Add(InputInterface* theInput,
+		       InputDriver* theDriver)
+{
+	theInput->mId = mId + 1;
+	theInput->mInputDriver = theDriver;
+
+	if (theInput->Init ())
+	{
+		mId++;
+		mDrivers.push_back (theInput);
+		return true;
+	}
+
+	return false;
 }
