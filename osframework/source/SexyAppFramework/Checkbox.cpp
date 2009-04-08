@@ -79,3 +79,15 @@ void Checkbox::MouseDown(int x, int y, int theBtnNum, int theClickCount)
 		mListener->CheckboxChecked(mId, mChecked);
 	MarkDirty();
 }
+
+bool Checkbox::KeyDown(KeyCode theKey)
+{
+	if (theKey != KEYCODE_RETURN)
+		return Widget::KeyDown(theKey);
+
+	mChecked = !mChecked;
+	if (mListener)
+		mListener->CheckboxChecked(mId, mChecked);
+	MarkDirty();
+	return true;
+}

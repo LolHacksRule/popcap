@@ -37,6 +37,10 @@ public:
 	virtual void			MouseDown(int x, int y, int theBtnNum, int theClickCount);
 	virtual void			Draw(Graphics* g);
 
+	virtual bool                    KeyDown(KeyCode theKey);
+
+
+
 public:
 	Checkbox(Image* theUncheckedImage, Image* theCheckedImage, int theId, CheckboxListener* theCheckboxListener);
 };
