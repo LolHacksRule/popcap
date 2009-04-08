@@ -7,6 +7,8 @@
 #include <langinfo.h>
 #endif
 
+#include <assert.h>
+
 #include "cjkcodecs/multibytecodec.h"
 
 namespace Sexy
