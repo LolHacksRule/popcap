@@ -36,6 +36,8 @@ public:
 	virtual void			MouseDrag(int x, int y);
 	virtual void			MouseUp(int x, int y);
 	virtual void			MouseLeave();
+
+	virtual bool                    KeyDown(KeyCode theKey);
 };
 
 }

@@ -172,3 +172,29 @@ void Slider::MouseLeave()
 	if (!mDragging)
 		mWidgetManager->mApp->SetCursor(CURSOR_POINTER);
 }
+
+bool Slider::KeyDown(KeyCode theKey)
+{
+    if (theKey != KEYCODE_LEFT && theKey != KEYCODE_RIGHT)
+	    return Widget::KeyDown(theKey);
+
+    double anOldVal = mVal;
+
+    if (theKey == KEYCODE_LEFT)
+	    mVal -= 0.1;
+    else
+	    mVal += 0.1;
+
+    if (mVal < 0.0)
+	    mVal = 0.0;
+    if (mVal > 1.0)
+	    mVal = 1.0;
+
+    if (mVal != anOldVal)
+    {
+	    mListener->SliderVal(mId, mVal);
+	    MarkDirtyFull();
+    }
+
+    return true;
+}
