@@ -422,7 +422,7 @@ static int write32 (unsigned char* buf,
 
 void InputServer::PostEvent (Event &event)
 {
-	unsigned char buf[sizeof (struct UdpInput) * sizeof (uint32_t)];
+	unsigned char buf[sizeof (struct UdpInput) * sizeof (char)];
 	unsigned int offset = 0;
 
 	offset += write32 (buf + offset, (uint32_t)event.type);
