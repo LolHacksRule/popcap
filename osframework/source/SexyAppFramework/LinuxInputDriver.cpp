@@ -78,7 +78,7 @@ LinuxInputInterface::LinuxInputInterface (InputManager* theManager,
 {
 	mX = 0;
 	mY = 0;
-	mThread = NULL;
+	mInitialized = false;
 	if (theName)
 		mDeviceName = new std::string(theName);
 	else
@@ -100,18 +100,13 @@ bool LinuxInputInterface::Init()
 
 	mRetry = 0;
 	mDone = false;
-	mThread = new pthread_t;
-	if (!mThread)
-		goto close_device;
 
 	int ret;
-	ret = pthread_create (mThread, NULL, LinuxInputInterface::Run, this);
+	ret = pthread_create (&mThread, NULL, LinuxInputInterface::Run, this);
 	if (ret)
-		goto delete_thread;
+		goto close_device;
+	mInitialized = true;
 	return true;
- delete_thread:
-	delete mThread;
-	mThread = 0;
  close_device:
 	CloseDevice ();
  open_failed:
@@ -124,13 +119,11 @@ void LinuxInputInterface::Cleanup()
 		return;
 
 	mDone = true;
-	if (mThread)
-		pthread_join (*mThread, NULL);
-	delete mThread;
-	mThread = 0;
-
+	if (mInitialized)
+		pthread_join (mThread, NULL);
 	CloseDevice ();
 
+	mInitialized = false;
 	mX = 0;
 	mY = 0;
 }
@@ -247,7 +240,7 @@ bool LinuxInputInterface::OpenDevice ()
 	mFd = open (device, O_RDWR);
 	if (mFd < 0) {
 #if defined(SEXY_DEBUG) || defined(DEBUG)
-		printf ("open mouse device failed.\n");
+		printf ("open '%s' failed.\n", device);
 #endif
 		goto open_failed;
 	}
@@ -266,9 +259,6 @@ bool LinuxInputInterface::OpenDevice ()
 
 	get_device_info (mFd, 0);
 	return true;
- close_fd:
-	close (mFd);
-	mFd = -1;
  open_failed:
 	return false;
 }
