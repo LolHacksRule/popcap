@@ -48,15 +48,31 @@ def Win32ModuleLoaderConfigure (env):
 
 def AudiereSoundAddOptions (opts):
     from SCons.Variables.PathVariable import PathVariable
+    from SCons.Variables.BoolVariable import BoolVariable
     if 'audiere_ccflags' in opts.keys ():
         return
     opts.Add ('audiere_ccflags', "c/c++ compiler flags for audiere.", '')
     opts.Add ('audiere_ldflags', "link flags for audiere", '')
+    opts.Add(BoolVariable ('static_audiere', 'build audiere as a static library', 'False'))
 
 def EnableAudiereSound (env):
     env.AppendUnique (LIBS = ['audiere']);
-    env.AppendUnique (CCFLAGS = env['audiere_ccflags'].split(','),
-                      LINKFLAGS = env['audiere_ldflags'].split(','))
+    if env['static_audiere']:
+        env.AppendUnique (LIBS = ['vorbisfile', 'vorbis', 'ogg'])
+        if 'linux' in env['config']:
+            env.AppendUnique (LIBS = ['asound'])
+        elif 'darwin' in env['config']:
+            env.AppendUnique (CPPDEFINES = ['HAVE_CORE_AUDIO'],
+                              LINKFLAGS = [('-framework', 'CoreAudio'),
+                                           ('-framework', 'Cocoa'),
+                                           ('-framework', 'AudioUnit'),
+                                           ('-framework', 'AudioToolbox')],
+                              CCFLAGS = [('-framework', 'CoreAudio')])
+        elif 'win32' in env['config'] or 'mingw' in env['config']:
+            pass
+    else:
+        env.AppendUnique (CCFLAGS = env['audiere_ccflags'].split(','),
+                          LINKFLAGS = env['audiere_ldflags'].split(','))
 
 def AudiereSoundConfigure(env):
     env.AppendUnique (DRIVERS = ['AUDIERESOUND'])

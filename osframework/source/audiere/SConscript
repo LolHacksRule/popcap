@@ -175,7 +175,10 @@ else:
 
 sources = map(lambda f:os.path.join (audiere_dir, 'src', f), srcs)
 
-audiere_lib = env.SharedLibrary ('audiere', sources)
+if env['static_audiere']:
+    audiere_lib = env.Library ('audiere', sources)
+else:
+    audiere_lib = env.SharedLibrary ('audiere', sources)
 Depends (audiere_lib, ogg)
 
 ### install audiere header & library
