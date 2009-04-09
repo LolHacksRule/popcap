@@ -68,7 +68,10 @@ sconscripts += [os.path.join ('demos', 'SConscript')]
 
 otherdirs = env['otherdirs'].split(',')
 for d in otherdirs:
-  sconscripts += [os.path.join (d.strip(), 'SConscript')]
+  d = d.strip()
+  if not d:
+    continue
+  sconscripts += [os.path.join (d, 'SConscript')]
 
 for sconscript in sconscripts:
   if env['builddir']:
