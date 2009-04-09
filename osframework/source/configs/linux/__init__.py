@@ -6,7 +6,7 @@ import configs
 
 def AddOptions (opts):
     configs.AddOptions (opts)
-    #configs.FreeTypeAddOptions (opts)
+    configs.FreeTypeAddOptions (opts)
 
     from SCons.Variables.BoolVariable import BoolVariable
     if 'build_32bit' in opts.keys ():
@@ -28,7 +28,7 @@ def Configure (env):
                       LIBS = ['rt', 'm'])
     configs.linux.EnableLinuxUdpInputServer (env)
     configs.PosixModuleLoaderConfigure (env)
-    #configs.FreeTypeConfigure (env)
+    configs.FreeTypeConfigure (env)
 
 def LunuxInputAddOptions (opts):
     pass
