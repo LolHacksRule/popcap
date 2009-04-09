@@ -34,7 +34,7 @@ srcs += ['RegistryInterface.cpp', 'RegistryInterfaceFactory.cpp',
 if 'WIN32' in env['CPPDEFINES']:
     srcs += ['Win32RegistryInterface.cpp']
     env.AppendUnique(LIBS = ['advapi32'])
-    if gameenv['BUILD_STATIC']:
+    if gameenv['static']:
        gameenv.AppendUnique(LIBS = ['advapi32'])
 elif 'SEXY_DARWIN' in env['CPPDEFINES']:
     srcs += ['DarwinRegistryInterface.cpp']
@@ -145,7 +145,7 @@ env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
 if 'WIN32' in env['CPPDEFINES']:
     env.AppendUnique(LIBS = ['ws2_32'])
 
-if gameenv['BUILD_STATIC']:
+if gameenv['static']:
     if 'DIRECTFB' in env['DRIVERS']:
         gameenv['DIRECTFB']['ENABLE'](gameenv)
     if 'AGL' in env['DRIVERS']:
@@ -176,7 +176,7 @@ if gameenv['BUILD_STATIC']:
     if 'WIN32' in gameenv['CPPDEFINES']:
         gameenv.AppendUnique(LIBS = ['ws2_32'])
 
-if gameenv['BUILD_STATIC']:
+if gameenv['static']:
     env.Library('SexyAppFramework', srcs)
 else:
     env.SharedLibrary('SexyAppFramework', srcs)

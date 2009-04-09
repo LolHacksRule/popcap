@@ -51,7 +51,6 @@ config.AddOptions (opts)
 
 env = Environment (options = opts, ENV = os.environ,
                    tools = [ 'default', 'untar'])
-env['BUILD_STATIC'] = True
 createConvenienceLibBuilder (env)
 config.Configure (env)
 Help (opts.GenerateHelpText (env))
