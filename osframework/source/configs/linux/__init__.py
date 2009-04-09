@@ -6,9 +6,20 @@ import configs
 
 def AddOptions (opts):
     configs.AddOptions (opts)
+    #configs.FreeTypeAddOptions (opts)
+
+    from SCons.Variables.BoolVariable import BoolVariable
+    if 'build_32bit' in opts.keys ():
+        return
+    opts.Add (BoolVariable('build_32bit',
+                           "build binaries as 32-bit on 64-bit platform.",
+                           'False'))
 
 def Configure (env):
     configs.Configure (env)
+    if env['build_32bit']:
+        env.AppendUnique (CCFLAGS = ['-m32'],
+                          LINKFLAGS = ['-m32'])
     env.AppendUnique (CFLAGS = ['-pthread'],
                       LINKFLAGS = ['-pthread'])
     env.AppendUnique (CFLAGS = ['-g', '-fno-unit-at-a-time', '-Wall'],
@@ -17,6 +28,7 @@ def Configure (env):
                       LIBS = ['rt', 'm'])
     configs.linux.EnableLinuxUdpInputServer (env)
     configs.PosixModuleLoaderConfigure (env)
+    #configs.FreeTypeConfigure (env)
 
 def LunuxInputAddOptions (opts):
     pass
