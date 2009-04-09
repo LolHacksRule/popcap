@@ -12,6 +12,7 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('debug', 'build debug version', 'False'))
     opts.Add(BoolVariable ('release', 'build release version', 'False'))
     opts.Add(BoolVariable ('builddir', 'output to an alternative directory', 'False'))
+    opts.Add(BoolVariable ('static', 'build the framework as a static library', 'True'))
 
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''
