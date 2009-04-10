@@ -29,6 +29,7 @@ Widget::Widget()
 	mAddToManager = false;
 	mTabPrev = NULL;
 	mTabNext = NULL;
+	mFocus = 0;
 }
 
 Widget::~Widget()
@@ -218,14 +219,87 @@ void Widget::SetDisabled(bool isDisabled)
 		mWidgetManager->MousePosition(mWidgetManager->mLastMouseX, mWidgetManager->mLastMouseY);
 }
 
+void Widget::SetFocus(Widget* theWidget)
+{
+	Widget* aFocusWidget = theWidget;
+	std::vector<Widget*> aParents;
+	std::vector<Widget*> aOldParents;
+
+	if (theWidget && mFocus)
+	{
+		aFocusWidget = mFocus;
+		while (aFocusWidget->mParent != this)
+		{
+			aFocusWidget = (Widget*)aFocusWidget->mParent;
+			aOldParents.push_back(aFocusWidget);
+		}
+	}
+
+	if (theWidget)
+	{
+		while (aFocusWidget->mParent != this)
+		{
+			aFocusWidget = (Widget*)aFocusWidget->mParent;
+			aParents.push_back(aFocusWidget);
+		}
+	}
+
+	Widget* aParent = 0;
+	unsigned i;
+	for (i = 0; i < std::min(aParents.size(), aOldParents.size()); i++)
+	{
+		if (aParents[i] != aOldParents[i])
+			break;
+		aParent = aParents[i];
+	}
+	if (theWidget)
+	{
+		if (theWidget->mParent != this)
+		{
+			if (aParent)
+			{
+				assert (aParent == aParents[i - 1]);
+				aOldParents[i]->LostFocus();
+				for (i = 0; i < aParents.size(); i++)
+				{
+					aParents[i]->GotFocus();
+					aParents[i]->mIsSelected = true;
+				}
+			}
+		}
+		theWidget->mIsSelected = true;
+		theWidget->GotFocus();
+
+		mIsSelected = true;
+		mFocus = aFocusWidget;
+	}
+	else
+	{
+		LostFocus();
+	}
+}
+
 void Widget::GotFocus()
 {
-	mHasFocus = true;
+	if (!mHasFocus)
+	{
+		mHasFocus = true;
+		MarkDirty();
+	}
 }
 
 void Widget::LostFocus()
 {
+	bool dirty = mHasFocus || mIsSelected;
+
 	mHasFocus = false;
+	mIsSelected = false;
+	if (mFocus)
+		mFocus->LostFocus();
+	mFocus = 0;
+
+	if (dirty)
+		MarkDirty();
 }
 
 void Widget::Update()
@@ -239,7 +313,7 @@ void Widget::UpdateF(float theFrac)
 
 bool Widget::IsFocusable()
 {
-	return mVisible && mFocusable;
+	return mVisible && mFocusable && !mDisabled;
 }
 
 bool Widget::KeyChar(SexyChar theChar)
@@ -306,6 +380,7 @@ bool Widget::DoKeyUp()
 		cur->mIsSelected = false;
 		cur->LostFocus();
 		cur->MarkDirty();
+		mFocus = 0;
 	}
 	if (cur && !next)
 	{
@@ -317,6 +392,7 @@ bool Widget::DoKeyUp()
 	{
 		next->GotFocus();
 		next->MarkDirty();
+		mFocus = next;
 	}
 
 	return next ? true : false;
@@ -372,6 +448,7 @@ bool Widget::DoKeyDown()
 		cur->mIsSelected = false;
 		cur->LostFocus();
 		cur->MarkDirty();
+		mFocus = 0;
 	}
 
 	if (cur && !next)
@@ -384,6 +461,7 @@ bool Widget::DoKeyDown()
 	{
 		next->GotFocus();
 		next->MarkDirty();
+		mFocus = next;
 	}
 
 	return next ? true : false;
@@ -446,6 +524,7 @@ bool Widget::DoKeyEscape()
 	{
 		cur->LostFocus();
 		cur->MarkDirty();
+		mFocus = false;
 	}
 
 	return true;

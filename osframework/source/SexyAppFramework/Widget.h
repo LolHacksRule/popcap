@@ -39,6 +39,7 @@ public:
 
 	Widget*                                 mTabPrev;
 	Widget*                                 mTabNext;
+	Widget*                                 mFocus;
 
 	static bool                             mWriteColoredString;  // controls whether ^color^ works in calls to WriteString
 
@@ -70,6 +71,7 @@ public:
 	virtual void			DrawOverlay(Graphics* g, int thePriority);
 	virtual void			Update();
 	virtual void			UpdateF(float theFrac);
+	virtual void                    SetFocus(Widget* theWidget);
 	virtual void			GotFocus();
 	virtual void			LostFocus();
 	virtual bool			KeyChar(SexyChar theChar);
