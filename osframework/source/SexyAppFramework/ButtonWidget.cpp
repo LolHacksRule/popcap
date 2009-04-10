@@ -196,6 +196,10 @@ void ButtonWidget::Draw(Graphics* g)
 	}
 }
 
+void ButtonWidget::DrawOther(Graphics* g)
+{
+}
+
 void ButtonWidget::SetDisabled(bool isDisabled)
 {
 	Widget::SetDisabled(isDisabled);

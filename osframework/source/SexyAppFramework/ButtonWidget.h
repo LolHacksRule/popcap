@@ -61,6 +61,7 @@ public:
 	virtual void			SetFont(Font* theFont);
 	virtual bool			IsButtonDown();
 	virtual void			Draw(Graphics* g);
+	virtual void			DrawOther(Graphics* g);
 	virtual void			SetDisabled(bool isDisabled);
 	virtual void			MouseEnter();
 	virtual void			MouseLeave();
