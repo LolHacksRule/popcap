@@ -169,14 +169,14 @@ void ButtonWidget::Draw(Graphics* g)
 				DrawButtonImage(g,mOverImage,mOverRect,0,0);
 				g->SetColorizeImages(false);
 			}
-			else if ((mIsOver || mIsDown) && HaveButtonImage(mOverImage,mOverRect))
+			else if ((mIsOver || mIsDown || mHasFocus) && HaveButtonImage(mOverImage,mOverRect))
 			{
 				DrawButtonImage(g,mOverImage,mOverRect,0,0);
 			}
 			else if (HaveButtonImage(mButtonImage,mNormalRect))
 				DrawButtonImage(g,mButtonImage,mNormalRect,0,0);
 
-			if (mIsOver)
+			if (mIsOver || mHasFocus)
 				g->SetColor(mColors[COLOR_LABEL_HILITE]);
 			else
 				g->SetColor(mColors[COLOR_LABEL]);
