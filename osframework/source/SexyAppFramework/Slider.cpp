@@ -181,9 +181,9 @@ bool Slider::KeyDown(KeyCode theKey)
     double anOldVal = mVal;
 
     if (theKey == KEYCODE_LEFT)
-	    mVal -= 0.1;
+	    mVal -= 0.05;
     else
-	    mVal += 0.1;
+	    mVal += 0.05;
 
     if (mVal < 0.0)
 	    mVal = 0.0;
