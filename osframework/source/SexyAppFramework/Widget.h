@@ -34,8 +34,9 @@ public:
 	bool                                    mIsSelected;
 	bool                                    mFocusable;
 
-	Rect                                    mFocusDrawRect;
+	Rect                                    mFocusRect;
 	Color                                   mFocusColor;
+	bool                                    mDrawFocusRect;
 
 	Widget*                                 mTabPrev;
 	Widget*                                 mTabNext;
