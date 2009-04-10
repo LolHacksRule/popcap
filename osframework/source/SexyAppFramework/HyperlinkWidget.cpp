@@ -26,7 +26,7 @@ void HyperlinkWidget::Draw(Graphics* g)
 	int aFontX = (mWidth - mFont->StringWidth(mLabel))/2;
 	int aFontY = (mHeight + mFont->GetAscent())/2 - 1;
 
-	if (mIsOver)
+	if (mIsOver || mHasFocus)
 		g->SetColor(mOverColor);
 	else
 		g->SetColor(mColor);
