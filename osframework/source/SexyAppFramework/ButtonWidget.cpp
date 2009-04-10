@@ -35,6 +35,7 @@ ButtonWidget::ButtonWidget(int theId, ButtonListener* theButtonListener)
 	mOverAlphaFadeInSpeed = 0;
 
 	SetColors(gButtonWidgetColors, NUM_COLORS);
+	mDrawFocusRect = false;
 }
 
 ButtonWidget::~ButtonWidget()
@@ -194,10 +195,6 @@ void ButtonWidget::Draw(Graphics* g)
 			g->DrawString(mLabel, aFontX+1, aFontY+1);
 		}
 	}
-}
-
-void ButtonWidget::DrawOther(Graphics* g)
-{
 }
 
 void ButtonWidget::SetDisabled(bool isDisabled)
