@@ -327,18 +327,36 @@ void WidgetManager::SetFocus(Widget* aWidget)
 	if (aWidget==mFocusWidget)
 		return;
 
-	if (mFocusWidget != NULL)
-		mFocusWidget->LostFocus();
-
 	if ((aWidget != NULL) && (aWidget->mWidgetManager == this))
 	{
-		mFocusWidget = aWidget;
+		Widget* aFocusWidget = aWidget;
+
+		// set the focus widget to top level widget
+		while (aFocusWidget->mParent != this)
+			aFocusWidget = (Widget*)aFocusWidget->mParent;
+		mFocusWidget = aFocusWidget;
 
 		if ((mHasFocus) && (mFocusWidget != NULL))
-			mFocusWidget->GotFocus();
+		{
+			// Let the top level widget handle the focus
+			if (aFocusWidget == aWidget)
+			{
+				if (mFocusWidget != NULL)
+					mFocusWidget->LostFocus();
+				mFocusWidget->GotFocus();
+			}
+			else
+			{
+				mFocusWidget->SetFocus(aWidget);
+			}
+		}
 	}
 	else
+	{
+		if (mFocusWidget != NULL)
+			mFocusWidget->LostFocus();
 		mFocusWidget = NULL;
+	}
 }
 
 void WidgetManager::GotFocus()
@@ -689,9 +707,14 @@ bool WidgetManager::MouseDown(int x, int y, int theClickCount)
 	mLastDownWidget = aWidget;
 	if (aWidget != NULL)
 	{
+#if 0
 		if (aWidget->WantsFocus())
 			SetFocus(aWidget);
-
+#else
+		// always update focus
+		if (true)
+			SetFocus(aWidget);
+#endif
 		aWidget->mIsDown = true;
 		aWidget->MouseDown(aWidgetX, aWidgetY, theClickCount);
 	}
