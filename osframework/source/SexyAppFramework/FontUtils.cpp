@@ -13,6 +13,16 @@
 
 namespace Sexy
 {
+	static inline bool
+	SexyUnicodeValide(uint32 unichar)
+	{
+		return ((unichar) < 0x110000 &&
+			(((unichar) & 0xFFFFF800) != 0xD800) &&
+			((unichar) < 0xFDD0 || (unichar) > 0xFDEF) &&
+			((unichar) & 0xFFFE) != 0xFFFE);
+
+	}
+
 	int
 	SexyUsc4ToUtf8 (uint32 unichar, char * utf8)
 	{
@@ -68,55 +78,71 @@ namespace Sexy
 	int SexyUtf8ToUcs4Char (const char * str, uint32 * ucs4, int len)
 	{
 		const unsigned char * utf8 = (const unsigned char *)str;
-		unsigned char ch;
-		int extra;
-		uint32 unicode;
+		unsigned char c;
+		unsigned char mask;
+		int i;
+		int seqlen;
+		uint32 result;
 
-		if (!len)
-			return 0;
-
-		ch = *utf8++;
-
-		if (!(ch & 0x80)) {
-			unicode = ch;
-			extra = 0;
-		} else if (!(ch & 0x40)) {
-			return -1;
-		} else if (!(ch & 0x20)) {
-			unicode = ch & 0x1f;
-			extra = 1;
-		} else if (!(ch & 0x10)) {
-			unicode = ch & 0xf;
-			extra = 2;
-		} else if (!(ch & 0x08)) {
-			unicode = ch & 0x07;
-			extra = 3;
-		} else if (!(ch & 0x04)) {
-			unicode = ch & 0x03;
-			extra = 4;
-		} else if (!(ch & 0x02)) {
-			unicode = ch & 0x01;
-			extra = 5;
-		} else {
+		c = *utf8;
+		if (c < 0x80)
+		{
+			result = c;
+			mask = 0x7f;
+			seqlen = 1;
+		}
+		else if ((c & 0xe0) == 0xc0)
+		{
+			mask = 0x1f;
+			seqlen = 2;
+		}
+		else if ((c & 0xf0) == 0xe0)
+		{
+			mask = 0x0f;
+			seqlen = 3;
+		}
+		else if ((c & 0xf8) == 0xf0)
+		{
+			mask = 0x07;
+			seqlen = 4;
+		}
+		else if ((c & 0xfc) == 0xf8)
+		{
+			mask = 0x03;
+			seqlen = 5;
+		}
+		else if ((c & 0xfe) == 0xfc)
+		{
+			mask = 0x01;
+			seqlen = 6;
+		}
+		else
+		{
 			return -1;
 		}
 
-		if (extra > len - 1)
+		if (len < seqlen)
 			return -1;
 
-		while (extra--) {
-			unicode <<= 6;
-			ch = *utf8++;
-
-			if ((ch & 0xc0) != 0x80)
+		result = c & mask;
+		for (i = 1; i < seqlen; i++)
+		{
+			c = (unsigned char)utf8[i];
+			if ((c & 0xc0) != 0x80)
+			{
 				return -1;
-
-			unicode |= ch & 0x3f;
+			}
+			result <<= 6;
+			result |= c & 0x3f;
 		}
 
+		if (!SexyUnicodeValide(result))
+			return -1;
+		if (SexyUsc4ToUtf8(result, 0) != seqlen)
+			return -1;
 		if (ucs4)
-			*ucs4 = unicode;
-		return utf8 - (const unsigned char *)str;
+			*ucs4 = result;
+		return seqlen;
 	}
 
 	int SexyUtf8Strlen (const char * utf8, int len)
