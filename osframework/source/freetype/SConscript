@@ -76,6 +76,8 @@ srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'gzip', f),
 freetype_env.AppendUnique(CPPDEFINES = ['FT_CONFIG_OPTION_SYSTEM_ZLIB'])
 freetype_env.AppendUnique (CPPPATH = [os.path.join ('#', 'ImageLib', 'zlib')])
 
+freetype_env.AppendUnique(CPPDEFINES = ['TT_CONFIG_OPTION_BYTECODE_INTERPRETER'])
+
 ### generate freetype's module intializers
 def GenerateFreetypeModule(env, target, source):
    f = open (target[0].path, 'w')
