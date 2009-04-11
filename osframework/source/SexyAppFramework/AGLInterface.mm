@@ -5,6 +5,7 @@
 #include "Graphics.h"
 #include "PerfTimer.h"
 #include "Debug.h"
+#include "FontUtils.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
 #include "InputManager.h"
@@ -124,6 +125,7 @@ AGLInterface::AGLInterface (SexyAppBase* theApp)
 	mHeight = mApp->mHeight;
 	mScreenImage = 0;
 	mCGLContext = 0;
+	mCursorHide = false;
 
 	InitKeyMap ();
 }
@@ -281,10 +283,13 @@ int AGLInterface::Init (void)
 		      assumeInside:NO];
 		[mWindow makeFirstResponder:view];
 
-		[mWindow setTitle:[NSString stringWithCString:mApp->mTitle.c_str()
-					    length:mApp->mTitle.length()]];
+		std::string aUtf8Title = mApp->mTitle;
+		SexyUtf8FromString(mApp->mTitle, aUtf8Title);
+		[mWindow setTitle:[NSString stringWithCString:aUtf8Title.c_str()
+					    length:aUtf8Title.length()]];
 		[NSCursor hide];
 	}
+	mCursorHide = true;
 
 	mCGLContext = (CGLContextObj) [mContext CGLContextObj];
 	CGLSetCurrentContext (mCGLContext);
@@ -474,6 +479,21 @@ bool AGLInterface::GetEvent(struct Event &event)
 			event.flags = EVENT_FLAGS_AXIS;
 			event.u.mouse.x = int([nsevent locationInWindow].x);
 			event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
+			if (event.u.mouse.x >= 0 && event.u.mouse.y >= 0 &&
+			    event.u.mouse.x < mWidth && event.u.mouse.y < mHeight)
+                        {
+                                if (!mCursorHide)
+                                        [NSCursor hide];
+                                mCursorHide = true;
+                        }
+                        else
+                        {
+				if (mCursorHide)
+					[NSCursor unhide];
+				mCursorHide = false;
+				event.type = EVENT_NONE;
+                        }
+
 			RemapMouse (event.u.mouse.x, event.u.mouse.y);
 			[NSApp sendEvent:nsevent];
 			break;

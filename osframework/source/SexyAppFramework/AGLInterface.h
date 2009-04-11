@@ -46,6 +46,8 @@ private:
 
 	std::map<int, int>                      mKeyMap;
 
+	bool                                    mCursorHide;
+
 private:
 	void                                    InitKeyMap();
 	int                                     KeyCodeFromNSKeyCode(int NSKeyCode);
