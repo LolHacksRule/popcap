@@ -12,6 +12,7 @@ Font::Font()
 	mSupportUnicode = false;
 	mDrawShadow = false;
 	mSimulateBold = false;
+	mOutLine = false;
 }
 
 Font::Font(const Font& theFont) :
@@ -21,7 +22,8 @@ Font::Font(const Font& theFont) :
 	mLineSpacingOffset(theFont.mLineSpacingOffset),
 	mSupportUnicode(theFont.mSupportUnicode),
 	mDrawShadow(theFont.mDrawShadow),
-	mSimulateBold(theFont.mSimulateBold)
+	mSimulateBold(theFont.mSimulateBold),
+	mOutLine(theFont.mOutLine)
 {
 }
 

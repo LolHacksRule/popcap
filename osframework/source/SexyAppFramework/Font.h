@@ -21,6 +21,7 @@ public:
 
 	bool					        mDrawShadow;
 	bool					        mSimulateBold;
+	bool                                            mOutLine;
 
 public:
 	Font();
