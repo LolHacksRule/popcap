@@ -15,6 +15,8 @@ HyperlinkWidget::HyperlinkWidget(int theId, ButtonListener* theButtonListener) :
 	mDoFinger = true;
 	mUnderlineOffset = 3;
 	mUnderlineSize = 1;
+
+	mDrawFocusRect = true;
 }
 
 void HyperlinkWidget::Draw(Graphics* g)
