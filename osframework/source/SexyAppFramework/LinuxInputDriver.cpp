@@ -402,7 +402,7 @@ void* LinuxInputInterface::Run (void * data)
 			if (driver->mRetry > 10)
 				break;
 
-			usleep (100);
+			usleep (200000);
 			printf ("try to reopen the input device.\n");
 			if (!driver->OpenDevice ())
 				driver->mRetry++;
