@@ -435,6 +435,7 @@ bool ResourceManager::ParseFontResource(XMLElement &theElement)
 		aRes->mItalic = theElement.mAttributes.find(_S("italic"))!=theElement.mAttributes.end();
 		aRes->mShadow = theElement.mAttributes.find(_S("shadow"))!=theElement.mAttributes.end();
 		aRes->mUnderline = theElement.mAttributes.find(_S("underline"))!=theElement.mAttributes.end();
+		aRes->mOutLine = theElement.mAttributes.find(_S("outline"))!=theElement.mAttributes.end();
 	}
 	else
 		aRes->mSysFont = false;
@@ -871,8 +872,12 @@ bool ResourceManager::DoLoadFont(FontRes* theRes)
 							theRes->mSize, bold,
 							theRes->mItalic,
 							theRes->mUnderline);
-		aFont->mDrawShadow = theRes->mShadow;
-		aFont->mSimulateBold = simulateBold;
+		if (aFont)
+		{
+			aFont->mDrawShadow = theRes->mShadow;
+			aFont->mSimulateBold = simulateBold;
+			aFont->mOutLine = theRes->mOutLine;
+		}
 	}
 	else if (theRes->mImagePath.empty())
 	{

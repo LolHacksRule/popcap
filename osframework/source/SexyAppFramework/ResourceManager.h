@@ -96,6 +96,7 @@ protected:
 		bool mItalic;
 		bool mUnderline;
 		bool mShadow;
+		bool mOutLine;
 		int mSize;
 
 
