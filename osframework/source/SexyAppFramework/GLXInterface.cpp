@@ -295,15 +295,22 @@ bool GLXInterface::GetEvent(struct Event &event)
 	event.type = EVENT_NONE;
 	event.flags = 0;
 	KeySym key;
+	const char * keystr;
 
 	//printf ("XEvent type %d\n", xevent.type);
 	switch (xevent.type) {
 	case KeyPress:
 		XLookupString ((XKeyEvent *)&xevent, NULL, 0, &key, NULL);
+		keystr = XKeysymToString(key);
 		event.type = EVENT_KEY_DOWN;
 		event.u.key.keyCode = XKsymToKeyCode (key);
-		event.u.key.keyChar = XKsymToKeyCode (key);
-		if (isalnum (event.u.key.keyChar))
+		if (keystr && keystr[0] && !keystr[1])
+			event.u.key.keyChar = keystr[0];
+		else if (keystr && !strcmp(keystr, "space"))
+			event.u.key.keyChar = ' ';
+		else
+			event.u.key.keyChar = 0;
+		if (event.u.key.keyChar)
 			event.flags |= EVENT_FLAGS_KEY_CHAR;
 		break;
 	case KeyRelease:
@@ -402,7 +409,7 @@ bool GLXInterface::GetEvent(struct Event &event)
 		event.u.active.active = false;
 		break;
 	case ClientMessage:
-		if (xevent.xclient.data.l[0] == mWMDeleteMessage)
+		if (xevent.xclient.data.l[0] == (long)mWMDeleteMessage)
 			event.type = EVENT_QUIT;
 		break;
 	default:
