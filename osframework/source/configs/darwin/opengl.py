@@ -6,6 +6,7 @@ import configs
 
 def AddOptions (opts):
     configs.darwin.AddOptions (opts)
+    configs.AudiereSoundAddOptions (opts)
 
 def EnableAGL(env):
     env.PrependUnique (LINKFLAGS = [('-framework', 'OpenGL'),
@@ -18,4 +19,4 @@ def Configure(env):
     agl = {}
     agl['ENABLE'] = EnableAGL
     env.AppendUnique (AGL = agl)
-
+    configs.AudiereSoundConfigure (env)

@@ -6,6 +6,7 @@ import configs
 
 def AddOptions (opts):
     configs.AddOptions (opts)
+    configs.FreeTypeAddOptions (opts)
 
 def Configure (env):
     configs.Configure (env)
@@ -17,6 +18,7 @@ def Configure (env):
                       LINKFLAGS = ['-g', '-fno-unit-at-a-time'],
                       LIBS = ['m'])
     configs.PosixModuleLoaderConfigure (env)
+    configs.FreeTypeConfigure (env)
 
 def UdpInputAddOptions (opts):
     pass
