@@ -93,9 +93,13 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 		event.type = EVENT_KEY_DOWN;
 		event.flags = EVENT_FLAGS_KEY_CODE;
 		event.u.key.keyCode = WinKeyToKeyCode (wParam);
-		event.u.key.keyChar = WinKeyToKeyCode (wParam);
-		if (isalnum (wParam))
-			event.flags |= EVENT_FLAGS_KEY_CHAR;
+		event.u.key.keyChar = 0;
+		break;
+	case WM_CHAR:
+		event.type = EVENT_KEY_DOWN;
+		event.flags = EVENT_FLAGS_KEY_CODE | EVENT_FLAGS_KEY_CHAR;
+		event.u.key.keyChar = wParam;
+		event.u.key.keyCode = 0;
 		break;
 	case WM_KEYUP:
 		event.type = EVENT_KEY_UP;
