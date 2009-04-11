@@ -267,7 +267,16 @@ void Widget::SetFocus(Widget* theWidget)
 					aParents[i]->mIsSelected = true;
 				}
 			}
+			else if (mFocus)
+			{
+				mFocus->LostFocus();
+			}
 		}
+		else if (mFocus)
+		{
+			mFocus->LostFocus();
+		}
+
 		theWidget->mIsSelected = true;
 		theWidget->GotFocus();
 
