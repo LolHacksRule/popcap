@@ -57,6 +57,9 @@ public:
 	float			  mMaxTotalU;
 	float			  mMaxTotalV;
 
+	bool                      mRectangleTexture;
+	GLenum                    mTarget;
+
 public:
 	GLTexture();
 	~GLTexture();
@@ -88,6 +91,10 @@ public:
 #define GL_BGRA	 0x80E1
 #endif
 
+#ifndef GL_TEXTURE_RECTANGLE_ARB
+#define GL_TEXTURE_RECTANGLE_ARB 0x84F5
+#endif
+
 #ifdef SEXY_OPENGLES
 #define ftofix(f) (GLfixed)(f * 65536.0f)
 #endif
@@ -113,13 +120,14 @@ static GLuint CreateTexture (GLImage* theImage, GLuint old,
 		}
 	}
 
-	glBindTexture (GL_TEXTURE_2D, old ? old : texture);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	int target = theImage->GetTextureTarget();
+	glBindTexture (target, old ? old : texture);
+	glTexParameteri (target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri (target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #ifdef GL_TEXTURE_PRIORITY
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, 1);
+	glTexParameteri (target, GL_TEXTURE_PRIORITY, 1);
 #endif
 
 	uint32* bits = theImage->GetBits ();
@@ -174,7 +182,7 @@ static GLuint CreateTexture (GLImage* theImage, GLuint old,
 
 		memset (copy + w * aHeight, 0, w * aHeightExtra);
 
-		glTexImage2D (GL_TEXTURE_2D,
+		glTexImage2D (target,
 			      0,
 			      intlformat,
 			      w, h,
@@ -198,6 +206,8 @@ GLTexture::GLTexture ()
 	mTexMemSize = 0;
 	mTexBlockWidth = 64;
 	mTexBlockHeight = 64;
+	mRectangleTexture = false;
+	mTarget = 0;
 }
 
 GLTexture::~GLTexture ()
@@ -224,8 +234,13 @@ void GLTexture::CreateTextureDimensions (GLImage* theImage)
 	// Calculate inner block sizes
 	mTexBlockWidth = aWidth;
 	mTexBlockHeight = aHeight;
-	bool usePOT = true;
+	mRectangleTexture = theImage->mInterface->mTextureNPOT;
+	bool usePOT = !mRectangleTexture;
 
+	if (theImage->mInterface->mTextureNPOT)
+		mTarget = GL_TEXTURE_RECTANGLE_ARB;
+	else
+		mTarget = GL_TEXTURE_2D;
 	interface->CalulateBestTexDimensions (mTexBlockWidth, mTexBlockHeight, false, usePOT);
 
 	// Calculate right boundary block sizes
@@ -309,10 +324,20 @@ GLuint GLTexture::GetTexture (int x, int y, int &width, int &height,
 	width = right-left;
 	height = bottom-top;
 
-	u1 = left / (float)aBlock.mWidth;
-	v1 = top / (float)aBlock.mHeight;
-	u2 = right / (float)aBlock.mWidth;
-	v2 = bottom / (float)aBlock.mHeight;
+	if (mRectangleTexture)
+	{
+		u1 = left;
+		v1 = top;
+		u2 = right;
+		v2 = bottom;
+	}
+	else
+	{
+		u1 = left / (float)aBlock.mWidth;
+		v1 = top / (float)aBlock.mHeight;
+		u2 = right / (float)aBlock.mWidth;
+		v2 = bottom / (float)aBlock.mHeight;
+	}
 
 	return aBlock.mTexture;
 }
@@ -339,10 +364,20 @@ GLuint GLTexture::GetTextureF (float x, float y, float &width, float &height,
 	width = right - left;
 	height = bottom - top;
 
-	u1 = left / aBlock.mWidth;
-	v1 = top / aBlock.mHeight;
-	u2 = right / aBlock.mWidth;
-	v2 = bottom / aBlock.mHeight;
+	if (mRectangleTexture)
+	{
+		u1 = left;
+		v1 = top;
+		u2 = right;
+		v2 = bottom;
+	}
+	else
+	{
+		u1 = left / aBlock.mWidth;
+		v1 = top / aBlock.mHeight;
+		u2 = right / aBlock.mWidth;
+		v2 = bottom / aBlock.mHeight;
+	}
 
 	return aBlock.mTexture;
 }
@@ -467,7 +502,7 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
 
-	glEnable (GL_TEXTURE_2D);
+	glEnable (mTarget);
 	while (srcY < srcBottom)
 	{
 		srcX = srcLeft;
@@ -482,7 +517,7 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 			float x = dstX;// - 0.5f;
 			float y = dstY;// 0.5f;
 
-			glBindTexture (GL_TEXTURE_2D, aTexture);
+			glBindTexture (mTarget, aTexture);
 
 			GLDrawQuad (x, y, x + aWidth, y + aHeight,
 				    u1, v1, u2, v2);
@@ -841,7 +876,7 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
 
-	glEnable (GL_TEXTURE_2D);
+	glEnable (mTarget);
 	glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
 
 	while (srcY < srcBottom)
@@ -887,7 +922,7 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 				}
 			}
 
-			glBindTexture (GL_TEXTURE_2D, aTexture);
+			glBindTexture (mTarget, aTexture);
 
 			if (!clipped) {
 				GLDrawQuadTransformed (tp[0].x, tp[0].y,
@@ -977,13 +1012,14 @@ static void GLDrawVertexList3 (VertexList& aList)
 #endif
 }
 
-void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriangles, uint32 theColor, float tx, float ty)
+void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriangles,
+			      uint32 theColor, float tx, float ty)
 {
-	glEnable(GL_TEXTURE_2D); //FIXME only set this at start of drawing all
+	glEnable(mTarget); //FIXME only set this at start of drawing all
 
 	if ((mMaxTotalU <= 1.0) && (mMaxTotalV <= 1.0))
 	{
-		glBindTexture(GL_TEXTURE_2D, mTextures[0].mTexture);
+		glBindTexture(mTarget, mTextures[0].mTexture);
 
 		SexyGLVertex aVertexCache[300];
 		int aVertexCacheNum = 0;
@@ -1139,7 +1175,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 					DoPolyTextureClip (aList);
 					if (aList.size() >= 3)
 					{
-						glBindTexture (GL_TEXTURE_2D, aBlock.mTexture);
+						glBindTexture (mTarget, aBlock.mTexture);
 						GLDrawVertexList3 (aList);
 					}
 				}
@@ -1312,7 +1348,7 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 	if (theClipRect != NULL) {
 		DrawPolyClipped (theClipRect, aList);
 	} else {
-		glDisable (GL_TEXTURE_2D);
+		glDisable (GetTextureTarget());
 		glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
 #ifndef SEXY_OPENGLES
 		glBegin (GL_TRIANGLE_FAN);
@@ -1350,7 +1386,7 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 		return;
 	}
 
-	glDisable (GL_TEXTURE_2D);
+	glDisable (GetTextureTarget());
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1456,7 +1492,7 @@ void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, doubl
 		return;
 	}
 
-	glDisable (GL_TEXTURE_2D);
+	glDisable (GetTextureTarget());
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1531,7 +1567,7 @@ void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, dou
 		return;
 	}
 
-	glDisable (GL_TEXTURE_2D);
+	glDisable (GetTextureTarget());
 
 	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1614,7 +1650,7 @@ void GLImage::ClearRect(const Rect& theRect)
 		return;
 	}
 
-	glDisable (GL_TEXTURE_2D);
+	glDisable (GetTextureTarget());
 	glDisable (GL_BLEND);
 
 	SexyRGBA aColor = Color(0, 0, 0, 0).ToRGBA();
@@ -2002,4 +2038,11 @@ void GLImage::PopTransform()
 {
 	if (!mTransformStack.empty())
 		mTransformStack.pop_back();
+}
+
+int GLImage::GetTextureTarget()
+{
+	if (mInterface->mTextureNPOT && !getenv("SEXY_GL_NO_RECTANGLE_TEXTURE"))
+		return GL_TEXTURE_RECTANGLE_ARB;
+	return GL_TEXTURE_2D;
 }

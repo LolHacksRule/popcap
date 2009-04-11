@@ -12,10 +12,10 @@ class GLTexture;
 
 class GLImage : public MemoryImage
 {
-protected:
 	friend class			GLFont;
 	friend class			GLTexture;
 
+protected:
 	void				DeleteAllNonSurfaceData();
 
 public:
@@ -37,6 +37,9 @@ public:
 
 private:
 	void				Init();
+
+public:
+	int                             GetTextureTarget();
 
 public:
 	virtual void                    ReAttach(NativeDisplay *theNative);
