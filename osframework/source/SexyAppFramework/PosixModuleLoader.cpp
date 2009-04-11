@@ -90,7 +90,7 @@ void* PosixModule::GetSymbol (const char* theSymbol)
 
 	sym = dlsym (mHandle, theSymbol);
 
-	char * error = dlerror ();
+	const char * error = dlerror ();
 	delete mError;
 	mError = 0;
 	if (error)
