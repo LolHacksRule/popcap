@@ -296,7 +296,11 @@ namespace Sexy
 			char* in = (char *)inbuf;
 			left = inlen;
 			outleft = outlen - 1;
+#if defined(__FreeBSD__)
+			ret = iconv(cd, (const char**)&in, &left, &out, &outleft);
+#else
 			ret = iconv(cd, &in, &left, &out, &outleft);
+#endif
 			if (ret == (size_t)-1 && errno != E2BIG)
 			{
 				delete [] outbuf;
