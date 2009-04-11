@@ -106,8 +106,17 @@ static GLuint CreateTexture (GLImage* theImage, GLuint old,
 	int w, h;
 
 	/* Use the texture width and height expanded to powers of 2 */
-	w = RoundToPOT (width);
-	h = RoundToPOT (height);
+	if (theImage->mInterface->mTextureNPOT)
+	{
+		w = width;
+		h = height;
+	}
+	else
+	{
+		w = RoundToPOT (width);
+		h = RoundToPOT (height);
+		assert (w == width && h == height);
+	}
 
 	/* Create an OpenGL texture for the image */
 	if (!old)
@@ -237,10 +246,7 @@ void GLTexture::CreateTextureDimensions (GLImage* theImage)
 	mRectangleTexture = theImage->mInterface->mTextureNPOT;
 	bool usePOT = !mRectangleTexture;
 
-	if (theImage->mInterface->mTextureNPOT)
-		mTarget = GL_TEXTURE_RECTANGLE_ARB;
-	else
-		mTarget = GL_TEXTURE_2D;
+	mTarget = theImage->GetTextureTarget();
 	interface->CalulateBestTexDimensions (mTexBlockWidth, mTexBlockHeight, false, usePOT);
 
 	// Calculate right boundary block sizes
@@ -324,7 +330,7 @@ GLuint GLTexture::GetTexture (int x, int y, int &width, int &height,
 	width = right-left;
 	height = bottom-top;
 
-	if (mRectangleTexture)
+	if (mTarget == GL_TEXTURE_RECTANGLE_ARB)
 	{
 		u1 = left;
 		v1 = top;
@@ -364,7 +370,7 @@ GLuint GLTexture::GetTextureF (float x, float y, float &width, float &height,
 	width = right - left;
 	height = bottom - top;
 
-	if (mRectangleTexture)
+	if (mTarget == GL_TEXTURE_RECTANGLE_ARB)
 	{
 		u1 = left;
 		v1 = top;
@@ -2042,7 +2048,12 @@ void GLImage::PopTransform()
 
 int GLImage::GetTextureTarget()
 {
-	if (mInterface->mTextureNPOT && !getenv("SEXY_GL_NO_RECTANGLE_TEXTURE"))
+	if (mInterface->mTextureNPOT)
+	{
+		if (mInterface->mGLMajor >= 2)
+			return GL_TEXTURE_2D;
 		return GL_TEXTURE_RECTANGLE_ARB;
+	}
+
 	return GL_TEXTURE_2D;
 }
