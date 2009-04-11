@@ -10,6 +10,7 @@ def AddOptions (opts):
 
 def Configure (env):
     configs.Configure (env)
+    env['TARGETOS'] = 'darwin'
     env.AppendUnique (CPPDEFINES = ['SEXY_DARWIN'],
                       CCFLAGS = ['-pthread'],
                       LINKFLAGS = ['-pthread'])

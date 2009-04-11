@@ -10,6 +10,7 @@ def AddOptions(opts):
 
 def Configure(env):
     configs.Configure (env)
+    env['TARGETOS'] = 'windows'
     env.AppendUnique (CPPDEFINES = ['WIN32'])
     env.AppendUnique (CFLAGS = ['/EHsc'],
                       CXXFLAGS = ['/EHsc'],

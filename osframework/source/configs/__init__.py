@@ -17,6 +17,7 @@ def AddOptions(opts):
 
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''
+    env['TARGETOS'] = 'unknown'
     env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [], BUILD_PACKAGES = [])
     env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'include')],
                       LIBPATH = [os.path.join ('#', 'extra', 'lib')])
