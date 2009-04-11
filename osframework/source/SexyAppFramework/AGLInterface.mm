@@ -140,6 +140,7 @@ void AGLInterface::InitKeyMap ()
 		{ NSRightArrowFunctionKey, KEYCODE_RIGHT },
 		{ 0x0d, KEYCODE_RETURN },
 		{ 0x1b, KEYCODE_ESCAPE },
+		{ 0x24, KEYCODE_RETURN },
 		{ 0x7f, KEYCODE_BACK },
 		{ 0x31, KEYCODE_SPACE },
 		{ 0x33, KEYCODE_BACK },
@@ -157,6 +158,7 @@ void AGLInterface::InitKeyMap ()
 
 int AGLInterface::KeyCodeFromNSKeyCode (int NSKeyCode)
 {
+	printf ("keycode %d\n", NSKeyCode);
 	std::map<int, int>::iterator it;
 
 	it = mKeyMap.find (NSKeyCode);
