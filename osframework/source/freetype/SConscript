@@ -69,6 +69,12 @@ srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'truetype', f),
              ['ttobjs.c', 'ttpload.c', 'ttgload.c', 'ttinterp.c', 'ttgxvar.c',
               'ttdriver.c'])
 
+### gzip
+srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'gzip', f),
+             ['ftgzip.c'])
+### FT_CONFIG_OPTION_USE_ZLIB is enabled by default
+freetype_env.AppendUnique(CPPDEFINES = ['FT_CONFIG_OPTION_SYSTEM_ZLIB'])
+freetype_env.AppendUnique (CPPPATH = [os.path.join ('#', 'ImageLib', 'zlib')])
 
 ### generate freetype's module intializers
 def GenerateFreetypeModule(env, target, source):
@@ -123,3 +129,5 @@ gameenv.AppendUnique (LIBPATH = [os.path.join ('..', 'freetype', 'lib')])
 
 env.Clean (freetype, [freetype_dir])
 env.Clean (freetype, ['include', 'lib'])
+
+env['FREETYPE']  = freetype
