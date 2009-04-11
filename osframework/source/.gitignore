@@ -9,3 +9,8 @@ semantic.cache
 *.pyo
 *.obj
 *.pdb
+*.bak
+*.orig
+core.*
+build.*
+Config.py
