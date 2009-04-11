@@ -38,9 +38,6 @@ if 'WIN32' in env['CPPDEFINES']:
        gameenv.AppendUnique(LIBS = ['advapi32'])
 elif 'SEXY_DARWIN' in env['CPPDEFINES']:
     srcs += ['DarwinRegistryInterface.cpp']
-    env.AppendUnique(LIBS = ['iconv'])
-    if gameenv['static']:
-       gameenv.AppendUnique(LIBS = ['iconv'])
 else:
     srcs += ['XMLRegistryInterface.cpp']
 
@@ -178,6 +175,11 @@ if gameenv['static']:
 
     if 'WIN32' in gameenv['CPPDEFINES']:
         gameenv.AppendUnique(LIBS = ['ws2_32'])
+
+if env['TARGETOS'] in ['freebsd', 'netbsd', 'openbsd', 'darwin']:
+    env.AppendUnique(LIBS = ['iconv'])
+    if gameenv['static']:
+       gameenv.AppendUnique(LIBS = ['iconv'])
 
 if gameenv['static']:
     env.Library('SexyAppFramework', srcs)
