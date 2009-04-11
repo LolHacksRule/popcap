@@ -188,3 +188,11 @@ if env.has_key ('LUIS') and env['LUIS']:
 if False:
     env = Environment ()
     env.SharedLibrary ('SexyInputModule', 'TestInputModule.c')
+
+gameenv.Program('FontUtilsTest',
+                'FontUtilsTest.cpp',
+                LIBS = ['SexyAppFramework'] + gameenv['LIBS'],
+                LIBPATH = gameenv['LIBPATH'] +
+                ['.',
+                 os.path.join('..', 'ImageLib'),
+                 os.path.join('..', 'PakLib')])
