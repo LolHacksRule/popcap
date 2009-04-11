@@ -98,7 +98,8 @@ namespace Sexy
 							   const SexyString& theString,
 							   const Color& theColor,
 							   const Rect& theClipRect,
-							   bool drawShadow = false);
+							   bool drawShadow = false,
+							   bool drawOutline = false);
 		int				CharWidth(int theChar);
 		int				CharWidthKern(int theChar, int thePrevChar);
 

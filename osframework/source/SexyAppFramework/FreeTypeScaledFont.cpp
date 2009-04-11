@@ -224,23 +224,7 @@ int FreeTypeScaledFont::StringWidth(const SexyString& theString)
 int FreeTypeScaledFont::Utf8FromString(const std::string& string,
 				       std::string& utf8)
 {
-	int len = SexyUtf8Strlen(string.c_str(), -1);
-	if (len >= 0)
-	{
-		utf8 = string;
-		return len;
-	}
-
-	char* result;
-	len = SexyUtf8FromLocale(string.c_str(), -1, &result);
-	if (len >= 0)
-	{
-		utf8 = std::string(result);
-		delete [] result;
-		return len;
-	}
-
-	return -1;
+	return SexyUtf8FromString(string, utf8);
 }
 
 void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector& glyphs,
@@ -308,7 +292,7 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 
 void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
 				    const Color& theColor, const Rect& theClipRect,
-				    bool drawShadow)
+				    bool drawShadow, bool drawOutline)
 {
 	if (!mBaseFont)
 		return;
@@ -345,9 +329,15 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 
 		if (entry->mImage)
 		{
-			if (drawShadow)
+			if (drawShadow || drawOutline)
 			{
 				g->SetColor(aShadowColor);
+				if (drawOutline)
+				    g->DrawImage(entry->mImage,
+						 (int)floor(x + entry->mXOffSet - 1),
+						 (int)floor(y + entry->mYOffSet - 1),
+						 Rect(entry->mArea->x, entry->mArea->y,
+						      entry->mWidth, entry->mHeight));
 				g->DrawImage(entry->mImage,
 					     (int)floor(x + entry->mXOffSet + 1),
 					     (int)floor(y + entry->mYOffSet + 1),

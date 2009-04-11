@@ -65,7 +65,8 @@ int FreeTypeFont::StringWidth(const SexyString& theString)
 void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
 			      const Color& theColor, const Rect& theClipRect)
 {
-	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect, mDrawShadow);
+	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect,
+				mDrawShadow, mOutLine);
 }
 
 int FreeTypeFont::CharWidth(int theChar)
