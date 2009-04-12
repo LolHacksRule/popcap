@@ -119,10 +119,12 @@ public:
 	bool                                    IsFocusable();
 
  protected:
-	bool                                    DoKeyUp();
-	bool                                    DoKeyDown();
-	bool                                    DoKeyReturn();
-	bool                                    DoKeyEscape();
+	bool                                    OnKeyUp();
+	bool                                    OnKeyDown();
+	bool                                    OnKeyReturn();
+	bool                                    OnKeyEscape();
+	bool                                    DoKeyChar(SexyChar theChar);
+	bool                                    KeyDownUp(KeyCode theKey, bool down = true);
 };
 
 /////// Layout flags used in Widget::Layout method

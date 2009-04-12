@@ -326,7 +326,7 @@ bool Widget::IsFocusable()
 	return mVisible && mFocusable && !mDisabled;
 }
 
-bool Widget::KeyChar(SexyChar theChar)
+bool Widget::DoKeyChar(SexyChar theChar)
 {
 	WidgetVector::iterator it;
 	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
@@ -334,13 +334,53 @@ bool Widget::KeyChar(SexyChar theChar)
 		if ((*it)->mHasFocus && (*it)->IsFocusable())
 			break;
 	}
-	if (it != mSortedWidgets.end() && (*it)->mIsSelected)
-		return (*it)->KeyChar(theChar);
+	if (it != mSortedWidgets.end())
+	{
+		Widget* aWidget = *it;
+		bool aIsSelected = aWidget->mIsSelected;
+		if (!aWidget->KeyChar(theChar))
+			return false;
+		if (aIsSelected == aWidget->mIsSelected)
+			aWidget->mIsSelected = true;
+		return true;
+	}
 
 	return false;
 }
 
-bool Widget::DoKeyUp()
+bool Widget::KeyChar(SexyChar theChar)
+{
+	bool aIsSelected = mIsSelected;
+	if (DoKeyChar(theChar))
+	{
+		if (aIsSelected == mIsSelected)
+			mIsSelected = true;
+		return true;
+	}
+
+	return false;
+}
+
+bool Widget::KeyDownUp(KeyCode theKey, bool down)
+{
+	bool aIsSelected = mIsSelected;
+	bool aKeyHandled;
+
+	if (down)
+		aKeyHandled = KeyDown(theKey);
+	else
+		aKeyHandled = KeyUp(theKey);
+	if (aKeyHandled)
+	{
+		if (aIsSelected == mIsSelected)
+			mIsSelected = true;
+		return true;
+	}
+
+	return false;
+}
+
+bool Widget::OnKeyUp()
 {
 	if (!mSortedWidgets.size())
 		return false;
@@ -384,7 +424,7 @@ bool Widget::DoKeyUp()
 
 	if (next && cur)
 	{
-		if (cur->mIsSelected && cur->KeyDown(KEYCODE_UP))
+		if (cur->KeyDownUp(KEYCODE_UP))
 			return true;
 
 		cur->mIsSelected = false;
@@ -394,7 +434,7 @@ bool Widget::DoKeyUp()
 	}
 	if (cur && !next)
 	{
-		if (cur->mIsSelected && cur->KeyDown(KEYCODE_UP))
+		if (cur->KeyDownUp(KEYCODE_UP))
 			return true;
 	}
 
@@ -408,7 +448,7 @@ bool Widget::DoKeyUp()
 	return next ? true : false;
 }
 
-bool Widget::DoKeyDown()
+bool Widget::OnKeyDown()
 {
 	if (!mSortedWidgets.size())
 		return false;
@@ -452,7 +492,7 @@ bool Widget::DoKeyDown()
 
 	if (next && cur)
 	{
-		if (cur->mIsSelected && cur->KeyDown(KEYCODE_DOWN))
+		if (cur->KeyDownUp(KEYCODE_DOWN))
 			return true;
 
 		cur->mIsSelected = false;
@@ -463,7 +503,7 @@ bool Widget::DoKeyDown()
 
 	if (cur && !next)
 	{
-		if (cur->mIsSelected && cur->KeyDown(KEYCODE_DOWN))
+		if (cur->KeyDownUp(KEYCODE_DOWN))
 			return true;
 	}
 
@@ -477,7 +517,7 @@ bool Widget::DoKeyDown()
 	return next ? true : false;
 }
 
-bool Widget::DoKeyReturn()
+bool Widget::OnKeyReturn()
 {
 	if (!mSortedWidgets.size())
 		return false;
@@ -494,7 +534,7 @@ bool Widget::DoKeyReturn()
 
 	if (cur)
 	{
-		if (cur->mIsSelected && cur->KeyDown(KEYCODE_RETURN))
+		if (cur->KeyDownUp(KEYCODE_RETURN))
 			return true;
 
 		if (!cur->mIsSelected)
@@ -507,7 +547,7 @@ bool Widget::DoKeyReturn()
 	return false;
 }
 
-bool Widget::DoKeyEscape()
+bool Widget::OnKeyEscape()
 {
 	if (!mSortedWidgets.size())
 		return false;
@@ -523,7 +563,7 @@ bool Widget::DoKeyEscape()
 		return false;
 
 	cur = *it;
-	if (cur->mIsSelected && cur->KeyDown(KEYCODE_ESCAPE))
+	if (cur->KeyDownUp(KEYCODE_ESCAPE))
 		return true;
 
 	if (cur->mIsSelected)
@@ -534,7 +574,7 @@ bool Widget::DoKeyEscape()
 	{
 		cur->LostFocus();
 		cur->MarkDirty();
-		mFocus = false;
+		mFocus = 0;
 	}
 
 	return true;
@@ -559,19 +599,19 @@ bool Widget::KeyDown(KeyCode theKey)
 	}
 	else if (theKey == KEYCODE_UP)
 	{
-		return DoKeyUp();
+		return OnKeyUp();
 	}
 	else if (theKey == KEYCODE_DOWN)
 	{
-		return DoKeyDown();
+		return OnKeyDown();
 	}
 	else if (theKey == KEYCODE_RETURN)
 	{
-		return DoKeyReturn();
+		return OnKeyReturn();
 	}
 	else if (theKey == KEYCODE_ESCAPE)
 	{
-		return DoKeyEscape();
+		return OnKeyEscape();
 	}
 
 
@@ -582,35 +622,27 @@ bool Widget::KeyDown(KeyCode theKey)
 			break;
 	}
 	if (it != mSortedWidgets.end())
-		return (*it)->KeyDown(theKey);
+		return (*it)->KeyDownUp(theKey);
 
-	return true;
+	return false;
 }
 
 bool Widget::KeyUp(KeyCode theKey)
 {
-	if (theKey == KEYCODE_TAB)
+	WidgetVector::iterator it;
+	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
 	{
+		if ((*it)->mHasFocus && (*it)->IsFocusable())
+			break;
 	}
-	else if (theKey == KEYCODE_UP)
+	if (it != mSortedWidgets.end())
 	{
-	}
-	else if (theKey == KEYCODE_DOWN)
-	{
-	}
-	else
-	{
-		WidgetVector::iterator it;
-		for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
-		{
-			if ((*it)->mHasFocus && (*it)->IsFocusable())
-				break;
-		}
-		if (it != mSortedWidgets.end() && (*it)->mIsSelected)
-			return (*it)->KeyUp(theKey);
+		Widget* aWidget = *it;
+		if (aWidget->KeyDownUp(theKey, false))
+			return true;
 	}
 
-	return true;
+	return false;
 }
 
 void Widget::ShowFinger(bool on)
