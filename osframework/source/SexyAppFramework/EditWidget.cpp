@@ -552,6 +552,9 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 
 bool EditWidget::KeyDown(KeyCode theKey)
 {
+	if (!mIsSelected)
+		return false;
+
 	if (theKey != KEYCODE_ESCAPE && ((theKey < 'A') || (theKey >= 'Z')) &&
 	    mEditListener->AllowKey(mId, theKey))
 	{
@@ -564,10 +567,12 @@ bool EditWidget::KeyDown(KeyCode theKey)
 
 bool EditWidget::KeyChar(SexyChar theChar)
 {
+	if (theChar == 27)
+		return false;
+
 //	if (mEditListener->AllowChar(mId, theChar))
 	ProcessKey(KEYCODE_UNKNOWN, theChar);
-
-	return Widget::KeyChar(theChar);
+	return true;
 }
 
 int EditWidget::GetCharAt(int x, int y)
