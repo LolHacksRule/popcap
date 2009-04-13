@@ -131,8 +131,11 @@ if 'WIN32_MODULE_LOADER' in env['LOADERS']:
 srcs += ['ModuleInputDriver.cpp']
 
 if 'FREETYPEFONT' in env['DRIVERS']:
-    srcs += ["FreeTypeFontMap.cpp", 'FreeTypeBaseFont.cpp',
-             'FreeTypeScaledFont.cpp', 'FreeTypeFont.cpp']
+    freetype_srcs = ["FreeTypeFontMap.cpp", 'FreeTypeBaseFont.cpp',
+                     'FreeTypeScaledFont.cpp', 'FreeTypeFont.cpp']
+    srcs += freetype_srcs
+    if env.has_key ('FREETYPE') and env['FREETYPE']:
+        env.Depends(freetype_srcs + ['NativeDisplay.cpp'], env['FREETYPE'])
     env['FREETYPEFONT']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['HAVE_FREETYPE_FONT'])
 
