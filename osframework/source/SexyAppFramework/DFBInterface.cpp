@@ -541,6 +541,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 				event.type = EVENT_KEY_DOWN;
 			else
 				event.type = EVENT_KEY_UP;
+			event.flags = EVENT_FLAGS_KEY_CODE;
 			if (id == DIKI_UP) {
 				event.u.key.keyCode = (int)KEYCODE_UP;
 			} else if(id ==	 DIKI_DOWN) {
@@ -565,9 +566,11 @@ bool DFBInterface::GetEvent(struct Event &event)
 			} else if (id == DIKI_CONTROL_L || id == DIKI_CONTROL_R) {
 				event.u.key.keyCode = (int)KEYCODE_CONTROL;
 			} else if (id >= DIKI_A && id < DIKI_Z) {
+				event.flags |= EVENT_FLAGS_KEY_CHAR;
 				event.u.key.keyCode = (int)('a' + id - DIKI_A);
 				event.u.key.keyChar = (int)sym;
 			} else if (id >= DIKI_0 && id < DIKI_9) {
+				event.flags |= EVENT_FLAGS_KEY_CHAR;
 				event.u.key.keyCode = (int)('0' + id - DIKI_0);
 				event.u.key.keyChar = (int)sym;
 			} else {
@@ -673,6 +676,7 @@ bool DFBInterface::GetEvent(struct Event &event)
 				event.type = EVENT_KEY_DOWN;
 			else
 				event.type = EVENT_KEY_UP;
+			event.flags = EVENT_FLAGS_KEY_CODE;
 			if (id == DIKI_UP) {
 				event.u.key.keyCode = (int)KEYCODE_UP;
 			} else if(id ==	 DIKI_DOWN) {
@@ -697,9 +701,11 @@ bool DFBInterface::GetEvent(struct Event &event)
 			} else if (id == DIKI_CONTROL_L || id == DIKI_CONTROL_R) {
 				event.u.key.keyCode = (int)KEYCODE_CONTROL;
 			} else if (id >= DIKI_A && id < DIKI_Z) {
+				event.flags |= EVENT_FLAGS_KEY_CHAR;
 				event.u.key.keyCode = (int)('a' + id - DIKI_A);
 				event.u.key.keyChar = (int)sym;
 			} else if (id >= DIKI_0 && id < DIKI_9) {
+				event.flags |= EVENT_FLAGS_KEY_CHAR;
 				event.u.key.keyCode = (int)('0' + id - DIKI_0);
 				event.u.key.keyChar = (int)sym;
 			} else {
