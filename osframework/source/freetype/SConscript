@@ -92,7 +92,8 @@ modules = ['tt_driver', 'autofit_module', 'ft_raster1_renderer',
 ftmodule = os.path.join (freetype_dir, 'include', 'freetype', 'config', 'ftmodule.h')
 ftmodule_h = freetype_env.Command (ftmodule, [Value (modules)],
                                    GenerateFreetypeModule)
-freetype_env.Depends(freetype_env.Object(os.path.join (freetype_dir, 'src', 'base', 'ftinit.c')),
+freetype_env.Depends(freetype_env.SharedObject(os.path.join (freetype_dir, 'src',
+                                                             'base', 'ftinit.c')),
                      ftmodule_h)
 
 freetype_env.AppendUnique (CPPPATH = [os.path.join (freetype_dir, 'include'),
