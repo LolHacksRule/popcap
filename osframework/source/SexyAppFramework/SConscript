@@ -137,7 +137,7 @@ if 'FREETYPEFONT' in env['DRIVERS']:
     if env.has_key ('FREETYPE') and env['FREETYPE']:
         env.Depends(freetype_srcs + ['NativeDisplay.cpp'], env['FREETYPE'])
     env['FREETYPEFONT']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['HAVE_FREETYPE_FONT'])
+    env.AppendUnique(CPPDEFINES = ['SEXY_FREETYPE_FONT'])
 
 env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
                              '#SexyAppFramework'],

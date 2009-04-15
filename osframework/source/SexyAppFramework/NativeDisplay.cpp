@@ -2,7 +2,7 @@
 #include "MemoryImage.h"
 #include "Font.h"
 
-#ifdef HAVE_FREETYPE_FONT
+#ifdef SEXY_FREETYPE_FONT
 #include "FreeTypeFont.h"
 #endif
 
@@ -64,8 +64,9 @@ Font* NativeDisplay::CreateFont(SexyAppBase * theApp,
 				 bool italics,
 				 bool underline)
 {
-#ifdef HAVE_FREETYPE_FONT
-	return new FreeTypeFont(theFace, thePointSize * 96 / 72.0f, bold, italics, underline);
+#ifdef SEXY_FREETYPE_FONT
+	return new FreeTypeFont(theFace, thePointSize * 96 / 72.0f, bold,
+				italics, underline);
 #endif
 	return 0;
 }
