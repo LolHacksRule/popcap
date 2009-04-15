@@ -50,6 +50,17 @@ Driver* DriverFactory::Find (const std::string name)
 
 }
 
+Driver* DriverFactory::FindNext (Driver * theDriver)
+{
+	if (!theDriver)
+		return Find();
+
+	Drivers::iterator it = mDrivers.find(theDriver);
+	if (it == mDrivers.end () || ++it == mDrivers.end ())
+		return 0;
+	return *it;
+}
+
 const DriverFactory::Drivers* DriverFactory::GetDrivers()
 {
 	return &mDrivers;

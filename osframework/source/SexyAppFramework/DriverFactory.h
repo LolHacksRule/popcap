@@ -38,6 +38,7 @@ namespace Sexy {
 		void		       RemoveDriver (Driver * theDriver);
 
 		Driver*		       Find (const std::string name = "auto");
+		Driver*		       FindNext (Driver * theDriver);
 
 	public:
 		const Drivers*         GetDrivers();
