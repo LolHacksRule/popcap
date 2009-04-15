@@ -2832,10 +2832,16 @@ void SexyAppBase::Init()
 		std::string driver(sound_driver ? sound_driver : "auto");
 		SoundDriver* aSoundDriver = dynamic_cast<SoundDriver*>
 			(SoundDriverFactory::GetSoundDriverFactory ()->Find (driver));
-		if (aSoundDriver)
+	        while (aSoundDriver)
 		{
 			mSoundManager = aSoundDriver->Create (this);
-			mMusicInterface = aSoundDriver->CreateMusicInterface (this);
+			if (mSoundManager)
+			{
+				mMusicInterface = aSoundDriver->CreateMusicInterface (this);
+				break;
+			}
+			aSoundDriver = dynamic_cast<SoundDriver*>
+				(SoundDriverFactory::GetSoundDriverFactory ()->FindNext (aSoundDriver));
 		}
 	}
 	if (mSoundManager == NULL)
