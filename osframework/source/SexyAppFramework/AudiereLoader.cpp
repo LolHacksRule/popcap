@@ -10,12 +10,13 @@ audiere::MIDIDevicePtr gAudiereMIDIDevice;
 audiere::AudioDevicePtr getAudiereDevice(void)
 {
 	const char * audiereDevice = getenv("SEXY_AUDIERE_DEVICE");
+	const char * audiereParameters = getenv("SEXY_AUDIERE_PARAMETERS");
 #ifdef WIN32
 	if (!audiereDevice)
 		audiereDevice = "winmm";
 #endif
 	if (!gAudiereDevice)
-		gAudiereDevice = audiere::OpenDevice(audiereDevice);
+		gAudiereDevice = audiere::OpenDevice(audiereDevice, audiereParameters);
 	return gAudiereDevice;
 }
 
