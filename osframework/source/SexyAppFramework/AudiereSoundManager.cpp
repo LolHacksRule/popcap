@@ -124,7 +124,6 @@ bool AudiereSoundManager::LoadSound(unsigned int theSfxID, const std::string& th
 
 	std::string aFilename = theFilename;
 
-	int aLastDotPos = aFilename.rfind('.');
 	int aLastSlashPos = std::max((int) aFilename.rfind('\\'), (int) aFilename.rfind('/'));
 	if (aLastSlashPos < 0)
 		aLastSlashPos = 0;
@@ -353,12 +352,16 @@ public:
 	SoundManager* Create (SexyAppBase * theApp)
 	{
 		Init ();
+		if (!getAudiereDevice())
+			return 0;
 		return new AudiereSoundManager ();
 	}
 
 	MusicInterface* CreateMusicInterface (SexyAppBase * theApp)
 	{
 		Init ();
+		if (!getAudiereDevice())
+			return 0;
 		return new AudiereMusicInterface ();
 	}
 private:
