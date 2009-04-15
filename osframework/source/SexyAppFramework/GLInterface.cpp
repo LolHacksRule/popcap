@@ -156,7 +156,7 @@ void GLInterface::InitGL()
 		     strstr (mGLExtensions, "GL_EXT_texture_non_power_of_two") ||
 		     strstr (mGLExtensions, "GL_ARB_texture_rectangle") ||
 		     strstr (mGLExtensions, "GL_EXT_texture_rectangle")) &&
-		    !getenv("SEXY_GL_NO_RECTANGLE_TEXTURE"))
+		    getenv("SEXY_GL_RECTANGLE_TEXTURE"))
 			mTextureNPOT = GL_TRUE;
 		if (mGLMajor > 2 || (mGLMajor == 1 && mGLMinor >= 2) ||
 		    strstr (mGLExtensions, "GL_IMG_texture_format_BGRA888") ||
