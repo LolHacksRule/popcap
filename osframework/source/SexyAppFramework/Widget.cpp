@@ -222,7 +222,7 @@ void Widget::SetDisabled(bool isDisabled)
 
 void Widget::SetFocus(Widget* theWidget)
 {
-	Widget* aFocusWidget = theWidget;
+	Widget* aFocusWidget;
 	std::vector<Widget*> aParents;
 	std::vector<Widget*> aOldParents;
 
@@ -238,11 +238,16 @@ void Widget::SetFocus(Widget* theWidget)
 
 	if (theWidget)
 	{
+		aFocusWidget = theWidget;
 		while (aFocusWidget->mParent != this)
 		{
 			aFocusWidget = (Widget*)aFocusWidget->mParent;
 			aParents.push_back(aFocusWidget);
 		}
+	}
+	else
+	{
+		aFocusWidget = 0;
 	}
 
 	Widget* aParent = 0;
