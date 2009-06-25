@@ -5,6 +5,8 @@
 #include "AudiereSoundManager.h"
 #include "audiere.h"
 
+#include <math.h>
+
 using namespace Sexy;
 using namespace audiere;
 
@@ -80,7 +82,10 @@ void AudiereSoundInstance::RehupPan()
 void AudiereSoundInstance::RehupPitch()
 {
 	if (mStream)
-		mStream->setPitchShift(mBasePitch * mPitch);
+	{
+		double pitch = pow(1.0594630943592952645618252949463, mBasePitch * mPitch);
+		mStream->setPitchShift(pitch);
+	}
 }
 
 void AudiereSoundInstance::Release()
