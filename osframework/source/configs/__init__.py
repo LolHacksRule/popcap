@@ -14,6 +14,7 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('builddir', 'output to an alternative directory', 'False'))
     opts.Add(BoolVariable ('static', 'build the framework as a static library', 'True'))
     opts.Add('otherdirs', 'build other components in different directories(seperated by comma)', '')
+    opts.Add(BoolVariable ('keyboard', 'support changing focus by pressing arrow keys', 'True'))
 
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''

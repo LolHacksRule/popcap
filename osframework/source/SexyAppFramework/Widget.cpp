@@ -100,6 +100,7 @@ void Widget::Draw(Graphics* g) // Already translated
 
 void Widget::DrawOther(Graphics* g) // Already translated
 {
+#ifndef SEXY_NO_KEYBOARD
 	if (mFocusable && mHasFocus && mDrawFocusRect)
 	{
 		if (mParent && mParent == mWidgetManager)
@@ -111,6 +112,7 @@ void Widget::DrawOther(Graphics* g) // Already translated
 		else if (mWidth > 0 && mHeight > 0)
 			g->DrawRect(0, 0, mWidth - 1, mHeight - 1);
 	}
+#endif
 }
 
 void Widget::DrawOverlay(Graphics* g)
@@ -587,6 +589,7 @@ bool Widget::OnKeyEscape()
 
 bool Widget::KeyDown(KeyCode theKey)
 {
+#ifndef SEXY_NO_KEYBOARD
 	if (theKey == KEYCODE_TAB)
 	{
 		if (mWidgetManager->mKeyDown[KEYCODE_SHIFT])
@@ -628,12 +631,14 @@ bool Widget::KeyDown(KeyCode theKey)
 	}
 	if (it != mSortedWidgets.end())
 		return (*it)->KeyDownUp(theKey);
+#endif
 
 	return false;
 }
 
 bool Widget::KeyUp(KeyCode theKey)
 {
+#ifndef SEXY_NO_KEYBOARD
 	WidgetVector::iterator it;
 	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
 	{
@@ -646,6 +651,7 @@ bool Widget::KeyUp(KeyCode theKey)
 		if (aWidget->KeyDownUp(theKey, false))
 			return true;
 	}
+#endif
 
 	return false;
 }

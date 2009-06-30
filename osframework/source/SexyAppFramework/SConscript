@@ -139,6 +139,9 @@ if 'FREETYPEFONT' in env['DRIVERS']:
     env['FREETYPEFONT']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_FREETYPE_FONT'])
 
+if not env['keyboard']:
+    env.AppendUnique(CPPDEFINES = ['SEXY_NO_KEYBOARD'])
+
 env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
                              '#SexyAppFramework'],
                   LIBPATH = [os.path.join('..', 'ImageLib'),
