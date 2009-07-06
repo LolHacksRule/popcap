@@ -169,9 +169,10 @@ static GLuint CreateTexture (GLImage* theImage, GLuint old,
 		uint32 * src = bits + y * imageWidth + x;
 
 		for (i = 0; i < aHeight; i++) {
+			int j;
 			if (format == GL_RGBA)
 			{
-				for (int j = 0; j < aWidth; j++)
+				for (j = 0; j < aWidth; j++)
 				{
 					uint32 pixel = src[j];
 					dst[j] =
@@ -184,12 +185,14 @@ static GLuint CreateTexture (GLImage* theImage, GLuint old,
 			{
 				memcpy (dst, src, aWidth * 4);
 			}
-			memset (dst + aWidth, 0, aWidthExtra * 4);
+			for (j = aWidth; j < w; j++)
+				dst[j] = dst[aWidth - 1];
+
 			dst += w;
 			src += imageWidth;
 		}
-
-		memset (copy + w * aHeight, 0, w * aHeightExtra);
+		for (; i < h; i++, dst += w)
+			memcpy (dst, copy + w * (aHeight - 1), w * 4);
 
 		glTexImage2D (target,
 			      0,
