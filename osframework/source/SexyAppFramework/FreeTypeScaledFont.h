@@ -93,11 +93,13 @@ namespace Sexy
 		~FreeTypeScaledFont();
 
 	public:
-		int				StringWidth(const SexyString& theString);
+		int				StringWidth(const SexyString& theString,
+							    bool unicode = false);
 		void				DrawString(Graphics* g, int theX, int theY,
 							   const SexyString& theString,
 							   const Color& theColor,
 							   const Rect& theClipRect,
+							   bool unicode = false,
 							   bool drawShadow = false,
 							   bool drawOutline = false);
 		int				CharWidth(int theChar);
@@ -155,10 +157,11 @@ namespace Sexy
 		void				ShrinkGlyphCache(void);
 
 		int				Utf8FromString(const std::string& string,
+							       bool unicode,
 							       std::string& utf8);
 
 		void				GlyphsFromString(const std::string& string, GlyphVector& glyphs,
-								 bool render = false);
+								 bool unicode = false, bool render = false);
 
 	public:
 		void				Ref();

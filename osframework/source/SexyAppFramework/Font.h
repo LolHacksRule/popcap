@@ -35,11 +35,11 @@ public:
 	virtual int				GetHeight();
 	virtual int				GetLineSpacingOffset();
 	virtual int				GetLineSpacing();
-	virtual int				StringWidth(const SexyString& theString);
+	virtual int				StringWidth(const SexyString& theString, bool unicode = false);
 	virtual int				CharWidth(int theChar);
 	virtual int				CharWidthKern(int theChar, int thePrevChar);
 
-	virtual void			DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect);
+	virtual void			DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect, bool unicode = false);
 
 	virtual Font*			Duplicate() = 0;
 };

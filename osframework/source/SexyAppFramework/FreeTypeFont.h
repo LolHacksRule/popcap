@@ -31,10 +31,10 @@ namespace Sexy
 
 		virtual ~FreeTypeFont();
 
-		virtual int			StringWidth(const SexyString& theString);
+		virtual int			StringWidth(const SexyString& theString, bool unicode);
 		virtual void			DrawString(Graphics* g, int theX, int theY,
 							   const SexyString& theString, const Color& theColor,
-							   const Rect& theClipRect);
+							   const Rect& theClipRect, bool unicode);
 		virtual int			CharWidth(int theChar);
 		virtual int			CharWidthKern(int theChar, int thePrevChar);
 

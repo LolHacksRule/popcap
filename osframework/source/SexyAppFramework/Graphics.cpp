@@ -643,10 +643,10 @@ void Graphics::DrawLineAA(int theStartX, int theStartY, int theEndX, int theEndY
 	mDestImage->DrawLineAA(aStartX, aStartY, aEndX, aEndY, mColor, mDrawMode);
 }
 
-void Graphics::DrawString(const SexyString& theString, int theX, int theY)
+void Graphics::DrawString(const SexyString& theString, int theX, int theY, bool unicode)
 {
 	if (mFont != NULL)
-		mFont->DrawString(this, theX, theY, theString, mColor, mClipRect);
+		mFont->DrawString(this, theX, theY, theString, mColor, mClipRect, unicode);
 }
 
 void Graphics::DrawImage(Sexy::Image* theImage, int theX, int theY)
@@ -984,9 +984,9 @@ void Graphics::SetScale(float theScaleX, float theScaleY, float theOrigX, float 
 	mScaleOrigY = theOrigY + mTransY;
 }
 
-int Graphics::StringWidth(const SexyString& theString)
+int Graphics::StringWidth(const SexyString& theString, bool unicode)
 {
-	return mFont->StringWidth(theString);
+	return mFont->StringWidth(theString, unicode);
 }
 
 void Graphics::DrawImageBox(const Rect& theDest, Image* theComponentImage)
@@ -1078,7 +1078,7 @@ void Graphics::DrawImageCel(Image* theImageStrip, const Rect& theDestRect, int t
 	DrawImage(theImageStrip,theDestRect,aSrcRect);
 }
 
-int Graphics::WriteString(const SexyString& theString, int theX, int theY, int theWidth, int theJustification, bool drawString, int theOffset, int theLength, int theOldColor)
+int Graphics::WriteString(const SexyString& theString, int theX, int theY, int theWidth, int theJustification, bool drawString, int theOffset, int theLength, int theOldColor, bool unicode)
 {
 	Font* aFont = GetFont();
 	if (theOldColor==-1)
@@ -1089,10 +1089,10 @@ int Graphics::WriteString(const SexyString& theString, int theX, int theY, int t
 		switch (theJustification)
 		{
 		case 0:
-			theX += (theWidth - WriteString(theString, theX, theY, theWidth, -1, false, theOffset, theLength, theOldColor))/2;
+			theX += (theWidth - WriteString(theString, theX, theY, theWidth, -1, false, theOffset, theLength, theOldColor, unicode))/2;
 			break;
 		case 1:
-			theX += theWidth - WriteString(theString, theX, theY, theWidth, -1, false, theOffset, theLength, theOldColor);
+			theX += theWidth - WriteString(theString, theX, theY, theWidth, -1, false, theOffset, theLength, theOldColor, unicode);
 			break;
 		}
 	}
@@ -1145,13 +1145,13 @@ int Graphics::WriteString(const SexyString& theString, int theX, int theY, int t
 
 				if (drawString)
 				{
-					DrawString(aString, theX + aXOffset, theY);
+					DrawString(aString, theX + aXOffset, theY, unicode);
 					SetColor(Color((aColor >> 16) & 0xFF, (aColor >> 8) & 0xFF, (aColor) & 0xFF, GetColor().mAlpha));
 				}
 
 				i += 7;
 
-				aXOffset += GetFont()->StringWidth(aString);
+				aXOffset += GetFont()->StringWidth(aString, unicode);
 
 				aString = _S("");
 			}
@@ -1162,16 +1162,17 @@ int Graphics::WriteString(const SexyString& theString, int theX, int theY, int t
 
 	if (drawString)
 	{
-		DrawString(aString, theX + aXOffset, theY);
+		DrawString(aString, theX + aXOffset, theY, unicode);
 	}
 
-	aXOffset += GetFont()->StringWidth(aString);
+	aXOffset += GetFont()->StringWidth(aString, unicode);
 
 	return aXOffset;
 }
 
 static int WriteWordWrappedHelper(Graphics *g, const SexyString& theString, int theX, int theY, int theWidth, int theJustification,
-				  bool drawString, int theOffset, int theLength, int theOldColor, int theMaxChars)
+				  bool drawString, int theOffset, int theLength, int theOldColor, int theMaxChars,
+				  bool unicode)
 {
 	if (theOffset+theLength >theMaxChars)
 	{
@@ -1182,13 +1183,13 @@ static int WriteWordWrappedHelper(Graphics *g, const SexyString& theString, int 
 			if (theLength <= 0)
 				return -1;
 
-			if (aUtf8Len >= 0)
+			if (unicode && aUtf8Len >= 0)
 				while (SexyUtf8Strlen(theString.c_str() + theOffset, theLength) < 0)
 					theLength--;
 		}
 	}
 
-	return g->WriteString(theString,theX,theY,theWidth,theJustification,drawString,theOffset,theLength,theOldColor);
+	return g->WriteString(theString,theX,theY,theWidth,theJustification,drawString,theOffset,theLength,theOldColor, unicode);
 }
 
 int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, int theLineSpacing, int theJustification, int *theMaxWidth, int theMaxChars, int *theLastWidth)
@@ -1304,10 +1305,10 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 				{
 					if (aUtf8Str)
 						WriteWordWrappedHelper(this, aUtf8, theRect.mX + anIndentX, theRect.mY + aYOffset, theRect.mWidth,
-								       theJustification, true, aLineStartPos, aSpacePos-aLineStartPos, anOrigColorInt, theMaxChars);
+								       theJustification, true, aLineStartPos, aSpacePos-aLineStartPos, anOrigColorInt, theMaxChars, true);
 					else
 						WriteWordWrappedHelper(this, theLine, theRect.mX + anIndentX, theRect.mY + aYOffset, theRect.mWidth,
-								       theJustification, true, aLineStartPos, aSpacePos-aLineStartPos, anOrigColorInt, theMaxChars);
+								       theJustification, true, aLineStartPos, aSpacePos-aLineStartPos, anOrigColorInt, theMaxChars, false);
 
 					/*WriteString(theLine, theRect.mX + anIndentX, theRect.mY + aYOffset, theRect.mWidth,
 					theJustification, true, aLineStartPos, aSpacePos-aLineStartPos);*/
@@ -1342,10 +1343,10 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 
 				if (aUtf8Str)
 					aWrittenWidth = WriteWordWrappedHelper(this, aUtf8, theRect.mX + anIndentX, theRect.mY + aYOffset, theRect.mWidth,
-									       theJustification, true, aLineStartPos, aCurPos-aLineStartPos, anOrigColorInt, theMaxChars);
+									       theJustification, true, aLineStartPos, aCurPos-aLineStartPos, anOrigColorInt, theMaxChars, true);
 				else
 					aWrittenWidth = WriteWordWrappedHelper(this, theLine, theRect.mX + anIndentX, theRect.mY + aYOffset, theRect.mWidth,
-									       theJustification, true, aLineStartPos, aCurPos-aLineStartPos, anOrigColorInt, theMaxChars);
+									       theJustification, true, aLineStartPos, aCurPos-aLineStartPos, anOrigColorInt, theMaxChars, false);
 
 				if (aWrittenWidth<0)
 					break;
@@ -1378,10 +1379,10 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 
 		if (aUtf8Str)
 			aWrittenWidth = WriteWordWrappedHelper(this, aUtf8, theRect.mX + anIndentX, theRect.mY + aYOffset, theRect.mWidth,
-							       theJustification, true, aLineStartPos, aStrLen - aLineStartPos, anOrigColorInt, theMaxChars);
+							       theJustification, true, aLineStartPos, aStrLen - aLineStartPos, anOrigColorInt, theMaxChars, true);
 		else
 			aWrittenWidth = WriteWordWrappedHelper(this, theLine, theRect.mX + anIndentX, theRect.mY + aYOffset, theRect.mWidth,
-							       theJustification, true, aLineStartPos, theLine.length()-aLineStartPos, anOrigColorInt, theMaxChars);
+							       theJustification, true, aLineStartPos, theLine.length()-aLineStartPos, anOrigColorInt, theMaxChars, false);
 
 		if (aWrittenWidth>=0)
 		{
@@ -1411,9 +1412,9 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 	return aYOffset + aFont->GetDescent() - theLineSpacing;
 }
 
-int	Graphics::DrawStringColor(const SexyString& theLine, int theX, int theY, int theOldColor)
+int	Graphics::DrawStringColor(const SexyString& theLine, int theX, int theY, int theOldColor, bool unicode)
 {
-	return WriteString(theLine, theX, theY, -1, -1,true,0,-1,theOldColor);
+	return WriteString(theLine, theX, theY, -1, -1,true,0,-1,theOldColor, unicode);
 }
 
 int	Graphics::DrawStringWordWrapped(const SexyString& theLine, int theX, int theY, int theWrapWidth, int theLineSpacing, int theJustification, int *theMaxWidth)

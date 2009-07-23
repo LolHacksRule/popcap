@@ -156,7 +156,7 @@ void FreeTypeScaledFont::FreeTypeGlyphAreaFree(FreeTypeGlyphArea* area)
 	delete area;
 }
 
-int FreeTypeScaledFont::StringWidth(const SexyString& theString)
+int FreeTypeScaledFont::StringWidth(const SexyString& theString, bool unicode)
 {
 	if (!mBaseFont)
 		return 0;
@@ -174,7 +174,7 @@ int FreeTypeScaledFont::StringWidth(const SexyString& theString)
 	int min_y = 0, max_y = 0;
 
 	GlyphVector glyphs;
-	GlyphsFromString(theString, glyphs);
+	GlyphsFromString(theString, glyphs, unicode, false);
 	for (unsigned int i = 0; i < glyphs.size(); i++)
 	{
 		FreeTypeGlyphEntry* entry = glyphs[i].entry;
@@ -222,20 +222,41 @@ int FreeTypeScaledFont::StringWidth(const SexyString& theString)
 }
 
 int FreeTypeScaledFont::Utf8FromString(const std::string& string,
-				       std::string& utf8)
+				       bool unicode, std::string& utf8)
 {
-	return SexyUtf8FromString(string, utf8);
+	int len;
+	char* result;
+
+	len = SexyUtf8Strlen(string.c_str(), -1);
+	if (!unicode && len > 0)
+		printf ("unicode: %d str: %s len: %d\n", unicode, string.c_str(), len);
+
+	if (unicode && len >= 0)
+	{
+		utf8 = string;
+		return len;
+	}
+
+	len = SexyUtf8FromLocale(string.c_str(), -1, &result);
+	if (len >= 0)
+	{
+		utf8 = std::string(result);
+		delete [] result;
+		return len;
+	}
+
+	return -1;
 }
 
 void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector& glyphs,
-					  bool render)
+					  bool unicode, bool render)
 {
 	std::string utf8;
 
 	glyphs.clear();
 
 	FT_Face face = mFace;
-	int len = Utf8FromString(string, utf8);
+	int len = Utf8FromString(string, unicode, utf8);
 	if (len >= 0)
 	{
 		const char* chars = utf8.c_str();
@@ -292,7 +313,7 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 
 void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
 				    const Color& theColor, const Rect& theClipRect,
-				    bool drawShadow, bool drawOutline)
+				    bool unicode, bool drawShadow, bool drawOutline)
 {
 	if (!mBaseFont)
 		return;
@@ -319,7 +340,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 	g->SetColor(theColor);
 
 	GlyphVector glyphs;
-	GlyphsFromString(theString, glyphs, true);
+	GlyphsFromString(theString, glyphs, unicode, true);
 	for (unsigned int i = 0; i < glyphs.size(); i++)
 	{
 		FreeTypeGlyphEntry* entry = glyphs[i].entry;

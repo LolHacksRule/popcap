@@ -1342,7 +1342,7 @@ void ImageFont::GenerateActiveFontLayers()
 	}
 }
 
-int ImageFont::StringWidth(const SexyString& theString)
+int ImageFont::StringWidth(const SexyString& theString, bool unicode)
 {
 	int aWidth = 0;
 	char aPrevChar = 0;
@@ -1657,7 +1657,7 @@ void ImageFont::DrawStringEx(Graphics* g, int theX, int theY, const SexyString& 
 	g->SetColorizeImages(colorizeImages);
 }
 
-void ImageFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect)
+void ImageFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect, bool unicode)
 {
 	DrawStringEx(g, theX, theY, theString, theColor, &theClipRect, NULL, NULL);
 }

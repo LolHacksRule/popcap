@@ -57,16 +57,16 @@ FreeTypeFont::~FreeTypeFont()
 	mScaledFont->Unref();
 }
 
-int FreeTypeFont::StringWidth(const SexyString& theString)
+int FreeTypeFont::StringWidth(const SexyString& theString, bool unicode)
 {
-	return mScaledFont->StringWidth(theString);
+	return mScaledFont->StringWidth(theString, unicode);
 }
 
 void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
-			      const Color& theColor, const Rect& theClipRect)
+			      const Color& theColor, const Rect& theClipRect, bool unicode)
 {
 	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect,
-				mDrawShadow, mOutLine);
+				unicode, mDrawShadow, mOutLine);
 }
 
 int FreeTypeFont::CharWidth(int theChar)
