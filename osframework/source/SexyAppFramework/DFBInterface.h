@@ -38,7 +38,6 @@ public:
 	bool					mVideoOnlyDraw;
 	ulong					mInitCount;
 
-	pthread_t                               mMainThread;
 public:
 	ulong					GetColorRef(ulong theRGB);
 	void					AddImage(Image* theImage);
@@ -69,6 +68,7 @@ public:
 	virtual bool				GetEvent(struct Event &event);
 
 	bool                                    IsMainThread(void);
+	void                                    DelayedReleaseSurface(IDirectFBSurface* surface);
 
  private:
 	IDirectFBSurface*			CreateDFBSurface(int width, int height);

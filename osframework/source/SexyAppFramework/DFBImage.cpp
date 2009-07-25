@@ -102,7 +102,7 @@ bool DFBImage::UnlockSurface()
 void DFBImage::DeleteSurface()
 {
         if (mSurface)
-		mSurface->Release(mSurface);
+		mInterface->DelayedReleaseSurface(mSurface);
 	mSurface = 0;
 	mDFBCount++;
 }

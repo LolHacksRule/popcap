@@ -59,7 +59,6 @@ int DFBInterface::Init(void)
 {
 	Cleanup();
 
-	mMainThread = pthread_self();
 	DFBResult ret;
 	mInitialized = false;
 
@@ -727,9 +726,34 @@ bool DFBInterface::GetEvent(struct Event &event)
 	return true;
 }
 
+namespace Sexy {
+class DelayedReleaseSurfaceWork: public DelayedWork
+{
+public:
+	DelayedReleaseSurfaceWork(IDirectFBSurface* surface) : mSurface(surface) {}
+
+public:
+	virtual void Work()
+	{
+		mSurface->Release(mSurface);
+	}
+
+private:
+	IDirectFBSurface* mSurface;
+};
+}
+
+void DFBInterface::DelayedReleaseSurface(IDirectFBSurface* surface)
+{
+	if (mMainThread != Thread::Self())
+		PushWork(new DelayedReleaseSurfaceWork(surface));
+	else
+		surface->Release(surface);
+}
+
 bool DFBInterface::IsMainThread(void)
 {
-	return pthread_equal(mMainThread, pthread_self());
+	return mMainThread == Thread::Self();
 }
 
 class DFBVideoDriver: public VideoDriver {
