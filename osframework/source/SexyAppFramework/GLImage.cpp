@@ -60,8 +60,10 @@ public:
 	bool                      mRectangleTexture;
 	GLenum                    mTarget;
 
+	GLInterface*              mInterface;
+
 public:
-	GLTexture();
+	GLTexture(GLInterface* theInterface);
 	~GLTexture();
 
 	void			  ReleaseTextures ();
@@ -208,7 +210,7 @@ static GLuint CreateTexture (GLImage* theImage, GLuint old,
 	return old ? old : texture;
 }
 
-GLTexture::GLTexture ()
+GLTexture::GLTexture (GLInterface *theInterface)
 {
 	mWidth = 0;
 	mHeight = 0;
@@ -220,6 +222,7 @@ GLTexture::GLTexture ()
 	mTexBlockHeight = 64;
 	mRectangleTexture = false;
 	mTarget = 0;
+	mInterface = theInterface;
 }
 
 GLTexture::~GLTexture ()
@@ -230,7 +233,7 @@ GLTexture::~GLTexture ()
 void GLTexture::ReleaseTextures ()
 {
 	for(int i = 0; i < (int)mTextures.size(); i++)
-		glDeleteTextures (1, &mTextures[i].mTexture);
+		mInterface->DelayedDeleteTexture(mTextures[i].mTexture);
 
 	mTextures.clear();
 	mTexMemSize = 0;
@@ -2023,7 +2026,7 @@ void GLImage::EnsureTexture()
 {
 	if (!mTexture)
 	{
-		mTexture = new GLTexture();
+		mTexture = new GLTexture(mInterface);
 	}
 
 	if (mTexture->CheckCreateTextures (this) && mWantPal)
