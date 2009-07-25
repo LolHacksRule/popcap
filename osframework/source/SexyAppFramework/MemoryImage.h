@@ -26,6 +26,8 @@ public:
 	void*					mD3DData;
 	DWORD					mD3DFlags;	// see D3DInterface.h for possible values
 
+	void*                                   mNativeData;
+
 	uint32*					mColorTable;
 	uchar*					mColorIndices;
 

@@ -44,7 +44,8 @@ MemoryImage::MemoryImage(const MemoryImage& theMemoryImage) :
 	mWantPal(theMemoryImage.mWantPal),
 	mD3DFlags(theMemoryImage.mD3DFlags),
 	mBitsChangedCount(theMemoryImage.mBitsChangedCount),
-	mD3DData(NULL)
+	mD3DData(NULL),
+	mNativeData(NULL)
 {
 	bool deleteBits = false;
 
@@ -153,6 +154,7 @@ void MemoryImage::Init()
 
 	mD3DData = NULL;
 	mD3DFlags = 0;
+	mNativeData = NULL;
 	mBitsChangedCount = 0;
 
 	mPurgeBits = false;

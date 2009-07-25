@@ -1614,7 +1614,7 @@ MemoryImage* SexyAppBase::CreateCursorFromAndMask(unsigned char * data, unsigned
 	MemoryImage* anImage;
 
 	DBG_ASSERT ((width % 8 == 0) && (height % 8 == 0));
-	anImage = dynamic_cast<MemoryImage*>(mDDInterface->CreateImage (this, width, height));
+	anImage = (MemoryImage*)CreateImage (width, height);
 
 	bits = anImage->GetBits();
 	if (!bits) {
@@ -2911,14 +2911,9 @@ Sexy::Image* SexyAppBase::GetImage(const std::string& theFileName, bool commitBi
 	if (aLoadedImage == NULL)
 		return NULL;
 
-	Image* anImage = mDDInterface->CreateImage(this,
-						   aLoadedImage->GetWidth(),
-						   aLoadedImage->GetHeight());
-	if (anImage == NULL)
-	{
-		delete aLoadedImage;
-		return NULL;
-	}
+	MemoryImage* anImage = new MemoryImage(this);
+	anImage->Create(aLoadedImage->GetWidth(), aLoadedImage->GetHeight());
+	anImage->GetBits();
 	anImage->SetBits(aLoadedImage->GetBits(), aLoadedImage->GetWidth(), aLoadedImage->GetHeight(), commitBits);
 	delete aLoadedImage;
 	return anImage;
@@ -2953,14 +2948,8 @@ Sexy::Image* SexyAppBase::CreateCrossfadeImage(Sexy::Image* theImage1, const Rec
 	int aWidth = theRect1.mWidth;
 	int aHeight = theRect1.mHeight;
 
-	Image* anResultImage = mDDInterface->CreateImage (this, aWidth, aHeight);
-	MemoryImage * anImage = dynamic_cast<MemoryImage*>(anResultImage);
-
-	if (!anImage)
-	{
-		delete anResultImage;
-		return NULL;
-	}
+	MemoryImage * anImage = new MemoryImage(this);
+	anImage->Create(aWidth, aHeight);
 
 	uint32* aDestBits = anImage->GetBits();
 	uint32* aSrcBits1 = aMemoryImage1->GetBits();
@@ -3067,16 +3056,8 @@ Image* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColor)
 	if (aSrcMemoryImage == NULL)
 		return NULL;
 
-	Image* anDImage = mDDInterface->CreateImage(this, theImage->GetWidth(),
-						    theImage->GetHeight());
-	if (!anDImage)
-		return NULL;
-	MemoryImage* anImage = dynamic_cast<MemoryImage*>(anDImage);
-	if (!anImage)
-	{
-		delete anDImage;
-		return NULL;
-	}
+	MemoryImage* anImage = new MemoryImage(this);
+	anImage->Create(theImage->GetWidth(), theImage->GetHeight());
 
 	uint32* aSrcBits;
 	uint32* aDestBits;
@@ -3549,8 +3530,7 @@ SharedImageRef SexyAppBase::GetSharedImage(const std::string& theFileName, const
 	{
 		// Pass in a '!' as the first char of the file name to create a new image
 		if ((theFileName.length() > 0) && (theFileName[0] == '!'))
-			aSharedImageRef.mSharedImage->mImage =
-				mDDInterface->CreateImage(this, 0, 0);
+			aSharedImageRef.mSharedImage->mImage = new MemoryImage(this);
 		else
 			aSharedImageRef.mSharedImage->mImage = GetImage(theFileName,false);
 	}

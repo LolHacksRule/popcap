@@ -233,8 +233,14 @@ void DFBInterface::RemoveImage(Image* theImage)
 		mImageSet.erase(anItr);
 }
 
-void DFBInterface::Remove3DData(MemoryImage* theImage) // for 3d texture cleanup
+void DFBInterface::RemoveImageData(MemoryImage* theImage) // for 3d texture cleanup
 {
+	if (!theImage->mNativeData)
+		return;
+
+	DFBImageData* aData = (DFBImageData*)theImage->mNativeData;
+	theImage->mNativeData = 0;
+	delete aData;
 }
 
 void DFBInterface::Cleanup()
@@ -318,9 +324,9 @@ bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 	mDFBCursorImage = NULL;
 	mCursorImage = NULL;
 
-	DFBImage * anImage = dynamic_cast<DFBImage*>(theImage);
+	MemoryImage * anImage = dynamic_cast<MemoryImage*>(theImage);
 	if (anImage)
-		mDFBCursorImage = anImage->EnsureSurface();
+		mDFBCursorImage = DFBImage::EnsureSrcSurface(this, theImage);
 	if (mDFBCursorImage)
 		mDFBCursorImage->AddRef(mDFBCursorImage);
 	mCursorImage = anImage;

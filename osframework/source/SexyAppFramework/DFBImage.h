@@ -10,6 +10,23 @@ namespace Sexy
 class DFBInterface;
 class DFBFont;
 
+class DFBImageData
+{
+public:
+	int			  mWidth;
+	int			  mHeight;
+	int			  mBitsChangedCount;
+	DFBInterface*             mInterface;
+	IDirectFBSurface*         mSurface;
+	MemoryImage*              mImage;
+
+public:
+	DFBImageData(DFBInterface* theInterface, MemoryImage* theImage);
+	~DFBImageData();
+
+	void SyncData();
+};
+
 class DFBImage : public MemoryImage
 {
 protected:
@@ -99,6 +116,8 @@ public:
 
  public:
 	IDirectFBSurface*		EnsureSurface();
+	static IDirectFBSurface*        EnsureSrcSurface(DFBInterface* interface, Image* theImage);
+
 };
 
 }

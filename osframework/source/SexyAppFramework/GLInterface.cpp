@@ -290,10 +290,10 @@ bool GLInterface::EnableCursor(bool enable)
 
 bool GLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
-	GLImage * aGLImage = dynamic_cast<GLImage*>(theImage);
+	MemoryImage * aMemoryImage = dynamic_cast<MemoryImage*>(theImage);
 
 	mCursorDirty = true;
-	mCursorImage = aGLImage;
+	mCursorImage = aMemoryImage;
 	mCursorHotX = theHotX;
 	mCursorHotY = theHotY;
 	return true;
@@ -327,6 +327,28 @@ bool GLInterface::DrawCursor(Graphics* g)
 	mCursorDrawnX = mCursorX;
 	mCursorDrawnY = mCursorY;
 	return true;
+}
+
+int GLInterface::GetTextureTarget()
+{
+	if (mTextureNPOT)
+	{
+		if (mGLMajor >= 2)
+			return GL_TEXTURE_2D;
+		return GL_TEXTURE_RECTANGLE_ARB;
+	}
+
+	return GL_TEXTURE_2D;
+}
+
+void GLInterface::RemoveImageData(MemoryImage* theImage)
+{
+	if (!theImage->mNativeData)
+		return;
+
+	GLTexture* aData = (GLTexture*)theImage->mNativeData;
+	theImage->mNativeData = 0;
+	delete aData;
 }
 
 namespace Sexy {

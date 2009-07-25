@@ -22,6 +22,7 @@ typedef std::set<DFBImage*> DFBImageSet;
 class DFBInterface : public NativeDisplay
 {
 	friend class DFBImage;
+	friend class DFBImageData;
 public:
 	SexyAppBase*				mApp;
 
@@ -42,7 +43,7 @@ public:
 	ulong					GetColorRef(ulong theRGB);
 	void					AddImage(Image* theImage);
 	void					RemoveImage(Image* theImage);
-	void					Remove3DData(MemoryImage* theImage); // for 3d texture cleanup
+	void					RemoveImageData(MemoryImage* theImage); // for 3d texture cleanup
 
 	void					Cleanup();
 
@@ -86,7 +87,7 @@ public:
         int                                     mCursorHotY;
         bool                                    mCursorEnabled;
         bool                                    mSoftCursor;
-        DFBImage*                               mCursorImage;
+        MemoryImage*                            mCursorImage;
         IDirectFBSurface                      * mDFBCursorImage;
 
 	IDirectFBDisplayLayer		      * mLayer;

@@ -54,7 +54,7 @@ public:
 	int					mCursorHotX;
 	int					mCursorHotY;
 
-	GLImage*				mCursorImage;
+	MemoryImage*				mCursorImage;
 	bool                                    mCursorDirty;
 	bool					mCursorDrawn;
 
@@ -86,6 +86,8 @@ public:
 	virtual int				Init();
 	virtual void				Cleanup();
 
+	virtual void				RemoveImageData(MemoryImage* theImage);
+
 	virtual void				SwapBuffers();
 	virtual void				InitGL();
 
@@ -103,6 +105,7 @@ public:
 
  public:
 	void                                    DelayedDeleteTexture(GLuint name);
+	int                                     GetTextureTarget(void);
 };
 
 }
