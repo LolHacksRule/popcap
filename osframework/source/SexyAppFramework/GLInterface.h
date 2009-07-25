@@ -100,6 +100,9 @@ public:
 	virtual void				SetCursorPos(int theCursorX, int theCursorY);
 	virtual bool				DrawCursor(Graphics* g);
 	virtual bool				UpdateCursor(int theCursorX, int theCursorY);
+
+ public:
+	void                                    DelayedDeleteTexture(GLuint name);
 };
 
 }

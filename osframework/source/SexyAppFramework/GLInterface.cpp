@@ -328,3 +328,28 @@ bool GLInterface::DrawCursor(Graphics* g)
 	mCursorDrawnY = mCursorY;
 	return true;
 }
+
+namespace Sexy {
+class DelayedDeleteTextureWork: public DelayedWork
+{
+public:
+	DelayedDeleteTextureWork(GLuint tex) : mTex(tex) {}
+
+public:
+	virtual void Work()
+	{
+		glDeleteTextures(1, &mTex);
+	}
+
+private:
+	GLuint mTex;
+};
+}
+
+void GLInterface::DelayedDeleteTexture(GLuint name)
+{
+	if (mMainThread != Thread::Self())
+		PushWork(new DelayedDeleteTextureWork(name));
+	else
+		glDeleteTextures(1, &name);
+}
