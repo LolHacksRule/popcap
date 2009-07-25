@@ -5,6 +5,7 @@
 #include "CritSect.h"
 #include "Ratio.h"
 #include "Event.h"
+#include "SexyThread.h"
 
 namespace Sexy
 {
@@ -57,6 +58,7 @@ public:
 
 	std::list<DelayedWork*>                 mWorkQueue;
 	CritSect				mWorkQueuCritSect;
+	Thread                                  mMainThread;
 
 public:
 	NativeDisplay();

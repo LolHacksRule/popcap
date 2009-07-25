@@ -28,6 +28,7 @@ NativeDisplay::NativeDisplay()
 
 	mCursorX = 0;
 	mCursorY = 0;
+	mMainThread = Thread::Self();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
