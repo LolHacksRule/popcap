@@ -149,8 +149,8 @@ public:
 	
 	virtual int				CharWidth(int theChar);
 	virtual int				CharWidthKern(int theChar, int thePrevChar);
-	virtual int				StringWidth(const SexyString& theString, bool unicode);
-	virtual void			DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect, bool unicode);
+	virtual int				StringWidth(const SexyString& theString, bool unicode = false);
+	virtual void			DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect, bool unicode = false);
 
 	virtual Font*			Duplicate();
 
