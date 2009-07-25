@@ -240,6 +240,7 @@ void DFBInterface::Remove3DData(MemoryImage* theImage) // for 3d texture cleanup
 
 void DFBInterface::Cleanup()
 {
+	FlushWork();
 	mInitialized = false;
 
 	if (mInput)

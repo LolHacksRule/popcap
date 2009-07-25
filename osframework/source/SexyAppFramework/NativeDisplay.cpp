@@ -115,3 +115,32 @@ bool NativeDisplay::DrawCursor(Sexy::Graphics* g)
 void NativeDisplay::RemoveImageData(MemoryImage * theMemoryImage)
 {
 }
+
+void NativeDisplay::PushWork(DelayedWork* theWork)
+{
+	AutoCrit anAutoCrit(mWorkQueuCritSect);
+	mWorkQueue.push_back(theWork);
+}
+
+DelayedWork* NativeDisplay::PopWork(void)
+{
+	AutoCrit anAutoCrit(mWorkQueuCritSect);
+	std::list<DelayedWork*>::iterator it = mWorkQueue.begin();
+	if (it == mWorkQueue.end())
+		return 0;
+
+	DelayedWork* aWork = *it;
+	mWorkQueue.pop_front();
+	return aWork;
+}
+
+void NativeDisplay::FlushWork()
+{
+	DelayedWork* aWork;
+
+	for (aWork = PopWork(); aWork; aWork = PopWork())
+	{
+		aWork->Work();
+		delete aWork;
+	}
+}

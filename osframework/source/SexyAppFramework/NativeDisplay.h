@@ -17,6 +17,12 @@ class SexyAppBase;
 class Graphics;
 class MemoryImage;
 
+class DelayedWork
+{
+public:
+	virtual void Work(void) = 0;
+};
+
 class NativeDisplay
 {
 public:
@@ -48,6 +54,10 @@ public:
 	Ratio					mDisplayAspect;
 
 	Rect					mPresentationRect;
+
+	std::list<DelayedWork*>                 mWorkQueue;
+	CritSect				mWorkQueuCritSect;
+
 public:
 	NativeDisplay();
 	virtual ~NativeDisplay();
@@ -84,6 +94,13 @@ public:
  public:
         virtual bool                                HasEvent();
         virtual bool                                GetEvent(struct Event & event);
+
+public:
+	void                                        FlushWork(void);
+	void                                        PushWork(DelayedWork* theWork);
+
+private:
+	DelayedWork*                                PopWork(void);
 };
 
 };

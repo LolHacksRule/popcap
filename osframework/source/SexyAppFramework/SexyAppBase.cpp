@@ -350,13 +350,15 @@ SexyAppBase::~SexyAppBase()
 		mSharedImageMap.erase(aSharedImageItr++);
 	}
 
+	mDDInterface->FlushWork();
+
         delete mArrowCursor;
 	delete mHandCursor;
 	delete mDraggingCursor;
 
-	delete mDDInterface;
 	delete mMusicInterface;
 	delete mSoundManager;
+	delete mDDInterface;
 
 	WaitForLoadingThread();
 
@@ -1111,9 +1113,13 @@ bool SexyAppBase::DrawDirtyStuff()
 		return false;
 	}
 
+	mDDInterface->FlushWork();
+
 	mIsDrawing = true;
 	bool drewScreen = mWidgetManager->DrawScreen();
 	mIsDrawing = false;
+
+	mDDInterface->FlushWork();
 
 	if ((drewScreen || (aStartTime - mLastDrawTick >= 1000) || (mCustomCursorDirty)) &&
 	    ((int) (aStartTime - mNextDrawTick) >= 0))

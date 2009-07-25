@@ -87,6 +87,7 @@ int GLInterface::Init(void)
 
 void GLInterface::Cleanup()
 {
+	FlushWork();
 	mInitialized = false;
 
 	mGLExtensions = NULL;
@@ -115,6 +116,7 @@ bool GLInterface::Redraw(Rect* theClipRect)
 
 void GLInterface::SwapBuffers()
 {
+	FlushWork();
 }
 
 void GLInterface::InitGL()

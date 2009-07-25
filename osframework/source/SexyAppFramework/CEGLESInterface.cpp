@@ -238,6 +238,8 @@ int CEGLESInterface::Init (void)
 
 void CEGLESInterface::Cleanup ()
 {
+	FlushWork();
+
 	AutoCrit anAutoCrit(mCritSect);
 
 	mInitialized = false;
