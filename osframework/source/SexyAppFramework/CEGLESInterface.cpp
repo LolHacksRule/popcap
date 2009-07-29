@@ -23,14 +23,6 @@ CEGLESInterface::CEGLESInterface (SexyAppBase* theApp)
 	mSurface = EGL_NO_SURFACE;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
-	mCursorHotX = 0;
-	mCursorHotY = 0;
-	mCursorX = 0;
-	mCursorY = 0;
-	mCursorOldX = 0;
-	mCursorOldY = 0;
-	mCursorEnabled = false;
-	mCursorDrawn = false;
 }
 
 CEGLESInterface::~CEGLESInterface ()
@@ -52,8 +44,10 @@ static void init_gdl_plane (int width, int height)
 
 	gdl_init (0);
 
-	printf ("screen size %dx%d\n", width, height);
 	gdl_get_display_info (GDL_DISPLAY_ID_0, &display);
+	printf ("Display size: %dx%d(%dx%d)\n", width, height,
+		display.tvmode.width, display.tvmode.height);
+
 	dst_rect.origin.x = 0;
 	dst_rect.origin.y = 0;
 	dst_rect.width = display.tvmode.width;
@@ -95,8 +89,13 @@ int CEGLESInterface::Init (void)
 
 	EGLBoolean ret;
 
+	if (mApp->mIsWindowed)
+		mOverScan = 1.0f;
+	else
+		mOverScan = 0.9f;
+
 #ifdef SEXY_INTEL_CANMORE
-	init_gdl_plane (mApp->mWidth, mApp->mHeight);
+	init_gdl_plane (-1, -1);
 
 	mDpy = eglGetDisplay ((EGLNativeDisplayType)EGL_DEFAULT_DISPLAY);
 #else
@@ -160,23 +159,24 @@ int CEGLESInterface::Init (void)
 		goto destroy_surface;
 	}
 
-	mWidth = mApp->mWidth;
-	mHeight = mApp->mHeight;
-	mDisplayWidth = width;
-	mDisplayHeight = height;
-	mPresentationRect.mX = 0;
-	mPresentationRect.mY = 0;
-	mPresentationRect.mWidth = mDisplayWidth;
-	mPresentationRect.mHeight = mDisplayHeight;
-
-#if 0
-	EGLint SwapBehavior;
-	eglQuerySurface (mDpy, mSurface, EGL_SWAP_BEHAVIOR, &SwapBehavior);
-	printf ("swap behavior: %s\n",
-		SwapBehavior == EGL_BUFFER_PRESERVED ? "preserved" : "destroyed");
-
-	eglSurfaceAttrib (mDpy, mSurface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_PRESERVED);
-#endif
+	printf ("surface size: %dx%d\n", width, height);
+	mWindowWidth = width;
+	mWindowHeight = height;
+	if (mApp->mIsWindowed)
+	{
+		mWidth = width;
+		mHeight = height;
+		mDisplayWidth = width;
+		mDisplayHeight = height;
+	}
+	else
+	{
+		mWidth = mApp->mWidth;
+		mHeight = mApp->mHeight;
+		mDisplayWidth = mApp->mWidth;
+		mDisplayHeight = mApp->mHeight;
+	}
+	mPresentationRect = Rect(0, 0, mDisplayWidth, mDisplayHeight);
 
 	mContext = eglCreateContext (mDpy, configs[0], EGL_NO_CONTEXT, NULL);
 	if (mContext == EGL_NO_CONTEXT)
@@ -191,28 +191,6 @@ int CEGLESInterface::Init (void)
 		printf ("eglMakeCurrent failed");
 		goto destroy_context;
 	}
-
-#if defined(EGL1_1) || defined(EGL1_2)
-	glSwapInterval (mDpy, 1);
-#endif
-
-	mCursorDrawn = false;
-	glGenTextures (1, &mOldCursorTex);
-
-	static unsigned char bits[64 * 64 * 4] = { 0 };
-
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-	glBindTexture (GL_TEXTURE_2D, mOldCursorTex);
-	glTexImage2D (GL_TEXTURE_2D,
-		      0,
-		      GL_RGBA,
-		      64, 64,
-		      0,
-		      GL_RGBA,
-		      GL_UNSIGNED_BYTE,
-		      bits);
 
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
@@ -246,9 +224,6 @@ void CEGLESInterface::Cleanup ()
 
 	GLInterface::Cleanup ();
 
-	mCursorImage = 0;
-	glDeleteTextures (1, &mOldCursorTex);
-
 	if (mScreenImage)
 		delete mScreenImage;
 	mScreenImage = NULL;
@@ -269,68 +244,10 @@ void CEGLESInterface::Cleanup ()
 	if (mDpy)
 		eglTerminate (mDpy);
 	mDpy = NULL;
-
-	mCursorX = 0;
-	mCursorY = 0;
-	mCursorOldX = 0;
-	mCursorOldY = 0;
 }
 
 void CEGLESInterface::RemapMouse(int& theX, int& theY)
 {
-}
-
-bool CEGLESInterface::EnableCursor(bool enable)
-{
-	mCursorEnabled = enable;
-	return true;
-}
-
-bool CEGLESInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
-{
-	GLImage * aGLImage = dynamic_cast<GLImage*>(theImage);
-	mCursorImage = aGLImage;
-	mCursorHotX = theHotX;
-	mCursorHotY = theHotY;
-	return true;
-}
-
-void CEGLESInterface::SetCursorPos(int theCursorX, int theCursorY)
-{
-        mCursorOldX = mCursorX;
-        mCursorOldY = mCursorY;
-	mCursorX = theCursorX;
-	mCursorY = theCursorY;
-}
-
-bool CEGLESInterface::UpdateCursor(int theCursorX, int theCursorY)
-{
-	SetCursorPos (theCursorX, theCursorY);
-	if (mCursorImage &&
-	    (mCursorOldX != mCursorX ||
-	     mCursorOldY != mCursorY))
-		return true;
-	return false;
-}
-
-bool CEGLESInterface::DrawCursor(Graphics* g)
-{
-	if (!mCursorImage)
-		return false;
-
-	if (0)
-	{
-		glBindTexture (GL_TEXTURE_2D, mOldCursorTex);
-		glCopyTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, mCursorX, mCursorY, 64, 64);
-	}
-
-	g->DrawImage (mCursorImage,
-		      mCursorX - mCursorHotX,
-		      mCursorY - mCursorHotY);
-
-	mCursorDrawnX = mCursorX;
-	mCursorDrawnY = mCursorY;
-	return true;
 }
 
 Image* CEGLESInterface::CreateImage(SexyAppBase * theApp,
@@ -357,40 +274,7 @@ bool CEGLESInterface::GetEvent(struct Event &event)
 void CEGLESInterface::SwapBuffers()
 {
 	if (mSurface)
-	{
 		eglSwapBuffers (mDpy, mSurface);
-
-		if (0 && mCursorDrawn)
-		{
-			glColor4ub (255, 255, 255, 255);
-
-			glBindTexture (GL_TEXTURE_2D, mOldCursorTex);
-
-			GLfloat verts[4 * 2];
-			verts[0] = 0;  verts[1] = 0;
-			verts[2] = 0;  verts[3] = 64;
-			verts[4] = 64; verts[5] = 0;
-			verts[6] = 64; verts[7] = 64;
-
-			GLfloat coords[4 * 2];
-			coords[0] = 0.0f; coords[1] = 0.0f;
-			coords[2] = 0.0f; coords[3] = 1.0f;
-			coords[4] = 1.0f; coords[5] = 0.0f;
-			coords[6] = 1.0f; coords[7] = 1.0f;
-
-			glEnableClientState (GL_VERTEX_ARRAY);
-			glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-			glVertexPointer (2, GL_FLOAT, 0, verts);
-			glTexCoordPointer (2, GL_FLOAT, 0, coords);
-			glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
-
-			glDisableClientState (GL_VERTEX_ARRAY);
-			glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-
-			mCursorDrawn = false;
-		}
-	}
 }
 
 class CEGLESVideoDriver: public VideoDriver {
