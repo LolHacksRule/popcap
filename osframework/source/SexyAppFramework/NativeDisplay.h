@@ -21,6 +21,10 @@ class MemoryImage;
 class DelayedWork
 {
 public:
+	virtual ~DelayedWork()
+	{
+	}
+
 	virtual void Work(void) = 0;
 };
 
