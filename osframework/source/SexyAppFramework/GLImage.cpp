@@ -75,6 +75,22 @@ multiply_pixel (uint pixel)
 	return  (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
 }
 
+static inline void
+multiply_rgba(SexyRGBA &rgba)
+{
+       rgba.r = multiply_alpha(rgba.r, rgba.a);
+       rgba.g = multiply_alpha(rgba.g, rgba.a);
+       rgba.b = multiply_alpha(rgba.b, rgba.a);
+}
+
+static inline SexyRGBA
+ColorToMultipliedRGBA(Color theColor)
+{
+	SexyRGBA rgba = theColor.ToRGBA();
+	multiply_rgba(rgba);
+	return rgba;
+}
+
 static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 			     GLuint old, int x, int y, int width, int height)
 {
@@ -513,10 +529,12 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 	srcY = srcTop;
 	dstY = theY;
 
-	SexyRGBA rgba = theColor.ToRGBA ();
-	glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
+
+	SexyRGBA rgba = theColor.ToRGBA ();
+	glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
+	multiply_rgba (rgba);
 
 	glEnable (mTarget);
 	while (srcY < srcBottom)
@@ -887,10 +905,11 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 	srcY = srcTop;
 	dstY = starty;
 
-	SexyRGBA rgba = theColor.ToRGBA();
-
 	if ((srcLeft >= srcRight) || (srcTop >= srcBottom))
 		return;
+
+	SexyRGBA rgba = theColor.ToRGBA();
+	multiply_rgba (rgba);
 
 	glEnable (mTarget);
 	glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
@@ -1062,7 +1081,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 			aVertex[0].sy = aTriVerts[0].y + ty;
 			aVertex[0].sz = 0;
 			col = GetColorFromTriVertex(aTriVerts[0],theColor);
-			aVertex[0].color = col.ToRGBA();
+			aVertex[0].color = ColorToMultipliedRGBA(col);
 			aVertex[0].tu = aTriVerts[0].u * mMaxTotalU;
 			aVertex[0].tv = aTriVerts[0].v * mMaxTotalV;
 
@@ -1070,7 +1089,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 			aVertex[1].sy = aTriVerts[1].y + ty;
 			aVertex[1].sz = 0;
 			col = GetColorFromTriVertex(aTriVerts[0],theColor);
-			aVertex[1].color = col.ToRGBA();
+			aVertex[1].color = ColorToMultipliedRGBA(col);
 			aVertex[1].tu = aTriVerts[1].u * mMaxTotalU;
 			aVertex[1].tv = aTriVerts[1].v * mMaxTotalV;
 
@@ -1078,7 +1097,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 			aVertex[2].sy = aTriVerts[2].y + ty;
 			aVertex[2].sz = 0;
 			col = GetColorFromTriVertex(aTriVerts[0],theColor);
-			aVertex[2].color = col.ToRGBA();
+			aVertex[2].color = ColorToMultipliedRGBA(col);
 			aVertex[2].tu = aTriVerts[2].u * mMaxTotalU;
 			aVertex[2].tv = aTriVerts[2].v * mMaxTotalV;
 
@@ -1110,20 +1129,20 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 
 			SexyGLVertex vertex1 = {(GLfloat)(aTriVerts[0].u * mMaxTotalU),
 						(GLfloat)(aTriVerts[0].v * mMaxTotalV),
-						col.ToRGBA(),
+						ColorToMultipliedRGBA(col),
 						aTriVerts[0].x + tx, aTriVerts[0].u + ty, 0.0f};
 
 			col = GetColorFromTriVertex(aTriVerts[1],theColor);
 
 			SexyGLVertex vertex2 = {(GLfloat)(aTriVerts[1].u * mMaxTotalU),
 						(GLfloat)(aTriVerts[1].v * mMaxTotalV),
-						col.ToRGBA(),
+						ColorToMultipliedRGBA(col),
 						aTriVerts[1].x + tx, aTriVerts[1].u + ty, 0.0f};
 			col = GetColorFromTriVertex (aTriVerts[2],theColor);
 
 			SexyGLVertex vertex3 = {(GLfloat)(aTriVerts[2].u * mMaxTotalU),
 						(GLfloat)(aTriVerts[2].v * mMaxTotalV),
-						col.ToRGBA(),
+						ColorToMultipliedRGBA(col),
 						aTriVerts[2].x + tx, aTriVerts[2].u + ty, 0.0f};
 
 			aVertex[0] = vertex1;
