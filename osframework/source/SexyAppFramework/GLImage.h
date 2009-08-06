@@ -10,17 +10,6 @@ namespace Sexy
 class GLInterface;
 class GLFont;
 
-#if 0
-typedef struct {
-  GLfloat  tu;
-  GLfloat  tv;
-  SexyRGBA color;
-  GLfloat  sx;
-  GLfloat  sy;
-  GLfloat  sz;
-} SexyGLVertex;
-#endif
-
 struct GLTextureBlock
 {
 	GLuint	  mTexture;
@@ -54,6 +43,7 @@ public:
 	GLTexture(GLInterface* theInterface);
 	~GLTexture();
 
+	void                      SetTextureFilter(bool linear);
 	void			  ReleaseTextures ();
 	void			  CreateTextureDimensions (MemoryImage *theImage);
 	void			  CreateTextures (MemoryImage *theImage);
@@ -147,6 +137,7 @@ public:
 	virtual void			DrawLine(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode);
 	virtual void			DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY, const Color& theColor, int theDrawMode);
 	virtual void			Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode);
+	virtual void			Bltf(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Color& theColor, int theDrawMode);
 	virtual void			BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect, const Color& theColor, int theDrawMode);
 	virtual void			BltRotated(Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY);
 	virtual void			StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch);
@@ -166,7 +157,7 @@ public:
 	GLTexture*			EnsureTexture();
 	void				BltTransformed(Image* theImage, const Rect* theClipRect, const Color& theColor,
 						       int theDrawMode, const Rect &theSrcRect,
-						       const SexyMatrix3 &theTransform,
+						       const SexyMatrix3 &theTransform, bool linearfilter,
 						       float theX = 0, float theY = 0, bool center = false);
 
 

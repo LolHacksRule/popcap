@@ -48,6 +48,33 @@ typedef struct {
 #define ftofix(f) (GLfixed)(f * 65536.0f)
 #endif
 
+static inline int
+multiply_alpha (int alpha, int color)
+{
+    int temp = (alpha * color) + 0x80;
+    return ((temp + (temp >> 8)) >> 8);
+}
+
+static inline uint
+multiply_pixel (uint pixel)
+{
+	if (!pixel)
+		return 0;
+
+	unsigned char  alpha = pixel >> 24;
+	unsigned char  red   = (pixel >> 16) & 0xff;
+	unsigned char  green = (pixel >>  8) & 0xff;
+	unsigned char  blue  = (pixel >>  0) & 0xff;
+
+	if (alpha != 0xff)
+	{
+		red   = multiply_alpha (alpha, red);
+		green = multiply_alpha (alpha, green);
+		blue  = multiply_alpha (alpha, blue);
+	}
+	return  (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+}
+
 static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 			     GLuint old, int x, int y, int width, int height)
 {
@@ -66,6 +93,7 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 		h = RoundToPOT (height);
 		assert (w == width && h == height);
 	}
+	//printf ("texture: %dx%d ==> %dx%d\n", width, height, w, h);
 
 	/* Create an OpenGL texture for the image */
 	if (!old)
@@ -84,9 +112,6 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 	glTexParameteri (target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#ifdef GL_TEXTURE_PRIORITY
-	glTexParameteri (target, GL_TEXTURE_PRIORITY, 1);
-#endif
 
 	uint32* bits = theImage->GetBits ();
 	uint32* copy = new uint32[w * h];
@@ -123,7 +148,7 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 			{
 				for (j = 0; j < aWidth; j++)
 				{
-					uint32 pixel = src[j];
+					uint32 pixel = multiply_pixel (src[j]);
 					dst[j] =
 						(pixel	& 0xff00ff00) |
 						((pixel & 0x00ff0000) >> 16) |
@@ -132,7 +157,8 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 			}
 			else
 			{
-				memcpy (dst, src, aWidth * 4);
+				for (j = 0; j < aWidth; j++)
+					dst[j] = multiply_pixel (src[j]);
 			}
 			for (j = aWidth; j < w; j++)
 				dst[j] = dst[aWidth - 1];
@@ -175,6 +201,38 @@ GLTexture::GLTexture (GLInterface *theInterface)
 GLTexture::~GLTexture ()
 {
 	ReleaseTextures ();
+}
+
+void GLTexture::SetTextureFilter(bool linear)
+{
+	if (linear)
+	{
+		glTexParameteri (mTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri (mTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	}
+	else
+	{
+		glTexParameteri (mTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri (mTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	}
+}
+
+static void SetBlendFunc(int theDrawMode, bool premultiply = false)
+{
+	if (!premultiply)
+	{
+		if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+			glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		else
+			glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	}
+	else
+	{
+		if (theDrawMode == Graphics::DRAWMODE_NORMAL)
+			glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		else
+			glBlendFunc (GL_ONE, GL_ONE);
+	}
 }
 
 void GLTexture::ReleaseTextures ()
@@ -1368,11 +1426,7 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 	}
 
 	glDisable (GetTextureTarget());
-
-	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	else
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	SetBlendFunc(theDrawMode);
 
 	SexyRGBA aColor = theColor.ToRGBA();
 	float x = theRect.mX;// - 0.5f;
@@ -1474,11 +1528,7 @@ void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, doubl
 	}
 
 	glDisable (GetTextureTarget());
-
-	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	else
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	SetBlendFunc (theDrawMode);
 
 	float x1, y1, x2, y2;
 	SexyRGBA aColor = theColor.ToRGBA ();
@@ -1549,11 +1599,7 @@ void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, dou
 	}
 
 	glDisable (GetTextureTarget());
-
-	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	else
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	SetBlendFunc (theDrawMode);
 
 	float x1, y1, x2, y2;
 	SexyRGBA aColor = theColor.ToRGBA ();
@@ -1619,7 +1665,6 @@ uint32* GLImage::GetBits()
 
 void GLImage::Clear()
 {
-	TRACE_THIS();
 	ClearRect(Rect (0, 0, mWidth, mHeight));
 }
 
@@ -1708,6 +1753,18 @@ void GLImage::AdditiveBltMirror(Image* theImage, int theX, int theY,
 	TRACE_THIS ();
 }
 
+void GLImage::Bltf(Image* theImage, float theX, float theY, const Rect& theSrcRect,
+		   const Color& theColor, int theDrawMode)
+{
+	GLTexture *aTexture = EnsureSrcTexture(mInterface, theImage);
+	if (!aTexture)
+		return;
+
+	SetBlendFunc (theDrawMode, true);
+	aTexture->SetTextureFilter(true);
+	aTexture->Blt (theX, theY, theSrcRect, theColor);
+}
+
 void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect,
 		  const Color& theColor, int theDrawMode)
 {
@@ -1731,10 +1788,8 @@ void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect,
 	if (!aTexture)
 		return;
 
-	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	else
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	SetBlendFunc (theDrawMode, true);
+	aTexture->SetTextureFilter(true);
 	aTexture->Blt (theX, theY, theSrcRect, theColor);
 }
 
@@ -1753,7 +1808,7 @@ void GLImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcR
 	aTransform.Scale (-1, 1);
 	aTransform.Translate (theX, theY);
 
-	BltTransformed (theImage, NULL, theColor, theDrawMode, theSrcRect, aTransform);
+	BltTransformed (theImage, NULL, theColor, theDrawMode, theSrcRect, aTransform, false);
 }
 
 void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect,
@@ -1774,33 +1829,31 @@ void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRe
 		if (anIntersect.mWidth != 0 && anIntersect.mHeight != 0)
 		{
 			SexyTransform2D aTransform;
-			aTransform.Translate( theX, theY);
+			aTransform.Translate(theX, theY);
 
-			BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
+			BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect,
+					aTransform, true);
 		}
 	}
 	else
 	{
-		GLImage::Blt (theImage, int (theX), int (theY), theSrcRect, theColor, theDrawMode);
+		GLImage::Bltf (theImage, theX, theY, theSrcRect, theColor, theDrawMode);
 	}
 }
 
 void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Color& theColor,
 			      int theDrawMode, const Rect &theSrcRect,
-			      const SexyMatrix3 &theTransform,
+			      const SexyMatrix3 &theTransform, bool linear,
 			      float theX, float theY, bool center)
 {
 	GLTexture *aTexture = EnsureSrcTexture(mInterface, theImage);
 	if (!aTexture)
 		return;
 
-	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	else
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
-
+	SetBlendFunc (theDrawMode, true);
 	if (!mTransformStack.empty())
 	{
+		aTexture->SetTextureFilter(true);
 		if (theX != 0.0f || theY != 0.0f)
 		{
 			SexyTransform2D aTransform;
@@ -1825,6 +1878,7 @@ void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Co
 	}
 	else
 	{
+		aTexture->SetTextureFilter(linear);
 		aTexture->BltTransformed (theTransform, theSrcRect, theColor,
 					  theClipRect, theX, theY, center);
 	}
@@ -1846,7 +1900,7 @@ void GLImage::BltRotated (Image* theImage, float theX, float theY, const Rect &t
 	aTransform.RotateRad (theRot);
 	aTransform.Translate (theX + theRotCenterX, theY + theRotCenterY);
 
-	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
+	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform, false);
 }
 
 void GLImage::StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect,
@@ -1875,7 +1929,8 @@ void GLImage::StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& t
 	}
 
 	aTransform.Translate (theDestRect.mX, theDestRect.mY);
-	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
+	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform,
+			!fastStretch);
 }
 
 void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect,
@@ -1904,7 +1959,8 @@ void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const R
 	}
 
 	aTransform.Translate (theDestRect.mX, theDestRect.mY);
-	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform);
+	BltTransformed (theImage, &theClipRect, theColor, theDrawMode, theSrcRect, aTransform,
+			!fastStretch);
 }
 
 void GLImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix, const Rect& theClipRect,
@@ -1935,10 +1991,8 @@ void GLImage::BltTrianglesTex(Image *theImage, const TriVertex theVertices[][3],
 	if (!aTexture)
 		return;
 
-	if (theDrawMode == Graphics::DRAWMODE_NORMAL)
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	else
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+	SetBlendFunc (theDrawMode, true);
+	aTexture->SetTextureFilter(blend);
 	aTexture->BltTriangles (theVertices, theNumTriangles, (uint32)theColor.ToInt(), tx, ty);
 }
 
@@ -1961,8 +2015,8 @@ void GLImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitB
 		MemoryImage::GetBits();
 	MemoryImage::SetBits(theBits, theWidth, theHeight, commitBits);
 
-	if (mTexture)
-		mTexture->CheckCreateTextures (this);
+	//if (mTexture)
+	//	mTexture->CheckCreateTextures (this);
 }
 
 void GLImage::Flip(enum FlipFlags flags)
