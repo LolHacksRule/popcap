@@ -228,8 +228,6 @@ int FreeTypeScaledFont::Utf8FromString(const std::string& string,
 	char* result;
 
 	len = SexyUtf8Strlen(string.c_str(), -1);
-	if (!unicode && len > 0)
-		printf ("unicode: %d str: %s len: %d\n", unicode, string.c_str(), len);
 
 	if (unicode && len >= 0)
 	{
