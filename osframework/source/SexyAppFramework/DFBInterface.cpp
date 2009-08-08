@@ -399,10 +399,12 @@ IDirectFBSurface* DFBInterface::CreateDFBSurface(int width, int height)
 
 		desc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_WIDTH |
 							  DSDESC_HEIGHT |
-							  DSDESC_PIXELFORMAT);
+							  DSDESC_PIXELFORMAT |
+							  DSDESC_CAPS);
 		desc.width = width;
 		desc.height = height;
 		desc.pixelformat = DSPF_ARGB;
+		desc.caps = DSCAPS_PREMULTIPLIED;
 		if (mDFB->CreateSurface(mDFB, &desc, &aSurface))
 			return 0;
 	} else {

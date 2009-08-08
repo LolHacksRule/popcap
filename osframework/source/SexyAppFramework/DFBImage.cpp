@@ -18,6 +18,54 @@ using namespace Sexy;
 #define TRACE_THIS()
 #endif
 
+static inline int
+multiply_alpha (int alpha, int color)
+{
+    int temp = (alpha * color) + 0x80;
+    return ((temp + (temp >> 8)) >> 8);
+}
+
+static inline uint
+multiply_pixel (uint pixel)
+{
+	if (!pixel)
+		return 0;
+
+	unsigned char  alpha = pixel >> 24;
+	unsigned char  red   = (pixel >> 16) & 0xff;
+	unsigned char  green = (pixel >>  8) & 0xff;
+	unsigned char  blue  = (pixel >>  0) & 0xff;
+
+	if (alpha != 0xff)
+	{
+		red   = multiply_alpha (alpha, red);
+		green = multiply_alpha (alpha, green);
+		blue  = multiply_alpha (alpha, blue);
+	}
+	return  (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+}
+
+static inline uint
+unmultiply_pixel (uint pixel)
+{
+	unsigned char alpha;
+	unsigned char red;
+	unsigned char green;
+	unsigned char blue;
+
+	alpha = (pixel & 0xff000000) >> 24;
+        if (alpha == 0 || alpha == 0xff)
+	{
+		return pixel;
+	}
+
+	red = (((pixel & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
+	green = (((pixel & 0x00ff00) >>  8) * 255 + alpha / 2) / alpha;
+	blue = (((pixel & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
+
+	return  (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+}
+
 DFBImageData::DFBImageData(DFBInterface* theInterface, MemoryImage* theImage)
 {
 	mBitsChangedCount = -1;
@@ -26,6 +74,8 @@ DFBImageData::DFBImageData(DFBInterface* theInterface, MemoryImage* theImage)
 	mInterface = theInterface;
 	mImage = theImage;
 	mSurface = theInterface->CreateDFBSurface(mWidth, mHeight);
+	if (mSurface)
+		mSurface->GetCapabilities(mSurface, &mCaps);
 }
 
 DFBImageData::~DFBImageData()
@@ -48,7 +98,18 @@ void DFBImageData::SyncData()
 	if (ret != DFB_OK)
 		return;
 	for (int i = 0; i < mHeight; i++) {
-		memcpy (dst, src, mWidth * 4);
+		if (mCaps & DSCAPS_PREMULTIPLIED)
+		{
+			uint *s = (uint*)src;
+			uint *d = (uint*)dst;
+
+			for (int j = 0; j < mWidth; j++)
+				d[j] = multiply_pixel (s[j]);
+		}
+		else
+		{
+			memcpy (dst, src, mWidth * 4);
+		}
 		src += mWidth * 4;
 		dst += pitch;
 	}
@@ -60,7 +121,6 @@ void DFBImageData::SyncData()
 IDirectFBSurface* DFBImage::EnsureSrcSurface(DFBInterface* interface, Image* theImage)
 {
 	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
-	IDirectFBSurface * src;
 
 	if (srcImage)
 		return srcImage->EnsureSurface();
@@ -106,7 +166,8 @@ DFBImage::~DFBImage()
 
 void DFBImage::Init()
 {
-	if (mSurface) {
+	if (mSurface)
+	{
 		int width, height;
 		mSurface->GetSize(mSurface, &width, &height);
 		mWidth = width;
@@ -328,7 +389,18 @@ void DFBImage::BitsChanged()
 		if (ret != DFB_OK)
 			return;
 		for (i = 0; i < mHeight; i++) {
-			memcpy (dst, src, mWidth * 4);
+			if (mCaps & DSCAPS_PREMULTIPLIED)
+			{
+				uint *s = (uint*)src;
+				uint *d = (uint*)dst;
+
+				for (int j = 0; j < mWidth; j++)
+					d[j] = multiply_pixel (s[j]);
+			}
+			else
+			{
+				memcpy (dst, src, mWidth * 4);
+			}
 			src += mWidth * 4;
 			dst += pitch;
 		}
@@ -356,8 +428,20 @@ uint32* DFBImage::GetBits()
 		if (ret != DFB_OK)
 			return bits;
 		dst = (unsigned char*)bits;
-		for (i = 0; i < mHeight; i++) {
-			memcpy (dst, src, mWidth * 4);
+		for (i = 0; i < mHeight; i++)
+		{
+			if (mCaps & DSCAPS_PREMULTIPLIED)
+			{
+				uint *s = (uint*)src;
+				uint *d = (uint*)dst;
+
+				for (int j = 0; j < mWidth; j++)
+					d[j] = unmultiply_pixel (s[j]);
+			}
+			else
+			{
+				memcpy (dst, src, mWidth * 4);
+			}
 			dst += mWidth * 4;
 			src += pitch;
 		}
@@ -433,39 +517,6 @@ void DFBImage::AdditiveFillRect(const Rect& theRect, const Color& theColor)
 
 void DFBImage::NormalBlt(Image* theImage, int theX, int theY, const Rect& theSrcRect, const Color& theColor)
 {
-	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
-	IDirectFBSurface * src, * dst;
-
-	src = srcImage->EnsureSurface();
-	dst = EnsureSurface();
-	if (src == NULL || dst == NULL) {
-		MemoryImage::NormalBlt(theImage, theX, theY, theSrcRect, theColor);
-		return;
-	}
-
-
-	DFBRectangle src_rect;
-	src_rect.x = theSrcRect.mX;
-	src_rect.y = theSrcRect.mY;
-	src_rect.w = theSrcRect.mWidth;
-	src_rect.h = theSrcRect.mHeight;
-
-	DFBSurfaceBlittingFlags flags;
-	flags = DSBLIT_BLEND_ALPHACHANNEL;
-	if (theColor.GetRed() == 0xff &&
-	    theColor.GetGreen() == 0xff &&
-	    theColor.GetBlue() == 0xff) {
-		if (theColor.GetAlpha() != 0xff)
-			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_BLEND_COLORALPHA);
-	} else {
-		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE | DSBLIT_BLEND_COLORALPHA);
-	}
-	dst->SetBlittingFlags(dst, flags);
-	dst->SetColor(dst,
-		      theColor.GetRed(), theColor.GetGreen(),
-		      theColor.GetBlue(), theColor.GetAlpha());
-	dst->Blit(dst, src, &src_rect, theX, theY);
-	mDFBCount++;
 	TRACE_THIS();
 }
 
@@ -513,6 +564,9 @@ void DFBImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, 
 	src_rect.w = theSrcRect.mWidth;
 	src_rect.h = theSrcRect.mHeight;
 
+	DFBSurfaceCapabilities aCaps;
+	src->GetCapabilities(src, &aCaps);
+
 	DFBSurfaceBlittingFlags flags;
 	flags = DSBLIT_BLEND_ALPHACHANNEL;
 	if (theColor.GetRed() == 0xff &&
@@ -526,6 +580,8 @@ void DFBImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect, 
 	dst->SetBlittingFlags(dst, flags);
 	if (theDrawMode == Graphics::DRAWMODE_ADDITIVE)
 		dst->SetDstBlendFunction (dst, DSBF_ONE);
+	if (aCaps & DSCAPS_PREMULTIPLIED)
+		dst->SetSrcBlendFunction (dst, DSBF_ONE);
 	dst->SetColor(dst,
 		      theColor.GetRed(), theColor.GetGreen(),
 		      theColor.GetBlue(), theColor.GetAlpha());
@@ -544,54 +600,7 @@ void DFBImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrc
 void DFBImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect,
 		    const Rect &theClipRect, const Color& theColor, int theDrawMode)
 {
-	if (true)
-		MemoryImage::BltF(theImage, theX, theY, theSrcRect, theClipRect,
-				  theColor, theDrawMode);
-
-	IDirectFBSurface * src, * dst;
-
-	src = EnsureSrcSurface(mInterface, theImage);
-	dst = EnsureSurface();
-	if (src == NULL || dst == NULL) {
-		MemoryImage::BltF(theImage, theX, theY, theSrcRect, theClipRect,
-				  theColor, theDrawMode);
-		return;
-	}
-
-
-	DFBRectangle src_rect;
-	src_rect.x = theSrcRect.mX;
-	src_rect.y = theSrcRect.mY;
-	src_rect.w = theSrcRect.mWidth;
-	src_rect.h = theSrcRect.mHeight;
-
-	DFBRegion clip_reg;
-	clip_reg.x1 = theClipRect.mX;
-	clip_reg.y1 = theClipRect.mY;
-	clip_reg.x2 = clip_reg.x1 + theClipRect.mWidth;
-	clip_reg.y2 = clip_reg.y1 + theClipRect.mHeight;
-
-	DFBSurfaceBlittingFlags flags;
-	flags = DSBLIT_BLEND_ALPHACHANNEL;
-	if (theColor.GetRed() == 0xff &&
-	    theColor.GetGreen() == 0xff &&
-	    theColor.GetBlue() == 0xff) {
-		if (theColor.GetAlpha() != 0xff)
-			flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_BLEND_COLORALPHA);
-	} else {
-		flags = (DFBSurfaceBlittingFlags)(flags | DSBLIT_COLORIZE | DSBLIT_BLEND_COLORALPHA);
-	}
-	dst->SetBlittingFlags(dst, flags);
-	if (theDrawMode == Graphics::DRAWMODE_ADDITIVE)
-		dst->SetDstBlendFunction (dst, DSBF_ONE);
-	dst->SetColor(dst,
-		      theColor.GetRed(), theColor.GetGreen(),
-		      theColor.GetBlue(), theColor.GetAlpha());
-	dst->SetClip(dst, &clip_reg);
-	dst->Blit(dst, src, &src_rect, theX, theY);
-	dst->SetPorterDuff(dst, DSPD_NONE);
-	dst->SetClip(dst, NULL);
-	mDFBCount++;
+	MemoryImage::BltF(theImage, theX, theY, theSrcRect, theClipRect, theColor, theDrawMode);
 }
 
 void DFBImage::BltRotated(Image* theImage, float theX, float theY, const Rect &theSrcRect,
@@ -633,6 +642,9 @@ void DFBImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Re
 	clip_reg.x2 = clip_reg.x1 + theClipRect.mWidth;
 	clip_reg.y2 = clip_reg.y1 + theClipRect.mHeight;
 
+	DFBSurfaceCapabilities aCaps;
+	src->GetCapabilities(src, &aCaps);
+
 	DFBSurfaceBlittingFlags flags;
 	flags = DSBLIT_BLEND_ALPHACHANNEL;
 	if (theColor.GetRed() == 0xff &&
@@ -650,6 +662,8 @@ void DFBImage::StretchBlt(Image* theImage, const Rect& theDestRectOrig, const Re
 		      theColor.GetBlue(), theColor.GetAlpha());
 	if (theDrawMode == Graphics::DRAWMODE_ADDITIVE)
 		dst->SetDstBlendFunction(dst, DSBF_ONE);
+	if (aCaps & DSCAPS_PREMULTIPLIED)
+		dst->SetSrcBlendFunction (dst, DSBF_ONE);
 	dst->StretchBlit(dst, src, &src_rect, &dest_rect);
 	dst->SetPorterDuff(dst, DSPD_NONE);
 	dst->SetClip(dst, NULL);
@@ -714,8 +728,20 @@ void DFBImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commit
 			return;
 		src = (unsigned char*)theBits;
 		dst = (unsigned char*)addr;
-		for (i = 0; i < mHeight; i++) {
-			memcpy (dst, src, theWidth * 4);
+		for (i = 0; i < mHeight; i++)
+		{
+			if (mCaps & DSCAPS_PREMULTIPLIED)
+			{
+				uint *s = (uint*)src;
+				uint *d = (uint*)dst;
+
+				for (int j = 0; j < mWidth; j++)
+					d[j] = multiply_pixel (s[j]);
+			}
+			else
+			{
+				memcpy (dst, src, mWidth * 4);
+			}
 			src += theWidth * 4;
 			dst += pitch;
 		}
@@ -728,6 +754,9 @@ void DFBImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commit
 
 IDirectFBSurface* DFBImage::EnsureSurface()
 {
+	if (!mInterface->IsMainThread())
+		return 0;
+
 	if (mSurface)
 	{
 		if (mMemoryCount != mBitsChangedCount && mBits)

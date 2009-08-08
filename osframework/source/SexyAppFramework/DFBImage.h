@@ -18,6 +18,7 @@ public:
 	int			  mBitsChangedCount;
 	DFBInterface*             mInterface;
 	IDirectFBSurface*         mSurface;
+	DFBSurfaceCapabilities	  mCaps;
 	MemoryImage*              mImage;
 
 public:
