@@ -18,6 +18,28 @@ using namespace Sexy;
 #define TRACE_THIS()
 #endif
 
+namespace Sexy {
+
+class DFBImageData
+{
+public:
+	int			  mWidth;
+	int			  mHeight;
+	int			  mBitsChangedCount;
+	DFBInterface*             mInterface;
+	IDirectFBSurface*         mSurface;
+	DFBSurfaceCapabilities	  mCaps;
+	MemoryImage*              mImage;
+
+public:
+	DFBImageData(DFBInterface* theInterface, MemoryImage* theImage);
+	~DFBImageData();
+
+	void SyncData();
+};
+
+}
+
 static inline int
 multiply_alpha (int alpha, int color)
 {

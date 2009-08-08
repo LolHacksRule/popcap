@@ -8,62 +8,10 @@ namespace Sexy
 {
 
 class GLInterface;
-class GLFont;
-
-struct GLTextureBlock
-{
-	GLuint	  mTexture;
-	GLshort	  mWidth;
-	GLshort	  mHeight;
-};
-
-class GLTexture
-{
-public:
-	typedef std::vector<GLTextureBlock> TextureVector;
-
-	TextureVector		  mTextures;
-	int			  mWidth;
-	int			  mHeight;
-	int			  mTexVecWidth;
-	int			  mTexVecHeight;
-	int			  mTexBlockWidth;
-	int			  mTexBlockHeight;
-	int			  mBitsChangedCount;
-	int			  mTexMemSize;
-	float			  mMaxTotalU;
-	float			  mMaxTotalV;
-
-	bool                      mRectangleTexture;
-	GLenum                    mTarget;
-
-	GLInterface*              mInterface;
-
-public:
-	GLTexture(GLInterface* theInterface);
-	~GLTexture();
-
-	void                      SetTextureFilter(bool linear);
-	void			  ReleaseTextures ();
-	void			  CreateTextureDimensions (MemoryImage *theImage);
-	void			  CreateTextures (MemoryImage *theImage);
-	bool			  CheckCreateTextures (MemoryImage *theImage);
-
-	GLuint			  GetTexture (int x, int y, int &width, int &height, float &u1, float &v1,
-					      float &u2, float &v2);
-	GLuint			  GetTextureF (float x, float y, float &width, float &height,
-					       float &u1, float &v1, float &u2, float &v2);
-
-	void			  Blt (float theX, float theY, const Rect& theSrcRect, const Color& theColor);
-	void			  BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcRect, const Color& theColor,
-						  const Rect *theClipRect = NULL, float theX = 0, float theY = 0, bool center = false);
-	void			  BltTriangles (const TriVertex theVertices[][3], int theNumTriangles, uint32 theColor,
-						float tx = 0, float ty = 0);
-};
+class GLTexture;
 
 class GLImage : public MemoryImage
 {
-	friend class			GLFont;
 	friend class			GLTexture;
 
 protected:
