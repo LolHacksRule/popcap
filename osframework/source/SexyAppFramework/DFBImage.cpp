@@ -792,3 +792,13 @@ void DFBImage::Flip(enum FlipFlags flags)
 		dfbflags = (DFBSurfaceFlipFlags)(dfbflags | DSFLIP_ONSYNC);
 	mSurface->Flip (mSurface, NULL, dfbflags);
 }
+
+void DFBImage::RemoveImageData(MemoryImage* theImage)
+{
+	if (!theImage->mNativeData)
+		return;
+
+	DFBImageData* aData = (DFBImageData*)theImage->mNativeData;
+	theImage->mNativeData = 0;
+	delete aData;
+}

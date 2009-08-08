@@ -147,7 +147,9 @@ int DFBInterface::Init(void)
 		mSoftCursor = true;
 	}
 
+#if 0
 	DFBSurfaceDescription surface_desc;
+#endif
 	int width, height;
 
 #if 0
@@ -235,12 +237,7 @@ void DFBInterface::RemoveImage(Image* theImage)
 
 void DFBInterface::RemoveImageData(MemoryImage* theImage) // for 3d texture cleanup
 {
-	if (!theImage->mNativeData)
-		return;
-
-	DFBImageData* aData = (DFBImageData*)theImage->mNativeData;
-	theImage->mNativeData = 0;
-	delete aData;
+	DFBImage::RemoveImageData(theImage);
 }
 
 void DFBInterface::Cleanup()

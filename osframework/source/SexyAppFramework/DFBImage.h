@@ -118,6 +118,7 @@ public:
  public:
 	IDirectFBSurface*		EnsureSurface();
 	static IDirectFBSurface*        EnsureSrcSurface(DFBInterface* interface, Image* theImage);
+	static void                     RemoveImageData(MemoryImage* theImage);
 
 };
 
