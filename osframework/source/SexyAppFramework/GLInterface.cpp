@@ -348,12 +348,7 @@ int GLInterface::GetTextureTarget()
 
 void GLInterface::RemoveImageData(MemoryImage* theImage)
 {
-	if (!theImage->mNativeData)
-		return;
-
-	GLTexture* aData = (GLTexture*)theImage->mNativeData;
-	theImage->mNativeData = 0;
-	delete aData;
+	GLImage::RemoveImageData(theImage);
 }
 
 namespace Sexy {

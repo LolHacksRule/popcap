@@ -163,6 +163,11 @@ public:
 
 	void				 PushTransform(const SexyMatrix3 &theTransform, bool concatenate = true);
 	void				 PopTransform();
+
+ public:
+	static GLTexture*                EnsureSrcTexture(GLInterface *theInterface,
+							  Image       *theImage);
+	static void                      RemoveImageData(MemoryImage *theImage);
 };
 
 }
