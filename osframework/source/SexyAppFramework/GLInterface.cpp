@@ -128,6 +128,8 @@ void GLInterface::InitGL()
 	w = mWindowWidth * mOverScan;
 	h = mWindowHeight * mOverScan;
 	glViewport (x, y, w, h);
+	if (SEXY_GL_IS_DEBUG ())
+		printf ("GL viewport: (%.2f, %.2f, %.2f, %.2f)\n", x, y, w, h);
 
 	const char* version = (const char*)glGetString (GL_VERSION);
 	const char* str = version;
@@ -146,7 +148,7 @@ void GLInterface::InitGL()
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureHeight);
 
 	if (SEXY_GL_IS_DEBUG ())
-		printf ("Maximium texture size: %d\n", mMaxTextureHeight);
+		printf ("GL Maximium texture size: %d\n", mMaxTextureHeight);
 
 	mGLExtensions = (const char*)glGetString (GL_EXTENSIONS);
 
@@ -200,6 +202,9 @@ void GLInterface::InitGL()
 		  ftofix (mHeight), ftofix (0),
 		  ftofix (-1.0), ftofix (1.0));
 #endif
+	if (SEXY_GL_IS_DEBUG ())
+		printf ("GL Ortho: (%d, %d, %d, %d)\n", 0, 0, mWidth, mHeight);
+
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
 
