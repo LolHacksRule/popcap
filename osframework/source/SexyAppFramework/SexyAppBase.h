@@ -350,6 +350,8 @@ public:
         InputManager*                           mInputManager;
 	RegistryInterface*                      mRegistryInterface;
 
+	std::string                             mCmdLine;
+
 #ifdef ZYLOM
 	uint					mZylomGameId;
 #endif
@@ -601,6 +603,8 @@ public:
 	void					ClearUpdateBacklog(bool relaxForASecond = false);
 	bool					IsScreenSaver();
 	virtual bool				AppCanRestore();
+
+	char*                                   GetCmdLine();
 };
 
 extern SexyAppBase* gSexyAppBase;

@@ -2692,8 +2692,49 @@ void SexyAppBase::SetDouble(const std::string& theId, double theValue)
 		aPair.first->second = theValue;
 }
 
+char* SexyAppBase::GetCmdLine()
+{
+#if defined(WIN32)
+	mCmdLine = std::string(GetCommandLineA());
+#elif defined(__linux__)
+	FILE *fp = fopen ("/proc/self/cmdline", "r");
+	char buffer[65536];
+	size_t size;
+
+	size = fread(buffer, 1, 63335, fp);
+	for (int i = 0; i < size - 1; i++)
+		if (buffer[i] == '\0')
+			buffer[i] = ' ';
+	buffer[63335] = '\0';
+	fclose(fp);
+	mCmdLine = std::string(buffer);
+#else
+	mCmdLine = "";
+#endif
+
+	//printf ("CmdLine: %s\n", mCmdLine.c_str());
+	return (char*)mCmdLine.c_str();
+}
+
 void SexyAppBase::DoParseCmdLine()
 {
+	char* aCmdLine = GetCmdLine();
+
+	char* aCmdLinePtr = aCmdLine;
+	if (aCmdLinePtr[0] == '"')
+	{
+		aCmdLinePtr = strchr(aCmdLinePtr + 1, '"');
+		if (aCmdLinePtr != NULL)
+			aCmdLinePtr++;
+	}
+
+	if (aCmdLinePtr != NULL)
+	{
+		aCmdLinePtr = strchr(aCmdLinePtr, ' ');
+		if (aCmdLinePtr != NULL)
+			ParseCmdLine(aCmdLinePtr+1);
+	}
+
 	mCmdLineParsed = true;
 }
 
