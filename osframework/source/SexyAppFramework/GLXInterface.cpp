@@ -101,6 +101,8 @@ int GLXInterface::Init (void)
 				 InputOutput, visualInfo->visual,
 				 CWBorderPixel | CWColormap | CWEventMask, &swa);
 
+	XSync(mDpy, False);
+
 	/* create an OpenGL rendering context */
 	mContext = glXCreateContext (mDpy, visualInfo,	None, GL_TRUE);
 	if (!mContext)
@@ -156,6 +158,7 @@ int GLXInterface::Init (void)
 		XIfEvent (mDpy,	 &event,  WaitForSubstructureNotify, (char*)this);
 	}
 	XStoreName (mDpy, mWindow, mApp->mTitle.c_str ());
+	XSync(mDpy, False);
 
 	mScreenImage = static_cast<GLImage*>(CreateImage (mApp, mWidth, mHeight));
 
