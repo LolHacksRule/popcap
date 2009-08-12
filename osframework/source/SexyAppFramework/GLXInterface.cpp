@@ -77,7 +77,7 @@ int GLXInterface::Init (void)
 	if (!glXQueryExtension (mDpy, NULL, NULL))
 		goto close_dpy;
 
-	static int attributes[] = {GLX_RGBA, GLX_DOUBLEBUFFER, None};
+	static int attributes[] = {GLX_RGBA, GLX_ALPHA_SIZE, 8, GLX_DOUBLEBUFFER, None};
 	XVisualInfo* visualInfo;
 
 	visualInfo = glXChooseVisual (mDpy, DefaultScreen (mDpy), attributes);
@@ -108,6 +108,7 @@ int GLXInterface::Init (void)
 	glXMakeCurrent (mDpy, mWindow, mContext);
 
 	XMapWindow (mDpy, mWindow);
+	XSync (mDpy, False);
 
 	XEvent event;
 	XIfEvent (mDpy,	 &event,  WaitForMapNotify, (char*)mWindow);
@@ -398,7 +399,13 @@ bool GLXInterface::GetEvent(struct Event &event)
 		Redraw (NULL);
 		break;
 	case ConfigureNotify:
-		/* resize (xevent.xconfigure.width, xevent.xconfigure.height); */
+		if (xevent.xmap.window == mWindow)
+		{
+			mWindowWidth = xevent.xconfigure.width;
+			mWindowHeight = xevent.xconfigure.height;
+			Reshape();
+			return GL_TRUE;
+		}
 		break;
 	case EnterNotify:
 		event.type = EVENT_ACTIVE;
