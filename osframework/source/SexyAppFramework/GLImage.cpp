@@ -1157,11 +1157,10 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 
 			if ((aVertexCacheNum == 300) || (aTriangleNum == theNumTriangles - 1))
 			{
+				glDrawArrays (GL_TRIANGLES, 0, std::min(300, theNumTriangles));
 
-
-				glDrawArrays (GL_TRIANGLES, 0, 300);
-
-				if (aTriangleNum == theNumTriangles - 1) {
+				if (aTriangleNum == theNumTriangles - 1)
+				{
 					glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 					glDisableClientState (GL_COLOR_ARRAY);
 					glDisableClientState (GL_VERTEX_ARRAY);
@@ -1682,6 +1681,26 @@ void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, dou
 	x2 = theEndX;
 	y2 = theEndY;
 
+	if (!mTransformStack.empty())
+	{
+		SexyVector2 p1(theStartX, theStartY);
+		SexyVector2 p2(theEndX, theEndY);
+		p1 = mTransformStack.back() * p1;
+		p2 = mTransformStack.back() * p2;
+
+		x1 = p1.x;
+		y1 = p1.y;
+		x2 = p2.x;
+		y2 = p2.y;
+	}
+	else
+	{
+		x1 = theStartX;
+		y1 = theStartY;
+		x2 = theEndX;
+		y2 = theEndY;
+	}
+
 	glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
 #ifndef SEXY_OPENGLES
 	glBegin (GL_LINE_STRIP);
@@ -1767,6 +1786,24 @@ void GLImage::ClearRect(const Rect& theRect)
 	verts[4] = x + aWidth; verts[5] = y;
 	verts[6] = x + aWidth; verts[7] = y + aHeight;
 
+	if (!mTransformStack.empty())
+	{
+		SexyVector2 p[4] = { SexyVector2(x, y),
+				     SexyVector2(x, y + aHeight),
+				     SexyVector2(x + aWidth, y),
+				     SexyVector2(x + aWidth, y + aHeight) };
+
+		int i;
+		for (i = 0; i < 4; i++)
+		{
+			p[i] = mTransformStack.back()*p[i];
+			p[i].x -= 0.5f;
+			p[i].y -= 0.5f;
+			verts[i * 2 + 0] = p[i].x;
+			verts[i * 2 + 1] = p[i].y;
+		}
+	}
+
 	glEnableClientState (GL_VERTEX_ARRAY);
 
 	glVertexPointer (2, GL_FLOAT, 0, verts);
@@ -1781,6 +1818,27 @@ void GLImage::ClearRect(const Rect& theRect)
 		{ 0, 0, aColor, x + aWidth, y,		 0},
 		{ 0, 0, aColor, x + aWidth, y + aHeight, 0}
 	};
+
+	if (!mTransformStack.empty())
+	{
+		SexyVector2 p[4] =
+		{
+			SexyVector2(x, y),
+			SexyVector2(x,y + aHeight),
+			SexyVector2(x + aWidth, y),
+			SexyVector2(x + aWidth, y + aHeight)
+		};
+
+		int i;
+		for (i = 0; i < 4; i++)
+		{
+			p[i] = mTransformStack.back()*p[i];
+			p[i].x -= 0.5f;
+			p[i].y -= 0.5f;
+			aVertex[i].sx = p[i].x;
+			aVertex[i].sy = p[i].y;
+		}
+	}
 
 	glBegin (GL_TRIANGLE_STRIP);
 	glVertex2f (aVertex[0].sx, aVertex[0].sy);
