@@ -97,6 +97,7 @@ public:
 
 	virtual void				SwapBuffers();
 	virtual void				InitGL();
+	virtual void                            Reshape();
 
 	virtual bool				Redraw(Rect* theClipRect);
 

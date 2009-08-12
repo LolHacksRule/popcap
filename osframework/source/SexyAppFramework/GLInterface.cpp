@@ -119,7 +119,7 @@ void GLInterface::SwapBuffers()
 	FlushWork();
 }
 
-void GLInterface::InitGL()
+void GLInterface::Reshape()
 {
 	float x, y, w, h;
 
@@ -128,8 +128,14 @@ void GLInterface::InitGL()
 	w = mWindowWidth * mOverScan;
 	h = mWindowHeight * mOverScan;
 	glViewport (x, y, w, h);
+
 	if (SEXY_GL_IS_DEBUG ())
 		printf ("GL viewport: (%.2f, %.2f, %.2f, %.2f)\n", x, y, w, h);
+}
+
+void GLInterface::InitGL()
+{
+	Reshape();
 
 	const char* version = (const char*)glGetString (GL_VERSION);
 	const char* str = version;
