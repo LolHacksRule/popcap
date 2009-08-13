@@ -14,6 +14,8 @@ Image::Image()
 	mAnimInfo = NULL;
 	mDrawn = false;
 	mFlags = IMAGE_FLAGS_NONE;
+	mWrapModeU = WRAP_CLAMP;
+	mWrapModeV = WRAP_CLAMP;
 }
 
 Image::Image(const Image& theImage) :
