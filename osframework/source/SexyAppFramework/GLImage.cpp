@@ -78,6 +78,7 @@ public:
 	GLenum                    mTarget;
 
 	GLInterface*              mInterface;
+	int                       mImageFlags;
 
 public:
 	GLTexture(GLInterface* theInterface);
@@ -266,6 +267,7 @@ GLTexture::GLTexture (GLInterface *theInterface)
 	mRectangleTexture = false;
 	mTarget = 0;
 	mInterface = theInterface;
+	mImageFlags = 0;
 }
 
 GLTexture::~GLTexture ()
@@ -325,9 +327,10 @@ void GLTexture::CreateTextureDimensions (MemoryImage* theImage)
 	mTexBlockHeight = aHeight;
 	mRectangleTexture = mInterface->mTextureNPOT;
 	bool usePOT = !mRectangleTexture;
+	bool miniSubDiv = (theImage->mFlags & IMAGE_FLAGS_MINI_SUBDIV) != 0;
 
 	mTarget = mInterface->GetTextureTarget();
-	mInterface->CalulateBestTexDimensions (mTexBlockWidth, mTexBlockHeight, false, usePOT);
+	mInterface->CalulateBestTexDimensions (mTexBlockWidth, mTexBlockHeight, miniSubDiv, usePOT);
 
 	// Calculate right boundary block sizes
 	int aRightWidth = aWidth % mTexBlockWidth;
@@ -513,6 +516,7 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 	mWidth = theImage->mWidth;
 	mHeight = theImage->mHeight;
 	mBitsChangedCount = theImage->mBitsChangedCount;
+	mImageFlags = theImage->mFlags;
 }
 
 bool GLTexture::CheckCreateTextures (MemoryImage *theImage)
