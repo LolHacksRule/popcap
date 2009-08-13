@@ -57,7 +57,8 @@ enum FlipFlags {
 enum ImageFlags {
     IMAGE_FLAGS_NONE          = 0,
     IMAGE_FLAGS_DOUBLE_BUFFER = 1 << 0,
-    IMAGE_FLAGS_FLIP_AS_COPY  = 1 << 1
+    IMAGE_FLAGS_FLIP_AS_COPY  = 1 << 1,
+    IMAGE_FLAGS_MINI_SUBDIV   = 2 << 2
 };
 
 class Image
@@ -77,7 +78,7 @@ public:
 	// for animations
 	AnimInfo				*mAnimInfo;
 
-        ImageFlags                               mFlags;
+        int                                      mFlags;
 
 public:
 	Image();
