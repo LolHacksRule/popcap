@@ -522,7 +522,8 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 bool GLTexture::CheckCreateTextures (MemoryImage *theImage)
 {
 	if (theImage->mWidth != mWidth || theImage->mHeight != mHeight ||
-	    theImage->mBitsChangedCount != mBitsChangedCount)
+	    theImage->mBitsChangedCount != mBitsChangedCount ||
+	    theImage->mFlags != mImageFlags)
 	{
 		theImage->GetBits();
 		CreateTextures (theImage);
