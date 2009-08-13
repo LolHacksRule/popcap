@@ -109,8 +109,8 @@ public:
 						       float theX = 0, float theY = 0, bool center = false);
 
 
-	void				 PushTransform(const SexyMatrix3 &theTransform, bool concatenate = true);
-	void				 PopTransform();
+	virtual void                     PushTransform(const SexyMatrix3 &theTransform, bool concatenate = true);
+	virtual void			 PopTransform();
 
  public:
 	static GLTexture*                EnsureSrcTexture(GLInterface *theInterface,
