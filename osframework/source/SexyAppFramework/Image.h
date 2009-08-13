@@ -129,6 +129,8 @@ public:
 
         virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
 	virtual void                    SetWrapMode(WrapMode u, WrapMode v);
+	virtual void			PushTransform(const SexyMatrix3 &theTransform, bool concatenate = true);
+	virtual void			PopTransform();
 };
 
 }

@@ -312,3 +312,11 @@ void Image:: SetWrapMode(WrapMode u, WrapMode v)
 	mWrapModeU = u;
 	mWrapModeV = v;
 }
+
+void Image::PushTransform(const SexyMatrix3 &theTransform, bool)
+{
+}
+
+void Image::PopTransform()
+{
+}
