@@ -67,6 +67,8 @@ int GLXInterface::Init (void)
 	if (!mDpy)
 		goto fail;
 
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
 	mScreen = DefaultScreen (mDpy);
 	mDesktopWidth = DisplayWidth (mDpy, mScreen);
 	mDesktopHeight = DisplayHeight (mDpy, mScreen);
@@ -161,23 +163,7 @@ int GLXInterface::Init (void)
 	XSync(mDpy, False);
 
 	mScreenImage = static_cast<GLImage*>(CreateImage (mApp, mWidth, mHeight));
-
-	mScreenImage->mFlags = (ImageFlags)(IMAGE_FLAGS_DOUBLE_BUFFER);
-
-	if (mWidth != mWindowWidth || mHeight != mWindowHeight) {
-		mTrans[0].LoadIdentity ();
-		mTrans[0].Translate (0, 0);
-		mTrans[0].Scale (((float)mWindowWidth) / mWidth,
-				 ((float)mWindowHeight) / mHeight);
-
-		mTrans[1].LoadIdentity ();
-		mTrans[1].Scale (mWidth / ((float)mWindowWidth),
-				 mHeight / ((float)mWindowHeight));
-		mTrans[1].Translate (0, 0);
-	} else {
-		mTrans[0].LoadIdentity ();
-		mTrans[1].LoadIdentity ();
-	}
+	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
 
 	mPresentationRect.mX = 0;
 	mPresentationRect.mY = 0;
@@ -230,8 +216,8 @@ void GLXInterface::Cleanup ()
 
 void GLXInterface::RemapMouse(int& theX, int& theY)
 {
-	theX *= (float)mWidth / mDisplayWidth;
-	theY *= (float)mHeight / mDisplayHeight;
+	theX *= (float)mWidth / mWindowWidth;
+	theY *= (float)mHeight / mWindowHeight;
 }
 
 Image* GLXInterface::CreateImage(SexyAppBase * theApp,
@@ -348,11 +334,9 @@ bool GLXInterface::GetEvent(struct Event &event)
 			default:
 				break;
 			}
-			SexyVector2 v(be->x, be->y);
-			v = mTrans[1] * v;
 
-			event.u.mouse.x = v.x;
-			event.u.mouse.y = v.y;
+			event.u.mouse.x = be->x;
+			event.u.mouse.y = be->y;
 		}
 		break;
 	}
@@ -376,11 +360,8 @@ bool GLXInterface::GetEvent(struct Event &event)
 				break;
 			}
 
-			SexyVector2 v(be->x, be->y);
-			v = mTrans[1] * v;
-
-			event.u.mouse.x = v.x;
-			event.u.mouse.y = v.y;
+			event.u.mouse.x = be->x;
+			event.u.mouse.y = be->y;
 		}
 		break;
 	}
@@ -390,11 +371,8 @@ bool GLXInterface::GetEvent(struct Event &event)
 		event.type = EVENT_MOUSE_MOTION;
 		event.flags = EVENT_FLAGS_AXIS;
 
-		SexyVector2 v(me->x, me->y);
-		v = mTrans[1] * v;
-
-		event.u.mouse.x = v.x;
-		event.u.mouse.y = v.y;
+		event.u.mouse.x = me->x;
+		event.u.mouse.y = me->y;
 		break;
 	}
 	case Expose:
@@ -425,6 +403,12 @@ bool GLXInterface::GetEvent(struct Event &event)
 	default:
 		break;
 	}
+
+        if (event.type != EVENT_NONE && event.flags & EVENT_FLAGS_AXIS)
+        {
+                event.u.mouse.x *= (float)mWidth / mWindowWidth;
+                event.u.mouse.y *= (float)mHeight / mWindowHeight;
+        }
 
 	return true;
 }
