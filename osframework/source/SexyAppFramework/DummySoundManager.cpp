@@ -152,7 +152,7 @@ bool DummySoundManager::SetBasePan(unsigned int theSfxID, int theBasePan)
 
 SoundInstance* DummySoundManager::GetSoundInstance(unsigned int theSfxID)
 {
-	if (theSfxID > MAX_SOURCE_SOUNDS)
+	if (theSfxID >= MAX_SOURCE_SOUNDS)
 		return NULL;
 
 	int aFreeChannel = FindFreeChannel();
