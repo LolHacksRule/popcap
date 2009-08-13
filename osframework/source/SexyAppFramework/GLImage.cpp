@@ -1157,19 +1157,13 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 
 			if ((aVertexCacheNum == 300) || (aTriangleNum == theNumTriangles - 1))
 			{
-				glDrawArrays (GL_TRIANGLES, 0, std::min(300, theNumTriangles));
-
-				if (aTriangleNum == theNumTriangles - 1)
-				{
-					glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-					glDisableClientState (GL_COLOR_ARRAY);
-					glDisableClientState (GL_VERTEX_ARRAY);
-				}
-
-
+				glDrawArrays (GL_TRIANGLES, 0, aVertexCacheNum);
 				aVertexCacheNum = 0;
 			}
 		}
+		glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState (GL_COLOR_ARRAY);
+		glDisableClientState (GL_VERTEX_ARRAY);
 	}
 	else
 	{
@@ -1183,23 +1177,23 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 			SexyGLVertex vertex1 = {(GLfloat)(aTriVerts[0].u * mMaxTotalU),
 						(GLfloat)(aTriVerts[0].v * mMaxTotalV),
 						ColorToMultipliedRGBA(col),
-						aTriVerts[0].x + tx, aTriVerts[0].u + ty, 0.0f};
+						aTriVerts[0].x + tx, aTriVerts[0].y + ty, 0.0f};
 
 			col = GetColorFromTriVertex(aTriVerts[1],theColor);
 
 			SexyGLVertex vertex2 = {(GLfloat)(aTriVerts[1].u * mMaxTotalU),
 						(GLfloat)(aTriVerts[1].v * mMaxTotalV),
 						ColorToMultipliedRGBA(col),
-						aTriVerts[1].x + tx, aTriVerts[1].u + ty, 0.0f};
+						aTriVerts[1].x + tx, aTriVerts[1].y + ty, 0.0f};
 			col = GetColorFromTriVertex (aTriVerts[2],theColor);
 
 			SexyGLVertex vertex3 = {(GLfloat)(aTriVerts[2].u * mMaxTotalU),
 						(GLfloat)(aTriVerts[2].v * mMaxTotalV),
 						ColorToMultipliedRGBA(col),
-						aTriVerts[2].x + tx, aTriVerts[2].u + ty, 0.0f};
+						aTriVerts[2].x + tx, aTriVerts[2].y + ty, 0.0f};
 
 			aVertex[0] = vertex1;
-			aVertex[1]  = vertex2;
+			aVertex[1] = vertex2;
 			aVertex[2] = vertex3;
 
 			float aMinU = mMaxTotalU, aMinV = mMaxTotalV;
@@ -1968,6 +1962,16 @@ void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRe
 	}
 	else
 	{
+		if (!mTransformStack.empty ())
+		{
+			SexyTransform2D aTransform;
+			aTransform.Translate(theX, theY);
+
+			BltTransformed(theImage, NULL,theColor, theDrawMode, theSrcRect,
+				       aTransform, true);
+			return;
+		}
+
 		GLImage::Bltf (theImage, theX, theY, theSrcRect, theColor, theDrawMode);
 	}
 }
