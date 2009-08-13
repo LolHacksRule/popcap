@@ -47,18 +47,23 @@ class SysFont;
 class TriVertex;
 
 enum FlipFlags {
-    FLIP_NONE      = 0,
-    FLIP_WAIT      = 1 << 0,
-    FLIP_ONSYNC    = 1 << 1,
-    FLIP_BLIT      = 1 << 2,
-    FLIP_WAIT_SYNC = FLIP_WAIT | FLIP_ONSYNC
+	FLIP_NONE      = 0,
+	FLIP_WAIT      = 1 << 0,
+	FLIP_ONSYNC    = 1 << 1,
+	FLIP_BLIT      = 1 << 2,
+	FLIP_WAIT_SYNC = FLIP_WAIT | FLIP_ONSYNC
 };
 
 enum ImageFlags {
-    IMAGE_FLAGS_NONE          = 0,
-    IMAGE_FLAGS_DOUBLE_BUFFER = 1 << 0,
-    IMAGE_FLAGS_FLIP_AS_COPY  = 1 << 1,
-    IMAGE_FLAGS_MINI_SUBDIV   = 2 << 2
+	IMAGE_FLAGS_NONE          = 0,
+	IMAGE_FLAGS_DOUBLE_BUFFER = 1 << 0,
+	IMAGE_FLAGS_FLIP_AS_COPY  = 1 << 1,
+	IMAGE_FLAGS_MINI_SUBDIV   = 2 << 2
+};
+
+enum WrapMode {
+	WRAP_CLAMP,
+	WRAP_REPEAT
 };
 
 class Image
@@ -79,6 +84,8 @@ public:
 	AnimInfo				*mAnimInfo;
 
         int                                      mFlags;
+	int                                      mWrapModeU;
+	int                                      mWrapModeV;
 
 public:
 	Image();
@@ -121,6 +128,7 @@ public:
 	virtual bool			Palletize();
 
         virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
+	virtual void                    SetWrapMode(WrapMode u, WrapMode v);
 };
 
 }

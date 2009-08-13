@@ -306,3 +306,9 @@ bool Image::Palletize()
 void Image::Flip(enum FlipFlags flags)
 {
 }
+
+void Image:: SetWrapMode(WrapMode u, WrapMode v)
+{
+	mWrapModeU = u;
+	mWrapModeV = v;
+}
