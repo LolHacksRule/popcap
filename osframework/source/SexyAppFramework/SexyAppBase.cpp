@@ -265,6 +265,7 @@ SexyAppBase::SexyAppBase()
 	mSoftVSyncWait = false;
 	mUserChanged3DSetting = false;
 	mAutoEnable3D = false;
+	mIs3D = false;
 	mTest3D = false;
 	mMinVidMemory3D = 6;
 	mRecommendedVidMemory3D = 14;
@@ -671,6 +672,7 @@ void SexyAppBase::WriteToRegistry()
 	RegistryWriteInteger("SfxVolume", (int) (mSfxVolume * 100));
 	RegistryWriteInteger("Muted", (mMuteCount - mAutoMuteCount > 0) ? 1 : 0);
 	RegistryWriteInteger("ScreenMode", mIsWindowed ? 0 : 1);
+	RegistryWriteInteger("Is3D", mIs3D ? 1 : 0);
 	RegistryWriteInteger("PreferredX", mPreferredX);
 	RegistryWriteInteger("PreferredY", mPreferredY);
 	RegistryWriteInteger("CustomCursors", mCustomCursorsEnabled ? 1 : 0);
@@ -738,6 +740,9 @@ void SexyAppBase::ReadFromRegistry()
 
 	if (RegistryReadInteger("ScreenMode", &anInt))
 		mIsWindowed = anInt == 0;
+
+	if (RegistryReadInteger("Is3D", &anInt))
+		mIs3D = anInt != 0;
 
 	RegistryReadInteger("PreferredX", &mPreferredX);
 	RegistryReadInteger("PreferredY", &mPreferredY);
@@ -1796,14 +1801,10 @@ void SexyAppBase::SwitchScreenMode(bool wantWindowed, bool is3d, bool force)
 	if (mForceFullscreen)
 		wantWindowed = false;
 
-	if (mIsWindowed == wantWindowed && !force)
-	{
-		Set3DAcclerated(is3d);
-		return;
-	}
-
 	// Set 3d acceleration preference
 	Set3DAcclerated(is3d, false);
+	if (mIsWindowed == wantWindowed && mIs3D == Is3DAccelerated() && !force)
+		return;
 
 	// Always make the app windowed when playing demos, in order to
 	//  make it easier to track down bugs.  We place this after the
@@ -3549,6 +3550,10 @@ void SexyAppBase::DemoSyncRefreshRate()
 
 void SexyAppBase::Set3DAcclerated(bool is3D, bool reinit)
 {
+	mIs3D = is3D;
+
+	if (reinit)
+		SwitchScreenMode();
 }
 
 SharedImageRef SexyAppBase::GetSharedImage(const std::string& theFileName, const std::string& theVariant, bool* isNew)

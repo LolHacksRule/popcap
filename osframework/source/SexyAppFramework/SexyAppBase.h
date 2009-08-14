@@ -331,6 +331,7 @@ public:
 	bool					mSoftVSyncWait;
 	bool					mUserChanged3DSetting;
 	bool					mAutoEnable3D;
+	bool                                    mIs3D;
 	bool					mTest3D;
 	DWORD					mMinVidMemory3D;
 	DWORD					mRecommendedVidMemory3D;
