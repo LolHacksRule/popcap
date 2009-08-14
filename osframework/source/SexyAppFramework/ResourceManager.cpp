@@ -752,27 +752,20 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 
 		aDDImage->CommitBits();
 
-#if 0
 		if (!aDDImage->mHasAlpha)
 		{
-			aDDImage->mWantDDSurface = true;
+			//aDDImage->mWantDDSurface = true;
 			aDDImage->mPurgeBits = true;
 		}
-#endif
 		SEXY_PERF_END("ResourceManager:DDSurface");
 	}
 
-#if 0
 	if (theRes->mPalletize)
 	{
 		SEXY_PERF_BEGIN("ResourceManager:Palletize");
-		if (aDDImage->mSurface==NULL)
-			aDDImage->Palletize();
-		else
-			aDDImage->mWantPal = true;
+		aDDImage->Palletize();
 		SEXY_PERF_END("ResourceManager:Palletize");
 	}
-#endif
 
 #if 0
 	if (theRes->mA4R4G4B4)
@@ -781,12 +774,13 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 	if (theRes->mA8R8G8B8)
 		aDDImage->mD3DFlags |= D3DImageFlag_UseA8R8G8B8;
 
+#endif
 	if (theRes->mMinimizeSubdivisions)
-		aDDImage->mD3DFlags |= D3DImageFlag_MinimizeNumSubdivisions;
+		aDDImage->mFlags |= IMAGE_FLAGS_MINI_SUBDIV;
 
 	if (theRes->mAnimInfo.mAnimType != AnimType_None)
 		aDDImage->mAnimInfo = new AnimInfo(theRes->mAnimInfo);
-#endif
+
 	aDDImage->mNumRows = theRes->mRows;
 	aDDImage->mNumCols = theRes->mCols;
 
