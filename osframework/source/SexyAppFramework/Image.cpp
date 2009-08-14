@@ -25,6 +25,7 @@ Image::Image(const Image& theImage) :
 	mNumCols(theImage.mNumCols)
 {
 	mDrawn = false;
+	mFilePath = theImage.mFilePath;
 	if (theImage.mAnimInfo != NULL)
 		mAnimInfo = new AnimInfo(*theImage.mAnimInfo);
 	else
@@ -201,6 +202,7 @@ Rect Image::GetAnimCelRect(int theTime)
 
 void Image::CopyAttributes(Image *from)
 {
+	mFilePath = from->mFilePath;
 	mNumCols = from->mNumCols;
 	mNumRows = from->mNumRows;
 	delete mAnimInfo;

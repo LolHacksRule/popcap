@@ -2956,6 +2956,7 @@ Sexy::Image* SexyAppBase::GetImage(const std::string& theFileName, bool commitBi
 	anImage->Create(aLoadedImage->GetWidth(), aLoadedImage->GetHeight());
 	anImage->GetBits();
 	anImage->SetBits(aLoadedImage->GetBits(), aLoadedImage->GetWidth(), aLoadedImage->GetHeight(), commitBits);
+	anImage->mFilePath = theFileName;
 	delete aLoadedImage;
 	return anImage;
 }
