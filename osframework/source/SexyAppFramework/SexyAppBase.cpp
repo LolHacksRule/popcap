@@ -326,6 +326,8 @@ SexyAppBase::~SexyAppBase()
 {
 	Shutdown();
 
+	ProcessSafeDeleteList();
+
 	DialogMap::iterator aDialogItr = mDialogMap.begin();
 	while (aDialogItr != mDialogMap.end())
 	{
