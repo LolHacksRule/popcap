@@ -46,6 +46,7 @@ public:
 
 	bool					mInitialized;
 	bool					mIsWindowed;
+	bool                                    mIs3D;
 	bool					mVideoOnlyDraw;
 	ulong					mInitCount;
 

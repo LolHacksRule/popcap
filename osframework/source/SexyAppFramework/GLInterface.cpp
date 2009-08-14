@@ -54,7 +54,7 @@ GLInterface::~GLInterface()
 
 bool GLInterface::Is3DAccelerated()
 {
-    return true;
+    return mIs3D;
 }
 
 bool GLInterface::Is3DAccelerationSupported()
@@ -81,6 +81,7 @@ int GLInterface::Init(void)
 	mMaxTextureWidth = 4096;
 	mMaxTextureHeight = 4096;
 	mTextureNPOT = GL_FALSE;
+	mIs3D = mApp->mIs3D;
 
 	return 0;
 }
