@@ -277,6 +277,7 @@ GLTexture::~GLTexture ()
 
 void GLTexture::SetTextureFilter(bool linear)
 {
+	linear = true;
 	if (linear)
 	{
 		glTexParameteri (mTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -592,8 +593,8 @@ void GLTexture::Blt (float theX, float theY, const Rect& theSrcRect,
 		return;
 
 	SexyRGBA rgba = theColor.ToRGBA ();
-	glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
 	multiply_rgba (rgba);
+	glColor4ub (rgba.r, rgba.g, rgba.b, rgba.a);
 
 	glEnable (mTarget);
 	while (srcY < srcBottom)
