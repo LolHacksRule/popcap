@@ -22,6 +22,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <wctype.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #ifdef WIN32
 #ifndef NOMINMAX
