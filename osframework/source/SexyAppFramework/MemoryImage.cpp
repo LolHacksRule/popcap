@@ -2094,3 +2094,15 @@ bool MemoryImage::Palletize()
 
 	return true;
 }
+
+#include "../ImageLib/ImageLib.h"
+void MemoryImage::WriteToPng(std::string theFileName)
+{
+	ImageLib::Image anImage;
+
+	anImage.mWidth = mWidth;
+	anImage.mHeight = mHeight;
+	anImage.mBits = GetBits();
+	ImageLib::WritePNGImage(theFileName, &anImage);
+	anImage.mBits = 0;
+}

@@ -116,6 +116,8 @@ public:
 	virtual void			SetVolatile(bool isVolatile);
 
 	virtual bool			Palletize();
+
+	void                            WriteToPng(std::string theFileName);
 };
 
 }
