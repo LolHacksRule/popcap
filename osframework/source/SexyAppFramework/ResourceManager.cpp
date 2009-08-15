@@ -746,6 +746,7 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 	theRes->mImage = aSharedImageRef;
 	aDDImage->mPurgeBits = theRes->mPurgeBits;
 
+#if 0
 	if (theRes->mDDSurface)
 	{
 		SEXY_PERF_BEGIN("ResourceManager:DDSurface");
@@ -754,11 +755,12 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 
 		if (!aDDImage->mHasAlpha)
 		{
-			//aDDImage->mWantDDSurface = true;
+			aDDImage->mWantDDSurface = true;
 			aDDImage->mPurgeBits = true;
 		}
 		SEXY_PERF_END("ResourceManager:DDSurface");
 	}
+#endif
 
 	if (theRes->mPalletize)
 	{
@@ -784,8 +786,10 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 	aDDImage->mNumRows = theRes->mRows;
 	aDDImage->mNumCols = theRes->mCols;
 
+#if 0
 	if (aDDImage->mPurgeBits)
 		aDDImage->PurgeBits();
+#endif
 
 	ResourceLoadedHook(theRes);
 	return true;
