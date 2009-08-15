@@ -129,7 +129,7 @@ bool AudiereSoundManager::LoadSound(unsigned int theSfxID, const std::string& th
 		aLastSlashPos = 0;
 
 	static const char* extensions[] = {
-		"", ".wav", ".ogg", ".mp3", NULL
+		"", ".wav", ".au", ".ogg", ".mp3", NULL
 	};
 
 	for (int i = 0; extensions[i]; i++)
