@@ -23,6 +23,7 @@
 #include "PerfTimer.h"
 #include "MTRand.h"
 #include "ModVal.h"
+#include "SexyDebug.h"
 
 #include <iostream>
 #include <fstream>
@@ -136,6 +137,8 @@ SexyAppBase::SexyAppBase()
 	gSexyAppBase = this;
 
 	ImageLib::InitJPEG2000();
+
+	DebugInit(FAULT_HANDLER);
 
 	mNotifyGameMessage = 0;
 
