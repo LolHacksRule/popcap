@@ -57,6 +57,15 @@ int NativeDisplay::Init()
 	return -1;
 }
 
+bool NativeDisplay::CanReinit()
+{
+	return false;
+}
+
+bool NativeDisplay::Reinit()
+{
+	return false;
+}
 
 Font* NativeDisplay::CreateFont(SexyAppBase * theApp,
 				 const std::string theFace,

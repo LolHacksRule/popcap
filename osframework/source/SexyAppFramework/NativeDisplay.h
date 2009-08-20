@@ -70,6 +70,8 @@ public:
 
  public:
         virtual int                                Init();
+	virtual bool                               CanReinit();
+	virtual bool                               Reinit();
 
 	virtual bool				   Is3DAccelerated();
 	virtual bool				   Is3DAccelerationSupported();

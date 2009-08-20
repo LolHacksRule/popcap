@@ -2431,10 +2431,13 @@ int SexyAppBase::InitDDInterface()
 
 	mInputManager->Cleanup ();
 
-	PreDDInterfaceInitHook();
-	DeleteNativeImageData();
+	bool aCanReinit = mDDInterface->CanReinit();
 
-	if (mDDInterface->Init())
+	PreDDInterfaceInitHook();
+	if (!aCanReinit)
+		DeleteNativeImageData();
+
+	if ((aCanReinit && !mDDInterface->Reinit()) || mDDInterface->Init())
 	{
 		std::cout<<"Initializing video driver failed."<<std::endl;
 		DoExit (1);
