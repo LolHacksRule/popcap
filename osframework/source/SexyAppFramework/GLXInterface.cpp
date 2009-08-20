@@ -145,7 +145,8 @@ int GLXInterface::Init (void)
 	wmState = XInternAtom (mDpy, "_NET_WM_STATE", False);
 	fullScreen = XInternAtom (mDpy, "_NET_WM_STATE_FULLSCREEN", False);
 
-	if (!mApp->mIsWindowed) {
+	if (!mApp->mIsWindowed)
+	{
 		memset(&event, 0, sizeof(event));
 		event.type = ClientMessage;
 		event.xclient.window = mWindow;
@@ -212,6 +213,53 @@ void GLXInterface::Cleanup ()
 	if (mDpy)
 		XCloseDisplay (mDpy);
 	mDpy = NULL;
+}
+
+bool GLXInterface::CanReinit(void)
+{
+	return mInitialized;
+}
+
+bool GLXInterface::Reinit (void)
+{
+	XEvent event;
+
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
+	mDisplayWidth = mWidth;
+	mDisplayHeight = mHeight;
+	mWindowWidth = mWidth;
+	mWindowHeight = mHeight;
+	mIs3D = mApp->mIs3D;
+
+	Atom wmState, fullScreen;
+
+	wmState = XInternAtom (mDpy, "_NET_WM_STATE", False);
+	fullScreen = XInternAtom (mDpy, "_NET_WM_STATE_FULLSCREEN", False);
+
+	memset(&event, 0, sizeof(event));
+	event.type = ClientMessage;
+	event.xclient.window = mWindow;
+	event.xclient.message_type = wmState;
+	event.xclient.format = 32;
+	event.xclient.data.l[0] = mApp->mIsWindowed ? 0 : 1;
+	event.xclient.data.l[1] = fullScreen;
+	event.xclient.data.l[2] = 0;
+
+	XSendEvent (mDpy, DefaultRootWindow (mDpy), False,
+		    SubstructureNotifyMask, &event);
+	XIfEvent (mDpy,	 &event,  WaitForSubstructureNotify, (char*)this);
+
+	delete mScreenImage;
+	mScreenImage = static_cast<GLImage*>(CreateImage (mApp, mWidth, mHeight));
+	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
+
+	mPresentationRect.mX = 0;
+	mPresentationRect.mY = 0;
+	mPresentationRect.mWidth = mWidth;
+	mPresentationRect.mHeight = mHeight;
+
+	return GLInterface::Reinit();
 }
 
 void GLXInterface::RemapMouse(int& theX, int& theY)
