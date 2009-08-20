@@ -2437,7 +2437,15 @@ int SexyAppBase::InitDDInterface()
 	if (!aCanReinit)
 		DeleteNativeImageData();
 
-	if ((aCanReinit && !mDDInterface->Reinit()) || mDDInterface->Init())
+	if (aCanReinit)
+	{
+		if (!mDDInterface->Reinit())
+		{
+			std::cout<<"Reinitializing video driver failed."<<std::endl;
+			DoExit (1);
+		}
+	}
+	else if (mDDInterface->Init())
 	{
 		std::cout<<"Initializing video driver failed."<<std::endl;
 		DoExit (1);
