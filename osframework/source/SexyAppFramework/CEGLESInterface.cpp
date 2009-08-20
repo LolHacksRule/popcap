@@ -89,6 +89,8 @@ int CEGLESInterface::Init (void)
 
 	EGLBoolean ret;
 
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
 	if (mApp->mIsWindowed)
 		mOverScan = 1.0f;
 	else
@@ -244,6 +246,45 @@ void CEGLESInterface::Cleanup ()
 	if (mDpy)
 		eglTerminate (mDpy);
 	mDpy = NULL;
+}
+
+bool CEGLESInterface::CanReinit (void)
+{
+	return mInitialized;
+}
+
+bool CEGLESInterface::Reinit (void)
+{
+	if (mApp->mIsWindowed)
+		mOverScan = 1.0f;
+	else
+		mOverScan = 0.9f;
+
+	mWidth = mApp->mWidth;
+	mHeight = mApp->mHeight;
+	mIs3D = mApp->mIs3D;
+
+	if (mApp->mIsWindowed)
+	{
+		mWidth = mWindowWidth;
+		mHeight = mWindowHeight;
+		mDisplayWidth = mWindowWidth;
+		mDisplayHeight = mWindowHeight;
+	}
+	else
+	{
+		mWidth = mApp->mWidth;
+		mHeight = mApp->mHeight;
+		mDisplayWidth = mApp->mWidth;
+		mDisplayHeight = mApp->mHeight;
+	}
+	mPresentationRect = Rect(0, 0, mDisplayWidth, mDisplayHeight);
+
+	delete mScreenImage;
+	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
+	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
+
+	return GLInterface::Reinit();
 }
 
 void CEGLESInterface::RemapMouse(int& theX, int& theY)

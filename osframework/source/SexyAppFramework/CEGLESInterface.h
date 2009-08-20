@@ -24,6 +24,8 @@ public:
 	virtual ~CEGLESInterface();
 
 	virtual int				Init();
+	virtual bool				CanReinit();
+	virtual bool				Reinit();
 	virtual void				Cleanup();
 
 	virtual void				SwapBuffers();
