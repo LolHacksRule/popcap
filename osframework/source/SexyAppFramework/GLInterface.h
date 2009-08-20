@@ -92,6 +92,7 @@ public:
 
 	virtual Image*				GetScreenImage();
 	virtual int				Init();
+	virtual bool                            Reinit();
 	virtual void				Cleanup();
 
 	virtual void				RemoveImageData(MemoryImage* theImage);

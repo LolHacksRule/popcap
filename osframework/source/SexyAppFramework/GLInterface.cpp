@@ -86,6 +86,12 @@ int GLInterface::Init(void)
 	return 0;
 }
 
+bool GLInterface::Reinit(void)
+{
+	InitGL();
+	return true;
+}
+
 void GLInterface::Cleanup()
 {
 	FlushWork();
