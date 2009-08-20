@@ -25,6 +25,8 @@ def Configure(env):
                       LIBPATH = [os.path.join ('#', 'extra', 'lib')])
     if not env.has_key ('PKGCONFIG'):
         env.Replace (PKGCONFIG = 'pkg-config')
+    if env['debug']:
+        env.AppendUnique(CPPDEFINES = ['SEXY_DEBUG'])
 
 def PosixModuleLoaderAddOptions (opts):
     pass
