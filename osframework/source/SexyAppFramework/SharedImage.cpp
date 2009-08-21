@@ -86,15 +86,14 @@ MemoryImage* SharedImageRef::operator->()
 
 SharedImageRef::operator Image*()
 {
-	if (mSharedImage != NULL)
-		return mSharedImage->mImage;
-	else
+	if (mUnsharedImage)
 		return mUnsharedImage;
+	return (MemoryImage*)*this;
 }
 
 SharedImageRef::operator MemoryImage*()
 {
-	if (mUnsharedImage != NULL)
-		return mUnsharedImage;
-	return dynamic_cast<MemoryImage*>(mSharedImage->mImage);
+	if (mSharedImage != NULL)
+		return (MemoryImage*)mSharedImage->mImage;
+	return NULL;
 }
