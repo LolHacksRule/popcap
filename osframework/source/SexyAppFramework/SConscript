@@ -22,7 +22,8 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "WidgetManager.cpp", "XMLParser.cpp", 'FontUtils.cpp',
         'DriverFactory.cpp', 'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
-        'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp', 'SexyThread.cpp']
+        'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp', 'SexyThread.cpp',
+        'SexyDebug.cpp']
 
 srcs += map(lambda f:os.path.join ('cjkcodecs', f),
             ['codecs_cn.c', 'codecs_hk.c',  'codecs_iso2022.c',
@@ -72,6 +73,12 @@ if 'CEGLES' in env['DRIVERS']:
     srcs += ["CEGLESInterface.cpp"]
     env['CEGLES']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_CEGLES_DRIVER'])
+
+if 'XGLES' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLInterface.cpp"]
+    srcs += ["XGLESInterface.cpp"]
+    env['XGLES']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_XGLES_DRIVER'])
 
 if 'LINUXINPUT' in env['DRIVERS']:
     srcs += ["LinuxInputDriver.cpp"]
@@ -162,6 +169,8 @@ if gameenv['static']:
         gameenv['WGL']['ENABLE'](gameenv)
     if 'CEGLES' in env['DRIVERS']:
         gameenv['CEGLES']['ENABLE'](gameenv)
+    if 'XGLES' in env['DRIVERS']:
+        gameenv['XGLES']['ENABLE'](gameenv)
     if 'LINUXINPUT' in env['DRIVERS']:
         gameenv['LINUXINPUT']['ENABLE'](gameenv)
     if 'SMINPUT' in env['DRIVERS']:
