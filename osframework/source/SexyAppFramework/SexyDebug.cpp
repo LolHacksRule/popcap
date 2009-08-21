@@ -14,6 +14,10 @@
 #if defined(__linux__) && defined(__ELF__) && !defined(__UCLIBC__)
 #define HAVE_BACKTRACE
 #include <execinfo.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <dlfcn.h>
 #endif
 #define HAVE_SETRLIMIT
 #endif
@@ -305,11 +309,26 @@ EnableCoreDump(void)
 static void PosixPrintBackTrace()
 {
 #ifdef HAVE_BACKTRACE
-	void    * context[32];
-	size_t    size;
+	void *array[64];
+	const char *mod;
+	int size, i;
+	Dl_info info;
 
-	size = backtrace (context, 32);
-	backtrace_symbols_fd (context, size, 0);
+	printf("\nBacktrace:\n");
+	size = backtrace(array, 64);
+	for (i = 0; i < size; i++)
+	{
+		dladdr(array[i], &info);
+		mod = (info.dli_fname && *info.dli_fname) ? info.dli_fname : "(vdso)";
+		if (info.dli_saddr)
+			printf("%d: %s (%s+0x%lx) [%p]\n", i, mod,
+			       info.dli_sname, (char*)array[i] - (char*)info.dli_saddr, array[i]);
+		else
+			printf("%d: %s (%p+0x%lx) [%p]\n", i, mod,
+			       info.dli_fbase, (char*)array[i] - (char*)info.dli_fbase, array[i]);
+	}
+	fflush(stdout);
+	fflush(stderr);
 #endif
 }
 #endif
@@ -336,7 +355,11 @@ void Sexy::DebugPrintBackTrace()
 
 
 
-#ifdef COMMON_GAME_DEBUG_TEST
+#ifdef SEXY_DEBUG_TEST
+/**
+ * compile with:
+ * gcc -DSEXY_DEBUG_TEST -o SexyDebug SexyDebug.cpp -lstdc++ -ldl -O0 -export-dynamic
+ */
 void crasha()
 {
 	int * ptr = (int *)0xbeafdead;
