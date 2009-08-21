@@ -1,5 +1,7 @@
 #include "PosixModuleLoader.h"
 
+#include <stdio.h>
+
 using namespace Sexy;
 
 PosixModuleLoader::PosixModuleLoader ()
