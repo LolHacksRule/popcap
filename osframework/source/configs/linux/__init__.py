@@ -25,7 +25,7 @@ def Configure (env):
                       LINKFLAGS = ['-pthread'])
     env.AppendUnique (CFLAGS = ['-g', '-fno-unit-at-a-time', '-Wall'],
                       CXXFLAGS = ['-g', '-Wall'],
-                      LINKFLAGS = ['-g', '-fno-unit-at-a-time'],
+                      LINKFLAGS = ['-g', '-fno-unit-at-a-time', '-export-dynamic'],
                       LIBS = ['rt', 'm'])
     configs.linux.EnableLinuxUdpInputServer (env)
     configs.PosixModuleLoaderConfigure (env)
