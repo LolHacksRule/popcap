@@ -169,12 +169,6 @@ void GLInterface::InitGL()
 		printf ("GL extensions: %s\n", mGLExtensions);
 
 	if (mGLExtensions) {
-		if ((strstr (mGLExtensions, "GL_ARB_texture_non_power_of_two") ||
-		     strstr (mGLExtensions, "GL_EXT_texture_non_power_of_two") ||
-		     strstr (mGLExtensions, "GL_ARB_texture_rectangle") ||
-		     strstr (mGLExtensions, "GL_EXT_texture_rectangle")) &&
-		    getenv("SEXY_GL_RECTANGLE_TEXTURE"))
-			mTextureNPOT = GL_TRUE;
 		if (mGLMajor > 2 || (mGLMajor == 1 && mGLMinor >= 2) ||
 		    strstr (mGLExtensions, "GL_IMG_texture_format_BGRA888") ||
 		    strstr (mGLExtensions, "GL_EXT_bgra"))
@@ -349,13 +343,6 @@ bool GLInterface::DrawCursor(Graphics* g)
 
 int GLInterface::GetTextureTarget()
 {
-	if (mTextureNPOT)
-	{
-		if (mGLMajor >= 2)
-			return GL_TEXTURE_2D;
-		return GL_TEXTURE_RECTANGLE_ARB;
-	}
-
 	return GL_TEXTURE_2D;
 }
 

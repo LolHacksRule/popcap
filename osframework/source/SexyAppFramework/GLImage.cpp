@@ -153,17 +153,10 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 	int w, h;
 
 	/* Use the texture width and height expanded to powers of 2 */
-	if (theInterface->mTextureNPOT)
-	{
-		w = width;
-		h = height;
-	}
-	else
-	{
-		w = RoundToPOT (width);
-		h = RoundToPOT (height);
-		assert (w == width && h == height);
-	}
+	w = RoundToPOT (width);
+	h = RoundToPOT (height);
+	assert (w == width && h == height);
+
 	//printf ("texture: %dx%d ==> %dx%d\n", width, height, w, h);
 
 	/* Create an OpenGL texture for the image */
@@ -326,8 +319,7 @@ void GLTexture::CreateTextureDimensions (MemoryImage* theImage)
 	// Calculate inner block sizes
 	mTexBlockWidth = aWidth;
 	mTexBlockHeight = aHeight;
-	mRectangleTexture = mInterface->mTextureNPOT;
-	bool usePOT = !mRectangleTexture;
+	bool usePOT = true;
 	bool miniSubDiv = (theImage->mFlags & IMAGE_FLAGS_MINI_SUBDIV) != 0;
 
 	mTarget = mInterface->GetTextureTarget();
