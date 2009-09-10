@@ -10,9 +10,27 @@ namespace Sexy
 {
 
 class SexyAppBase;
+class LinuxInputDriver;
+
+struct LinuxDeviceInfo {
+	int          vid;
+	int          pid;
+	int          version;
+	int          bustype;
+
+	bool operator == (const LinuxDeviceInfo &other) const
+	{
+		return
+		vid == other.vid && pid == other.pid &&
+		version == other.version && bustype == other.bustype;
+        }
+};
+
 class LinuxInputInterface: public InputInterface {
 public:
-	LinuxInputInterface (InputManager* theManager, const char* theName);
+	LinuxInputInterface (InputManager* theManager,
+			     LinuxInputDriver *driver,
+			     const char* theName);
         virtual ~LinuxInputInterface ();
 
 public:
@@ -25,6 +43,7 @@ public:
 private:
         bool                  OpenDevice ();
         void                  CloseDevice ();
+	bool                  ReopenDevice ();
 
         static void *         Run (void * data);
 
@@ -39,7 +58,10 @@ private:
 
         int                   mRetry;
 
-	std::string         * mDeviceName;
+	std::string           mDeviceName;
+
+	LinuxInputDriver     *mDriver;
+	LinuxDeviceInfo       mInfo;
 };
 
 }

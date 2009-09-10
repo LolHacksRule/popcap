@@ -1,6 +1,7 @@
 #include "LinuxInputDriver.h"
 #include "InputDriverFactory.h"
 #include "InputManager.h"
+#include "AutoCrit.h"
 #include "SexyAppBase.h"
 
 #include <cstring>
@@ -68,21 +69,170 @@ struct input_info {
      int num_buttons;
      int num_rels;
      int num_abs;
+
+     struct input_id id;
 };
+
+static bool
+get_device_info (int fd, struct input_info* info, bool silent = true);
 
 using namespace Sexy;
 
+namespace Sexy {
+class LinuxInputDriver: public InputDriver {
+public:
+	LinuxInputDriver ()
+	 : InputDriver("LinuxInput", 0)
+	{
+	}
+
+	InputInterface* Create (SexyAppBase * theApp)
+	{
+		const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
+		bool added = false;
+
+		if (device)
+			return new LinuxInputInterface (theApp->mInputManager, this, device);
+
+		for (unsigned i = 0; i < 256; i++)
+		{
+			struct input_info info;
+			int fd;
+			char name[1024];
+
+			snprintf (name, sizeof(name), "/dev/input/event%d", i);
+			fd = open (name, O_RDWR);
+			if (fd < 0)
+				continue;
+
+			if (!get_device_info (fd, &info, true) ||
+			    (!info.num_rels && !info.num_abs))
+			{
+				close (fd);
+				continue;
+			}
+			close (fd);
+
+			InputInterface * anInput;
+			anInput = new LinuxInputInterface (theApp->mInputManager, this, name);
+			if (!theApp->mInputManager->Add(anInput, this))
+				delete anInput;
+			else
+				added = true;
+		}
+
+		if (!added)
+			return new LinuxInputInterface (theApp->mInputManager, this, 0);
+		return 0;
+        }
+
+	std::string GetRealDevice (std::string device)
+        {
+		char* path = realpath (device.c_str (), 0);
+		if (!path)
+			return std::string ("");
+
+		std::string result (path);
+
+		free (path);
+		return result;
+	}
+
+	std::string AddDevice (std::string device, LinuxDeviceInfo info)
+        {
+		device = GetRealDevice (device);
+		if (!device.length ())
+			return device;
+
+		AutoCrit aAutoCrit (mCritSect);
+
+		mDeviceMap.insert (std::pair<std::string, LinuxDeviceInfo>(device, info));
+
+		return device;
+	}
+
+	void RemoveDevice (std::string device)
+        {
+		AutoCrit aAutoCrit (mCritSect);
+
+		DeviceMap::iterator it = mDeviceMap.find (device);
+		if (it != mDeviceMap.end())
+			mDeviceMap.erase (it);
+	}
+
+	int DoReprobe (LinuxDeviceInfo *dinfo,
+		     std::string &theDeviceName)
+	{
+		for (unsigned i = 0; i < 256; i++)
+		{
+			struct input_info info;
+			int fd;
+			char name[1024];
+
+			snprintf (name, sizeof(name), "/dev/input/event%d", i);
+
+			DeviceMap::iterator it = mDeviceMap.find (std::string (name));
+			if (it != mDeviceMap.end())
+				continue;
+
+			fd = open (name, O_RDWR);
+			if (fd < 0)
+				continue;
+
+			if (!get_device_info (fd, &info, false) ||
+			    (!info.num_rels && !info.num_abs))
+			{
+				close (fd);
+				continue;
+			}
+
+			if (!dinfo || (dinfo->pid == info.id.product &&
+				       dinfo->vid == info.id.vendor &&
+				       dinfo->version == info.id.version &&
+				       dinfo->bustype == info.id.bustype))
+			{
+				theDeviceName = std::string (name);
+				return fd;
+			}
+
+			close (fd);
+		}
+
+		return -1;
+        }
+
+	int Reprobe (LinuxDeviceInfo *dinfo,
+		     std::string &theDeviceName)
+	{
+		AutoCrit aAutoCrit (mCritSect);
+		int fd;
+
+		fd = DoReprobe (dinfo, theDeviceName);
+		if (fd >= 0)
+			return fd;
+		return DoReprobe (NULL, theDeviceName);
+        }
+
+private:
+	typedef std::map<std::string, LinuxDeviceInfo> DeviceMap;
+	DeviceMap             mDeviceMap;
+
+	CritSect              mCritSect;
+};
+
+}
+
 LinuxInputInterface::LinuxInputInterface (InputManager* theManager,
+					  LinuxInputDriver *driver,
 					  const char * theName)
 	: InputInterface (theManager), mFd (-1), mDone (false)
 {
 	mX = 0;
 	mY = 0;
 	mInitialized = false;
-	if (theName)
-		mDeviceName = new std::string(theName);
-	else
-		mDeviceName = 0;
+	mDriver = driver;
+	mDeviceName = std::string(theName ? theName : "");
+	memset (&mInfo, 0, sizeof (mInfo));
 }
 
 LinuxInputInterface::~LinuxInputInterface ()
@@ -129,7 +279,7 @@ void LinuxInputInterface::Cleanup()
 }
 
 static bool
-get_device_info (int fd, struct input_info* info, bool silent = true)
+get_device_info (int fd, struct input_info* info, bool silent)
 {
      unsigned int  num_keys     = 0;
      unsigned int  num_ext_keys = 0;
@@ -206,6 +356,12 @@ get_device_info (int fd, struct input_info* info, bool silent = true)
                     num_abs++;
      }
 
+     if (ioctl (fd, EVIOCGID, &info->id) < 0)
+     {
+	     perror ("Get id error");
+	     return false;
+     }
+
      if (!silent)
      {
 	     printf ("keys: %d\n", num_keys);
@@ -214,6 +370,7 @@ get_device_info (int fd, struct input_info* info, bool silent = true)
 	     printf ("relative events: %d\n", num_rels);
 	     printf ("absolute events: %d\n", num_abs);
      }
+
 
      if (info)
      {
@@ -224,6 +381,7 @@ get_device_info (int fd, struct input_info* info, bool silent = true)
 	     info->num_abs = num_abs;
      }
 
+
      return true;
 }
 
@@ -231,8 +389,8 @@ bool LinuxInputInterface::OpenDevice ()
 {
 	const char * device = 0;
 
-	if (mDeviceName)
-		device = mDeviceName->c_str();
+	if (mDeviceName.length ())
+		device = mDeviceName.c_str();
 	if (!device)
 		device = getenv ("SEXY_LINUX_INPUT_DEVICE");
 	if (!device)
@@ -249,7 +407,7 @@ bool LinuxInputInterface::OpenDevice ()
 	ret = ioctl (mFd, EVIOCGRAB, 1);
 	if (ret)
 	{
-	    printf ("grab %s failed.\n", device);
+		printf ("grab %s failed.\n", device);
 		mGrabed = false;
 	}
 	else
@@ -257,10 +415,52 @@ bool LinuxInputInterface::OpenDevice ()
 		mGrabed = true;
 	}
 
-	get_device_info (mFd, 0);
+	struct input_info info;
+	get_device_info (mFd, &info);
+	mInfo.pid = info.id.product;
+	mInfo.vid = info.id.vendor;
+	mInfo.version = info.id.version;
+	mInfo.bustype = info.id.bustype;
+
+	mDeviceName = std::string (device);
 	return true;
  open_failed:
 	return false;
+}
+
+bool LinuxInputInterface::ReopenDevice ()
+{
+	int ret;
+
+	CloseDevice ();
+
+	ret = mDriver->Reprobe (&mInfo, mDeviceName);
+	if (ret < 0)
+		return false;
+
+	mFd = ret;
+	ret = ioctl (mFd, EVIOCGRAB, 1);
+	if (ret)
+	{
+		printf ("grab %s failed.\n", mDeviceName.c_str ());
+		mGrabed = false;
+	}
+	else
+	{
+		mGrabed = true;
+	}
+
+	struct input_info info;
+	get_device_info (mFd, &info);
+	mInfo.pid = info.id.product;
+	mInfo.vid = info.id.vendor;
+	mInfo.version = info.id.version;
+	mInfo.bustype = info.id.bustype;
+
+	mDriver->AddDevice (mDeviceName, mInfo);
+
+	printf ("Reopened device(dev = %s)\n", mDeviceName.c_str ());
+	return true;
 }
 
 void LinuxInputInterface::CloseDevice ()
@@ -270,8 +470,11 @@ void LinuxInputInterface::CloseDevice ()
 
 	if (mGrabed)
 		ioctl (mFd, EVIOCGRAB, 0);
+	mGrabed = false;
 	close (mFd);
 	mFd = -1;
+
+	mDriver->RemoveDevice (mDeviceName);
 }
 
 static bool
@@ -284,17 +487,23 @@ handle_key_event (struct input_event & linux_event,
 	if ((linux_event.code >= BTN_MOUSE && linux_event.code < BTN_JOYSTICK) ||
 	    linux_event.code == BTN_TOUCH)
 	{
-		if (linux_event.value == 1)
-			event.type = EVENT_MOUSE_BUTTON_PRESS;
-		else if (linux_event.value == 0)
-			event.type = EVENT_MOUSE_BUTTON_RELEASE;
-		event.flags = EVENT_FLAGS_BUTTON;
+#if 0
+		printf ("button: %d(%x) %d\n", linux_event.code, linux_event.code,
+			linux_event.value);
+#endif
 		if (linux_event.code == BTN_MOUSE)
 			event.u.mouse.button = 1;
 		else if (linux_event.code == (BTN_MOUSE + 1))
 			event.u.mouse.button = 2;
 		else if (linux_event.code == (BTN_MOUSE + 2))
 			event.u.mouse.button = 3;
+		else
+			return true;
+		if (linux_event.value == 1)
+			event.type = EVENT_MOUSE_BUTTON_PRESS;
+		else if (linux_event.value == 0)
+			event.type = EVENT_MOUSE_BUTTON_RELEASE;
+		event.flags |= EVENT_FLAGS_BUTTON;
 	}
 
 	return true;
@@ -309,12 +518,12 @@ handle_rel_event (struct input_event & linux_event,
 	{
 	case REL_X:
 		event.type = EVENT_MOUSE_MOTION;
-		event.flags = EVENT_FLAGS_REL_AXIS;
+		event.flags |= EVENT_FLAGS_REL_AXIS;
 		event.u.mouse.x = linux_event.value;
 		break;
 	case REL_Y:
 		event.type = EVENT_MOUSE_MOTION;
-		event.flags = EVENT_FLAGS_REL_AXIS;
+		event.flags |= EVENT_FLAGS_REL_AXIS;
 		event.u.mouse.y = linux_event.value;
 		break;
 	default:
@@ -332,12 +541,12 @@ handle_abs_event (struct input_event & linux_event,
 	{
 	case ABS_X:
 		event.type = EVENT_MOUSE_MOTION;
-		event.flags = EVENT_FLAGS_AXIS;
+		event.flags |= EVENT_FLAGS_AXIS;
 		event.u.mouse.x = linux_event.value;
 		break;
 	case ABS_Y:
 		event.type = EVENT_MOUSE_MOTION;
-		event.flags = EVENT_FLAGS_AXIS;
+		event.flags |= EVENT_FLAGS_AXIS;
 		event.u.mouse.y = linux_event.value;
 		break;
 	default:
@@ -399,12 +608,8 @@ void* LinuxInputInterface::Run (void * data)
 		}
 		else
 		{
-			if (driver->mRetry > 10)
-				break;
-
-			usleep (200000);
-			printf ("try to reopen the input device.\n");
-			if (!driver->OpenDevice ())
+			usleep (100000);
+			if (!driver->ReopenDevice ())
 				driver->mRetry++;
 			else
 				driver->mRetry = 0;
@@ -428,15 +633,19 @@ void* LinuxInputInterface::Run (void * data)
 			continue;
 
 		readlen /= sizeof (linux_event[0]);
+
+		Event event;
+		memset (&event, 0, sizeof (event));
 		for (int i = 0; i < readlen; i++) {
-			Event event;
-
-			event.type = EVENT_NONE;
-			event.flags = 0;
-			event.u.mouse.x = driver->mX;
-			event.u.mouse.y = driver->mY;
-
+			if (0)
+				printf ("linux_event: type %d code %d value: %d\n",
+					linux_event[i].type, linux_event[i].code,
+					linux_event[i].value);
 			handle_event (linux_event[i], event);
+
+			if (linux_event[i].type != EV_SYN ||
+			    linux_event[i].code != SYN_REPORT)
+			    continue;
 
 			if (event.type == EVENT_MOUSE_MOTION)
 			{
@@ -448,13 +657,20 @@ void* LinuxInputInterface::Run (void * data)
 			}
 			if (event.type != EVENT_NONE)
 			{
+#if 1
 				if (0)
+#else
+				if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
+				    event.type == EVENT_MOUSE_BUTTON_RELEASE)
+#endif
 				{
 					printf ("event.type: %d\n", event.type);
+					printf ("event.button: %d\n", event.u.mouse.button);
 					printf ("event.x: %d\n", event.u.mouse.x);
 					printf ("event.y: %d\n", event.u.mouse.y);
 				}
 				driver->PostEvent (event);
+				memset (&event, 0, sizeof (event));
 			}
 		}
 	}
@@ -471,48 +687,6 @@ bool LinuxInputInterface::GetEvent (Event & event)
 {
 	return false;
 }
-
-class LinuxInputDriver: public InputDriver {
-public:
-	LinuxInputDriver ()
-	 : InputDriver("LinuxInput", 0)
-	{
-	}
-
-	InputInterface* Create (SexyAppBase * theApp)
-	{
-		const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
-		if (device)
-			return new LinuxInputInterface (theApp->mInputManager, device);
-
-		for (unsigned i = 0; i < 256; i++)
-		{
-			struct input_info info;
-			int fd;
-			char name[1024];
-
-			snprintf (name, sizeof(name), "/dev/input/event%d", i);
-			fd = open (name, O_RDWR);
-			if (fd < 0)
-				continue;
-
-			if (!get_device_info (fd, &info, true) ||
-			    (!info.num_rels && !info.num_abs))
-			{
-				close (fd);
-				continue;
-			}
-			close (fd);
-
-			InputInterface * anInput;
-			anInput = new LinuxInputInterface (theApp->mInputManager, name);
-			if (!theApp->mInputManager->Add(anInput, this))
-				delete anInput;
-		}
-
-		return 0;
-        }
-};
 
 static LinuxInputDriver aLinuxInputDriver;
 InputDriverRegistor aLinuxInputDriverRegistor (&aLinuxInputDriver);
