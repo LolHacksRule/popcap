@@ -95,5 +95,5 @@ SharedImageRef::operator MemoryImage*()
 {
 	if (mSharedImage != NULL)
 		return (MemoryImage*)mSharedImage->mImage;
-	return NULL;
+	return (MemoryImage *)mUnsharedImage;
 }
