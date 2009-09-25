@@ -571,7 +571,7 @@ bool LinuxInputInterface::OpenDevice ()
 #ifdef SEXY_LINUX_INPUT_GRAB_DEVICE
 	wantGrab = getenv ("SEXY_LINUX_INPUT_NO_GRAB") == 0;
 #else
-	wantGrab = getenv ("SEXY_LINUX_INPUT_GRAB_DEVICE") != 0
+	wantGrab = getenv ("SEXY_LINUX_INPUT_GRAB_DEVICE") != 0;
 #endif
 	if (wantGrab)
 	{
