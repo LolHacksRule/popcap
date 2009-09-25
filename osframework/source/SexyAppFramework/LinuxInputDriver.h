@@ -30,7 +30,8 @@ class LinuxInputInterface: public InputInterface {
 public:
 	LinuxInputInterface (InputManager* theManager,
 			     LinuxInputDriver *driver,
-			     const char* theName);
+			     const char* theName,
+			     bool hotpluged = false);
         virtual ~LinuxInputInterface ();
 
 public:
@@ -39,6 +40,11 @@ public:
 
         virtual bool          HasEvent ();
         virtual bool          GetEvent (Event & event);
+
+	const std::string &   GetDeviceName ()
+	{
+		return mDeviceName;
+	}
 
 private:
         bool                  OpenDevice ();
@@ -52,9 +58,16 @@ private:
 	bool                  mGrabed;
         volatile int          mDone;
         pthread_t             mThread;
+
+	bool                  mHotpluged;
 	bool                  mInitialized;
         int                   mX;
         int                   mY;
+
+	int                   mMinX;
+	int                   mMaxX;
+	int                   mMinY;
+	int                   mMaxY;
 
         int                   mRetry;
 

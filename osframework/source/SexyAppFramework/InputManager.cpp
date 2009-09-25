@@ -25,9 +25,6 @@ void InputManager::Init ()
 {
 	Cleanup ();
 
-	mWidth = mApp->mDDInterface->mDisplayWidth;
-	mHeight = mApp->mDDInterface->mDisplayHeight;
-
 	InputDriverFactory* factory;
 
 	factory = InputDriverFactory::GetInputDriverFactory ();
@@ -41,15 +38,40 @@ void InputManager::Init ()
 		aInput = dynamic_cast<InputInterface*>
 			(((InputDriver*)(*it))->Create (mApp));
 
-		if (aInput && !Add (aInput, (InputDriver*)(*it)))
+		if (aInput && !Add(aInput, (InputDriver*)(*it)))
 			delete aInput;
 	}
 
+	mWidth = mApp->mDDInterface->mDisplayWidth;
+	mHeight = mApp->mDDInterface->mDisplayHeight;
+
 	ConnectAll();
+
+	/* notify creators */
+	for (it = Creators->begin (); it != Creators->end (); ++it)
+	{
+		InputDriver* driver =(InputDriver*)(*it);
+		driver->OnStart (mApp, this);
+	}
+
 }
 
 void InputManager::Cleanup (void)
 {
+	InputDriverFactory* factory;
+
+	factory = InputDriverFactory::GetInputDriverFactory ();
+
+	const DriverFactory::Drivers* Creators = factory->GetDrivers ();
+	DriverFactory::Drivers::const_iterator dit;
+
+	/* notify creators */
+	for (dit = Creators->begin (); dit != Creators->end (); ++dit)
+	{
+		InputDriver* driver =(InputDriver*)(*dit);
+		driver->OnStop ();
+	}
+
 	Drivers::iterator it;
 	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
 		delete (*it);
@@ -126,9 +148,10 @@ bool InputManager::PopEvent (Event &event)
 		event.flags &= ~EVENT_FLAGS_REL_AXIS;
 	}
 
-	if (0 && event.type != EVENT_NONE)
+	if (false && event.type != EVENT_NONE)
 	{
 		printf ("event.type: %d\n", event.type);
+		printf ("event.button: %d\n", event.u.mouse.button);
 		if (event.flags & EVENT_FLAGS_AXIS)
 		{
 			printf ("event.x: %d\n", event.u.mouse.x);
@@ -143,6 +166,7 @@ void InputManager::Update (void)
 	Event event;
 	while (mApp->mDDInterface && mApp->mDDInterface->GetEvent (event))
 	{
+		// the id field of events from NativeDisplay is always 0
 		event.id = 0;
 		PushEvent (event);
 	}
@@ -197,20 +221,12 @@ InputInterface* InputManager::Find(int id)
 	return 0;
 }
 
-InputInterface* InputManager::Find(const std::string& name)
+bool InputManager::Add(InputInterface * theInput,
+		       InputDriver * theDriver,
+		       bool connect)
 {
-	Drivers::iterator it;
+	AutoCrit anAutoCrit (mCritSect);
 
-	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
-		if ((*it)->mInputDriver->mName == name)
-			return *it;
-
-	return 0;
-}
-
-bool InputManager::Add(InputInterface* theInput,
-		       InputDriver* theDriver)
-{
 	theInput->mId = mId + 1;
 	theInput->mInputDriver = theDriver;
 
@@ -218,8 +234,30 @@ bool InputManager::Add(InputInterface* theInput,
 	{
 		mId++;
 		mDrivers.push_back (theInput);
+
+		if (connect)
+			theInput->Connect ();
 		return true;
 	}
 
 	return false;
+}
+
+bool InputManager::Remove(InputInterface * theInput)
+{
+	if (!theInput)
+		return false;
+
+	{
+		AutoCrit anAutoCrit (mCritSect);
+
+		Drivers::iterator it = std::find (mDrivers.begin (), mDrivers.end (), theInput);
+		if (it == mDrivers.end ())
+			return false;
+
+		mDrivers.erase (it);
+	}
+
+	delete theInput;
+	return true;
 }

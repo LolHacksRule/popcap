@@ -14,9 +14,14 @@
 #include <sys/ioctl.h>
 #include <sys/kd.h>
 #include <cstdlib>
+#include <limits.h>
 
 #include <linux/input.h>
 #include <linux/keyboard.h>
+
+#ifndef SEXY_LINUX_DEVICE_NO_HOTPLUG
+//#define SEXY_LINUX_DEVICE_NO_HOTPLUG
+#endif
 
 #ifndef EVIOCGLED
 #define EVIOCGLED(len) _IOC(_IOC_READ, 'E', 0x19, len)
@@ -48,29 +53,31 @@
  * Touchpads related stuff
  */
 enum {
-     TOUCHPAD_FSM_START,
-     TOUCHPAD_FSM_MAIN,
-     TOUCHPAD_FSM_DRAG_START,
-     TOUCHPAD_FSM_DRAG_MAIN,
+	TOUCHPAD_FSM_START,
+	TOUCHPAD_FSM_MAIN,
+	TOUCHPAD_FSM_DRAG_START,
+	TOUCHPAD_FSM_DRAG_MAIN,
 };
 struct touchpad_axis {
-     int old, min, max;
+	int old, min, max;
 };
 struct touchpad_fsm_state {
-     int fsm_state;
-     struct touchpad_axis x;
-     struct touchpad_axis y;
-     struct timeval timeout;
+	int fsm_state;
+	struct touchpad_axis x;
+	struct touchpad_axis y;
+	struct timeval timeout;
 };
 
+#define MAX_ABS 6
 struct input_info {
-     int num_keys;
-     int num_ext_keys;
-     int num_buttons;
-     int num_rels;
-     int num_abs;
+	int num_keys;
+	int num_ext_keys;
+	int num_buttons;
+	int num_rels;
+	int num_abs;
 
-     struct input_id id;
+	struct input_id id;
+	struct input_absinfo absinfo[MAX_ABS];
 };
 
 static bool
@@ -84,16 +91,106 @@ public:
 	LinuxInputDriver ()
 	 : InputDriver("LinuxInput", 0)
 	{
+		mHotplugDone = true;
+		mStopped = false;
 	}
+
+	unsigned int CheckHotplug ()
+	{
+		unsigned int checksum;
+		FILE *fp;
+
+		checksum = 0;
+		fp = fopen ("/proc/bus/input/devices", "rb");
+		if (!fp)
+			return -1;
+
+		unsigned char byte;
+		while (fread (&byte, 1, 1, fp) > 0)
+			checksum += byte;
+		fclose (fp);
+
+		return checksum;
+	}
+
+	void HotplugLoop ()
+	{
+		unsigned int checksum = -1;
+
+		while (!mHotplugDone)
+		{
+			unsigned int current;
+
+			current = CheckHotplug ();
+			if (current != checksum)
+			{
+				printf ("Rescanning input devices...\n");
+				AutoCrit aAutoCrit (mScanCritSect);
+
+				checksum = current;
+				CleanupDisconDevices ();
+				ScanAndAddDevice (mApp, true);
+			}
+
+			sleep (1);
+		}
+	}
+
+	static void HotplugLoopStub (void *arg)
+	{
+		LinuxInputDriver *driver = (LinuxInputDriver*)arg;
+		driver->HotplugLoop ();
+	}
+
+	void OnStart (SexyAppBase * theApp, InputManager * theManager)
+	{
+		mHotplugDone = false;
+		mApp = theApp;
+		mDisconDevices.clear ();
+		mStopped = false;
+#ifndef SEXY_LINUX_DEVICE_NO_HOTPLUG
+		mHotplugThread = Thread::Create (HotplugLoopStub, this);
+#endif
+	}
+
+	void OnStop ()
+	{
+		mHotplugDone = true;
+#ifndef SEXY_LINUX_DEVICE_NO_HOTPLUG
+		mHotplugThread.Join ();
+#endif
+		mStopped = true;
+	}
+
+	void CleanupDisconDevices ()
+	{
+		if (mDisconDevices.empty ())
+			return;
+
+		while (!mDisconDevices.empty ())
+		{
+			LinuxInputInterface* device = mDisconDevices.front ();
+
+			printf ("Cleanuping device: %s\n",
+				device->GetDeviceName ().c_str ());
+			mApp->mInputManager->Remove (device);
+			mDisconDevices.pop_front ();
+		}
+        }
 
 	InputInterface* Create (SexyAppBase * theApp)
 	{
 		const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
-		bool added = false;
 
 		if (device)
 			return new LinuxInputInterface (theApp->mInputManager, this, device);
 
+		ScanAndAddDevice (theApp, false);
+		return 0;
+        }
+
+	void ScanAndAddDevice (SexyAppBase * theApp, bool hotpluged)
+	{
 		for (unsigned i = 0; i < 256; i++)
 		{
 			struct input_info info;
@@ -105,6 +202,9 @@ public:
 			if (fd < 0)
 				continue;
 
+			if (FindDevice (name))
+				continue;
+
 			if (!get_device_info (fd, &info, true) ||
 			    (!info.num_rels && !info.num_abs))
 			{
@@ -113,28 +213,22 @@ public:
 			}
 			close (fd);
 
-			InputInterface * anInput;
-			anInput = new LinuxInputInterface (theApp->mInputManager, this, name);
-			if (!theApp->mInputManager->Add(anInput, this))
+			LinuxInputInterface * anInput;
+			anInput = new LinuxInputInterface (theApp->mInputManager, this,
+							   name, hotpluged);
+			if (!theApp->mInputManager->Add(anInput, this, hotpluged))
 				delete anInput;
-			else
-				added = true;
 		}
-
-		if (!added)
-			return new LinuxInputInterface (theApp->mInputManager, this, 0);
-		return 0;
         }
 
 	std::string GetRealDevice (std::string device)
         {
-		char* path = realpath (device.c_str (), 0);
+		char buf[PATH_MAX];
+		char* path = realpath (device.c_str (), buf);
 		if (!path)
-			return std::string ("");
+			return device;
 
 		std::string result (path);
-
-		free (path);
 		return result;
 	}
 
@@ -148,6 +242,7 @@ public:
 
 		mDeviceMap.insert (std::pair<std::string, LinuxDeviceInfo>(device, info));
 
+		printf ("Added device: %s.\n", device.c_str ());
 		return device;
 	}
 
@@ -158,10 +253,34 @@ public:
 		DeviceMap::iterator it = mDeviceMap.find (device);
 		if (it != mDeviceMap.end())
 			mDeviceMap.erase (it);
+
+		printf ("Removed device: %s.\n", device.c_str ());
+	}
+
+	bool FindDevice (std::string device)
+	{
+		AutoCrit aAutoCrit (mCritSect);
+
+		DeviceMap::iterator it = mDeviceMap.find (device);
+		return it != mDeviceMap.end();
+	}
+
+	void AddDisconDevice (LinuxInputInterface *theDevice)
+	{
+		AutoCrit aAutoCrit (mScanCritSect);
+
+		if (mHotplugDone)
+			return;
+
+		if (std::find (mDisconDevices.begin (),
+			       mDisconDevices.end (),
+			       theDevice) != mDisconDevices.end ())
+			return;
+		mDisconDevices.push_back (theDevice);
 	}
 
 	int DoReprobe (LinuxDeviceInfo *dinfo,
-		     std::string &theDeviceName)
+		       std::string &theDeviceName)
 	{
 		for (unsigned i = 0; i < 256; i++)
 		{
@@ -171,15 +290,14 @@ public:
 
 			snprintf (name, sizeof(name), "/dev/input/event%d", i);
 
-			DeviceMap::iterator it = mDeviceMap.find (std::string (name));
-			if (it != mDeviceMap.end())
+			if (FindDevice (std::string (name)))
 				continue;
 
 			fd = open (name, O_RDWR);
 			if (fd < 0)
 				continue;
 
-			if (!get_device_info (fd, &info, false) ||
+			if (!get_device_info (fd, &info, true) ||
 			    (!info.num_rels && !info.num_abs))
 			{
 				close (fd);
@@ -204,12 +322,19 @@ public:
 	int Reprobe (LinuxDeviceInfo *dinfo,
 		     std::string &theDeviceName)
 	{
-		AutoCrit aAutoCrit (mCritSect);
+		AutoCrit aAutoCrit (mScanCritSect);
 		int fd;
+
+		if (mStopped)
+			return -1;
 
 		fd = DoReprobe (dinfo, theDeviceName);
 		if (fd >= 0)
 			return fd;
+
+		if (!dinfo)
+			return -1;
+
 		return DoReprobe (NULL, theDeviceName);
         }
 
@@ -218,18 +343,33 @@ private:
 	DeviceMap             mDeviceMap;
 
 	CritSect              mCritSect;
+	CritSect              mScanCritSect;
+
+	std::list<LinuxInputInterface*> mDisconDevices;
+
+	Thread                mHotplugThread;
+	bool                  mHotplugDone;
+	bool                  mStopped;
+
+	SexyAppBase*          mApp;
 };
 
 }
 
 LinuxInputInterface::LinuxInputInterface (InputManager* theManager,
 					  LinuxInputDriver *driver,
-					  const char * theName)
+					  const char * theName,
+					  bool hotpluged)
 	: InputInterface (theManager), mFd (-1), mDone (false)
 {
 	mX = 0;
 	mY = 0;
+	mMinX = 0;
+	mMaxX = 0;
+	mMinY = 0;
+	mMaxY = 0;
 	mInitialized = false;
+	mHotpluged = hotpluged;
 	mDriver = driver;
 	mDeviceName = std::string(theName ? theName : "");
 	memset (&mInfo, 0, sizeof (mInfo));
@@ -276,113 +416,134 @@ void LinuxInputInterface::Cleanup()
 	mInitialized = false;
 	mX = 0;
 	mY = 0;
+	mMinX = 0;
+	mMaxX = 0;
+	mMinY = 0;
+	mMaxY = 0;
 }
 
 static bool
 get_device_info (int fd, struct input_info* info, bool silent)
 {
-     unsigned int  num_keys     = 0;
-     unsigned int  num_ext_keys = 0;
-     unsigned int  num_buttons  = 0;
-     unsigned int  num_rels     = 0;
-     unsigned int  num_abs      = 0;
-     int ret;
+	unsigned int  num_keys     = 0;
+	unsigned int  num_ext_keys = 0;
+	unsigned int  num_buttons  = 0;
+	unsigned int  num_rels     = 0;
+	unsigned int  num_abs      = 0;
+	unsigned int i;
+	int ret;
 
-     char name[256];
-     unsigned long eventbit[NBITS(EV_MAX)];
-     unsigned long keybit[NBITS(KEY_MAX)];
-     unsigned long relbit[NBITS(REL_MAX)];
-     unsigned long absbit[NBITS(ABS_MAX)];
+	char name[256];
+	unsigned long eventbit[NBITS(EV_MAX)];
+	unsigned long keybit[NBITS(KEY_MAX)];
+	unsigned long relbit[NBITS(REL_MAX)];
+	unsigned long absbit[NBITS(ABS_MAX)];
 
-     /* get device name */
-     ret = ioctl (fd, EVIOCGNAME(255), name);
-     if (ret < 0)
-	     return false;
+	/* get device name */
+	ret = ioctl (fd, EVIOCGNAME(255), name);
+	if (ret < 0)
+		return false;
 
-     if (!silent)
-	     printf ("device name: %s\n", name);
+	if (!silent)
+		printf ("** Device name: %s\n", name);
 
-     /* get event type bits */
-     ret = ioctl (fd, EVIOCGBIT(0, sizeof(eventbit)), eventbit);
-     if (ret < 0)
-	     return false;
+	/* get event type bits */
+	ret = ioctl (fd, EVIOCGBIT(0, sizeof(eventbit)), eventbit);
+	if (ret < 0)
+		return false;
 
-     if (test_bit (EV_KEY, eventbit))
-     {
-          int i;
+	if (test_bit (EV_KEY, eventbit))
+	{
+		int i;
 
-          /* get keyboard bits */
-          ioctl (fd, EVIOCGBIT(EV_KEY, sizeof(keybit)), keybit);
+		/* get keyboard bits */
+		ioctl (fd, EVIOCGBIT(EV_KEY, sizeof(keybit)), keybit);
 
-	  /**  count typical keyboard keys only */
-          for (i = KEY_Q; i < KEY_M; i++)
-               if (test_bit (i, keybit))
-                    num_keys++;
+		/**  count typical keyboard keys only */
+		for (i = KEY_Q; i < KEY_M; i++)
+			if (test_bit (i, keybit))
+				num_keys++;
 
-          for (i = KEY_OK; i < KEY_MAX; i++)
-               if (test_bit (i, keybit))
-                    num_ext_keys++;
+		for (i = KEY_OK; i < KEY_MAX; i++)
+			if (test_bit (i, keybit))
+				num_ext_keys++;
 
-          for (i = BTN_MOUSE; i < BTN_JOYSTICK; i++)
-               if (test_bit (i, keybit))
-                    num_buttons++;
-     }
+		for (i = BTN_MOUSE; i < BTN_JOYSTICK; i++)
+			if (test_bit (i, keybit))
+				num_buttons++;
+	}
 
-     if (test_bit (EV_REL, eventbit))
-     {
-          int i;
+	if (test_bit (EV_REL, eventbit))
+	{
+		int i;
 
-          /* get bits for relative axes */
-          ret = ioctl (fd, EVIOCGBIT (EV_REL, sizeof(relbit)), relbit);
-	  if (ret < 0)
-		  return false;
+		/* get bits for relative axes */
+		ret = ioctl (fd, EVIOCGBIT (EV_REL, sizeof(relbit)), relbit);
+		if (ret < 0)
+			return false;
 
-          for (i = 0; i < REL_MAX; i++)
-               if (test_bit (i, relbit))
-                    num_rels++;
-     }
+		for (i = 0; i < REL_MAX; i++)
+			if (test_bit (i, relbit))
+				num_rels++;
+	}
 
-     if (test_bit (EV_ABS, eventbit))
-     {
-          int i;
+	if (test_bit (EV_ABS, eventbit))
+	{
+		/* get bits for absolute axes */
+		ret = ioctl (fd, EVIOCGBIT (EV_ABS, sizeof (absbit)), absbit);
+		if (ret < 0)
+			return false;
 
-          /* get bits for absolute axes */
-          ret = ioctl (fd, EVIOCGBIT (EV_ABS, sizeof (absbit)), absbit);
-	  if (ret < 0)
-		  return false;
+		for (i = 0; i < ABS_PRESSURE; i++)
+			if (test_bit (i, absbit))
+				num_abs++;
+	}
 
-          for (i = 0; i < ABS_PRESSURE; i++)
-               if (test_bit (i, absbit))
-                    num_abs++;
-     }
+	if (ioctl (fd, EVIOCGID, &info->id) < 0)
+	{
+		perror ("Failed to get device id");
+		return false;
+	}
 
-     if (ioctl (fd, EVIOCGID, &info->id) < 0)
-     {
-	     perror ("Get id error");
-	     return false;
-     }
+	for (i = 0; i < num_abs; i++)
+	{
+		if (ioctl (fd, EVIOCGABS(i), &info->absinfo[i]) < 0)
+		{
+			perror ("Failed to get absinfo");
+			return false;
+		}
+	}
 
-     if (!silent)
-     {
-	     printf ("keys: %d\n", num_keys);
-	     printf ("extend keys: %d\n", num_ext_keys);
-	     printf ("buttons: %d\n", num_buttons);
-	     printf ("relative events: %d\n", num_rels);
-	     printf ("absolute events: %d\n", num_abs);
-     }
+	if (!silent)
+	{
+		printf ("** keys: %d\n", num_keys);
+		printf ("** extend keys: %d\n", num_ext_keys);
+		printf ("** buttons: %d\n", num_buttons);
+		printf ("** relative events: %d\n", num_rels);
+		printf ("** absolute events: %d\n", num_abs);
+		for (i = 0; i < num_abs; i++)
+		{
+			printf ("** \taxes %d: value %d min %d max %d flatness %d fuzz %d\n",
+				i,
+				info->absinfo[i].value,
+				info->absinfo[i].minimum,
+				info->absinfo[i].maximum,
+				info->absinfo[i].fuzz,
+				info->absinfo[i].flat);
+		}
+	}
+
+	if (info)
+	{
+		info->num_keys = num_keys;
+		info->num_ext_keys = num_ext_keys;
+		info->num_buttons = num_buttons;
+		info->num_rels = num_rels;
+		info->num_abs = num_abs;
+	}
 
 
-     if (info)
-     {
-	     info->num_keys = num_keys;
-	     info->num_ext_keys = num_ext_keys;
-	     info->num_buttons = num_buttons;
-	     info->num_rels = num_rels;
-	     info->num_abs = num_abs;
-     }
-
-
-     return true;
+	return true;
 }
 
 bool LinuxInputInterface::OpenDevice ()
@@ -398,31 +559,41 @@ bool LinuxInputInterface::OpenDevice ()
 	mFd = open (device, O_RDWR);
 	if (mFd < 0) {
 #if defined(SEXY_DEBUG) || defined(DEBUG)
-		printf ("open '%s' failed.\n", device);
+		printf ("Failed to open '%s'.\n", device);
 #endif
 		goto open_failed;
 	}
 
 	int ret;
-	ret = ioctl (mFd, EVIOCGRAB, 1);
-	if (ret)
+
+	mGrabed = false;
+	bool wantGrab;
+#ifdef SEXY_LINUX_INPUT_GRAB_DEVICE
+	wantGrab = getenv ("SEXY_LINUX_INPUT_NO_GRAB") == 0;
+#else
+	wantGrab = getenv ("SEXY_LINUX_INPUT_GRAB_DEVICE") != 0
+#endif
+	if (wantGrab)
 	{
-		printf ("grab %s failed.\n", device);
-		mGrabed = false;
+		ret = ioctl (mFd, EVIOCGRAB, 1);
+		if (ret)
+			printf ("Couldn't grab device: %s.\n", device);
+		else
+			mGrabed = true;
 	}
-	else
-	{
-		mGrabed = true;
-	}
+	if (mGrabed)
+		printf ("Graded device: %s.\n", device);
 
 	struct input_info info;
-	get_device_info (mFd, &info);
+	get_device_info (mFd, &info, false);
 	mInfo.pid = info.id.product;
 	mInfo.vid = info.id.vendor;
 	mInfo.version = info.id.version;
 	mInfo.bustype = info.id.bustype;
 
 	mDeviceName = std::string (device);
+	mDriver->AddDevice (mDeviceName, mInfo);
+
 	return true;
  open_failed:
 	return false;
@@ -442,7 +613,7 @@ bool LinuxInputInterface::ReopenDevice ()
 	ret = ioctl (mFd, EVIOCGRAB, 1);
 	if (ret)
 	{
-		printf ("grab %s failed.\n", mDeviceName.c_str ());
+		printf ("Couldn't grab %s.\n", mDeviceName.c_str ());
 		mGrabed = false;
 	}
 	else
@@ -451,7 +622,7 @@ bool LinuxInputInterface::ReopenDevice ()
 	}
 
 	struct input_info info;
-	get_device_info (mFd, &info);
+	get_device_info (mFd, &info, false);
 	mInfo.pid = info.id.product;
 	mInfo.vid = info.id.vendor;
 	mInfo.version = info.id.version;
@@ -459,7 +630,7 @@ bool LinuxInputInterface::ReopenDevice ()
 
 	mDriver->AddDevice (mDeviceName, mInfo);
 
-	printf ("Reopened device(dev = %s)\n", mDeviceName.c_str ());
+	printf ("Device %s reopened.\n", mDeviceName.c_str ());
 	return true;
 }
 
@@ -583,6 +754,7 @@ void* LinuxInputInterface::Run (void * data)
 
 	while (!driver->mDone)
 	{
+		fd = driver->mFd;
 		if (driver->mFd >= 0)
 		{
 			FD_ZERO (&set);
@@ -595,9 +767,21 @@ void* LinuxInputInterface::Run (void * data)
 			status = select (fd + 1, &set, NULL, NULL, &timeout);
 			if (status < 0 && errno != EINTR)
 			{
-				printf ("device disconnected.\n");
+				printf ("Device disconnected(hotpluged ? %s).\n",
+					driver->mHotpluged ? "yes" : "no");
+
 				driver->CloseDevice ();
-				continue;
+
+				/* don't bother, it's hotpluged */
+				if (driver->mHotpluged)
+				{
+					driver->mDone = true;
+					break;
+				}
+				else
+				{
+					continue;
+				}
 			}
 			if (status < 0)
 				continue;
@@ -608,7 +792,7 @@ void* LinuxInputInterface::Run (void * data)
 		}
 		else
 		{
-			usleep (100000);
+			usleep (500000);
 			if (!driver->ReopenDevice ())
 				driver->mRetry++;
 			else
@@ -624,9 +808,18 @@ void* LinuxInputInterface::Run (void * data)
 
 		if (readlen < 0 && errno != EINTR)
 		{
-			printf ("device disconnected.\n");
+			printf ("Device disconnected (hotpluged? %s).\n",
+				driver->mHotpluged ? "yes" : "no");
 			driver->CloseDevice ();
-			continue;
+			if (driver->mHotpluged)
+			{
+				driver->mDone = true;
+				break;
+			}
+			else
+			{
+				continue;
+			}
 		}
 
 		if (readlen <= 0)
@@ -641,11 +834,14 @@ void* LinuxInputInterface::Run (void * data)
 				printf ("linux_event: type %d code %d value: %d\n",
 					linux_event[i].type, linux_event[i].code,
 					linux_event[i].value);
+
 			handle_event (linux_event[i], event);
 
+#if 0
 			if (linux_event[i].type != EV_SYN ||
 			    linux_event[i].code != SYN_REPORT)
 			    continue;
+#endif
 
 			if (event.type == EVENT_MOUSE_MOTION)
 			{
@@ -657,7 +853,7 @@ void* LinuxInputInterface::Run (void * data)
 			}
 			if (event.type != EVENT_NONE)
 			{
-#if 1
+#if 0
 				if (0)
 #else
 				if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
@@ -675,6 +871,8 @@ void* LinuxInputInterface::Run (void * data)
 		}
 	}
 
+	if (driver->mHotpluged && driver->mFd < 0)
+		driver->mDriver->AddDisconDevice (driver);
 	return NULL;
 }
 

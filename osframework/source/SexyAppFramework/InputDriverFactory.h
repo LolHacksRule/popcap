@@ -6,11 +6,15 @@
 #include "InputInterface.h"
 
 namespace Sexy {
+class InputManager;
+
 class InputDriver: public Driver
 {
  public:
 	virtual InputInterface* Create (SexyAppBase * theApp) = 0;
-
+	virtual void            OnStart (SexyAppBase * theApp,
+					 InputManager * theManager) {};
+	virtual void            OnStop () {};
 
  public:
 	InputDriver (const std::string theName,
