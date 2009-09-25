@@ -29,11 +29,6 @@ def Configure (env):
     gles['ENABLE'] = EnableCEGLES
     env.AppendUnique(CEGLES = gles)
 
-    ### enable genaric linux input driver.
-    configs.linux.LinuxInputConfigure (env)
-    configs.linux.UdpInputConfigure (env)
-    configs.linux.SMInputConfigure (env)
-
     ### gstreamer sound manager
     configs.linux.GstSoundConfigure (env)
     configs.AudiereSoundConfigure (env)

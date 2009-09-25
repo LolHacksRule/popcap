@@ -14,6 +14,7 @@ def AddOptions (opts):
     opts.Add (BoolVariable('build_32bit',
                            "build binaries as 32-bit on 64-bit platform.",
                            'False'))
+    LinuxInputAddOptions (opts)
 
 def Configure (env):
     configs.Configure (env)
@@ -30,12 +31,20 @@ def Configure (env):
     configs.linux.EnableLinuxUdpInputServer (env)
     configs.PosixModuleLoaderConfigure (env)
     configs.FreeTypeConfigure (env)
+    configs.linux.LinuxInputConfigure (env)
+    configs.linux.UdpInputConfigure (env)
 
-def LunuxInputAddOptions (opts):
-    pass
+def LinuxInputAddOptions (opts):
+    from SCons.Variables.BoolVariable import BoolVariable
+    if 'linux_input_grab_device' in opts.keys ():
+        return
+    opts.Add(BoolVariable ('linux_input_grab_device',
+                           'Grab the input event device',
+                           'True'))
 
 def EnableLinuxInput (env):
-    pass
+    if env['linux_input_grab_device']:
+        env.AppendUnique (CPPDEFINES = [('SEXY_LINUX_INPUT_GRAB_DEVICE', 1)])
 
 def LinuxInputConfigure(env):
     env.AppendUnique (DRIVERS = ['LINUXINPUT'])

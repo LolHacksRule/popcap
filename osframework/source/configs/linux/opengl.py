@@ -18,9 +18,6 @@ def Configure(env):
     glx['ENABLE'] = EnableGLX
     env.AppendUnique (GLX = glx)
 
-    ### enable genaric linux input driver.
-    configs.linux.LinuxInputConfigure (env)
-
     ### gstreamer sound manager
     configs.linux.GstSoundConfigure (env)
     configs.AudiereSoundConfigure (env)
