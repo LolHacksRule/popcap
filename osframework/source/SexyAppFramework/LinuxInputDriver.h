@@ -70,6 +70,7 @@ private:
 	int                   mMaxY;
 
         int                   mRetry;
+	int                   mModifiers;
 
 	std::string           mDeviceName;
 

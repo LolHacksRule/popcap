@@ -3,6 +3,7 @@
 #include "InputManager.h"
 #include "AutoCrit.h"
 #include "SexyAppBase.h"
+#include "KeyCodes.h"
 
 #include <cstring>
 #include <unistd.h>
@@ -15,6 +16,7 @@
 #include <sys/kd.h>
 #include <cstdlib>
 #include <limits.h>
+#include <ctype.h>
 
 #include <linux/input.h>
 #include <linux/keyboard.h>
@@ -31,23 +33,26 @@
 #define EVIOCGRAB      _IOW('E', 0x90, int)
 #endif
 
-#define BITS_PER_LONG        (sizeof(long) * 8)
-#define NBITS(x)             ((((x) - 1) / BITS_PER_LONG) + 1)
-#define OFF(x)               ((x) % BITS_PER_LONG)
-#define BIT(x)               (1UL << OFF(x))
-#define LONG(x)              ((x) / BITS_PER_LONG)
+#define BITS_PER_LONG	     (sizeof(long) * 8)
+#define NBITS(x)	     ((((x) - 1) / BITS_PER_LONG) + 1)
+#define OFF(x)		     ((x) % BITS_PER_LONG)
+#define BIT(x)		     (1UL << OFF(x))
+#define LONG(x)		     ((x) / BITS_PER_LONG)
 #undef test_bit
 #define test_bit(bit, array) ((array[LONG(bit)] >> OFF(bit)) & 1)
 
 /* compat defines for older kernel like 2.4.x */
 #ifndef EV_SYN
 #define EV_SYN			0x00
-#define SYN_REPORT              0
-#define SYN_CONFIG              1
+#define SYN_REPORT		0
+#define SYN_CONFIG		1
 #define ABS_TOOL_WIDTH		0x1c
 #define BTN_TOOL_DOUBLETAP	0x14d
 #define BTN_TOOL_TRIPLETAP	0x14e
 #endif
+
+#define MODIFIERS_SHIFT	   (1 << 0)
+#define MODIFIERS_CAPSLOCK (1 << 1)
 
 /*
  * Touchpads related stuff
@@ -176,7 +181,7 @@ public:
 			mApp->mInputManager->Remove (device);
 			mDisconDevices.pop_front ();
 		}
-        }
+	}
 
 	InputInterface* Create (SexyAppBase * theApp)
 	{
@@ -187,7 +192,7 @@ public:
 
 		ScanAndAddDevice (theApp, false);
 		return 0;
-        }
+	}
 
 	void ScanAndAddDevice (SexyAppBase * theApp, bool hotpluged)
 	{
@@ -205,8 +210,7 @@ public:
 			if (FindDevice (name))
 				continue;
 
-			if (!get_device_info (fd, &info, true) ||
-			    (!info.num_rels && !info.num_abs))
+			if (!get_device_info (fd, &info, true))
 			{
 				close (fd);
 				continue;
@@ -219,10 +223,10 @@ public:
 			if (!theApp->mInputManager->Add(anInput, this, hotpluged))
 				delete anInput;
 		}
-        }
+	}
 
 	std::string GetRealDevice (std::string device)
-        {
+	{
 		char buf[PATH_MAX];
 		char* path = realpath (device.c_str (), buf);
 		if (!path)
@@ -233,7 +237,7 @@ public:
 	}
 
 	std::string AddDevice (std::string device, LinuxDeviceInfo info)
-        {
+	{
 		device = GetRealDevice (device);
 		if (!device.length ())
 			return device;
@@ -247,7 +251,7 @@ public:
 	}
 
 	void RemoveDevice (std::string device)
-        {
+	{
 		AutoCrit aAutoCrit (mCritSect);
 
 		DeviceMap::iterator it = mDeviceMap.find (device);
@@ -317,7 +321,7 @@ public:
 		}
 
 		return -1;
-        }
+	}
 
 	int Reprobe (LinuxDeviceInfo *dinfo,
 		     std::string &theDeviceName)
@@ -336,22 +340,22 @@ public:
 			return -1;
 
 		return DoReprobe (NULL, theDeviceName);
-        }
+	}
 
 private:
 	typedef std::map<std::string, LinuxDeviceInfo> DeviceMap;
-	DeviceMap             mDeviceMap;
+	DeviceMap	      mDeviceMap;
 
-	CritSect              mCritSect;
-	CritSect              mScanCritSect;
+	CritSect	      mCritSect;
+	CritSect	      mScanCritSect;
 
 	std::list<LinuxInputInterface*> mDisconDevices;
 
-	Thread                mHotplugThread;
-	bool                  mHotplugDone;
-	bool                  mStopped;
+	Thread		      mHotplugThread;
+	bool		      mHotplugDone;
+	bool		      mStopped;
 
-	SexyAppBase*          mApp;
+	SexyAppBase*	      mApp;
 };
 
 }
@@ -425,11 +429,11 @@ void LinuxInputInterface::Cleanup()
 static bool
 get_device_info (int fd, struct input_info* info, bool silent)
 {
-	unsigned int  num_keys     = 0;
+	unsigned int  num_keys	   = 0;
 	unsigned int  num_ext_keys = 0;
 	unsigned int  num_buttons  = 0;
-	unsigned int  num_rels     = 0;
-	unsigned int  num_abs      = 0;
+	unsigned int  num_rels	   = 0;
+	unsigned int  num_abs	   = 0;
 	unsigned int i;
 	int ret;
 
@@ -583,6 +587,7 @@ bool LinuxInputInterface::OpenDevice ()
 	}
 	if (mGrabed)
 		printf ("Graded device: %s.\n", device);
+	mModifiers = 0;
 
 	struct input_info info;
 	get_device_info (mFd, &info, false);
@@ -610,16 +615,20 @@ bool LinuxInputInterface::ReopenDevice ()
 		return false;
 
 	mFd = ret;
-	ret = ioctl (mFd, EVIOCGRAB, 1);
-	if (ret)
+	if (mGrabed)
 	{
-		printf ("Couldn't grab %s.\n", mDeviceName.c_str ());
-		mGrabed = false;
+		ret = ioctl (mFd, EVIOCGRAB, 1);
+		if (ret)
+		{
+			printf ("Couldn't grab %s.\n", mDeviceName.c_str ());
+			mGrabed = false;
+		}
+		else
+		{
+			mGrabed = true;
+		}
 	}
-	else
-	{
-		mGrabed = true;
-	}
+	mModifiers = 0;
 
 	struct input_info info;
 	get_device_info (mFd, &info, false);
@@ -648,12 +657,70 @@ void LinuxInputInterface::CloseDevice ()
 	mDriver->RemoveDevice (mDeviceName);
 }
 
+static int translate_key(int keysym)
+{
+	static const struct {
+		int    keySym;
+		int    keyCode;
+	} keymap[] = {
+		{ KEY_LEFT, KEYCODE_LEFT },
+		{ KEY_RIGHT, KEYCODE_RIGHT },
+		{ KEY_UP, KEYCODE_UP },
+		{ KEY_DOWN, KEYCODE_DOWN },
+		{ KEY_ENTER, KEYCODE_RETURN },
+		{ KEY_ESC, KEYCODE_ESCAPE },
+		{ KEY_BACKSPACE, KEYCODE_BACK },
+		{ KEY_DELETE, KEYCODE_DELETE },
+		{ KEY_LEFTSHIFT, KEYCODE_SHIFT },
+		{ KEY_RIGHTSHIFT, KEYCODE_SHIFT },
+		{ KEY_LEFTCTRL, KEYCODE_CONTROL },
+		{ KEY_RIGHTCTRL, KEYCODE_CONTROL },
+		{ KEY_CAPSLOCK, KEYCODE_CAPITAL },
+		{ KEY_A, 'A' },
+		{ KEY_B, 'B' },
+		{ KEY_C, 'C' },
+		{ KEY_D, 'D' },
+		{ KEY_E, 'E' },
+		{ KEY_F, 'F' },
+		{ KEY_G, 'G' },
+		{ KEY_H, 'H' },
+		{ KEY_I, 'I' },
+		{ KEY_J, 'J' },
+		{ KEY_K, 'K' },
+		{ KEY_L, 'L' },
+		{ KEY_M, 'M' },
+		{ KEY_N, 'N' },
+		{ KEY_O, 'O' },
+		{ KEY_P, 'P' },
+		{ KEY_Q, 'Q' },
+		{ KEY_R, 'R' },
+		{ KEY_S, 'S' },
+		{ KEY_T, 'T' },
+		{ KEY_U, 'U' },
+		{ KEY_V, 'V' },
+		{ KEY_W, 'W' },
+		{ KEY_X, 'X' },
+		{ KEY_Y, 'Y' },
+		{ KEY_Z, 'Z' },
+		{ 0, 0 }
+	};
+
+	for (int i = 0; keymap[i].keyCode; i++) {
+		if (keymap[i].keySym == keysym)
+			return keymap[i].keyCode;
+	}
+
+	if (keysym >= KEY_0 && keysym <= KEY_9)
+		return '0' + keysym - KEY_0;
+	return 0;
+}
+
 static bool
 handle_key_event (struct input_event & linux_event,
-		  Event & event)
+		  int &modifiers, Event & event)
 {
      if (linux_event.code == BTN_TOUCH || linux_event.code == BTN_TOOL_FINGER)
-          linux_event.code = BTN_MOUSE;
+	  linux_event.code = BTN_MOUSE;
 
 	if ((linux_event.code >= BTN_MOUSE && linux_event.code < BTN_JOYSTICK) ||
 	    linux_event.code == BTN_TOUCH)
@@ -675,6 +742,66 @@ handle_key_event (struct input_event & linux_event,
 		else if (linux_event.value == 0)
 			event.type = EVENT_MOUSE_BUTTON_RELEASE;
 		event.flags |= EVENT_FLAGS_BUTTON;
+	}
+	else
+	{
+		int keycode = translate_key(linux_event.code);
+
+		if (!keycode)
+			return false;
+
+		if (linux_event.value == 1)
+			event.type = EVENT_KEY_DOWN;
+		else if (linux_event.value == 0)
+			event.type = EVENT_KEY_UP;
+		event.flags |= EVENT_FLAGS_KEY_CODE;
+		event.u.key.keyCode = keycode;
+		if (isalnum(keycode) && event.type == EVENT_KEY_DOWN)
+		{
+			event.flags |= EVENT_FLAGS_KEY_CHAR;
+			if (keycode >= 'A' && keycode <= 'Z')
+				keycode = keycode - 'A' + 'a';
+			if (((modifiers & MODIFIERS_SHIFT) != 0) ^
+			    ((modifiers & MODIFIERS_CAPSLOCK)))
+			{
+				if (keycode >= 'a' && keycode <= 'z')
+				{
+					event.u.key.keyChar = keycode - 'a' + 'A';
+				}
+				else if (keycode >= '0' && keycode <= '9')
+				{
+					static int numbermap[10] =
+					{
+						'!', '@', '#', '$', '%', '^', '&', '*', '(', '}'
+					};
+
+					event.u.key.keyChar = numbermap[keycode - '0'];
+				}
+				else
+				{
+					event.u.key.keyChar = keycode;
+				}
+			}
+			else
+			{
+				event.u.key.keyChar = keycode;
+			}
+		}
+		if (event.type == EVENT_KEY_DOWN)
+		{
+			if (event.u.key.keyCode == KEYCODE_SHIFT)
+				modifiers |= MODIFIERS_SHIFT;
+			if (event.u.key.keyCode == KEYCODE_CAPITAL)
+				modifiers |= MODIFIERS_CAPSLOCK;
+		}
+		else if (event.type == EVENT_KEY_UP)
+		{
+			if (event.u.key.keyCode == KEYCODE_SHIFT)
+				modifiers &= ~MODIFIERS_SHIFT;
+			if (event.u.key.keyCode == KEYCODE_CAPITAL)
+				modifiers &= ~MODIFIERS_CAPSLOCK;
+		}
+		printf ("keycode: %s\n", GetKeyNameFromCode((KeyCode)keycode).c_str());
 	}
 
 	return true;
@@ -728,11 +855,11 @@ handle_abs_event (struct input_event & linux_event,
 }
 
 static bool handle_event (struct input_event& linux_event,
-			  Event &event)
+			  int &modifiers, Event &event)
 {
 	switch (linux_event.type) {
 	case EV_KEY:
-		return handle_key_event (linux_event, event);
+		return handle_key_event (linux_event, modifiers, event);
 		break;
 	case EV_REL:
 		return handle_rel_event (linux_event, event);
@@ -748,9 +875,9 @@ void* LinuxInputInterface::Run (void * data)
 {
 	LinuxInputInterface * driver = (LinuxInputInterface *)data;
 	struct input_event linux_event[64];
-	fd_set             set;
-	int                status;
-	int                fd = driver->mFd;
+	fd_set		   set;
+	int		   status;
+	int		   fd = driver->mFd;
 
 	while (!driver->mDone)
 	{
@@ -835,7 +962,7 @@ void* LinuxInputInterface::Run (void * data)
 					linux_event[i].type, linux_event[i].code,
 					linux_event[i].value);
 
-			handle_event (linux_event[i], event);
+			handle_event (linux_event[i], driver->mModifiers, event);
 
 #if 0
 			if (linux_event[i].type != EV_SYN ||
@@ -853,7 +980,7 @@ void* LinuxInputInterface::Run (void * data)
 			}
 			if (event.type != EVENT_NONE)
 			{
-#if 0
+#if 1
 				if (0)
 #else
 				if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
