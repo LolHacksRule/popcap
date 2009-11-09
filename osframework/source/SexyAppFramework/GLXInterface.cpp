@@ -311,11 +311,9 @@ static int XKsymToKeyCode(KeySym keysym)
 			return keymap[i].keyCode;
 
 	if (keysym >= XK_A && keysym <= XK_Z)
-		return 'a' + keysym - XK_A;
+		return 'A' + keysym - XK_A;
 	if (keysym >= XK_0 && keysym <= XK_9)
 		return '0' + keysym - XK_0;
-	if (isalnum (keysym))
-		return toupper(keysym);
 	return 0;
 }
 
