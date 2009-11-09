@@ -621,7 +621,7 @@ bool Widget::KeyDown(KeyCode theKey)
 	{
 		return OnKeyEscape();
 	}
-
+#endif
 
 	WidgetVector::iterator it;
 	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
@@ -631,14 +631,12 @@ bool Widget::KeyDown(KeyCode theKey)
 	}
 	if (it != mSortedWidgets.end())
 		return (*it)->KeyDownUp(theKey);
-#endif
 
 	return false;
 }
 
 bool Widget::KeyUp(KeyCode theKey)
 {
-#ifndef SEXY_NO_KEYBOARD
 	WidgetVector::iterator it;
 	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
 	{
@@ -651,7 +649,6 @@ bool Widget::KeyUp(KeyCode theKey)
 		if (aWidget->KeyDownUp(theKey, false))
 			return true;
 	}
-#endif
 
 	return false;
 }
