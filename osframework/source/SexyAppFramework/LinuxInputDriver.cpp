@@ -301,8 +301,7 @@ public:
 			if (fd < 0)
 				continue;
 
-			if (!get_device_info (fd, &info, true) ||
-			    (!info.num_rels && !info.num_abs))
+			if (!get_device_info (fd, &info, true))
 			{
 				close (fd);
 				continue;
@@ -670,6 +669,7 @@ static int translate_key(int keysym)
 		{ KEY_ENTER, KEYCODE_RETURN },
 		{ KEY_ESC, KEYCODE_ESCAPE },
 		{ KEY_BACKSPACE, KEYCODE_BACK },
+		{ KEY_SPACE, KEYCODE_SPACE },
 		{ KEY_DELETE, KEYCODE_DELETE },
 		{ KEY_LEFTSHIFT, KEYCODE_SHIFT },
 		{ KEY_RIGHTSHIFT, KEYCODE_SHIFT },
