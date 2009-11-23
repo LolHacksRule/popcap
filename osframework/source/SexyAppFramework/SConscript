@@ -23,7 +23,7 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         'DriverFactory.cpp', 'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
         'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp', 'SexyThread.cpp',
-        'SexyDebug.cpp']
+        'SexyDebug.cpp', 'RemoteEvent.cpp']
 
 srcs += map(lambda f:os.path.join ('cjkcodecs', f),
             ['codecs_cn.c', 'codecs_hk.c',  'codecs_iso2022.c',
@@ -151,8 +151,8 @@ if not env['keyboard']:
 
 env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
                              '#SexyAppFramework'],
-                  LIBPATH = [os.path.join('..', 'ImageLib'),
-                             os.path.join('..', 'PakLib')],
+                  LIBPATH = [os.path.join('$top_builddir', 'ImageLib'),
+                             os.path.join('$top_builddir', 'PakLib')],
                   LIBS = ['PakLib', 'ImageLib'])
 
 if env['TARGETOS'] == 'windows':
@@ -214,5 +214,5 @@ gameenv.Program('FontUtilsTest',
                 LIBS = ['SexyAppFramework'] + gameenv['LIBS'],
                 LIBPATH = gameenv['LIBPATH'] +
                 ['.',
-                 os.path.join('..', 'ImageLib'),
-                 os.path.join('..', 'PakLib')])
+                 os.path.join('$top_builddir', 'ImageLib'),
+                 os.path.join('$top_builddir', 'PakLib')])

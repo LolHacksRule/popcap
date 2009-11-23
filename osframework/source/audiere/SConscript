@@ -195,9 +195,9 @@ Depends (audiere, audiere_headers)
 env.Alias ('audiere_install', audiere)
 
 ### add our header & library path to SexyAppFramework's env.
-sexyenv.AppendUnique (CPPPATH = [os.path.join ('..', 'audiere', 'include')],
-                      LIBPATH = [os.path.join ('..', 'audiere', 'lib')])
-gameenv.AppendUnique (LIBPATH = [os.path.join ('..', 'audiere', 'lib')])
+sexyenv.AppendUnique (CPPPATH = [os.path.join ('$top_builddir', 'audiere', 'include')],
+                      LIBPATH = [os.path.join ('$top_builddir', 'audiere', 'lib')])
+gameenv.AppendUnique (LIBPATH = [os.path.join ('$top_builddir', 'audiere', 'lib')])
 
 env.Clean (audiere, [audiere_dir])
 env.Clean (audiere, ['include', 'lib'])

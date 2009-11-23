@@ -126,9 +126,9 @@ Depends (freetype, freetype_headers)
 freetype_env.Alias ('freetype_install', freetype)
 
 ### add our header & library path to SexyAppFramework's env.
-sexyenv.AppendUnique (CPPPATH = [os.path.join ('..', 'freetype', freetype_dir, 'include')],
-                      LIBPATH = [os.path.join ('..', 'freetype', 'lib')])
-gameenv.AppendUnique (LIBPATH = [os.path.join ('..', 'freetype', 'lib')])
+sexyenv.AppendUnique (CPPPATH = [os.path.join ('$top_builddir', 'freetype', freetype_dir, 'include')],
+                      LIBPATH = [os.path.join ('$top_builddir', 'freetype', 'lib')])
+gameenv.AppendUnique (LIBPATH = [os.path.join ('$top_builddir', 'freetype', 'lib')])
 
 env.Clean (freetype, [freetype_dir])
 env.Clean (freetype, ['include', 'lib'])

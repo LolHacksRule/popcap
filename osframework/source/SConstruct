@@ -55,14 +55,30 @@ createConvenienceLibBuilder (env)
 config.Configure (env)
 Help (opts.GenerateHelpText (env))
 
+env['distdir'] = os.path.join(modname.replace('configs.', ''), 'dist')
+
 sexyenv = env.Clone ()
 gameenv = env.Clone ()
+gameenv['extras'] = []
+gameenv['extras_objs'] = []
+
+### setup top builddir
+if env['builddir']:
+  builddir = os.path.join(modname.replace('configs.', ''), 'build')
+else:
+  builddir = ''
+
+env['top_builddir'] = '#' + builddir
+gameenv['top_builddir'] = '#' + builddir
+
 Export (['env', 'gameenv', 'sexyenv'])
 
 sconscripts = [os.path.join ('ImageLib', 'SConscript')]
 sconscripts += [os.path.join ('PakLib', 'SConscript')]
 sconscripts += [os.path.join ('audiere', 'SConscript')]
 sconscripts += [os.path.join ('freetype', 'SConscript')]
+sconscripts += [os.path.join ('curl', 'SConscript')]
+sconscripts += [os.path.join ('Connection', 'SConscript')]
 sconscripts += [os.path.join ('SexyAppFramework', 'SConscript')]
 sconscripts += [os.path.join ('demos', 'SConscript')]
 
@@ -74,9 +90,9 @@ for d in otherdirs:
   sconscripts += [os.path.join (d, 'SConscript')]
 
 for sconscript in sconscripts:
+  top_builddir = builddir
   if env['builddir']:
-    builddir = os.path.join (modname.replace('configs', 'build'),
-                             os.path.split(sconscript)[0])
+    builddir = os.path.join (top_builddir, os.path.split(sconscript)[0])
     SConscript (sconscript, variant_dir = builddir, duplicate = False)
   else:
     SConscript (sconscript)
