@@ -71,10 +71,7 @@ def EnableSMInput (env):
     pass
 
 def SMInputConfigure(env):
-    env.AppendUnique (DRIVERS = ['SMINPUT'])
-    sm_input = {}
-    sm_input['ENABLE'] = EnableSMInput
-    env.AppendUnique (SMINPUT = sm_input)
+    pass
 
 def EnableLinuxUdpInputServer(env):
     env['LUIS'] = True

@@ -85,11 +85,6 @@ if 'LINUXINPUT' in env['DRIVERS']:
     env['LINUXINPUT']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_LINUX_INPUT_DRIVER'])
 
-if 'SMINPUT' in env['DRIVERS']:
-    srcs += ["SMInputDriver.cpp"]
-    env['SMINPUT']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_SM_INPUT_DRIVER'])
-
 if 'UDPINPUT' in env['DRIVERS']:
     srcs += ["UdpInputDriver.cpp"]
     env['UDPINPUT']['ENABLE'](env)
@@ -173,8 +168,6 @@ if gameenv['static']:
         gameenv['XGLES']['ENABLE'](gameenv)
     if 'LINUXINPUT' in env['DRIVERS']:
         gameenv['LINUXINPUT']['ENABLE'](gameenv)
-    if 'SMINPUT' in env['DRIVERS']:
-        gameenv['SMINPUT']['ENABLE'](gameenv)
     if 'GSTSOUND' in env['DRIVERS']:
         gameenv['GSTSOUND']['ENABLE'](gameenv)
     if 'AUDIERESOUND' in env['DRIVERS']:
