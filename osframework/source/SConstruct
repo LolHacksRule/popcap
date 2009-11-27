@@ -23,7 +23,8 @@ opts = Variables ('Config.py')
 config.AddOptions (opts)
 
 env = Environment (options = opts, ENV = os.environ,
-                   tools = [ 'default', 'convlib', 'untar'])
+                   tools = [ 'default', 'convlib', 'untar', 'archive',
+                             'scanreplace'])
 config.Configure (env)
 Help (opts.GenerateHelpText (env))
 
