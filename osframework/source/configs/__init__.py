@@ -14,9 +14,12 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('release', 'build release version', 'False'))
     opts.Add(BoolVariable ('builddir', 'output to an alternative directory', 'False'))
     opts.Add(BoolVariable ('static', 'build the framework as a static library', 'True'))
-    opts.Add('otherdirs', 'build other components in different directories(seperated by comma)', '')
     opts.Add(BoolVariable ('keyboard', 'support changing focus by pressing arrow keys', 'True'))
     opts.Add('language', 'specify the language of games', 'en_US')
+    opts.Add('oem', "the name of oem", 'default')
+    opts.Add('target', "the name of oem target for example(olo, canmore)", '')
+    opts.Add('install_prefix', 'install games into its subdirectory', '')
+    opts.Add('otherdirs', 'build other components in different directories(seperated by comma)', '')
 
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''
