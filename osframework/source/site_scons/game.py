@@ -102,7 +102,7 @@ def __InstallGameExras(env, game, destdir, extras, basedir):
 def GenerateVersion(env, target, source):
     import time
     f = file(target[0].abspath, 'w')
-    verstr = 'TM.' + time.strftime('%y.%m.%d.')
+    verstr = time.strftime('%y.%m.%d.')
     verstr += '_'.join([str(s) for s in source]) + '.'
     verstr += env['oem'] + '\n'
     f.write(verstr)
@@ -131,15 +131,6 @@ def Md5sum(filename):
     f = file(filename,'rb')
     return hashlib.md5(f.read()).hexdigest()
 
-def GetUpdateUrl(path):
-    import ConfigParser
-    config = ConfigParser.ConfigParser()
-    config.read(os.path.join(path))
-    if config.has_section('settings'):
-        for item in config.items('settings'):
-            if item[0] == 'url':
-                return item[1]
-
 def ListDirFiles(path, list_dir = False):
     result = []
     for root, dirs, files in os.walk(path):
@@ -148,33 +139,6 @@ def ListDirFiles(path, list_dir = False):
         for f in files:
             result.append(os.path.join(root, f))
     return result
-
-def GenerateUpdateServiceXml(env, target, source):
-    url = GetUpdateUrl(source[0].abspath)
-    basedir = source[1].value
-    files = source[2:]
-    result = target[0].path
-
-    ### list all files
-    updates = []
-    for source in files:
-        if source.isdir():
-            updates += ListDirFiles(source.abspath)
-        else:
-            updates.append(source.abspath)
-
-    f = file(target[0].abspath, 'w')
-    f.write ('<?xml version="1.0" encoding="utf-8"?>\n<updateFiles>\n')
-    for up in updates:
-        s = '    <file path=\"'
-        file_path = up.replace(basedir + os.sep, '')
-        file_path = file_path.replace(os.sep, '/')
-        s += file_path + '\" url=\"' + url + '/' + file_path + '\" '
-        s += 'md5sum=\"' + str(Md5sum(up)) + '\" needRestart=\"true\"/>\n'
-        f.write(s)
-    f.write('</updateFiles>\n')
-    f.close()
-
 
 def InstallGameExtras(env, game, destdir, targets = []):
     ### install extra objects
@@ -186,44 +150,20 @@ def InstallGameExtras(env, game, destdir, targets = []):
 
     ### install oem specific files
     root = env.Dir('#').abspath
-    dirs = ['default', "auth", game]
+    dirs = ['default', game]
     for d in dirs:
         extra_dir = os.path.join(root, 'oem', env['oem'], d, env['TARGET_PLATFORM'])
         #print 'extra_dir = ', extra_dir
         extras = env.Glob(os.path.join(extra_dir, '*'))
         targets += __InstallGameExras(env, game, destdir, extras, extra_dir)
 
-    ### generate the updateService.xml for auto-update
-    if env['auto_update']:
-        basename = 'updateclient.ini.in'
-        source = os.path.join(root, 'oem', env['oem'],
-                              env['TARGET_PLATFORM'], basename)
-        if not os.path.exists (source):
-            source = os.path.join(root, 'oem', basename)
-        target = os.path.basename(source[:len(source) - 3])
-        kvs = {}
-        kvs['server_addr'] = env['update_server']
-        kvs['gamename'] = game.lower()
-        kvs['company'] = env['oem']
-        kvs['remoter'] = 'default'
-        kvs['language'] = env['language'].lower()
-        kvs['use_auth'] = ['noauth', 'auth'][env['auth']]
-        result = env.ScanReplace(target = target,
-                                 source = [source, env.Value(kvs)])
-        targets += env.Install(destdir, result)
-        targets += env.Command(os.path.join(destdir, 'updateService.xml'),
-                                [result, env.Value(env.Dir(destdir).abspath),
-                                 targets],
-                               GenerateUpdateServiceXml)
-
     ### generate version file
     srcdir = GetCurrentSrcDir(env)
     framework_rev = GetGitVersion(root)
     app_rev = GetGitVersion(srcdir)
 
-    targets += env.Command(os.path.join(destdir, 'version'),
-                           [env.Value(framework_rev),
-                            env.Value(app_rev)],
+    targets += env.Command(os.path.join(destdir, 'version.txt'),
+                           [env.Value(framework_rev), env.Value(app_rev)],
                            GenerateVersion)
     return targets
 
