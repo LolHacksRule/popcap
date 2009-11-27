@@ -3,6 +3,7 @@
 # Author: Luo Jinghua
 
 import os.path
+import sys
 
 def AddOptions(opts):
     from SCons.Variables.BoolVariable import BoolVariable
@@ -15,11 +16,12 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('static', 'build the framework as a static library', 'True'))
     opts.Add('otherdirs', 'build other components in different directories(seperated by comma)', '')
     opts.Add(BoolVariable ('keyboard', 'support changing focus by pressing arrow keys', 'True'))
-    opts.Add('language', 'specify the language of games', '')
+    opts.Add('language', 'specify the language of games', 'en_US')
 
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''
-    env['TARGETOS'] = 'unknown'
+    env['TARGET_OS'] = sys.platform
+    env['TARGET_PLATFORM'] = 'pc'
     env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [], BUILD_PACKAGES = [])
     env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'include')],
                       LIBPATH = [os.path.join ('#', 'extra', 'lib')])

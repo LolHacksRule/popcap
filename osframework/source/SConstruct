@@ -18,49 +18,17 @@ modcomps = modname.split ('.')
 for modcomp in modcomps[1:]:
   config = getattr (config, modcomp)
 
-def createConvenienceLibBuilder (env):
-  """This is a utility function that creates the ConvenienceLibrary
-  Builder in an Environment if it is not there already.
-
-  If it is already there, we return the existing one.
-
-  Based on the stock StaticLibrary and SharedLibrary builders.
-  """
-
-  try:
-    convenience_lib = env['BUILDERS']['ConvenienceLibrary']
-  except KeyError:
-    action_list = [ SCons.Action.Action ("$ARCOM", "$ARCOMSTR") ]
-    #if env.Detect('ranlib'):
-    #  ranlib_action = SCons.Action.Action("$RANLIBCOM", "$RANLIBCOMSTR")
-    #  action_list.append(ranlib_action)
-
-    convenience_lib = SCons.Builder.Builder (action = action_list,
-                                             emitter = '$LIBEMITTER',
-                                             prefix = '$LIBPREFIX',
-                                             suffix = '$LIBSUFFIX',
-                                             src_suffix = '$SHOBJSUFFIX',
-                                             src_builder = 'SharedObject')
-    env['BUILDERS']['ConvenienceLibrary'] = convenience_lib
-
-    return convenience_lib
-
 opts = Variables ('Config.py')
 
 config.AddOptions (opts)
 
 env = Environment (options = opts, ENV = os.environ,
-                   tools = [ 'default', 'untar'])
-createConvenienceLibBuilder (env)
+                   tools = [ 'default', 'convlib', 'untar'])
 config.Configure (env)
 Help (opts.GenerateHelpText (env))
 
+### dist directory
 env['distdir'] = os.path.join(modname.replace('configs.', ''), 'dist')
-
-sexyenv = env.Clone ()
-gameenv = env.Clone ()
-gameenv['extras'] = []
-gameenv['extras_objs'] = []
 
 ### setup top builddir
 if env['builddir']:
@@ -69,19 +37,19 @@ else:
   builddir = ''
 
 env['top_builddir'] = '#' + builddir
-gameenv['top_builddir'] = '#' + builddir
 
+sexyenv = env.Clone ()
+gameenv = env.Clone ()
+gameenv['extras'] = []
+gameenv['extras_objs'] = []
 Export (['env', 'gameenv', 'sexyenv'])
 
 sconscripts = [os.path.join ('ImageLib', 'SConscript')]
 sconscripts += [os.path.join ('PakLib', 'SConscript')]
 sconscripts += [os.path.join ('audiere', 'SConscript')]
 sconscripts += [os.path.join ('freetype', 'SConscript')]
-sconscripts += [os.path.join ('curl', 'SConscript')]
-sconscripts += [os.path.join ('Connection', 'SConscript')]
-sconscripts += [os.path.join ('SexyAppFramework', 'SConscript')]
-sconscripts += [os.path.join ('demos', 'SConscript')]
 
+### otherdirs
 otherdirs = env['otherdirs'].split(',')
 for d in otherdirs:
   d = d.strip()
@@ -89,8 +57,28 @@ for d in otherdirs:
     continue
   sconscripts += [os.path.join (d, 'SConscript')]
 
+sconscripts += [os.path.join ('SexyAppFramework', 'SConscript')]
+sconscripts += [os.path.join ('demos', 'SConscript')]
+
+def FindGames(path):
+    result = []
+    for root, dirs, files in os.walk(path):
+      for f in files:
+        if f == 'SConscript':
+          result.append(os.path.join(root, f))
+          print f
+        else:
+          print f
+    return result
+
+### find games in games directory
+games = FindGames('games')
+for game in games:
+  if game not in sconscripts:
+    sconscripts.append(game)
+
+top_builddir = builddir
 for sconscript in sconscripts:
-  top_builddir = builddir
   if env['builddir']:
     builddir = os.path.join (top_builddir, os.path.split(sconscript)[0])
     SConscript (sconscript, variant_dir = builddir, duplicate = False)
