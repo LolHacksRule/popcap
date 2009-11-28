@@ -4,6 +4,7 @@
 
 import os
 import sys
+import game
 
 srcdir = Dir('.')
 if srcdir.srcdir:
@@ -42,11 +43,33 @@ env.Program('demo5', [os.path.join ('Demo5', 'Board.cpp'),
                       os.path.join ('Demo5', 'TitleScreen.cpp'),
                       os.path.join ('Demo5', 'Res.cpp'),
                       os.path.join ('Demo5', 'main.cpp')])
-env.Program('hungarr', [os.path.join ('Hun-garr', 'Board.cpp'),
-                        os.path.join ('Hun-garr', 'GameApp.cpp'),
-                        os.path.join ('Hun-garr', 'GameOverEffect.cpp'),
-                        os.path.join ('Hun-garr', 'LevelupEffect.cpp'),
-                        os.path.join ('Hun-garr', 'OptionsDialog.cpp'),
-                        os.path.join ('Hun-garr', 'TitleScreen.cpp'),
-                        os.path.join ('Hun-garr', 'Res.cpp'),
-                        os.path.join ('Hun-garr', 'main.cpp')])
+hungarr = env.Program('hungarr', [os.path.join ('Hun-garr', 'Board.cpp'),
+                                  os.path.join ('Hun-garr', 'GameApp.cpp'),
+                                  os.path.join ('Hun-garr', 'GameOverEffect.cpp'),
+                                  os.path.join ('Hun-garr', 'LevelupEffect.cpp'),
+                                  os.path.join ('Hun-garr', 'OptionsDialog.cpp'),
+                                  os.path.join ('Hun-garr', 'TitleScreen.cpp'),
+                                  os.path.join ('Hun-garr', 'Res.cpp'),
+                                  os.path.join ('Hun-garr', 'main.cpp')])
+
+language = env['language']
+
+### install game hungarr
+game_name = 'Hun-garr'
+destdir = game.GetGameDistDir(env, game_name)
+
+### install targets for hungarr
+targets = []
+
+### data
+files = []
+files.append(os.path.join(srcdir, 'fonts'))
+files.append(os.path.join(srcdir, 'images'))
+files.append(os.path.join(srcdir, 'music'))
+files.append(os.path.join(srcdir, 'sounds'))
+
+### properties
+files.append(os.path.join(srcdir, 'properties'))
+
+targets = game.InstallGame(env, game_name, hungarr, destdir, files, targets)
+env.Alias('hungarr_install', targets)
