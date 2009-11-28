@@ -24,12 +24,12 @@ config.AddOptions (opts)
 
 env = Environment (options = opts, ENV = os.environ,
                    tools = [ 'default', 'convlib', 'untar', 'archive',
-                             'scanreplace'])
+                             'scanreplace', 'md5sum'])
 config.Configure (env)
 Help (opts.GenerateHelpText (env))
 
 ### dist directory
-env['distdir'] = os.path.join(modname.replace('configs.', ''), 'dist')
+env['distdir'] = '#' + os.path.join(modname.replace('configs.', ''), 'dist')
 
 ### setup top builddir
 if env['builddir']:
