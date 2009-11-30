@@ -162,9 +162,12 @@ def InstallGameExtras(env, game, destdir, targets = []):
     framework_rev = GetGitVersion(root)
     app_rev = GetGitVersion(srcdir)
 
+    if not env.has_key('GAMEGENVERSIONSTR'):
+        env['GAMEGENVERSIONSTR'] = 'Generating version file: $TARGET ($SOURCES)'
     targets += env.Command(os.path.join(destdir, 'version.txt'),
                            [env.Value(framework_rev), env.Value(app_rev)],
-                           GenerateVersion)
+                           [SCons.Action.Action(GenerateVersion,
+                                                '$GAMEGENVERSIONSTR')])
     return targets
 
 def PackageGame(env, package_name, rootdir, targets = [], archive_format = None):
