@@ -235,6 +235,14 @@ def SetupColorizeOutput(env):
        (colors['cyan'], colors['end'], colors['purple'], colors['end'],
         colors['yellow'], colors['end'])
 
+    game_gen_ver_message = '%sGenerating version file:%s "%s$TARGET%s" %s($SOURCES)%s' % \
+       (colors['red'], colors['end'], colors['purple'], colors['end'],
+        colors['yellow'], colors['end'])
+    archive_message = '%sCompressing:%s "%s$TARGETS%s"' % \
+       (colors['red'], colors['end'], colors['purple'], colors['end'])
+    md5sum_message = '%sCaculating md5sum:%s "%s$TARGETS%s"' % \
+       (colors['red'], colors['end'], colors['purple'], colors['end'])
+
     env['CXXCOMSTR'] = compile_source_message,
     env['CCCOMSTR'] = compile_source_message,
     env['SHCCCOMSTR'] = compile_shared_source_message,
@@ -246,4 +254,7 @@ def SetupColorizeOutput(env):
     env['JARCOMSTR'] = java_library_message,
     env['JAVACCOMSTR'] = compile_source_message
     env['INSTALLSTR'] = install_message
+    env['GAMEGENVERSIONSTR'] = game_gen_ver_message
+    env['ARCHIVESTR'] = archive_message
+    env['MD5SUMSTR'] = md5sum_message
 
