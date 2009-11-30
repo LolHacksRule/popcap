@@ -2,6 +2,7 @@
 
 from string import Template
 import stat
+import SCons
 
 def md5sum(filename):
     import hashlib
@@ -15,20 +16,26 @@ def md5sum_action(target, source, env):
         file(target[i].abspath, 'w').write(content)
     return 0
 
-def md5sum_string(target, source, env):
-    return "Caculating md5sum '%s' from '%s'" % (str(target[0]), str(source[0]))
-
 def md5sum_emitter(target, source, env):
-    target = []
-    for s in source:
-        target.append(env.File(s.abspath + '.md5sum'))
+    if len(target) < len(source):
+        diff = len(source) - len(target)
+        offset = len(target)
+        for i in range(diff):
+            s = source[offset + i]
+            target.append(env.File(s.abspath + '.md5sum'))
     return (target, source)
 
 def generate(env, **kw):
-    action = env.Action(md5sum_action, md5sum_string)
-    env['BUILDERS']['MD5SUM'] = env.Builder(action = action,
-                                            emitter = md5sum_emitter,
-                                            suffix = '.md5sum')
+    try:
+        env['BUILDERS']['MD5SUMSTR']
+        env['BUILDERS']['MD5SUM']
+    except KeyError:
+        md5str = "Caculating md5sum: $TARGETS"
+        action = SCons.Action.Action(md5sum_action, '$MD5SUMSTR')
+        env['MD5SUMSTR'] = md5str
+        env['BUILDERS']['MD5SUM'] = env.Builder(action = action,
+                                                emitter = md5sum_emitter,
+                                                suffix = '.md5sum')
 
 def exists(env):
     try:
