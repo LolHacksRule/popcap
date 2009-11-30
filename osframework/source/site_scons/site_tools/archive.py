@@ -9,7 +9,6 @@ import fnmatch
 SUFFIX = {
     'gztar': '.tar.gz',
     'bztar': '.tar.bz2',
-    'ztar':  '.Z',
     'tar':   '.tar',
     'zip':   '.zip'
     }
@@ -43,6 +42,35 @@ def MakeZipfile (env, file_name, format, root_dir, base_dir):
 
 def MakeTarball (env, file_name, format, root_dir, base_dir):
     """Create a (possibly compressed) tar file from all the files under
+    'root_dir/basedir'.  'compress' must be "gzip" (the default), "bzip2",
+    or None.  Both "tar" and the compression utility named by
+    'compress' must be on the default program search path, so this is
+    probably Unix-specific.  The output tar file will be named 'base_dir' +
+    ".tar", possibly plus the appropriate compression extension (".gz",
+    ".bz2").
+    """
+    mode = {
+        'gztar': 'w|gz',
+        'bztar': 'w|bz2',
+        'tar':   'w|',
+    }
+    try:
+        import tarfile
+    except ImportError:
+        return 1
+
+    tarball = tarfile.open(file_name, mode[format])
+    src_dir = os.path.join(root_dir, base_dir)
+    for dirpath, dirnames, filenames in os.walk(src_dir):
+        for name in filenames:
+            path = os.path.normpath(os.path.join(dirpath, name))
+            arch_path = path[len(root_dir):]
+            tarball.add(path, arch_path, False)
+    tarball.close()
+    return 0;
+
+def MakeTarballCmd (env, file_name, format, root_dir, base_dir):
+    """Create a (possibly compressed) tar file from all the files under
     'root_dir/basedir'.  'compress' must be "gzip" (the default), "compress",
     "bzip2", or None.  Both "tar" and the compression utility named by
     'compress' must be on the default program search path, so this is
@@ -53,7 +81,6 @@ def MakeTarball (env, file_name, format, root_dir, base_dir):
     compress = {
         'gztar': 'z',
         'bztar': 'j',
-        'ztar':  'Z',
         'tar':   '',
     }
     if root_dir:
@@ -64,7 +91,6 @@ def MakeTarball (env, file_name, format, root_dir, base_dir):
 ARCHIVER = {
     'gztar': MakeTarball,
     'bztar': MakeTarball,
-    'ztar':  MakeTarball,
     'tar':   MakeTarball,
     'zip':   MakeZipfile
     }
@@ -118,18 +144,39 @@ def generate (env):
         rootdir = kwargs['rootdir']
         basedir = kwargs['basedir']
 
+        ### archive format
+        if kwargs.has_key('depends'):
+            depends = kwargs['depends']
+        else:
+            depends = []
+
+        ### depends
+        if not depends:
+            depends = []
+        if not SCons.Util.is_List(depends):
+            depends = [depends]
+
+        ### fixup the target list
         if not target:
             target = []
         if not SCons.Util.is_List(target):
             target = [target]
 
+        ### pad the target list
         if len(target) < len(format):
             base = len(target)
             for i in range(len(format) - base):
                 target += [env.File(str(name) + SUFFIX[format[i + base]])]
 
+        ### this is the really source what we used
         source = [env.Value(name), env.Value(rootdir), env.Value(basedir),
                   env.Value(format)]
+
+        ### put source files, directroies in source, let scons track
+        ### target dependences correctly.
+        if not depends:
+            depends = [os.path.join(rootdir, basedir)]
+        source += depends
         return env._Archive(target = target, source = source)
 
     try:
@@ -142,7 +189,8 @@ def generate (env):
 
 def exists (env):
     try:
-        from distutils import archive_util
+        import zipfile
+        import tarfile
         return True
     except:
         return False

@@ -167,13 +167,13 @@ def InstallGameExtras(env, game, destdir, targets = []):
                            GenerateVersion)
     return targets
 
-def PackageGame(env, package_name, rootdir, targets = [], fmt = None):
+def PackageGame(env, package_name, rootdir, targets = [], archive_format = None):
     ### setup default package format
-    if not fmt:
+    if not archive_format:
         if env.has_key('TARGET_OS') and env['TARGET_OS'] == 'win32':
-            fmt = 'zip'
+            archive_format = 'zip'
         else:
-            fmt = ['gztar', 'bztar']
+            archive_format = ['gztar', 'bztar']
 
     ### always use lower package name
     package_dir = os.path.dirname(package_name)
@@ -184,9 +184,8 @@ def PackageGame(env, package_name, rootdir, targets = [], fmt = None):
     tarball = env.Archive(name = package_name,
                           rootdir = os.path.dirname(rootdir),
                           basedir = os.path.basename(rootdir),
-                          format = fmt)
-    if targets:
-        env.Depends(tarball, targets)
+                          format = archive_format,
+                          depends = targets)
     md5sum = env.MD5SUM(tarball)
     return env.Install(destdir, tarball + md5sum)
 
