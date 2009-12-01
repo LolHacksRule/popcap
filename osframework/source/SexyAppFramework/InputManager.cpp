@@ -14,6 +14,7 @@ InputManager::InputManager (SexyAppBase * theApp,
 	mWidth = 1;
 	mHeight = 1;
 	mId = 0;
+	mCookie = 0;
 }
 
 InputManager::~InputManager ()
@@ -237,6 +238,7 @@ bool InputManager::Add(InputInterface * theInput,
 
 		if (connect)
 			theInput->Connect ();
+		mCookie++;
 		return true;
 	}
 
@@ -259,5 +261,46 @@ bool InputManager::Remove(InputInterface * theInput)
 	}
 
 	delete theInput;
+	mCookie++;
 	return true;
+}
+
+static void UpdateStatusInfo(InputStatusInfo &theInfo,
+			     InputInfo &anInfo)
+{
+	if (anInfo.mHasPointer)
+		theInfo.mNumPointer++;
+	else if (anInfo.mHasKey)
+		theInfo.mNumKeyboard++;
+	else if (anInfo.mHasAcc || anInfo.mHasGyro)
+		theInfo.mNum3DInput++;
+}
+
+void InputManager::GetStatus(InputStatusInfo &theInfo)
+{
+	AutoCrit anAutoCrit (mCritSect);
+
+	theInfo.mNumInput = mDrivers.size();
+	theInfo.mNumPointer = 0;
+	theInfo.mNumKeyboard = 0;
+	theInfo.mNum3DInput = 0;
+
+	InputInfo anInfo;
+	Drivers::iterator it;
+	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
+	{
+		if (!(*it)->GetInfo(anInfo))
+			continue;
+
+		UpdateStatusInfo(theInfo, anInfo);
+		anInfo.Reset();
+	}
+	if (mApp->mDDInterface && mApp->mDDInterface->GetInputInfo(anInfo))
+		UpdateStatusInfo(theInfo, anInfo);
+}
+
+void InputManager::Changed()
+{
+	AutoCrit anAutoCrit (mCritSect);
+	mCookie++;
 }

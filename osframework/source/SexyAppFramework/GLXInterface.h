@@ -37,6 +37,7 @@ public:
                                                             int width, int height);
         virtual bool                            HasEvent();
         virtual bool                            GetEvent(struct Event &event);
+	virtual bool                            GetInputInfo(InputInfo &anInfo);
 
 private:
         Display*                                mDpy;

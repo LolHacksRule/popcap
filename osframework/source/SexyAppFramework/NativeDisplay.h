@@ -6,6 +6,7 @@
 #include "Ratio.h"
 #include "Event.h"
 #include "SexyThread.h"
+#include "InputInterface.h"
 
 namespace Sexy
 {
@@ -17,6 +18,7 @@ class Image;
 class SexyAppBase;
 class Graphics;
 class MemoryImage;
+struct InputInfo;
 
 class DelayedWork
 {
@@ -77,6 +79,9 @@ public:
 	virtual bool				   Is3DAccelerationSupported();
 	virtual bool				   Is3DAccelerationRecommended();
 
+	virtual bool                               CanFullscreen();
+	virtual bool                               CanWindowed();
+
         virtual Font *                             CreateFont(SexyAppBase * theApp,
                                                               const std::string theFace,
                                                               int thePointSize,
@@ -102,6 +107,7 @@ public:
  public:
         virtual bool                                HasEvent();
         virtual bool                                GetEvent(struct Event & event);
+	virtual bool                                GetInputInfo(InputInfo &anInfo);
 
 public:
 	void                                        FlushWork(void);

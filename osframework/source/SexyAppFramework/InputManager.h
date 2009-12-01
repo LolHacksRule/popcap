@@ -11,6 +11,14 @@ namespace Sexy
 {
 
 class SexyAppBase;
+
+struct InputStatusInfo {
+	int mNumPointer;
+	int mNumKeyboard;
+	int mNum3DInput;
+	int mNumInput;
+};
+
 class InputManager
 {
  public:
@@ -40,6 +48,10 @@ class InputManager
 
 	bool          Remove(InputInterface * theInput);
 
+	unsigned int  GetCookie();
+	void          GetStatus(InputStatusInfo &theInfo);
+	void          Changed();
+
  private:
         SexyAppBase * mApp;
 
@@ -58,6 +70,7 @@ class InputManager
 	int           mHeight;
 
 	int           mId;
+	unsigned int  mCookie;
 };
 
 }

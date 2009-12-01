@@ -9,6 +9,26 @@ namespace Sexy
 
 class InputManager;
 class InputDriver;
+
+struct InputInfo {
+	std::string mName;
+	bool        mHasPointer;
+	bool        mHasKey;
+	bool        mHasAcc;
+	bool        mHasGyro;
+	int         mId;
+
+	void Reset()
+	{
+		mName = "Unknown";
+		mHasPointer = false;
+		mHasKey = false;
+		mHasAcc = false;
+		mHasGyro = false;
+		mId = -1;
+	}
+};
+
 class InputInterface {
 public:
 	InputInterface(InputManager* theManager);
@@ -24,6 +44,7 @@ public:
 	virtual void	      Connect ();
 	virtual void	      Reconnect();
 	virtual void	      Update ();
+	virtual bool          GetInfo(InputInfo &theInfo);
 
 	void		      PostEvent(Event & event);
 protected:

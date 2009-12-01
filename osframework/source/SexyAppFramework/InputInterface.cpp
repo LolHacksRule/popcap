@@ -47,3 +47,15 @@ void InputInterface::PostEvent(Event &event)
 	event.id = mId;
 	mManager->PushEvent (event);
 }
+
+bool InputInterface::GetInfo(InputInfo &theInfo)
+{
+	theInfo.mName = "";
+	theInfo.mHasPointer = true;
+	theInfo.mHasKey = false;
+	theInfo.mHasAcc = false;
+	theInfo.mHasGyro = false;
+	theInfo.mId = mId;
+
+	return true;
+}

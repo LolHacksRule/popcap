@@ -35,6 +35,7 @@ class Dialog;
 class ResourceManager;
 class InputManager;
 class RegistryInterface;
+struct InputStatusInfo;
 
 class WidgetSafeDeleteInfo
 {
@@ -606,6 +607,8 @@ public:
 	virtual bool				AppCanRestore();
 
 	char*                                   GetCmdLine();
+	void                                    CheckControllerStatus();
+	virtual void                            InputStatusChanged(const InputStatusInfo *theInfo);
 };
 
 extern SexyAppBase* gSexyAppBase;

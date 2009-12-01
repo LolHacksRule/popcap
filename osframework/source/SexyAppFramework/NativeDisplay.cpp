@@ -112,6 +112,11 @@ bool NativeDisplay::GetEvent(struct Event & event)
 	return false;
 }
 
+bool NativeDisplay::GetInputInfo(InputInfo &anInfo)
+{
+	return false;
+}
+
 bool NativeDisplay::UpdateCursor(int theCursorX, int theCursorY)
 {
 	return false;
@@ -124,6 +129,16 @@ bool NativeDisplay::DrawCursor(Sexy::Graphics* g)
 
 void NativeDisplay::RemoveImageData(MemoryImage * theMemoryImage)
 {
+}
+
+bool NativeDisplay::CanFullscreen()
+{
+    return true;
+}
+
+bool NativeDisplay::CanWindowed()
+{
+    return false;
 }
 
 void NativeDisplay::PushWork(DelayedWork* theWork)

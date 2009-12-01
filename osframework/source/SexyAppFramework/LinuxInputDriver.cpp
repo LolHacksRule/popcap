@@ -100,6 +100,39 @@ public:
 		mStopped = false;
 	}
 
+	const std::string& GetDeviceFilePath()
+	{
+		return mDevicePattern;
+	}
+
+	void SetupDeviceFilePath()
+	{
+		if (mDevicePattern.length())
+			return;
+
+		mDevicePattern = "/dev/input/event";
+		if (!access ("/dev/input", R_OK | W_OK | X_OK))
+			return;
+
+		if (mkdir ("/tmp/popcap", 0755) < 0 && errno != EEXIST)
+			return;
+		if (mkdir ("/tmp/popcap/input", 0755) < 0 && errno != EEXIST)
+			return;
+
+		for (unsigned int i = 0; i < 255; i++)
+		{
+			char path[2048];
+
+			snprintf (path, sizeof(path),
+				  "/tmp/popcap/input/event%d", i);
+			if (mknod (path, S_IFCHR | 0644,
+				   makedev(13, 64 + i)) < 0 && errno != EEXIST)
+				return;
+		}
+
+		mDevicePattern = "/tmp/popcap/input/event";
+	}
+
 	unsigned int CheckHotplug ()
 	{
 		unsigned int checksum;
@@ -108,7 +141,7 @@ public:
 		checksum = 0;
 		fp = fopen ("/proc/bus/input/devices", "rb");
 		if (!fp)
-			return -1;
+			return 0;
 
 		unsigned char byte;
 		while (fread (&byte, 1, 1, fp) > 0)
@@ -120,12 +153,13 @@ public:
 
 	void HotplugLoop ()
 	{
-		unsigned int checksum = -1;
+		unsigned int checksum = (unsigned int)-1;
 
 		while (!mHotplugDone)
 		{
 			unsigned int current;
 
+			CleanupDisconDevices ();
 			current = CheckHotplug ();
 			if (current != checksum)
 			{
@@ -133,8 +167,9 @@ public:
 				AutoCrit aAutoCrit (mScanCritSect);
 
 				checksum = current;
-				CleanupDisconDevices ();
 				ScanAndAddDevice (mApp, true);
+
+				fflush(stdout);
 			}
 
 			sleep (1);
@@ -153,6 +188,7 @@ public:
 		mApp = theApp;
 		mDisconDevices.clear ();
 		mStopped = false;
+		SetupDeviceFilePath();
 #ifndef SEXY_LINUX_DEVICE_NO_HOTPLUG
 		mHotplugThread = Thread::Create (HotplugLoopStub, this);
 #endif
@@ -185,12 +221,15 @@ public:
 
 	InputInterface* Create (SexyAppBase * theApp)
 	{
-		const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
+		SetupDeviceFilePath();
 
+#ifdef SEXY_LINUX_DEVICE_NO_HOTPLUG
+		const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
 		if (device)
 			return new LinuxInputInterface (theApp->mInputManager, this, device);
 
-		ScanAndAddDevice (theApp, false);
+		ScanAndAddDevice(theApp, false);
+#endif
 		return 0;
 	}
 
@@ -202,7 +241,8 @@ public:
 			int fd;
 			char name[1024];
 
-			snprintf (name, sizeof(name), "/dev/input/event%d", i);
+			snprintf (name, sizeof(name), "%s%d",
+				  GetDeviceFilePath().c_str(), i);
 			fd = open (name, O_RDWR);
 			if (fd < 0)
 				continue;
@@ -292,7 +332,8 @@ public:
 			int fd;
 			char name[1024];
 
-			snprintf (name, sizeof(name), "/dev/input/event%d", i);
+			snprintf (name, sizeof(name), "%s%d",
+				  GetDeviceFilePath().c_str(), i);
 
 			if (FindDevice (std::string (name)))
 				continue;
@@ -355,6 +396,8 @@ private:
 	bool		      mStopped;
 
 	SexyAppBase*	      mApp;
+
+	std::string           mDevicePattern;
 };
 
 }
@@ -371,6 +414,8 @@ LinuxInputInterface::LinuxInputInterface (InputManager* theManager,
 	mMaxX = 0;
 	mMinY = 0;
 	mMaxY = 0;
+	mHasPointer = false;
+	mHasKey = false;
 	mInitialized = false;
 	mHotpluged = hotpluged;
 	mDriver = driver;
@@ -423,6 +468,8 @@ void LinuxInputInterface::Cleanup()
 	mMaxX = 0;
 	mMinY = 0;
 	mMaxY = 0;
+	mHasPointer = false;
+	mHasKey = false;
 }
 
 static bool
@@ -595,6 +642,9 @@ bool LinuxInputInterface::OpenDevice ()
 	mInfo.version = info.id.version;
 	mInfo.bustype = info.id.bustype;
 
+	mHasPointer = info.num_rels || info.num_abs;
+	mHasKey = info.num_keys || info.num_ext_keys;
+
 	mDeviceName = std::string (device);
 	mDriver->AddDevice (mDeviceName, mInfo);
 
@@ -669,13 +719,13 @@ static int translate_key(int keysym)
 		{ KEY_ENTER, KEYCODE_RETURN },
 		{ KEY_ESC, KEYCODE_ESCAPE },
 		{ KEY_BACKSPACE, KEYCODE_BACK },
-		{ KEY_SPACE, KEYCODE_SPACE },
 		{ KEY_DELETE, KEYCODE_DELETE },
 		{ KEY_LEFTSHIFT, KEYCODE_SHIFT },
 		{ KEY_RIGHTSHIFT, KEYCODE_SHIFT },
 		{ KEY_LEFTCTRL, KEYCODE_CONTROL },
 		{ KEY_RIGHTCTRL, KEYCODE_CONTROL },
 		{ KEY_CAPSLOCK, KEYCODE_CAPITAL },
+		{ KEY_SPACE, KEYCODE_SPACE },
 		{ KEY_A, 'A' },
 		{ KEY_B, 'B' },
 		{ KEY_C, 'C' },
@@ -750,12 +800,21 @@ handle_key_event (struct input_event & linux_event,
 		if (!keycode)
 			return false;
 
-		if (linux_event.value == 1)
-			event.type = EVENT_KEY_DOWN;
-		else if (linux_event.value == 0)
+
+		if (linux_event.value == 0)
 			event.type = EVENT_KEY_UP;
+		else if (linux_event.value == 1)
+			event.type = EVENT_KEY_DOWN;
+		else if (linux_event.value == 2)
+			event.type = EVENT_KEY_DOWN;
+		else
+			return false;
+
 		event.flags |= EVENT_FLAGS_KEY_CODE;
 		event.u.key.keyCode = keycode;
+
+		printf ("keycode: %s\n", GetKeyNameFromCode((KeyCode)keycode).c_str());
+
 		if (isalnum(keycode) && event.type == EVENT_KEY_DOWN)
 		{
 			event.flags |= EVENT_FLAGS_KEY_CHAR;
@@ -772,7 +831,7 @@ handle_key_event (struct input_event & linux_event,
 				{
 					static int numbermap[10] =
 					{
-						'!', '@', '#', '$', '%', '^', '&', '*', '(', '}'
+						'!', '@', '#', '$', '%', '^', '&', '*', '(', ')'
 					};
 
 					event.u.key.keyChar = numbermap[keycode - '0'];
@@ -801,7 +860,6 @@ handle_key_event (struct input_event & linux_event,
 			if (event.u.key.keyCode == KEYCODE_CAPITAL)
 				modifiers &= ~MODIFIERS_CAPSLOCK;
 		}
-		printf ("keycode: %s\n", GetKeyNameFromCode((KeyCode)keycode).c_str());
 	}
 
 	return true;
@@ -889,8 +947,8 @@ void* LinuxInputInterface::Run (void * data)
 
 			struct timeval timeout;
 
-			timeout.tv_sec = 1;
-			timeout.tv_usec = 0;
+			timeout.tv_sec = 0;
+			timeout.tv_usec = 300;
 			status = select (fd + 1, &set, NULL, NULL, &timeout);
 			if (status < 0 && errno != EINTR)
 			{
@@ -901,14 +959,9 @@ void* LinuxInputInterface::Run (void * data)
 
 				/* don't bother, it's hotpluged */
 				if (driver->mHotpluged)
-				{
-					driver->mDone = true;
-					break;
-				}
+					goto disconnected;
 				else
-				{
 					continue;
-				}
 			}
 			if (status < 0)
 				continue;
@@ -938,15 +991,11 @@ void* LinuxInputInterface::Run (void * data)
 			printf ("Device disconnected (hotpluged? %s).\n",
 				driver->mHotpluged ? "yes" : "no");
 			driver->CloseDevice ();
+			/* don't bother, it's hotpluged */
 			if (driver->mHotpluged)
-			{
-				driver->mDone = true;
-				break;
-			}
+				goto disconnected;
 			else
-			{
 				continue;
-			}
 		}
 
 		if (readlen <= 0)
@@ -996,10 +1045,12 @@ void* LinuxInputInterface::Run (void * data)
 				memset (&event, 0, sizeof (event));
 			}
 		}
+		fflush(stdout);
 	}
 
-	if (driver->mHotpluged && driver->mFd < 0)
-		driver->mDriver->AddDisconDevice (driver);
+	return NULL;
+  disconnected:
+	driver->mDriver->AddDisconDevice (driver);
 	return NULL;
 }
 
@@ -1011,6 +1062,17 @@ bool LinuxInputInterface::HasEvent ()
 bool LinuxInputInterface::GetEvent (Event & event)
 {
 	return false;
+}
+
+bool LinuxInputInterface::GetInfo (InputInfo &theInfo)
+{
+	if (mFd < 0)
+		return false;
+
+	theInfo.mName = mDeviceName;
+	theInfo.mHasPointer = mHasPointer;
+	theInfo.mHasKey = mHasKey;
+	return true;
 }
 
 static LinuxInputDriver aLinuxInputDriver;

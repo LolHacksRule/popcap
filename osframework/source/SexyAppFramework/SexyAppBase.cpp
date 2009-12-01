@@ -3628,3 +3628,28 @@ void SexyAppBase::CleanSharedImages()
 	}
 }
 
+void SexyAppBase::CheckControllerStatus()
+{
+	static unsigned int cookie = (unsigned int)-1;
+
+	if (!mLoaded)
+		return;
+
+	if (mLoadingThreadStarted && !mLoadingThreadCompleted)
+		return;
+
+	unsigned int current = mInputManager->GetCookie();
+
+	if (current == cookie)
+		return;
+	cookie = current;
+
+	InputStatusInfo aStatus;
+
+	mInputManager->GetStatus(aStatus);
+	InputStatusChanged(&aStatus);
+}
+
+void SexyAppBase::InputStatusChanged(const InputStatusInfo *theInfo)
+{
+}

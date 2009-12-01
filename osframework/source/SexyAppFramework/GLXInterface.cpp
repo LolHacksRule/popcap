@@ -465,6 +465,16 @@ void GLXInterface::SwapBuffers()
 		glXSwapBuffers (mDpy, mWindow);
 }
 
+bool GLXInterface::GetInputInfo(InputInfo &anInfo)
+{
+	if (getenv("SEXY_GLX_NO_INPUT"))
+		return false;
+	anInfo.mName = "X11/OpenGL";
+	anInfo.mHasKey = true;
+	anInfo.mHasPointer = true;
+	return true;
+}
+
 class GLXVideoDriver: public VideoDriver {
 public:
 	GLXVideoDriver ()

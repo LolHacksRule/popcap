@@ -40,6 +40,7 @@ public:
 
         virtual bool          HasEvent ();
         virtual bool          GetEvent (Event & event);
+	virtual bool          GetInfo (InputInfo &theInfo);
 
 	const std::string &   GetDeviceName ()
 	{
@@ -76,6 +77,8 @@ private:
 
 	LinuxInputDriver     *mDriver;
 	LinuxDeviceInfo       mInfo;
+	bool                  mHasPointer;
+	bool                  mHasKey;
 };
 
 }
