@@ -192,7 +192,7 @@ def PackageGame(env, package_name, rootdir, targets = [], archive_format = None)
                           basedir = os.path.basename(rootdir),
                           format = archive_format,
                           depends = targets)
-    md5sum = env.MD5SUM(tarball)
+    md5sum = env.MD5SUM(target = [], source = tarball)
     return env.Install(destdir, tarball + md5sum)
 
 def InstallGame(env, name, prog, destdir, files, targets = []):
