@@ -173,10 +173,13 @@ def InstallGameExtras(env, game, destdir, targets = []):
 def PackageGame(env, package_name, rootdir, targets = [], archive_format = None):
     ### setup default package format
     if not archive_format:
-        if env.has_key('TARGET_OS') and env['TARGET_OS'] == 'win32':
-            archive_format = 'zip'
+        if env['package_format']:
+            archive_format = env['package_format']
         else:
-            archive_format = ['gztar', 'bztar']
+            if env.has_key('TARGET_OS') and env['TARGET_OS'] == 'win32':
+                archive_format = 'zip'
+            else:
+                archive_format = ['gztar', 'bztar']
 
     ### always use lower package name
     package_dir = os.path.dirname(package_name)

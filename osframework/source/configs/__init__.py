@@ -7,6 +7,8 @@ import sys
 
 def AddOptions(opts):
     from SCons.Variables.BoolVariable import BoolVariable
+    from SCons.Variables.ListVariable import ListVariable
+
     if 'debug' in opts.keys ():
         return
     opts.Add('config', 'configuration used to build the framework', '')
@@ -17,6 +19,8 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('strip', 'strip debug informantion from objects', True))
     opts.Add(BoolVariable ('colorize_output', 'cmake like colorize output message', True))
     opts.Add(BoolVariable ('keyboard', 'support changing focus by pressing arrow keys', True))
+    opts.Add(ListVariable ('package_format', 'the format of game packages(zip, tar.gz, tar.bz2..)',
+                           'none', ['zip', 'gztar', 'bztar', 'tar']))
     opts.Add('language', 'specify the language of games', 'en_US')
     opts.Add('oem', "the name of oem", 'default')
     opts.Add('target', "the name of oem target for example(olo, canmore)", '')
