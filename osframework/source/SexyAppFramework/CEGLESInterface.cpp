@@ -30,11 +30,9 @@ CEGLESInterface::~CEGLESInterface ()
 	Cleanup();
 }
 
-#ifdef SEXY_INTEL_CANMORE
-#include <libgdl.h>
-
-static void init_gdl_plane (int width, int height)
+static void init_gdl_plane ()
 {
+#ifdef SEXY_INTEL_CANMORE
 	gdl_pixel_format_t pix_fmt = GDL_PF_ARGB_32;
 	gdl_color_space_t color_space = GDL_COLOR_SPACE_RGB;
 	gdl_display_info_t  display;
@@ -55,16 +53,8 @@ static void init_gdl_plane (int width, int height)
 
 	src_rect.origin.x = 0;
 	src_rect.origin.y = 0;
-	if (width > 0)
-	{
-		src_rect.width = width;
-		src_rect.height = height;
-	}
-	else
-	{
-		src_rect.width = display.tvmode.width;
-		src_rect.height = display.tvmode.height;
-	}
+	src_rect.width = display.tvmode.width;
+	src_rect.height = display.tvmode.height;
 
 	upscale = GDL_TRUE;
 
@@ -75,8 +65,9 @@ static void init_gdl_plane (int width, int height)
 	gdl_plane_set_attr (GDL_PLANE_SRC_RECT, &src_rect);
 	gdl_plane_set_attr (GDL_PLANE_UPSCALE, &upscale);
 	gdl_plane_config_end (GDL_FALSE);
-}
+#elif defined(SEXY_INTEL_OLO)
 #endif
+}
 
 int CEGLESInterface::Init (void)
 {
@@ -96,9 +87,9 @@ int CEGLESInterface::Init (void)
 	else
 		mOverScan = 0.9f;
 
-#ifdef SEXY_INTEL_CANMORE
-	init_gdl_plane (-1, -1);
+	init_gdl_plane ();
 
+#ifdef SEXY_INTEL_CANMORE
 	mDpy = eglGetDisplay ((EGLNativeDisplayType)EGL_DEFAULT_DISPLAY);
 #else
 	mDpy = eglGetDisplay (EGL_DEFAULT_DISPLAY);

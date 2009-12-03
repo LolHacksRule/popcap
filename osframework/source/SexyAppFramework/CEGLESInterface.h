@@ -10,6 +10,8 @@
 #include <GLES/egl.h>
 #include <GLES/gl.h>
 
+#include <libgdl.h>
+
 namespace Sexy
 {
 
