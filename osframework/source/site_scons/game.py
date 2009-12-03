@@ -203,7 +203,8 @@ def InstallGame(env, name, prog, destdir, files, targets = []):
     targets += InstallGameExtras(env, name, destdir, targets)
 
     ### package all the bits
-    targets += PackageGame(env, name, destdir, targets)
+    if env['release']:
+        targets += PackageGame(env, name, destdir, targets)
 
     env.Alias('install', targets)
 
