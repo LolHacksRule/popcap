@@ -304,3 +304,9 @@ void InputManager::Changed()
 	AutoCrit anAutoCrit (mCritSect);
 	mCookie++;
 }
+
+unsigned int InputManager::GetCookie()
+{
+	AutoCrit anAutoCrit (mCritSect);
+	return mCookie;
+}
