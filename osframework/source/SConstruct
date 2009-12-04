@@ -123,9 +123,6 @@ def FindGames(path):
       for f in files:
         if f == 'SConscript':
           result.append(os.path.join(root, f))
-          print f
-        else:
-          print f
     return result
 
 ### find games in games directory
