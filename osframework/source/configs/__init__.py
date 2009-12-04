@@ -11,6 +11,8 @@ def AddOptions(opts):
 
     if 'debug' in opts.keys ():
         return
+
+    opts.Add('config_file', 'the path to Config.py', 'Config.py')
     opts.Add('config', 'configuration used to build the framework', '')
     opts.Add(BoolVariable ('debug', 'build debug version', False))
     opts.Add(BoolVariable ('release', 'build release version', False))

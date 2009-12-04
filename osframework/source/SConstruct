@@ -7,26 +7,82 @@ import sys
 import SCons
 
 ### configurations
-try:
-  from Config import config
-except Exception, e:
-  config = 'configs'
+opts = Variables ()
 
+### update Variables from config_file
+config_file = 'Config.py'
+if opts.args.has_key('config_file') and opts.args['config_file']:
+    config_file = options.args['config_file']
+
+config_vars = {}
+if os.path.exists(config_file):
+    print 'Applying options from', config_file
+    execfile(config_file, {}, config_vars)
+
+### update Variable from oem's config.py
+target_config_vars = {}
+if opts.args.has_key('target'):
+  config_file = os.path.join('oem', opts.args['oem'], opts.args['target'], 'Config.py')
+  if os.path.exists(config_file):
+      print 'Applying options from', config_file
+      execfile(config_file, {}, target_config_vars)
+  config_vars.update(target_config_vars)
+
+### check if user is overidding target configs
+for var in target_config_vars:
+  if opts.args.has_key(var) and opts.args[var] != target_config_vars[var]:
+    print 'Warning: overriding option \'%s\' from target with \'%s\'' % (var, opts.args[var])
+config_vars.update(opts.args)
+opts.args = config_vars
+
+### check whether user selected a config
+if opts.args.has_key('config'):
+    config = opts.args['config']
+else:
+    print 'Please copy Config-example.py to Config.py. And adjust its content for'
+    print 'your needs. Or, you can specify the oem and target from command line'
+    print 'options, e.g:'
+    print 'scons oem=hwacom target=olo release=1 strip=1'
+    Exit(-1)
+
+### prepend 'configs.' if it's necessary
+configs_prefix = 'configs.'
+if config[0:len(configs_prefix)] != configs_prefix:
+    print "'config' option doesn't have 'configs.' prefix, prepending 'configs.'"
+    config = configs_prefix + config
+    opts.args['config'] = config
+
+### Add additional options
 modname = config
 config = __import__ (modname)
 modcomps = modname.split ('.')
 for modcomp in modcomps[1:]:
   config = getattr (config, modcomp)
 
-opts = Variables ('Config.py')
-
 config.AddOptions (opts)
 
+### set release to true, if oem and target are both specified by user
+if opts.args.has_key('oem') and opts.args.has_key('target') and \
+   not opts.args.has_key('release'):
+    print 'Building oem specific targets, set \'release\' option to true.'
+    opts.args['release'] = True
+
+### set strip to true, if release is set by user
+if not opts.args.has_key('strip') and \
+       opts.args.has_key('release') and \
+       opts.args['release']:
+    print 'Building release targets, set the \'strip\' option to true.'
+    opts.args['strip'] = True
+
+### create scons environment
 env = Environment (options = opts, ENV = os.environ,
                    tools = [ 'default', 'convlib', 'untar', 'archive',
                              'scanreplace', 'md5sum'])
 config.Configure (env)
 Help (opts.GenerateHelpText (env))
+
+### options
+env['options_args'] = opts.args
 
 ### dist directory
 env['distdir'] = '#' + os.path.join(modname.replace('configs.', ''), 'dist')
