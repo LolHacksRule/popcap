@@ -39,14 +39,17 @@ public:
 	virtual bool	      Init();
 	virtual void	      Cleanup();
 
-	virtual bool	      HasEvent () = 0;
-	virtual bool	      GetEvent (Event & event) = 0;
+	virtual bool	      HasEvent ();
+	virtual bool	      GetEvent (Event &event);
 	virtual void	      Connect ();
 	virtual void	      Reconnect();
 	virtual void	      Update ();
 	virtual bool          GetInfo(InputInfo &theInfo);
 
-	void		      PostEvent(Event & event);
+	virtual bool          GetProperty (const std::string& name,
+					   void* retval);
+
+	void		      PostEvent(Event & event, int subid = 0);
 protected:
 	InputManager*	      mManager;
 

@@ -7,18 +7,23 @@ namespace Sexy
 #endif
 
 enum EventType {
-	EVENT_NONE		    = 0,
-	EVENT_KEY_DOWN		    = 1,
-	EVENT_KEY_UP		    = 2,
-	EVENT_MOUSE_BUTTON_PRESS    = 3,
-	EVENT_MOUSE_BUTTON_RELEASE  = 4,
-	EVENT_MOUSE_WHEEL_UP	    = 5,
-	EVENT_MOUSE_WHEEL_DOWN	    = 6,
-	EVENT_MOUSE_MOTION	    = 7,
-	EVENT_ACTIVE		    = 8,
-	EVENT_EXPOSE		    = 9,
-	EVENT_QUIT		    = 10,
-	EVENT_USER		    = 65536
+	EVENT_NONE		     = 0,
+	EVENT_KEY_DOWN		     = 1,
+	EVENT_KEY_UP		     = 2,
+	EVENT_MOUSE_BUTTON_PRESS     = 3,
+	EVENT_MOUSE_BUTTON_RELEASE   = 4,
+	EVENT_MOUSE_WHEEL_UP	     = 5,
+	EVENT_MOUSE_WHEEL_DOWN	     = 6,
+	EVENT_MOUSE_MOTION	     = 7,
+	EVENT_ACTIVE		     = 8,
+	EVENT_EXPOSE		     = 9,
+	EVENT_QUIT		     = 10,
+	EVENT_DEVICE_SEARCHING       = 11,
+	EVENT_DEVICE_LOST            = 12,
+	EVENT_DEVICE_DISCOVERED      = 13,
+	EVENT_ACC                    = 14,
+	EVENT_ANGLE                  = 15,
+	EVENT_USER		     = 65535
 };
 
 #define MAKE_USER_EVENT_TYPE(a, b, c)				   \
@@ -45,6 +50,22 @@ struct ActiveEvent {
 	int	       active;
 };
 
+struct DeviceEvent {
+	int            prevCount;
+	int            currCount;
+};
+
+struct AccEvent {
+	int	       keyCode;
+	unsigned int   acc;
+};
+
+struct AngleEvent {
+	float angleX;
+	float angleY;
+	float angleZ;
+};
+
 struct UserEvent {
 	int	       reserved[8];
 };
@@ -53,11 +74,15 @@ struct Event {
 	enum EventType		     type;
 	unsigned int		     flags;
 	int			     id;
+	int                          subid;
 	union {
 		struct MouseEvent    mouse;
 		struct KeyEvent	     key;
 		struct ActiveEvent   active;
+		struct DeviceEvent   device;
 		struct UserEvent     user;
+		struct AccEvent      acc;
+		struct AngleEvent    angle;
 	}			     u;
 };
 

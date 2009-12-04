@@ -42,10 +42,33 @@ void InputInterface::Update()
 	}
 }
 
-void InputInterface::PostEvent(Event &event)
+bool InputInterface::HasEvent ()
+{
+	return false;
+}
+
+bool InputInterface::GetEvent (Event &event)
+{
+	return false;
+}
+
+void InputInterface::PostEvent(Event &event, int subid)
 {
 	event.id = mId;
+	event.id = subid;
 	mManager->PushEvent (event);
+}
+
+bool InputInterface::GetProperty(const std::string& name,
+				 void* retval)
+{
+	if (name == "id")
+	{
+		int* ret = (int*)retval;
+		*ret = mId;
+		return true;
+	}
+	return false;
 }
 
 bool InputInterface::GetInfo(InputInfo &theInfo)

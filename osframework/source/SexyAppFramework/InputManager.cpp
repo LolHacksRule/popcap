@@ -238,6 +238,7 @@ bool InputManager::Add(InputInterface * theInput,
 
 		if (connect)
 			theInput->Connect ();
+
 		mCookie++;
 		return true;
 	}
@@ -263,6 +264,11 @@ bool InputManager::Remove(InputInterface * theInput)
 	delete theInput;
 	mCookie++;
 	return true;
+}
+
+unsigned int InputManager::GetCookie()
+{
+	return mCookie;
 }
 
 static void UpdateStatusInfo(InputStatusInfo &theInfo,
@@ -303,10 +309,4 @@ void InputManager::Changed()
 {
 	AutoCrit anAutoCrit (mCritSect);
 	mCookie++;
-}
-
-unsigned int InputManager::GetCookie()
-{
-	AutoCrit anAutoCrit (mCritSect);
-	return mCookie;
 }
