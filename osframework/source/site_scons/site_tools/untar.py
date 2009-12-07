@@ -9,16 +9,45 @@ import fnmatch
 def UntarPrefix (target):
     targets = [ t.path for t in target ]
     prefix = os.path.commonprefix(targets)
-    return os.path.split (os.path.normpath(prefix))[0]
+    return os.path.normpath(prefix)
 
 def UntarMatch (name, filter_list):
     for i in filter_list:
-        ### XXX more powerful matcher?
-        ### such as fnmacth or regular expression?
-        #if i in name:
         if fnmatch.fnmatch (name, i):
             return True
     return False
+
+def strippath(path, basedir, strip):
+    import os.path
+    path = os.path.normpath(path)
+    if strip:
+        path = os.path.sep.join(path.split(os.path.sep)[strip:])
+    if basedir == '.':
+        return path
+    return os.path.join(basedir, path)
+
+def detectstrip(prefix, p):
+    """auto detect patch strip level"""
+    basedir = prefix
+    for strip in range(7):
+        for fileno, filename in enumerate(p.source):
+            f2patch = strippath(filename, basedir, strip)
+            if not os.path.exists(f2patch):
+                f2patch = strippath(p.target[fileno], basedir, strip)
+                if not os.path.exists(f2patch):
+                    continue
+            if not os.path.isfile(f2patch):
+                continue
+            return strip
+    return 0
+
+def applypatch(prefix, filename):
+    """apply a patch"""
+    import patch
+
+    p = patch.fromfile(filename)
+    p.apply(prefix, detectstrip(prefix, p))
+    return 0
 
 def Untar (target, source, env):
     import tarfile
@@ -33,21 +62,30 @@ def Untar (target, source, env):
     else:
         exclude = []
 
+    if len(source) > 3:
+        patches = source[3:]
+    else:
+        patches = []
+
     prefix = UntarPrefix (target)
+    extract_dir = os.path.split(prefix)[0]
     try:
         for member in tar.getmembers ():
             if len(include) and not UntarMatch (member.name, include):
                 continue
             if len(exclude) and UntarMatch (member.name, exclude):
                 continue
-            tar.extract(member, prefix)
+            tar.extract(member, extract_dir)
     finally:
         tar.close()
 
+    for filename in patches:
+        print prefix, filename.path
+        applypatch(prefix, filename.path)
     return 0
 
 def UntarStr (target, source, env):
-    prefix = UntarPrefix (target)
+    prefix = os.path.split(UntarPrefix (target))[0]
     print("Untarring: %s to %s" % (source[0].path, prefix))
 
 def UntarEmitter (target, source, env):
@@ -98,7 +136,7 @@ def generate(env):
         bld = UntarBuilder
         env['BUILDERS']['_Untar'] = bld
 
-    def Untar(source, include = [], exclude = []):
+    def Untar(source, include = [], exclude = [], patches = []):
         if SCons.Util.is_List (include):
             include = SCons.Node.Python.Value (include)
         else:
@@ -107,7 +145,10 @@ def generate(env):
             exclude = SCons.Node.Python.Value (exclude)
         else:
             exclude = SCons.Node.Python.Value ([exclude])
+        if not SCons.Util.is_List (patches):
+            patches = [patches]
         source = [ source, include, exclude ]
+        source += patches
         return env._Untar([], source)
 
     env.Untar = Untar
@@ -115,6 +156,7 @@ def generate(env):
 def exists(env):
     try:
         import tarfile
+        import patch
         return True
     except:
         return False
