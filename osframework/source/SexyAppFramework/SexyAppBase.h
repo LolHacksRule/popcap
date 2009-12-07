@@ -439,6 +439,7 @@ public:
 	virtual std::string		GetGameSEHInfo();
 	virtual void			GetSEHWebParams(DefinesMap* theDefinesMap);
 	virtual void			Shutdown();
+	virtual void                    Cleanup(bool force = false);
 
 	virtual void			DoParseCmdLine();
 	virtual void			ParseCmdLine(const std::string& theCmdLine);

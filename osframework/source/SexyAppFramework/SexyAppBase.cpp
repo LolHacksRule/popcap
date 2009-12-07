@@ -132,6 +132,13 @@ static unsigned char gDraggingCursorData[] = {
 };
 
 //////////////////////////////////////////////////////////////////////////
+static void SexyCrash(void)
+{
+	if (gSexyAppBase)
+		gSexyAppBase->Cleanup(true);
+}
+
+//////////////////////////////////////////////////////////////////////////
 SexyAppBase::SexyAppBase()
 {
 	gSexyAppBase = this;
@@ -139,6 +146,7 @@ SexyAppBase::SexyAppBase()
 	ImageLib::InitJPEG2000();
 
 	DebugInit(FAULT_HANDLER);
+	DebugSetFaultCallback(SexyCrash);
 
 	mNotifyGameMessage = 0;
 
@@ -326,7 +334,7 @@ SexyAppBase::SexyAppBase()
 	mTabletPC = false;
 }
 
-SexyAppBase::~SexyAppBase()
+void SexyAppBase::Cleanup(bool force)
 {
 	Shutdown();
 
@@ -342,10 +350,16 @@ SexyAppBase::~SexyAppBase()
 	mDialogMap.clear();
 	mDialogList.clear();
 
+	if (force)
+		mWidgetManager->RemoveAllWidgets(true, true);
 	delete mWidgetManager;
-	delete mResourceManager;
-	delete mInputManager;
+	mWidgetManager = 0;
 
+	delete mResourceManager;
+	mResourceManager = 0;
+
+	delete mInputManager;
+	mInputManager = 0;
 
 	SharedImageMap::iterator aSharedImageItr = mSharedImageMap.begin();
 	while (aSharedImageItr != mSharedImageMap.end())
@@ -356,22 +370,39 @@ SexyAppBase::~SexyAppBase()
 		mSharedImageMap.erase(aSharedImageItr++);
 	}
 
-	mDDInterface->FlushWork();
+	if (mDDInterface)
+		mDDInterface->FlushWork();
 
         delete mArrowCursor;
+	mArrowCursor = 0;
+
 	delete mHandCursor;
+	mHandCursor = 0;
+
 	delete mDraggingCursor;
+	mDraggingCursor = 0;
 
 	delete mMusicInterface;
+	mMusicInterface = 0;
+
 	delete mSoundManager;
+	mSoundManager = 0;
+
 	delete mDDInterface;
+	mDDInterface = 0;
 
 	WaitForLoadingThread();
 
 	delete mRegistryInterface;
-	gSexyAppBase = NULL;
+	mRegistryInterface = 0;
 
 	WriteDemoBuffer();
+}
+
+SexyAppBase::~SexyAppBase()
+{
+	Cleanup();
+	gSexyAppBase = NULL;
 }
 
 void SexyAppBase::ClearUpdateBacklog(bool relaxForASecond)

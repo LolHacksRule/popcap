@@ -8,6 +8,7 @@ namespace Sexy
 
 	void DebugInit(int options);
 	void DebugPrintBackTrace();
+	void DebugSetFaultCallback(void (*)(void));
 }
 
 #endif

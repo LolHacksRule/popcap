@@ -24,6 +24,8 @@
 
 using namespace Sexy;
 
+static void (*FaultCallback)(void) = 0;
+
 #ifndef WIN32
 struct SigHandled {
      int              signum;
@@ -259,6 +261,9 @@ static void SignalHandler(int signum, siginfo_t * siginfo, void * data)
 	fflush(stdout);
 	fflush(stderr);
 
+	if (FaultCallback)
+		FaultCallback();
+
 	raise(signum);
 	abort();
 	exit(-signum);
@@ -342,6 +347,11 @@ void Sexy::DebugInit(int options)
 	if (options & CORE_DUMP)
 		EnableCoreDump();
 #endif
+}
+
+void Sexy::DebugSetFaultCallback(void (*func)(void))
+{
+	FaultCallback = func;
 }
 
 void Sexy::DebugPrintBackTrace()
