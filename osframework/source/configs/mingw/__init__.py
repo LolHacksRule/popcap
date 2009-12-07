@@ -36,7 +36,7 @@ def SetupCompiler(env):
 def Configure(env):
     SetupCompiler(env)
     configs.Configure(env)
-    env['TARGETOS'] = 'windows'
+    env['TARGET_OS'] = 'win32'
     env['WIN_PROG_FLAGS'] = '-mwindows'
     env.AppendUnique(CPPDEFINES = ['WIN32'])
     env.AppendUnique(CFLAGS = ['-g', '-fno-unit-at-a-time', '-Wall'],

@@ -31,8 +31,12 @@ def AddOptions(opts):
 
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''
-    env['TARGET_OS'] = sys.platform
-    env['TARGET_PLATFORM'] = 'pc'
+    if not env.has_key('TARGET_OS'):
+        env['TARGET_OS'] = sys.platform
+    if not env.has_key('TARGET_PLATFORM'):
+        env['TARGET_PLATFORM'] = 'pc'
+    if not env.has_key('TARGET_CHIP'):
+        env['TARGET_CHIP'] = 'default'
     env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [], BUILD_PACKAGES = [])
     env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'include')],
                       LIBPATH = [os.path.join ('#', 'extra', 'lib')])
