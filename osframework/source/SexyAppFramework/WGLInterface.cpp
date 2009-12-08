@@ -26,6 +26,8 @@ WGLInterface::WGLInterface (SexyAppBase* theApp)
 	mHeight = mApp->mHeight;
 	mSysCursor = TRUE;
 	mBlankCursor = 0;
+	mHDC = 0;
+	mContext = 0;
 }
 
 WGLInterface::~WGLInterface ()
