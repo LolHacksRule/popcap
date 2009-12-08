@@ -37,7 +37,8 @@ def Configure(env):
         env['TARGET_PLATFORM'] = 'pc'
     if not env.has_key('TARGET_CHIP'):
         env['TARGET_CHIP'] = 'default'
-    env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [], BUILD_PACKAGES = [])
+    env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [])
+    env.AppendUnique (BUILD_PACKAGES = [], PACKAGES_INFO = {}, ENABLED_PACKAGES = [])
     env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'include')],
                       LIBPATH = [os.path.join ('#', 'extra', 'lib')])
     if not env.has_key ('PKGCONFIG'):
@@ -124,6 +125,97 @@ def FreeTypeConfigure(env):
     freetype_font['ENABLE'] = EnableFreeType
     env['FREETYPECONFIG'] = 'freetype-config'
     env.AppendUnique (FREETYPEFONT = freetype_font)
+
+def SetPackageInfo(envs, name, **kwargs):
+    if not type(envs) is list:
+        envs = [envs]
+
+    for env in envs:
+        info = env['PACKAGES_INFO'][name] = kwargs.copy()
+        ### set defaults
+        for key in ['CPPDEFINES', 'CPPPATH', 'LIBS', 'LIBPATH', 'TARGETS',
+                    'DEPENDS', 'CCFLAGS', 'CXXFLAGS', 'LINKFLAGS']:
+            if not info.has_key(key):
+                info[key] = []
+
+def EnablePackage(env, name, what = None, append = True, unique = False):
+    ### set env
+    if not type(env) is list:
+        envs = [env]
+    else:
+        envs = env
+
+    ### get package info
+    info = GetPackageInfo(envs[0], name)
+    if not info:
+        return
+    if what is None:
+        what = info.keys()
+    args = {}
+    for key in what:
+        if key not in info:
+            continue
+        if key in ['TARGETS']:
+            continue
+        args[key] = info[key]
+
+    ### setup package variables
+    for env in envs:
+        if append:
+            if unique:
+                env.AppendUnique(**args)
+            else:
+                env.Append(**args)
+        else:
+            if unique:
+                env.PrependUnique(**args)
+            else:
+                env.Prepend(**args)
+
+        env.AppendUnique(ENABLED_PACKAGES = [name])
+
+def EnablePackages(envs, packages, what = None, append = True, unique = False):
+    if not type(packages) is list:
+        packages = [packages]
+    for package in packages:
+        EnablePackage(envs, package, what, append, unique)
+
+def GetPackageDepends(env, packages):
+    if not type(packages) is list:
+        packages = [packages]
+    libs = []
+    libpath = []
+    cpppath = []
+    cppdefines = []
+    ccflags = []
+    cxxflags = []
+    linkflags = []
+    depends = []
+
+    comps = []
+    for package in packages:
+        comps.append(GetPackageInfo(env, package))
+
+    for comp in comps:
+        if not comp:
+            continue
+        libs += comp['LIBS']
+        libpath += comp['LIBPATH']
+        cpppath += comp['CPPPATH']
+        cppdefines += comp['CPPDEFINES']
+        ccflags += comp['CCFLAGS']
+        cxxflags += comp['CXXFLAGS']
+        linkflags += comp['LINKFLAGS']
+        depends += comp['DEPENDS']
+    return { 'LIBS': libs, 'LIBPATH': libpath,
+             'CPPDEFINES': cppdefines, 'CPPPATH': cpppath,
+             'CCFLAGS': ccflags, 'CXXFLAGS': cxxflags,
+             'LINKFLAGS': linkflags, 'DEPENDS': depends }
+
+def GetPackageInfo(env, name):
+    if not env['PACKAGES_INFO'].has_key(name):
+        return {}
+    return env['PACKAGES_INFO'][name]
 
 colors = {}
 colors['cyan']   = '\033[36m'
