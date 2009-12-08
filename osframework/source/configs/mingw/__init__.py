@@ -15,7 +15,6 @@ res_builder = SCons.Builder.Builder(action = res_action, suffix = '.res.o',
 def SetupCompiler(env):
     env.Tool('mingw')
     prefix = 'i686-pc-mingw32-'
-    env['BUILDERS']['RES'] = res_builder
     env['CC'] = prefix + 'gcc'
     env['CXX'] = prefix + 'g++'
     env['AR'] = prefix + 'ar'
@@ -32,6 +31,12 @@ def SetupCompiler(env):
     env['SHOBJSUFFIX'] = '.o'
     env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME'] = 1
     env['SHCCFLAGS'] = SCons.Util.CLVar('$CCFLAGS')
+    env['RCFLAGS'] = SCons.Util.CLVar('')
+    env['RCINCFLAGS'] = '$( ${_concat(RCINCPREFIX, CPPPATH, RCINCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)'
+    env['RCINCPREFIX'] = '--include-dir '
+    env['RCINCSUFFIX'] = ''
+    env['RCCOM'] = '$RC $_CPPDEFFLAGS $RCINCFLAGS ${RCINCPREFIX} ${SOURCE.dir} $RCFLAGS -i $SOURCE -o $TARGET'
+    env['BUILDERS']['RES'] = res_builder
 
 def Configure(env):
     SetupCompiler(env)
