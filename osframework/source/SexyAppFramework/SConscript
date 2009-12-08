@@ -32,12 +32,12 @@ srcs += map(lambda f:os.path.join ('cjkcodecs', f),
 
 srcs += ['RegistryInterface.cpp', 'RegistryInterfaceFactory.cpp',
          'XMLWriter.cpp']
-if env['TARGETOS'] == 'windows':
+if env['TARGET_OS'] == 'win32':
     srcs += ['Win32RegistryInterface.cpp']
     env.AppendUnique(LIBS = ['advapi32'])
     if gameenv['static']:
        gameenv.AppendUnique(LIBS = ['advapi32'])
-elif env['TARGETOS'] == 'darwin':
+elif env['TARGET_OS'] == 'darwin':
     srcs += ['DarwinRegistryInterface.cpp']
 else:
     srcs += ['XMLRegistryInterface.cpp']
@@ -150,7 +150,7 @@ env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
                              os.path.join('$top_builddir', 'PakLib')],
                   LIBS = ['PakLib', 'ImageLib'])
 
-if env['TARGETOS'] == 'windows':
+if env['TARGET_OS'] == 'win32':
     env.AppendUnique(LIBS = ['ws2_32'])
 
 if gameenv['static']:
@@ -181,10 +181,10 @@ if gameenv['static']:
 
     gameenv.PrependUnique(LIBS = ['ImageLib', 'PakLib'])
 
-    if env['TARGETOS'] == 'windows':
+    if env['TARGET_OS'] == 'win32':
         gameenv.AppendUnique(LIBS = ['ws2_32'])
 
-if env['TARGETOS'] in ['freebsd', 'netbsd', 'openbsd', 'darwin']:
+if env['TARGET_OS'] in ['freebsd', 'netbsd', 'openbsd', 'darwin']:
     env.AppendUnique(LIBS = ['iconv'])
     if gameenv['static']:
        gameenv.AppendUnique(LIBS = ['iconv'])

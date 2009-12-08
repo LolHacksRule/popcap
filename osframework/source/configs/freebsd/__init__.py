@@ -17,7 +17,7 @@ def AddOptions (opts):
 
 def Configure (env):
     configs.Configure (env)
-    env['TARGETOS'] = 'freebsd'
+    env['TARGET_OS'] = 'freebsd'
     if env['build_32bit']:
         env.AppendUnique (CCFLAGS = ['-m32'],
                           LINKFLAGS = ['-m32'])
