@@ -134,7 +134,7 @@ def SetPackageInfo(envs, name, **kwargs):
         info = env['PACKAGES_INFO'][name] = kwargs.copy()
         ### set defaults
         for key in ['CPPDEFINES', 'CPPPATH', 'LIBS', 'LIBPATH', 'TARGETS',
-                    'DEPENDS', 'CCFLAGS', 'CXXFLAGS', 'LINKFLAGS']:
+                    'OBJECTS', 'DEPENDS', 'CCFLAGS', 'CXXFLAGS', 'LINKFLAGS']:
             if not info.has_key(key):
                 info[key] = []
 
@@ -180,6 +180,21 @@ def EnablePackages(envs, packages, what = None, append = True, unique = False):
     for package in packages:
         EnablePackage(envs, package, what, append, unique)
 
+def GetPackageTargets(env, packages):
+    if not type(packages) is list:
+        packages = [packages]
+
+    targets = []
+    for package in packages:
+        comp = GetPackageInfo(env, package)
+        if not comp:
+            continue
+        targets += comp['TARGETS']
+    return targets
+
+def GetEnabledPackageTargets(env):
+    return GetPackageTargets(env, env['ENABLED_PACKAGES'])
+
 def GetPackageDepends(env, packages):
     if not type(packages) is list:
         packages = [packages]
@@ -191,10 +206,13 @@ def GetPackageDepends(env, packages):
     cxxflags = []
     linkflags = []
     depends = []
+    targets = []
 
     comps = []
     for package in packages:
         comps.append(GetPackageInfo(env, package))
+        if comps[-1]:
+            depends.append(package)
 
     for comp in comps:
         if not comp:
@@ -207,10 +225,13 @@ def GetPackageDepends(env, packages):
         cxxflags += comp['CXXFLAGS']
         linkflags += comp['LINKFLAGS']
         depends += comp['DEPENDS']
-    return { 'LIBS': libs, 'LIBPATH': libpath,
-             'CPPDEFINES': cppdefines, 'CPPPATH': cpppath,
-             'CCFLAGS': ccflags, 'CXXFLAGS': cxxflags,
-             'LINKFLAGS': linkflags, 'DEPENDS': depends }
+        targets += comp['TARGETS']
+
+    result = { 'LIBS': libs, 'LIBPATH': libpath,
+               'CPPDEFINES': cppdefines, 'CPPPATH': cpppath,
+               'CCFLAGS': ccflags, 'CXXFLAGS': cxxflags,
+               'LINKFLAGS': linkflags, 'DEPENDS': depends }
+    return result, targets
 
 def GetPackageInfo(env, name):
     if not env['PACKAGES_INFO'].has_key(name):
