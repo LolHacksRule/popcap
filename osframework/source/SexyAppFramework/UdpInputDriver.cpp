@@ -3,6 +3,8 @@
 #include "SexyAppBase.h"
 
 #include <cstring>
+
+#ifndef WIN32
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -11,7 +13,10 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <netinet/in.h>
+#else
+#include <process.h>
+#include <winsock.h>
+#endif
 
 #include <cstdlib>
 
@@ -70,39 +75,29 @@ UdpInputInterface::UdpInputInterface (InputManager* theManager)
 {
 	mX = 0;
 	mY = 0;
-	mThread = NULL;
 }
 
 UdpInputInterface::~UdpInputInterface ()
 {
-    Cleanup ();
+	Cleanup ();
 }
 
 bool UdpInputInterface::Init()
 {
+#ifdef WIN32
+	WSADATA aData;
+	WSAStartup(MAKEWORD(1, 1), &aData);
+#endif
+
 	if (mFd >= 0)
 		Cleanup ();
 
 	if (!OpenDevice ())
-		goto open_failed;
+		return false;
 
 	mDone = false;
-	mThread = new pthread_t;
-	if (!mThread)
-		goto close_device;
-
-	int ret;
-	ret = pthread_create (mThread, NULL, UdpInputInterface::Run, this);
-	if (ret)
-		goto delete_thread;
+	mThread = Thread::Create(UdpInputInterface::Run, this);
 	return true;
- delete_thread:
-	delete mThread;
-	mThread = 0;
- close_device:
-	CloseDevice ();
- open_failed:
-	return false;
 }
 
 void UdpInputInterface::Cleanup()
@@ -111,15 +106,16 @@ void UdpInputInterface::Cleanup()
 		return;
 
 	mDone = true;
-	if (mThread)
-		pthread_join (*mThread, NULL);
-	delete mThread;
-	mThread = 0;
+	mThread.Join();
 
 	CloseDevice ();
 
 	mX = 0;
 	mY = 0;
+
+#ifdef WIN32
+	WSACleanup();
+#endif
 }
 
 bool UdpInputInterface::OpenDevice ()
@@ -156,8 +152,10 @@ void UdpInputInterface::CloseDevice ()
 	mFd = -1;
 }
 
-static uint32_t read32(unsigned char * byte)
+static uint32_t read32(uint32_t i)
 {
+	unsigned char *byte = (unsigned char*)&i;
+
 	return  byte[0] << 24 |
 		byte[1] << 16 |
 		byte[2] <<  8 |
@@ -167,32 +165,35 @@ static uint32_t read32(unsigned char * byte)
 static void handle_event (struct UdpInput &input,
 			  Event &event)
 {
-	unsigned char* byte = (unsigned char*) &input;
-	event.type = (EventType)read32 (byte);
-	event.flags = read32 (byte + 4);
+	event.type = (EventType)read32 (input.type);
+	event.flags = read32 (input.flags);
 	if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
 	    event.type == EVENT_MOUSE_BUTTON_RELEASE ||
 	    event.type == EVENT_MOUSE_WHEEL_UP ||
 	    event.type == EVENT_MOUSE_WHEEL_DOWN ||
 	    event.type == EVENT_MOUSE_MOTION)
 	{
-		event.u.mouse.x = read32 (byte + 8);
-		event.u.mouse.y = read32 (byte + 12);
-		event.u.mouse.button = read32 (byte + 16);
+		event.u.mouse.x = read32 (input.x);
+		event.u.mouse.y = read32 (input.y);
+		event.u.mouse.button = read32 (input.button);
 	}
 	else if (event.type == EVENT_KEY_DOWN ||
 		 event.type == EVENT_KEY_UP)
 	{
-		event.u.key.keyCode = read32 (byte + 20);
-		event.u.key.keyChar = read32 (byte + 24);
+		event.u.key.keyCode = read32 (input.key_code);
+		event.u.key.keyChar = read32 (input.key_char);
 	}
 	else if (event.type == EVENT_ACTIVE)
 	{
-		event.u.active.active = !!read32 (byte + 28);
+		event.u.active.active = !!read32 (input.active);
+	}
+	else if (event.type == EVENT_QUIT)
+	{
+		//nothing to do.
 	}
 }
 
-void* UdpInputInterface::Run (void * data)
+void UdpInputInterface::Run (void * data)
 {
 	UdpInputInterface * driver = (UdpInputInterface *)data;
 	struct UdpInput    input[64];
@@ -209,7 +210,6 @@ void* UdpInputInterface::Run (void * data)
 
 			struct timeval timeout;
 
-			//gettimeofday (&timeout, NULL);
 			timeout.tv_sec = 1;
 			timeout.tv_usec = 0;
 			status = select (fd + 1, &set, NULL, NULL, &timeout);
@@ -235,7 +235,7 @@ void* UdpInputInterface::Run (void * data)
 		}
 
 		ssize_t readlen;
-		readlen = read (fd, input, sizeof (struct UdpInput));
+		readlen = recv (fd, input, sizeof (struct UdpInput), 0);
 
 		if (driver->mDone)
 			break;
@@ -281,8 +281,6 @@ void* UdpInputInterface::Run (void * data)
 			}
 		}
 	}
-
-	return NULL;
 }
 
 bool UdpInputInterface::HasEvent ()
@@ -291,6 +289,11 @@ bool UdpInputInterface::HasEvent ()
 }
 
 bool UdpInputInterface::GetEvent (Event & event)
+{
+	return false;
+}
+
+bool UdpInputInterface::GetInfo(InputInfo &theInfo)
 {
 	return false;
 }

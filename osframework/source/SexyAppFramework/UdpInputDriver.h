@@ -3,8 +3,7 @@
 
 #include "Common.h"
 #include "InputInterface.h"
-
-#include <pthread.h>
+#include "SexyThread.h"
 
 namespace Sexy
 {
@@ -21,17 +20,18 @@ public:
 
         virtual bool          HasEvent ();
         virtual bool          GetEvent (Event & event);
+	virtual bool          GetInfo(InputInfo &theInfo);
 
 private:
         bool                  OpenDevice ();
         void                  CloseDevice ();
 
-        static void *         Run (void * data);
+        static void           Run (void * data);
 
  private:
         int                   mFd;
         volatile int          mDone;
-        pthread_t*            mThread;
+        Thread                mThread;
         int                   mX;
         int                   mY;
 };
