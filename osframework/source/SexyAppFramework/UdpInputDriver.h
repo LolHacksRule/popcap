@@ -19,12 +19,14 @@ public:
         virtual void          Cleanup ();
 
         virtual bool          HasEvent ();
-        virtual bool          GetEvent (Event & event);
+        virtual bool          GetEvent (Event &event);
 	virtual bool          GetInfo(InputInfo &theInfo);
 
 private:
         bool                  OpenDevice ();
         void                  CloseDevice ();
+	void                  UpdateStatus ();
+	void                  UpdateStatus (const Event &event);
 
         static void           Run (void * data);
 
@@ -34,6 +36,10 @@ private:
         Thread                mThread;
         int                   mX;
         int                   mY;
+	bool                  mHasKey;
+	bool                  mHasPointer;
+	DWORD                 mKeyCount;
+	DWORD                 mPointerCount;
 };
 
 }

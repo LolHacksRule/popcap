@@ -1,6 +1,7 @@
 #include "UdpInputDriver.h"
 #include "InputDriverFactory.h"
 #include "SexyAppBase.h"
+#include "InputManager.h"
 
 #include <cstring>
 
@@ -75,6 +76,10 @@ UdpInputInterface::UdpInputInterface (InputManager* theManager)
 {
 	mX = 0;
 	mY = 0;
+	mHasKey = false;
+	mHasPointer = false;
+	mKeyCount = 0;
+	mPointerCount = 0;
 }
 
 UdpInputInterface::~UdpInputInterface ()
@@ -112,6 +117,10 @@ void UdpInputInterface::Cleanup()
 
 	mX = 0;
 	mY = 0;
+	mHasKey = false;
+	mHasPointer = false;
+	mKeyCount = 0;
+	mPointerCount = 0;
 
 #ifdef WIN32
 	WSACleanup();
@@ -193,6 +202,58 @@ static void handle_event (struct UdpInput &input,
 	}
 }
 
+void UdpInputInterface::UpdateStatus()
+{
+	const unsigned int MaxIdleTime = 15000;
+	bool statusChanged = false;
+	DWORD count = Sexy::GetTickCount();
+	if (mHasPointer && (count - mPointerCount) > MaxIdleTime)
+	{
+		statusChanged = true;
+		mHasPointer = false;
+	}
+
+	if (mHasKey && (count - mKeyCount) > MaxIdleTime)
+	{
+		statusChanged = true;
+		mHasKey = false;
+	}
+	if (statusChanged)
+		mManager->Changed();
+}
+
+void UdpInputInterface::UpdateStatus(const Event &event)
+{
+	bool statusChanged = false;
+	DWORD count = Sexy::GetTickCount();
+
+	if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
+	    event.type == EVENT_MOUSE_BUTTON_RELEASE ||
+	    event.type == EVENT_MOUSE_WHEEL_UP ||
+	    event.type == EVENT_MOUSE_WHEEL_DOWN ||
+	    event.type == EVENT_MOUSE_MOTION)
+	{
+		if (!mHasPointer)
+		{
+			statusChanged = true;
+			mHasPointer = true;
+		}
+		mPointerCount = count;
+	}
+	else if (event.type == EVENT_KEY_DOWN ||
+		 event.type == EVENT_KEY_UP)
+	{
+		if (!mHasKey)
+		{
+			statusChanged = true;
+			mHasKey = true;
+		}
+		mKeyCount = count;
+	}
+	if (statusChanged)
+		mManager->Changed();
+}
+
 void UdpInputInterface::Run (void * data)
 {
 	UdpInputInterface * driver = (UdpInputInterface *)data;
@@ -217,6 +278,7 @@ void UdpInputInterface::Run (void * data)
 			{
 				printf ("device disconnected.\n");
 				driver->CloseDevice ();
+				driver->mManager->Changed();
 				continue;
 			}
 			if (status < 0)
@@ -224,7 +286,10 @@ void UdpInputInterface::Run (void * data)
 			if (driver->mDone)
 				break;
 			if (!FD_ISSET (fd, &set))
+			{
+				driver->UpdateStatus();
 				continue;
+			}
 		}
 		else
 		{
@@ -248,7 +313,10 @@ void UdpInputInterface::Run (void * data)
 		}
 
 		if (readlen <= 0)
+		{
+			driver->UpdateStatus();
 			continue;
+		}
 
 		readlen /= sizeof (input[0]);
 		for (int i = 0; i < readlen; i++) {
@@ -277,6 +345,8 @@ void UdpInputInterface::Run (void * data)
 					printf ("event.x: %d\n", event.u.mouse.x);
 					printf ("event.y: %d\n", event.u.mouse.y);
 				}
+
+				driver->UpdateStatus(event);
 				driver->PostEvent (event);
 			}
 		}
@@ -295,7 +365,13 @@ bool UdpInputInterface::GetEvent (Event & event)
 
 bool UdpInputInterface::GetInfo(InputInfo &theInfo)
 {
-	return false;
+	if (!mHasKey && !mHasPointer)
+		return false;
+
+	theInfo.mName = "UdpInput";
+	theInfo.mHasKey = mHasKey;
+	theInfo.mHasPointer = mHasPointer;
+	return true;
 }
 
 class UdpInputDriver: public InputDriver {
