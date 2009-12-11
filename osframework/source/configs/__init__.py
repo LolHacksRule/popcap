@@ -16,6 +16,9 @@ def AddOptions(opts):
     opts.Add('config', 'configuration used to build the framework', '')
     opts.Add(BoolVariable ('debug', 'build debug version', False))
     opts.Add(BoolVariable ('release', 'build release version', False))
+    opts.Add(BoolVariable ('optimize', 'build optimize version', False))
+    opts.Add(ListVariable ('optimize_level', 'the level of optimizing',
+                           '2', ['0', 's', '1', '2']))
     opts.Add(BoolVariable ('builddir', 'output to an alternative directory', False))
     opts.Add(BoolVariable ('static', 'build the framework as a static library', True))
     opts.Add(BoolVariable ('strip', 'strip debug informantion from objects', True))

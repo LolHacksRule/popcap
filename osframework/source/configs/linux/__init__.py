@@ -18,7 +18,7 @@ def AddOptions (opts):
 
 def Configure (env):
     configs.Configure (env)
-    env['TARGETOS'] = 'linux'
+    env['TARGET_OS'] = 'linux'
     if env['build_32bit']:
         env.AppendUnique (CCFLAGS = ['-m32'],
                           LINKFLAGS = ['-m32'])
@@ -28,6 +28,9 @@ def Configure (env):
                       CXXFLAGS = ['-g', '-Wall'],
                       LINKFLAGS = ['-g', '-fno-unit-at-a-time', '-export-dynamic'],
                       LIBS = ['rt', 'm'])
+    if env['optimize']:
+        env.AppendUnique (CCFLAGS = ['-O$optimize_level'])
+
     configs.linux.EnableLinuxUdpInputServer (env)
     configs.PosixModuleLoaderConfigure (env)
     configs.FreeTypeConfigure (env)
