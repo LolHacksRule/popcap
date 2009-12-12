@@ -27,28 +27,33 @@ def GetInstallableObjectSuffix(env, additional_suffixes = []):
     suffixes = additional_suffixes
     suffixes += [env['SHLIBSUFFIX'], env['PROGSUFFIX']]
     ### hack for pdb
-    if 'cl' in env['CC']:
+    if 'cl' in env['CC'] and not env['strip']:
         suffixes += ['.pdb']
     return suffixes
+
+def StrHasSuffix(s, suf):
+    if len(suf) > len(s):
+        return False
+    return s[len(s) - len(suf):] == suf
 
 def FilterInstallableObjectAndSuffixes(env, sources, additional_suffixes = []):
     suffixes = GetInstallableObjectSuffix(env, additional_suffixes)
     result = []
     result_suffixes = []
+    if type(sources) is not list and os.path.splitext(str(sources)) == '':
+        return [sources], ['']
     for source in sources:
         for suffix in suffixes:
-            if not suffix or suffix in str(source):
+            if not suffix or StrHasSuffix(str(source), suffix):
                 result += [source]
                 result_suffixes += [suffix]
                 break
-    ### hack for pdb
-    if result and 'cl' in env['CC'] and env['debug'] and not env['strip']:
-        result += [result[0].abspath + '.pdb']
-        result_suffixes += ['.pdb']
     return result, result_suffixes
 
 def FilterInstallableObject(env, sources, additional_suffixes = []):
-    return FilterInstallableObjectAndSuffixes(env, sources, additional_suffixes)[0]
+    result = FilterInstallableObjectAndSuffixes(env, sources, additional_suffixes)[0]
+    print sources, result
+    return result
 
 __stripped_suffix = '-stripped'
 def StripObject(env, sources, sources_suffixes):
