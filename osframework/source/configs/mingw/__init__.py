@@ -44,9 +44,10 @@ def Configure(env):
     configs.Configure(env)
     env['TARGET_OS'] = 'win32'
     env['WIN_PROG_FLAGS'] = '-mwindows'
+    env['STDCXX_LIBS'] = ['stdc++']
+    env['MATH_LIBS'] = ['m']
     env.AppendUnique(CPPDEFINES = ['WIN32'])
     env.AppendUnique(CFLAGS = ['-g', '-fno-unit-at-a-time', '-Wall'],
                      CXXFLAGS = ['-g', '-Wall'],
-                     LINKFLAGS = ['-g', '-fno-unit-at-a-time'],
-                     LIBS = ['stdc++', 'm'])
+                     LINKFLAGS = ['-g', '-fno-unit-at-a-time'])
     configs.Win32ModuleLoaderConfigure (env)

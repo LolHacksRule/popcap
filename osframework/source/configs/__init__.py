@@ -52,10 +52,15 @@ def Configure(env):
         env['TARGET_PLATFORM'] = 'pc'
     if not env.has_key('TARGET_CHIP'):
         env['TARGET_CHIP'] = 'default'
+    if not env.has_key('STDCXX_LIBS'):
+        env.Append(STDCXX_LIBS = [])
+    if not env.has_key('MATH_LIBS'):
+        env.AppendUnique(MATH_LIBS = [])
     env.AppendUnique (DRIVERS = [], LOADERS = [], CPPDEFINES = [])
     env.AppendUnique (BUILD_PACKAGES = [], PACKAGES_INFO = {}, ENABLED_PACKAGES = [])
     env.AppendUnique (CPPPATH = [os.path.join ('#', 'extra', 'include')],
-                      LIBPATH = [os.path.join ('#', 'extra', 'lib')])
+                      LIBPATH = [os.path.join ('#', 'extra', 'lib')],
+		      LIBS = [], CPPDEFINES = [])
     if not env.has_key ('PKGCONFIG'):
         env.Replace (PKGCONFIG = 'pkg-config')
     if env['debug']:
@@ -402,4 +407,3 @@ def SetupColorizeOutput(env):
     env['GAMEGENVERSIONSTR'] = game_gen_ver_message
     env['ARCHIVESTR'] = archive_message
     env['MD5SUMSTR'] = md5sum_message
-
