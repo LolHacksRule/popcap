@@ -25,7 +25,7 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         'DriverFactory.cpp', 'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
         'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp', 'SexyThread.cpp',
-        'SexyDebug.cpp', 'RemoteEvent.cpp']
+        'SexyDebug.cpp']
 
 srcs += map(lambda f:os.path.join ('cjkcodecs', f),
             ['codecs_cn.c', 'codecs_hk.c',  'codecs_iso2022.c',
