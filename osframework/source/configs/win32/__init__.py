@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 # -*- python -*-
 # Author: Luo Jinghua
@@ -5,6 +6,8 @@
 import configs
 
 def AddOptions(opts):
+    configs.SetOptionsDefault('freetype', True)
+
     configs.AddOptions (opts)
     configs.Win32ModuleLoaderAddOptions (opts)
 

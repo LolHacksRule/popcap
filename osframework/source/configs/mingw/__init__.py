@@ -6,6 +6,7 @@ import configs
 import SCons
 
 def AddOptions(opts):
+    configs.SetOptionsDefault('freetype', True)
     configs.AddOptions(opts)
 
 res_action = SCons.Action.Action('$RCCOM', '$RCCOMSTR')

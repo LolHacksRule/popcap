@@ -5,6 +5,16 @@
 import os.path
 import sys
 
+opts_default = {}
+
+def SetOptionsDefault(key, value):
+    opts_default[key] = value
+
+def GetOptionsDefault(key, default_value = None):
+    if opts_default.has_key(key):
+        return opts_default[key]
+    return default_value
+
 def AddOptions(opts):
     from SCons.Variables.BoolVariable import BoolVariable
     from SCons.Variables.ListVariable import ListVariable
@@ -32,6 +42,8 @@ def AddOptions(opts):
     opts.Add('install_prefix', 'install games into its subdirectory', '')
     opts.Add('otherdirs', 'build other components in different directories(seperated by comma)', '')
 
+    FreeTypeAddOptions(opts)
+
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''
     if not env.has_key('TARGET_OS'):
@@ -49,6 +61,7 @@ def Configure(env):
     if env['debug']:
         env.AppendUnique(CPPDEFINES = ['SEXY_DEBUG'])
     SetupColorizeOutput(env)
+    FreeTypeConfigure(env)
 
 def PosixModuleLoaderAddOptions (opts):
     pass
@@ -110,8 +123,12 @@ def AudiereSoundConfigure(env):
 
 def FreeTypeAddOptions (opts):
     from SCons.Variables.PathVariable import PathVariable
-    if 'freetype_ccflags' in opts.keys ():
+    from SCons.Variables.BoolVariable import BoolVariable
+
+    if 'freetype' in opts.keys ():
         return
+    opts.Add(BoolVariable ('freetype', 'build the freetype font driver',
+                           GetOptionsDefault('freetype', False)))
     opts.Add ('freetype_ccflags', "c/c++ compiler flags for freetype.", '')
     opts.Add ('freetype_ldflags', "link flags for freetype", '')
 
@@ -123,6 +140,8 @@ def EnableFreeType (env):
         env.ParseConfig('$FREETYPECONFIG --cflags --libs')
 
 def FreeTypeConfigure(env):
+    if not env['freetype']:
+        return
     env.AppendUnique (DRIVERS = ['FREETYPEFONT'])
     freetype_font = {}
     freetype_font['ENABLE'] = EnableFreeType
