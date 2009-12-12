@@ -147,6 +147,16 @@ def InstallGameExtras(env, game, destdir, targets = []):
     ### install extra objects
     targets += InstallObject(env, destdir, env['extras_objs'])
 
+    ### install objects
+    objects = []
+    for package in env['ENABLED_PACKAGES']:
+        info = env['PACKAGES_INFO'][package]
+        for dep in info['DEPENDS']:
+            objects.append(env['PACKAGES_INFO'][dep]['OBJECTS'])
+        objects.append(info['OBJECTS'])
+    for obj in objects:
+        targets += InstallObject(env, destdir, obj)
+
     ### install extra files
     for extra in env['extras']:
         targets += env.Install(destdir, extra)
