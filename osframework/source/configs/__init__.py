@@ -84,7 +84,7 @@ def Win32ModuleLoaderAddOptions (opts):
     pass
 
 def EnableWin32ModuleLoader (env):
-    env.AppendUnique (LIBS = ['dl'])
+    pass
 
 def Win32ModuleLoaderConfigure (env):
     env.AppendUnique (LOADERS = ['WIN32_MODULE_LOADER'])
