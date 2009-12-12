@@ -51,9 +51,7 @@ def FilterInstallableObjectAndSuffixes(env, sources, additional_suffixes = []):
     return result, result_suffixes
 
 def FilterInstallableObject(env, sources, additional_suffixes = []):
-    result = FilterInstallableObjectAndSuffixes(env, sources, additional_suffixes)[0]
-    print sources, result
-    return result
+    return FilterInstallableObjectAndSuffixes(env, sources, additional_suffixes)[0]
 
 __stripped_suffix = '-stripped'
 def StripObject(env, sources, sources_suffixes):
