@@ -99,6 +99,7 @@ sexyenv = env.Clone ()
 gameenv = env.Clone ()
 gameenv['extras'] = []
 gameenv['extras_objs'] = []
+gameenv.AppendUnique(LIBS = ['$STDCXX_LIBS'])
 Export (['env', 'gameenv', 'sexyenv'])
 
 sconscripts = [os.path.join ('ImageLib', 'SConscript')]
