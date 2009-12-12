@@ -23,11 +23,15 @@ def Configure(env):
         env.AppendUnique (CFLAGS = ['/DEBUG'],
                           CXXFLAGS = ['/DEBUG'],
                           LINKFLAGS = ['/DEBUG', '/PROFILE',
-                                      '/PDB:${TARGET}.pdb'])
-        env.Replace (CCPDBFLAGS = '/Zi /Fd${TARGET}.pdb')
+                                      '/PDB:${TARGET.file}.pdb'])
+        env['PDB'] = '${TARGET.base}.pdb'
 
     if env['release']:
         env.AppendUnique (CFLAGS = ['/O2'],
                           CXXFLAGS = ['/O2'],
                           LINKFLAGS = [])
     configs.Win32ModuleLoaderConfigure (env)
+
+    ### static link with freetype
+    env['FREETYPECONFIG'] = None
+    env.AppendUnique(BUILD_PACKAGES = ['freetype'])
