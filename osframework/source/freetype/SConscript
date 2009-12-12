@@ -108,8 +108,8 @@ freetype_env.AppendUnique (CPPPATH = [os.path.join (freetype_dir, 'include'),
                                       os.path.join (freetype_dir, 'src', 'truetype')],
                            CPPDEFINES = ['FT2_BUILD_LIBRARY'])
 
-#freetype_lib = freetype_env.ConvenienceLibrary ('freetype', srcs)
-freetype_lib = freetype_env.SharedLibrary ('freetype', srcs)
+freetype_lib = freetype_env.ConvenienceLibrary ('freetype', srcs)
+#freetype_lib = freetype_env.SharedLibrary ('freetype', srcs)
 
 ### install freetype header & library
 header_dir = 'include'
