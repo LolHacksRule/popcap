@@ -8,4 +8,14 @@ import sys
 Import('env')
 env = env.Clone()
 srcs = ['PakInterface.cpp']
-env.ConvenienceLibrary('PakLib', srcs)
+paklib = env.ConvenienceLibrary('PakLib', srcs)
+
+### sdk
+header_dir = os.path.join('$sdkdir', 'include', 'PakLib')
+lib_dir = os.path.join('$sdkdir', 'lib')
+
+paklib_sdk = env.Install (header_dir, 'PakInterface.h')
+paklib_sdk += env.Install (lib_dir, paklib)
+
+env.Alias ('paklib_sdk_install', paklib_sdk)
+env.Alias ('sdk_install', paklib_sdk)

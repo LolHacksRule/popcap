@@ -1,7 +1,10 @@
 import os
+import game
+import configs
+
 from SCons.Defaults import *
 
-Import (['env', 'sexyenv', 'gameenv'])
+Import (['env', 'gameenv'])
 
 # don't build audiere and its dependences if it's not enabled.
 if not 'AUDIERESOUND' in env['DRIVERS']:
@@ -38,10 +41,11 @@ for tarball in tarballs:
         print fpath, "doesn't exist."
         Return ()
 
-env = env.Clone ()
-env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
+common_env = env.Clone()
+common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
 
 ### ogg
+env = common_env.Clone()
 ogg_untar = env.Untar (os.path.join (srcdir, ogg_tar), ['*src*', '*include*'], ['*Makefile*'])
 env.SourceCode (ogg_dir, ogg_untar)
 
@@ -55,10 +59,6 @@ sources = map (lambda f: os.path.join(ogg_dir, 'src', f),
               ['framing.c', 'bitwise.c'])
 Depends(sources, headers)
 
-env.AppendUnique(CPPPATH = [os.path.join (ogg_dir, 'include')])
-
-ogg_lib = env.ConvenienceLibrary ('ogg', sources)
-
 lib_dir = os.path.join('lib')
 header_dir = os.path.join('include', 'ogg')
 
@@ -69,13 +69,18 @@ ogg_headers = env.Install (header_dir,
                            map(lambda f:os.path.join(ogg_dir, 'include',
                                                      'ogg', f),
                                ['os_types.h', 'ogg.h', 'config_types.h']))
+
+env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include')])
+
+ogg_lib = env.ConvenienceLibrary ('ogg', sources)
+Depends (sources, ogg_headers)
+
 ogg = env.Install (lib_dir, ogg_lib)
-Depends (ogg, ogg_headers)
 
 env.Clean (ogg, [ogg_dir])
 
 ### vorbis & vorbisfile
-env = env.Clone ()
+env = common_env.Clone ()
 
 vorbis_untar = env.Untar (os.path.join (srcdir, vorbis_tar))
 env.SourceCode (vorbis_dir, vorbis_untar)
@@ -108,7 +113,7 @@ Depends (vorbis, vorbis_headers)
 env.Clean (vorbis, [vorbis_dir])
 
 ### audiere
-env = env.Clone ()
+env = common_env.Clone ()
 
 audiere_untar = env.Untar (os.path.join (srcdir, audiere_tar))
 env.SourceCode (audiere_dir, audiere_untar)
@@ -146,7 +151,7 @@ env.AppendUnique (CPPDEFINES = ['NO_FLAC', 'NO_DUMB', 'NO_SPEEX'])
 env.AppendUnique (CPPDEFINES = ['AUDIERE_EXPORTS'])
 env.AppendUnique (LIBS = ['vorbisfile', 'vorbis', 'ogg'])
 
-if 'WIN32' in env['CPPDEFINES']:
+if 'win32' in env['TARGET_OS']:
     env.AppendUnique (CPPDEFINES = ['WIN32_LEAN_AND_MEAN', 'NOMINMAX',
                                     'HAVE_DSOUND'],
                       LIBS = ['winmm', 'dsound', 'ole32', 'rpcrt4',
@@ -155,12 +160,13 @@ if 'WIN32' in env['CPPDEFINES']:
              'timer_win32.cpp', 'threads_win32.cpp']
     srcs += [ 'device_ds_buffer.cpp', 'device_ds_stream.cpp',
               'device_ds.cpp', 'dxguid.cpp' ]
-elif 'linux' in env['config']:
-    env.AppendUnique (CPPDEFINES = ['HAVE_ALSA'],
-                      LIBS = ['asound'])
-    srcs += ['device_alsa.cpp', 'midi_null.cpp', 'cd_null.cpp',
+elif 'linux' in env['TARGET_OS']:
+    env.AppendUnique(CPPDEFINES = ['HAVE_ALSA'],
+                     LIBS = ['asound'])
+    srcs += ['device_alsa.cpp']
+    srcs += ['midi_null.cpp', 'cd_null.cpp',
              'timer_posix.cpp', 'threads_posix.cpp']
-elif 'darwin' in env['config']:
+elif 'darwin' in env['TARGET_OS']:
     env.AppendUnique (CPPDEFINES = ['HAVE_CORE_AUDIO'],
                       LINKFLAGS = [('-framework', 'CoreAudio'),
                                    ('-framework', 'Cocoa'),
@@ -179,25 +185,51 @@ if env['static_audiere']:
     audiere_lib = env.Library ('audiere', sources)
 else:
     audiere_lib = env.SharedLibrary ('audiere', sources)
-Depends (audiere_lib, ogg)
+Depends (sources, ogg + vorbis)
 
 ### install audiere header & library
 header_dir = 'include'
 
-audiere_headers = env.Install (header_dir,
-                               map(lambda f:os.path.join (audiere_dir,
-                                                         'src', f),
-                                   ['audiere.h']))
-
-audiere = env.Install (lib_dir, audiere_lib)
-Depends (audiere, audiere_headers)
-
+audiere = env.Install (header_dir,
+                       map(lambda f:os.path.join (audiere_dir,
+                                                  'src', f),
+                           ['audiere.h']))
+audiere += env.Install (lib_dir, audiere_lib)
 env.Alias ('audiere_install', audiere)
 
-### add our header & library path to SexyAppFramework's env.
-sexyenv.AppendUnique (CPPPATH = [os.path.join ('$top_builddir', 'audiere', 'include')],
-                      LIBPATH = [os.path.join ('$top_builddir', 'audiere', 'lib')])
-gameenv.AppendUnique (LIBPATH = [os.path.join ('$top_builddir', 'audiere', 'lib')])
+### sdk
+header_dir = os.path.join('$sdkdir', 'include')
+lib_dir = os.path.join('$sdkdir', 'lib')
 
+audiere_sdk = env.Install (header_dir,
+                           map(lambda f:os.path.join (audiere_dir,
+                                                      'src', f),
+                               ['audiere.h']))
+
+audiere_sdk += env.Install (lib_dir, [audiere_lib, vorbisfile_lib,
+                                      vorbis_lib, ogg_lib])
+
+env.Alias ('audiere_sdk_install', audiere_sdk)
+env.Alias ('sdk_install', audiere_sdk)
+
+### extra clean targets
 env.Clean (audiere, [audiere_dir])
 env.Clean (audiere, ['include', 'lib'])
+
+### a test program
+env.Program('audiere_play',
+            os.path.join(audiere_dir, 'examples', 'simple', 'simple.cpp'),
+            CPPPATH = [os.path.join(audiere_dir, 'srcs')] + env['CPPPATH'],
+            LIBPATH = ['.'] + env['LIBPATH'],
+            LIBS = ['audiere'] + env['LIBS'])
+
+### setup package info
+depends = []
+objects = audiere_lib
+if env['static_audiere']:
+    depends += ['vorbisfile', 'vorbis', 'ogg']
+configs.SetPackageInfo([env, gameenv], 'audiere',
+                       LIBS = ['audiere'] + depends,
+                       CPPPATH = [os.path.join('$top_builddir', 'audiere', 'include')],
+                       LIBPATH = [os.path.join('$top_builddir', 'audiere', 'lib')],
+                       OBJECTS = audiere_lib, TARGETS = audiere)

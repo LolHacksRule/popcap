@@ -4,9 +4,11 @@
 
 import os
 import sys
+import configs
+import game
 
-Import(['sexyenv', 'gameenv'])
-env = sexyenv.Clone()
+Import(['env', 'gameenv'])
+env = env.Clone()
 
 srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "CritSect.cpp", "CursorWidget.cpp", "Debug.cpp", "DescParser.cpp",
@@ -102,8 +104,9 @@ if 'AUDIERESOUND' in env['DRIVERS']:
              'AudierePakFile.cpp']
     env['AUDIERESOUND']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_AUDIERE_SOUND_DRIVER'])
+    configs.EnablePackage(env, 'audiere')
 
-if 'WIN32' in env['CPPDEFINES']:
+if env['TARGET_OS'] == 'win32':
     srcs += ["DSoundManager.cpp", 'DSoundInstance.cpp',
              'BassMusicInterface.cpp', 'BassLoader.cpp']
     ogg_srcs = 	['framing.c', 'bitwise.c']
@@ -118,6 +121,7 @@ if 'WIN32' in env['CPPDEFINES']:
     env.AppendUnique(LIBS = ['winmm'])
     gameenv.AppendUnique(LIBS = ['winmm'])
     env.AppendUnique(CPPDEFINES = ['SEXY_DIRECT_SOUND_DRIVER'])
+    game.AddExtraInstallableObject(gameenv, ['bass.dll'])
 
 if 'POSIX_MODULE_LOADER' in env['LOADERS']:
     srcs += ["PosixModuleLoader.cpp"]
@@ -136,10 +140,9 @@ if 'FREETYPEFONT' in env['DRIVERS']:
     freetype_srcs = ["FreeTypeFontMap.cpp", 'FreeTypeBaseFont.cpp',
                      'FreeTypeScaledFont.cpp', 'FreeTypeFont.cpp']
     srcs += freetype_srcs
-    if env.has_key ('FREETYPE') and env['FREETYPE']:
-        env.Depends(freetype_srcs + ['NativeDisplay.cpp'], env['FREETYPE'])
     env['FREETYPEFONT']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_FREETYPE_FONT'])
+    configs.EnablePackage(env, 'freetype')
 
 if not env['keyboard']:
     env.AppendUnique(CPPDEFINES = ['SEXY_NO_KEYBOARD'])
@@ -172,12 +175,14 @@ if gameenv['static']:
         gameenv['GSTSOUND']['ENABLE'](gameenv)
     if 'AUDIERESOUND' in env['DRIVERS']:
         gameenv['AUDIERESOUND']['ENABLE'](gameenv)
+        configs.EnablePackage(gameenv, 'audiere')
 
     if 'POSIXMODULELOADER' in env['LOADERS']:
         gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)
 
     if 'FREETYPEFONT' in env['DRIVERS']:
         gameenv['FREETYPEFONT']['ENABLE'](gameenv)
+        configs.EnablePackage(gameenv, 'freetype')
 
     gameenv.PrependUnique(LIBS = ['ImageLib', 'PakLib'])
 
@@ -190,18 +195,47 @@ if env['TARGET_OS'] in ['freebsd', 'netbsd', 'openbsd', 'darwin']:
        gameenv.AppendUnique(LIBS = ['iconv'])
 
 if gameenv['static']:
-    env.Library('SexyAppFramework', srcs)
+    sexy_lib = env.Library('SexyAppFramework', srcs)
 else:
-    env.SharedLibrary('SexyAppFramework', srcs)
+    sexy_lib = env.SharedLibrary('SexyAppFramework', srcs)
 
+### sdk
+header_dir = os.path.join('$sdkdir', 'include', 'SexyAppFramework')
+lib_dir = os.path.join('$sdkdir', 'lib')
+
+headers = ['FlashWidget.h', 'Font.h', 'ImageFont.h', 'SexyVector.h', 'Image.h', 'PerfTimer.h',
+           'SharedImage.h', 'InputDriverFactory.h', 'Point.h', 'Slider.h',
+           'Debug.h', 'InputInterface.h', 'SliderListener.h', 'DescParser.h', 'InputManager.h',
+           'PropertiesParser.h', 'SmartPtr.h', 'AutoCrit.h', 'Insets.h', 'Quantize.h',
+           'InternetManager.h', 'Ratio.h', 'SoundDriverFactory.h', 'FontUtils.h', 'KeyCodes.h',
+           'Rect.h', 'SoundInstance.h', 'DialogButton.h', 'RegistryInterfaceFactory.h',
+           'SoundManager.h', 'Buffer.h', 'Dialog.h', 'ListListener.h', 'RegistryInterface.h',
+           'SWTri.h', 'ButtonListener.h', 'DialogListener.h', 'ListWidget.h', 'RemoteEvent.h',
+           'SysFont.h', 'ButtonWidget.h', 'memmgr.h', 'TextWidget.h', 'DriverFactory.h',
+           'MemoryImage.h', 'ResourceManager.h', 'TriVertex.h', 'Checkbox.h', 'ScrollbarWidget.h',
+           'CheckboxListener.h', 'ModuleLoader.h', 'ScrollbuttonWidget.h', 'VideoDriverFactory.h',
+           'Graphics.h', 'ModuleManager.h', 'ScrollListener.h', 'Color.h', 'ModVal.h', 'SEHCatcher.h',
+           'WidgetContainer.h', 'Common.h', 'MoreGamesButton.h', 'SexyAppBase.h', 'Widget.h',
+           'CritSect.h', 'EditListener.h', 'GstSoundInstance.h', 'MTRand.h', 'SexyApp.h',
+           'WidgetManager.h', 'CursorWidget.h', 'EditWidget.h', 'MusicInterface.h', 'SexyDebug.h',
+           'XMLParser.h', 'Event.h', 'HTTPTransfer.h', 'NativeDisplay.h', 'SexyMatrix.h',
+           'Flags.h', 'HyperlinkWidget.h', 'NativeFont.h', 'SexyThread.h', 'XMLWriter.h']
+sexyapp_sdk = env.Install (header_dir, headers)
+sexyapp_sdk += env.Install (lib_dir, sexy_lib)
+env.Alias ('sexyapp_sdk_install', sexyapp_sdk)
+env.Alias ('sdk_install', sexyapp_sdk)
+
+### linux input over udp
 if env.has_key ('LUIS') and env['LUIS']:
     env = Environment ()
     env.Program ('luis', 'LinuxUdpInputServer.cpp')
 
+### a test module
 if False:
     env = Environment ()
     env.SharedLibrary ('SexyInputModule', 'TestInputModule.c')
 
+### a test program
 gameenv.Program('FontUtilsTest',
                 'FontUtilsTest.cpp',
                 LIBS = ['SexyAppFramework'] + gameenv['LIBS'],

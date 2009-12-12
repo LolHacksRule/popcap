@@ -95,6 +95,14 @@ else:
 
 env['top_builddir'] = '#' + builddir
 
+### setup sdkdir
+if env['builddir']:
+  sdkdir = os.path.join(modname.replace('configs.', ''), 'sdk')
+else:
+  sdkdir = ''
+
+env['sdkdir'] = '#' + sdkdir
+
 sexyenv = env.Clone ()
 gameenv = env.Clone ()
 gameenv['extras'] = []

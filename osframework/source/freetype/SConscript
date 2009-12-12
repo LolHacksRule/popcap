@@ -2,9 +2,11 @@
 # Author: Luo Jinghua
 
 import os
+import configs
+
 from SCons.Defaults import *
 
-Import (['env', 'sexyenv', 'gameenv'])
+Import (['env', 'gameenv'])
 
 if not 'freetype' in env['BUILD_PACKAGES']:
     Return ()
@@ -27,11 +29,9 @@ freetype_env = env.Clone()
 freetype_untar = freetype_env.Untar (os.path.join (srcdir, freetype_tar), ['*src*', '*include*'], ['*ftmodule.h'])
 freetype_env.SourceCode (freetype_dir, freetype_untar)
 
-srcs = ['ftsystem.c']
-srcs += ['ftdebug.c']
-srcs += ['ftinit.c']
-srcs += ['ftcalc.c', 'ftdbgmem.c', 'ftgloadr.c', 'ftnames.c', 'ftobjs.c', 'ftoutln.c',
-         'ftrfork.c', 'ftstream.c', 'fttrigon.c', 'ftutil.c']
+srcs = ['ftsystem.c', 'ftdebug.c', 'ftinit.c']
+srcs += ['ftcalc.c', 'ftdbgmem.c', 'ftgloadr.c', 'ftnames.c', 'ftobjs.c', 'ftglyph.c', 'ftoutln.c',
+         'ftbitmap.c', 'ftrfork.c', 'ftstream.c', 'fttrigon.c', 'ftutil.c']
 
 if 'darwin' in env['config']:
    srcs += ['ftmac.c']
@@ -70,12 +70,14 @@ srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'truetype', f),
               'ttdriver.c'])
 
 ### gzip
-srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'gzip', f),
-             ['ftgzip.c'])
-### FT_CONFIG_OPTION_USE_ZLIB is enabled by default
-freetype_env.AppendUnique(CPPDEFINES = ['FT_CONFIG_OPTION_SYSTEM_ZLIB'])
-freetype_env.AppendUnique (CPPPATH = [os.path.join ('#', 'ImageLib', 'zlib')])
+#srcs += map (lambda f:os.path.join (freetype_dir, 'src', 'gzip', f),
+#             ['ftgzip.c'])
 
+### FT_CONFIG_OPTION_USE_ZLIB is enabled by default
+#freetype_env.AppendUnique(CPPDEFINES = ['FT_CONFIG_OPTION_SYSTEM_ZLIB'])
+#freetype_env.AppendUnique (CPPPATH = [os.path.join ('#', 'ImageLib', 'zlib')])
+
+### enable bytecode interpreter
 freetype_env.AppendUnique(CPPDEFINES = ['TT_CONFIG_OPTION_BYTECODE_INTERPRETER'])
 
 ### generate freetype's module intializers
@@ -106,7 +108,8 @@ freetype_env.AppendUnique (CPPPATH = [os.path.join (freetype_dir, 'include'),
                                       os.path.join (freetype_dir, 'src', 'truetype')],
                            CPPDEFINES = ['FT2_BUILD_LIBRARY'])
 
-freetype_lib = freetype_env.ConvenienceLibrary ('freetype', srcs)
+#freetype_lib = freetype_env.ConvenienceLibrary ('freetype', srcs)
+freetype_lib = freetype_env.SharedLibrary ('freetype', srcs)
 
 ### install freetype header & library
 header_dir = 'include'
@@ -125,13 +128,29 @@ Depends (freetype, freetype_headers)
 
 freetype_env.Alias ('freetype_install', freetype)
 
-### add our header & library path to SexyAppFramework's env.
-sexyenv.AppendUnique (CPPPATH = [os.path.join ('$top_builddir', 'freetype', freetype_dir, 'include')],
-                      LIBPATH = [os.path.join ('$top_builddir', 'freetype', 'lib')])
-gameenv.AppendUnique (LIBPATH = [os.path.join ('$top_builddir', 'freetype', 'lib')])
+### sdk
+header_dir = os.path.join('$sdkdir', 'include', 'freetype2')
+lib_dir = os.path.join('$sdkdir', 'lib')
+
+ft2_sdk = env.Install (os.path.join (header_dir, 'freetype2'),
+                       Glob(os.path.join (freetype_dir,
+                                          'include', '*')) +
+                       Glob(os.path.join (freetype_dir,
+                                          'include', 'freetype', '*')) +
+                       Glob(os.path.join (freetype_dir,
+                                        'include', 'freetype', 'config', '*')))
+ft2_sdk += env.Install (lib_dir, freetype_lib)
+
+env.Alias ('ft2_sdk_install', ft2_sdk)
+env.Alias ('sdk_install', ft2_sdk)
 
 env.Clean (freetype, [freetype_dir])
 env.Clean (freetype, ['include', 'lib'])
 
-env['FREETYPE']  = freetype
-sexyenv['FREETYPE']  = freetype
+### setup package info
+configs.SetPackageInfo([env, gameenv], 'freetype',
+                       LIBS = ['freetype'],
+                       CPPPATH = [os.path.join('$top_builddir', 'freetype',
+                                               'include', 'freetype2')],
+                       LIBPATH = [os.path.join('$top_builddir', 'freetype', 'lib')],
+                       OBJECTS = freetype_lib, TARGETS = freetype)

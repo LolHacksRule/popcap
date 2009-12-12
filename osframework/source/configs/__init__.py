@@ -165,7 +165,7 @@ def SetPackageInfo(envs, name, **kwargs):
             if not info.has_key(key):
                 info[key] = []
 
-def EnablePackage(env, name, what = None, append = True, unique = False):
+def EnablePackage(env, name, what = None, append = True, unique = False, **kwargs):
     ### set env
     if not type(env) is list:
         envs = [env]

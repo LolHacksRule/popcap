@@ -97,5 +97,14 @@ zlib/trees.c
 zlib/uncompr.c
 zlib/zutil.c""".split()
 srcs += ['ImageLib.cpp']
-env.ConvenienceLibrary('ImageLib', srcs)
+imagelib = env.ConvenienceLibrary('ImageLib', srcs)
 
+### sdk
+header_dir = os.path.join('$sdkdir', 'include', 'ImageLib')
+lib_dir = os.path.join('$sdkdir', 'lib')
+
+imagelib_sdk = env.Install (header_dir, 'ImageLib.h')
+imagelib_sdk += env.Install (lib_dir, imagelib)
+
+env.Alias ('imagelib_sdk_install', imagelib_sdk)
+env.Alias ('sdk_install', imagelib_sdk)
