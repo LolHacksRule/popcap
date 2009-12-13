@@ -117,7 +117,7 @@ def GetGitVersion(srcdir):
     os.chdir(os.path.realpath(srcdir))
     gitcmd = 'git rev-parse HEAD'
     if sys.platform == 'win32':
-        gitcmd += ' 2>null'
+        gitcmd += ' 2>nul'
     else:
         gitcmd += ' 2>/dev/null'
     rev = os.popen(gitcmd).read()
