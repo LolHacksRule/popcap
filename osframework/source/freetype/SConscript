@@ -107,9 +107,16 @@ freetype_env.AppendUnique (CPPPATH = [os.path.join (freetype_dir, 'include'),
                                       os.path.join (freetype_dir, 'src', 'smooth'),
                                       os.path.join (freetype_dir, 'src', 'truetype')],
                            CPPDEFINES = ['FT2_BUILD_LIBRARY'])
-
-freetype_lib = freetype_env.ConvenienceLibrary ('freetype', srcs)
-#freetype_lib = freetype_env.SharedLibrary ('freetype', srcs)
+static_freetype = True
+if env['TARGET_OS'] == 'win32' and not static_freetype:
+    if 'gcc' in env['CC']:
+    	srcs += [os.path.join(srcdir, 'freetype.def')]
+    elif 'cl' in env['CC']:
+        freetype_env.AppendUnique(LINKFLAGS = ['/DEF:' + os.path.join(srcdir, 'freetype.def')])
+if static_freetype:
+    freetype_lib = freetype_env.ConvenienceLibrary ('freetype', srcs)
+else:
+    freetype_lib = freetype_env.SharedLibrary ('freetype', srcs)
 
 ### install freetype header & library
 header_dir = 'include'
