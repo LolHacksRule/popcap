@@ -110,8 +110,8 @@ public:
 #endif
 };
 
-typedef TRect<int> Rect;
-typedef TRect<double> FRect;
+typedef SEXY_EXPORT TRect<int> Rect;
+typedef SEXY_EXPORT TRect<double> FRect;
 
 
 

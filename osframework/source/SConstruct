@@ -99,7 +99,7 @@ env['top_builddir'] = '#' + builddir
 if env['builddir']:
   sdkdir = os.path.join(modname.replace('configs.', ''), 'sdk')
 else:
-  sdkdir = ''
+  sdkdir = 'sdk'
 
 env['sdkdir'] = '#' + sdkdir
 
@@ -110,8 +110,8 @@ gameenv['extras_objs'] = []
 gameenv.AppendUnique(LIBS = ['$STDCXX_LIBS'])
 Export (['env', 'gameenv', 'sexyenv'])
 
-sconscripts = [os.path.join ('ImageLib', 'SConscript')]
-sconscripts += [os.path.join ('PakLib', 'SConscript')]
+sconscripts = [os.path.join ('PakLib', 'SConscript')]
+sconscripts += [os.path.join ('ImageLib', 'SConscript')]
 sconscripts += [os.path.join ('audiere', 'SConscript')]
 sconscripts += [os.path.join ('freetype', 'SConscript')]
 

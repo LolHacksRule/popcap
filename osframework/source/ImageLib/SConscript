@@ -4,8 +4,9 @@
 
 import os
 import sys
+import game
 
-Import('env')
+Import('env', 'gameenv')
 srcs = """./png/png.c
 ./png/pngerror.c
 ./png/pngget.c
@@ -97,7 +98,19 @@ zlib/trees.c
 zlib/uncompr.c
 zlib/zutil.c""".split()
 srcs += ['ImageLib.cpp']
-imagelib = env.ConvenienceLibrary('ImageLib', srcs)
+
+imagelib_env = env.Clone()
+imagelib_env.AppendUnique(LIBPATH = [os.path.join('$top_builddir', 'PakLib')],
+                          LIBS = ['PakLib'])
+if env['static']:
+    env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_IMAGELIB'])
+    gameenv.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_IMAGELIB'])
+    imagelib_env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_IMAGELIB'])
+    imagelib = imagelib_env.ConvenienceLibrary('ImageLib', srcs)
+else:
+    imagelib_env.AppendUnique(CPPDEFINES = ['BUILDING_IMAGELIB'])
+    imagelib = imagelib_env.SharedLibrary('ImageLib', srcs)
+    game.AddExtraInstallableObject(gameenv, imagelib)
 
 ### sdk
 header_dir = os.path.join('$sdkdir', 'include', 'ImageLib')

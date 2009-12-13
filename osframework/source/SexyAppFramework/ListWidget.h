@@ -14,7 +14,7 @@ class ScrollbarWidget;
 class ListListener;
 class Font;
 
-class ListWidget : public Widget, public ScrollListener 
+class SEXY_EXPORT ListWidget : public Widget, public ScrollListener 
 {
 public:
 	enum 

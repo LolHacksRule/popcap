@@ -14,6 +14,18 @@
 #include <stdint.h>
 #endif
 
+#if defined(WIN32) && !defined(BUILDING_STATIC_PAKLIB)
+#ifdef BUILDING_PAKLIB
+#define PAKLIB_EXPORT __declspec (dllexport)
+#else
+#define PAKLIB_EXPORT __declspec (dllimport)
+#endif
+#endif
+
+#ifndef PAKLIB_EXPORT
+#define PAKLIB_EXPORT
+#endif
+
 class PakCollection;
 
 #ifdef WIN32
@@ -72,7 +84,7 @@ struct PFindData
 	std::string				mFindCriteria;
 };
 
-class PakInterfaceBase
+class PAKLIB_EXPORT PakInterfaceBase
 {
 public:
         virtual ~PakInterfaceBase() {}
@@ -94,7 +106,7 @@ public:
 	virtual bool			FindClose(PakHandle hFindFile) = 0;
 };
 
-class PakInterface : public PakInterfaceBase
+class PAKLIB_EXPORT PakInterface : public PakInterfaceBase
 {
 public:
 	PakCollectionList		mPakCollectionList;	
@@ -123,9 +135,9 @@ public:
 	bool					FindClose(PakHandle hFindFile);
 };
 
-extern PakInterface* gPakInterface;
+extern PAKLIB_EXPORT PakInterface* gPakInterface;
 //static PakHandle gPakFileMapping = NULL;
-extern PakInterfaceBase* GetPakPtr();
+extern PAKLIB_EXPORT PakInterfaceBase* GetPakPtr();
 
 static inline char * p_wcstombs(const wchar_t * theString)
 {

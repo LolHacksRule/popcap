@@ -22,9 +22,12 @@ def Configure(env):
     if env['debug']:
         env.AppendUnique (CFLAGS = ['/DEBUG'],
                           CXXFLAGS = ['/DEBUG'],
-                          LINKFLAGS = ['/DEBUG', '/PROFILE',
-                                      '/PDB:${TARGET.file}.pdb'])
+                          LINKFLAGS = ['/DEBUG', '/PROFILE'])
         env['PDB'] = '${TARGET.base}.pdb'
+
+    if not env['static']:
+        env.AppendUnique (CFLAGS = ['/MD'],
+                          CXXFLAGS = ['/MD'])
 
     if env['release']:
         env.AppendUnique (CFLAGS = ['/O2'],

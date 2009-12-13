@@ -121,7 +121,7 @@ public:
 
 typedef std::multimap<int, RenderCommand> RenderCommandMap;
 
-class ImageFont : public Font
+class SEXY_EXPORT ImageFont : public Font
 {
 public:	
 	FontData*				mFontData;

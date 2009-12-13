@@ -140,11 +140,11 @@ typedef std::map<std::wstring, std::wstring>	WStringWStringMap;
 typedef SexyString::value_type					SexyChar;
 #define HAS_SEXYCHAR
 
-#if defined(WIN32) && !defined(BUILDING_STATIC)
+#if defined(WIN32) && !defined(BUILDING_STATIC_SEXYFRAMEWORK)
 #ifdef BUILDING_SEXYFRAMEWORK
 #define SEXY_EXPORT __declspec (dllexport)
 #else
-#define SEXY_EXPORT
+#define SEXY_EXPORT __declspec (dllimport)
 #endif
 #endif
 
@@ -157,9 +157,9 @@ namespace Sexy
 
 const ulong SEXY_RAND_MAX = 0x7FFFFFFF;
 
-extern bool			gDebug;
+extern SEXY_EXPORT bool			gDebug;
 #ifdef WIN32
-extern HINSTANCE	gHInstance;
+extern SEXY_EXPORT HINSTANCE	gHInstance;
 #endif
 
 SEXY_EXPORT int					Rand();

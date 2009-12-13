@@ -4,11 +4,20 @@
 
 import os
 import sys
+import game
 
-Import('env')
-env = env.Clone()
+Import('env', 'gameenv')
+paklib_env = env.Clone()
 srcs = ['PakInterface.cpp']
-paklib = env.ConvenienceLibrary('PakLib', srcs)
+if not env['static']:
+    paklib_env.AppendUnique(CPPDEFINES = ['BUILDING_PAKLIB'])
+    paklib = paklib_env.SharedLibrary('PakLib', srcs)
+    game.AddExtraInstallableObject(gameenv, paklib)
+else:
+    env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_PAKLIB'])
+    gameenv.AppendUnique(CPPDEFINES = ['BUILDING_STTIC_PAKLIB'])
+    paklib_env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_PAKLIB'])
+    paklib = paklib_env.ConvenienceLibrary('PakLib', srcs)
 
 ### sdk
 header_dir = os.path.join('$sdkdir', 'include', 'PakLib')

@@ -151,7 +151,7 @@ env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
                              '#SexyAppFramework'],
                   LIBPATH = [os.path.join('$top_builddir', 'ImageLib'),
                              os.path.join('$top_builddir', 'PakLib')],
-                  LIBS = ['PakLib', 'ImageLib'])
+                  LIBS = ['ImageLib', 'PakLib'])
 
 if env['TARGET_OS'] == 'win32':
     env.AppendUnique(LIBS = ['ws2_32'])
@@ -197,10 +197,12 @@ if env['TARGET_OS'] in ['freebsd', 'netbsd', 'openbsd', 'darwin']:
 env.AppendUnique(CPPDEFINES = ['BUILDING_SEXYFRAMEWORK'],
                  LIBS = ['$STDCXX_LIBS'])
 if gameenv['static']:
-    env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC'])
+    env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_SEXYFRAMEWORK'])
+    gameenv.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_SEXYFRAMEWORK'])
     sexy_lib = env.Library('SexyAppFramework', srcs)
 else:
     sexy_lib = env.SharedLibrary('SexyAppFramework', srcs)
+    game.AddExtraInstallableObject(gameenv, sexy_lib)
 
 ### sdk
 header_dir = os.path.join('$sdkdir', 'include', 'SexyAppFramework')
@@ -210,16 +212,16 @@ headers = ['FlashWidget.h', 'Font.h', 'ImageFont.h', 'SexyVector.h', 'Image.h', 
            'SharedImage.h', 'InputDriverFactory.h', 'Point.h', 'Slider.h',
            'Debug.h', 'InputInterface.h', 'SliderListener.h', 'DescParser.h', 'InputManager.h',
            'PropertiesParser.h', 'SmartPtr.h', 'AutoCrit.h', 'Insets.h', 'Quantize.h',
-           'InternetManager.h', 'Ratio.h', 'SoundDriverFactory.h', 'FontUtils.h', 'KeyCodes.h',
+           'Ratio.h', 'SoundDriverFactory.h', 'FontUtils.h', 'KeyCodes.h',
            'Rect.h', 'SoundInstance.h', 'DialogButton.h', 'RegistryInterfaceFactory.h',
            'SoundManager.h', 'Buffer.h', 'Dialog.h', 'ListListener.h', 'RegistryInterface.h',
-           'SWTri.h', 'ButtonListener.h', 'DialogListener.h', 'ListWidget.h', 'RemoteEvent.h',
+           'SWTri.h', 'ButtonListener.h', 'DialogListener.h', 'ListWidget.h',
            'SysFont.h', 'ButtonWidget.h', 'memmgr.h', 'TextWidget.h', 'DriverFactory.h',
            'MemoryImage.h', 'ResourceManager.h', 'TriVertex.h', 'Checkbox.h', 'ScrollbarWidget.h',
            'CheckboxListener.h', 'ModuleLoader.h', 'ScrollbuttonWidget.h', 'VideoDriverFactory.h',
            'Graphics.h', 'ModuleManager.h', 'ScrollListener.h', 'Color.h', 'ModVal.h', 'SEHCatcher.h',
-           'WidgetContainer.h', 'Common.h', 'MoreGamesButton.h', 'SexyAppBase.h', 'Widget.h',
-           'CritSect.h', 'EditListener.h', 'GstSoundInstance.h', 'MTRand.h', 'SexyApp.h',
+           'WidgetContainer.h', 'Common.h', 'SexyAppBase.h', 'Widget.h',
+           'CritSect.h', 'EditListener.h', 'GstSoundInstance.h', 'MTRand.h',
            'WidgetManager.h', 'CursorWidget.h', 'EditWidget.h', 'MusicInterface.h', 'SexyDebug.h',
            'XMLParser.h', 'Event.h', 'HTTPTransfer.h', 'NativeDisplay.h', 'SexyMatrix.h',
            'Flags.h', 'HyperlinkWidget.h', 'NativeFont.h', 'SexyThread.h', 'XMLWriter.h']
@@ -241,7 +243,7 @@ if False:
 ### a test program
 gameenv.Program('FontUtilsTest',
                 'FontUtilsTest.cpp',
-                LIBS = ['SexyAppFramework'] + gameenv['LIBS'],
+                LIBS = ['SexyAppFramework', 'ImageLib', 'PakLib'] + gameenv['LIBS'],
                 LIBPATH = gameenv['LIBPATH'] +
                 ['.',
                  os.path.join('$top_builddir', 'ImageLib'),
