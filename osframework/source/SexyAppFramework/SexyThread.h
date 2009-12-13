@@ -8,9 +8,11 @@
 #include <pthread.h>
 #endif
 
+#include "Common.h"
+
 namespace Sexy {
 
-class Thread
+class SEXY_EXPORT Thread
 {
  public:
     Thread();

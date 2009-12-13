@@ -1,10 +1,12 @@
 #ifndef __INSETS_H__
 #define __INSETS_H__
 
+#include "Common.h"
+
 namespace Sexy
 {
 
-class Insets
+class SEXY_EXPORT Insets
 {
 public:
 	int						mLeft;

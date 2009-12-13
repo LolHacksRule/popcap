@@ -19,7 +19,7 @@ struct InputStatusInfo {
 	int mNumInput;
 };
 
-class InputManager
+class SEXY_EXPORT InputManager
 {
  public:
         InputManager(SexyAppBase * theApp,

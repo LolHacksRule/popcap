@@ -10,7 +10,7 @@ struct PFILE;
 namespace Sexy
 {
 
-class XMLParam
+class SEXY_EXPORT XMLParam
 {
 public:
 	std::string				mKey;
@@ -22,7 +22,7 @@ typedef std::list<XMLParamMap::iterator>	XMLParamMapIteratorList;
 
 typedef std::vector<wchar_t> XMLParserBuffer;
 
-class XMLElement
+class SEXY_EXPORT XMLElement
 {
 public:
 	enum
@@ -44,7 +44,7 @@ public:
 	XMLParamMapIteratorList	mAttributeIteratorList; // stores attribute iterators in their original order
 };
 
-class XMLParser
+class SEXY_EXPORT XMLParser
 {
 protected:
 	std::string				mFileName;

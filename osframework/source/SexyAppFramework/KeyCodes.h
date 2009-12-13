@@ -101,8 +101,8 @@ enum KeyCode
 	KEYCODE_ASCIIEND2	  = 0xE0
 };
 
-KeyCode	GetKeyCodeFromName(const std::string& theKeyName);
-const std::string GetKeyNameFromCode(const KeyCode& theKeyCode);
+SEXY_EXPORT KeyCode	GetKeyCodeFromName(const std::string& theKeyName);
+SEXY_EXPORT const std::string GetKeyNameFromCode(const KeyCode& theKeyCode);
 
 }
 

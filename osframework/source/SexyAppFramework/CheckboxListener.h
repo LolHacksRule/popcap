@@ -4,7 +4,7 @@
 namespace Sexy
 {
 
-class CheckboxListener
+class SEXY_EXPORT CheckboxListener
 {
 public:
 	virtual void			CheckboxChecked(int theId, bool checked) {}

@@ -5,7 +5,7 @@
 
 #define OPTIMIZE_SOFTWARE_DRAWING
 #ifdef OPTIMIZE_SOFTWARE_DRAWING
-extern bool gOptimizeSoftwareDrawing;
+extern SEXY_EXPORT bool gOptimizeSoftwareDrawing;
 #endif
 
 namespace Sexy
@@ -16,7 +16,7 @@ const uint32 MEMORYCHECK_ID = 0x4BEEFADE;
 class NativeDisplay;
 class SexyAppBase;
 
-class MemoryImage : public Image
+class SEXY_EXPORT MemoryImage : public Image
 {
 public:
 	SexyAppBase*			        mApp;

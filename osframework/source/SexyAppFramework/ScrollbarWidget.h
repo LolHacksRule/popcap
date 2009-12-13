@@ -14,7 +14,7 @@ namespace Sexy
 class ScrollListener;
 class ScrollbuttonWidget;
 
-class ScrollbarWidget : public Widget, public ButtonListener 
+class SEXY_EXPORT ScrollbarWidget : public Widget, public ButtonListener 
 {
 public:
 

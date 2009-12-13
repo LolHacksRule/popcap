@@ -140,6 +140,18 @@ typedef std::map<std::wstring, std::wstring>	WStringWStringMap;
 typedef SexyString::value_type					SexyChar;
 #define HAS_SEXYCHAR
 
+#if defined(WIN32) && !defined(BUILDING_STATIC)
+#ifdef BUILDING_SEXYFRAMEWORK
+#define SEXY_EXPORT __declspec (dllexport)
+#else
+#define SEXY_EXPORT
+#endif
+#endif
+
+#ifndef SEXY_EXPORT
+#define SEXY_EXPORT
+#endif
+
 namespace Sexy
 {
 
@@ -150,62 +162,62 @@ extern bool			gDebug;
 extern HINSTANCE	gHInstance;
 #endif
 
-int					Rand();
-int					Rand(int range);
-float				Rand(float range);
-void				SRand(ulong theSeed);
-extern std::string	vformat(const char* fmt, va_list argPtr);
-extern std::wstring	vformat(const wchar_t* fmt, va_list argPtr);
-extern std::string	StrFormat(const char* fmt ...);
-extern std::wstring	StrFormat(const wchar_t* fmt ...);
-bool				CheckFor98Mill();
-bool				CheckForVista();
-std::string                     GetResourcesFolder();
-void                            SetResourcesFolder(const std::string& thePath);
-std::string			GetAppDataFolder();
-void				SetAppDataFolder(const std::string& thePath);
-std::string			URLEncode(const std::string& theString);
-std::string			StringToUpper(const std::string& theString);
-std::wstring		StringToUpper(const std::wstring& theString);
-std::string			StringToLower(const std::string& theString);
-std::wstring		StringToLower(const std::wstring& theString);
-std::wstring		StringToWString(const std::string &theString);
-std::string			WStringToString(const std::wstring &theString);
-SexyString			StringToSexyString(const std::string& theString);
-SexyString			WStringToSexyString(const std::wstring& theString);
-std::string			SexyStringToString(const SexyString& theString);
-std::wstring		SexyStringToWString(const SexyString& theString);
-std::string			Upper(const std::string& theData);
-std::wstring		Upper(const std::wstring& theData);
-std::string			Lower(const std::string& theData);
-std::wstring		Lower(const std::wstring& theData);
-std::string			Trim(const std::string& theString);
-std::wstring		Trim(const std::wstring& theString);
-bool				StringToInt(const std::string theString, int* theIntVal);
-bool				StringToDouble(const std::string theString, double* theDoubleVal);
-bool				StringToInt(const std::wstring theString, int* theIntVal);
-bool				StringToDouble(const std::wstring theString, double* theDoubleVal);
-int					StrFindNoCase(const char *theStr, const char *theFind);
-bool				StrPrefixNoCase(const char *theStr, const char *thePrefix, int maxLength = 10000000);
-SexyString			CommaSeperate(int theValue);
-std::string			Evaluate(const std::string& theString, const DefinesMap& theDefinesMap);
-std::string			XMLDecodeString(const std::string& theString);
-std::string			XMLEncodeString(const std::string& theString);
-std::wstring		XMLDecodeString(const std::wstring& theString);
-std::wstring		XMLEncodeString(const std::wstring& theString);
+SEXY_EXPORT int					Rand();
+SEXY_EXPORT int					Rand(int range);
+SEXY_EXPORT float				Rand(float range);
+SEXY_EXPORT void				SRand(ulong theSeed);
+SEXY_EXPORT std::string	vformat(const char* fmt, va_list argPtr);
+SEXY_EXPORT std::wstring	vformat(const wchar_t* fmt, va_list argPtr);
+SEXY_EXPORT std::string	StrFormat(const char* fmt ...);
+SEXY_EXPORT std::wstring	StrFormat(const wchar_t* fmt ...);
+SEXY_EXPORT bool				CheckFor98Mill();
+SEXY_EXPORT bool				CheckForVista();
+SEXY_EXPORT std::string                     GetResourcesFolder();
+SEXY_EXPORT void                            SetResourcesFolder(const std::string& thePath);
+SEXY_EXPORT std::string			GetAppDataFolder();
+SEXY_EXPORT void				SetAppDataFolder(const std::string& thePath);
+SEXY_EXPORT std::string			URLEncode(const std::string& theString);
+SEXY_EXPORT std::string			StringToUpper(const std::string& theString);
+SEXY_EXPORT std::wstring		StringToUpper(const std::wstring& theString);
+SEXY_EXPORT std::string			StringToLower(const std::string& theString);
+SEXY_EXPORT std::wstring		StringToLower(const std::wstring& theString);
+SEXY_EXPORT std::wstring		StringToWString(const std::string &theString);
+SEXY_EXPORT std::string			WStringToString(const std::wstring &theString);
+SEXY_EXPORT SexyString			StringToSexyString(const std::string& theString);
+SEXY_EXPORT SexyString			WStringToSexyString(const std::wstring& theString);
+SEXY_EXPORT std::string			SexyStringToString(const SexyString& theString);
+SEXY_EXPORT std::wstring		SexyStringToWString(const SexyString& theString);
+SEXY_EXPORT std::string			Upper(const std::string& theData);
+SEXY_EXPORT std::wstring		Upper(const std::wstring& theData);
+SEXY_EXPORT std::string			Lower(const std::string& theData);
+SEXY_EXPORT std::wstring		Lower(const std::wstring& theData);
+SEXY_EXPORT std::string			Trim(const std::string& theString);
+SEXY_EXPORT std::wstring		Trim(const std::wstring& theString);
+SEXY_EXPORT bool				StringToInt(const std::string theString, int* theIntVal);
+SEXY_EXPORT bool				StringToDouble(const std::string theString, double* theDoubleVal);
+SEXY_EXPORT bool				StringToInt(const std::wstring theString, int* theIntVal);
+SEXY_EXPORT bool				StringToDouble(const std::wstring theString, double* theDoubleVal);
+SEXY_EXPORT int					StrFindNoCase(const char *theStr, const char *theFind);
+SEXY_EXPORT bool				StrPrefixNoCase(const char *theStr, const char *thePrefix, int maxLength = 10000000);
+SEXY_EXPORT SexyString			CommaSeperate(int theValue);
+SEXY_EXPORT std::string			Evaluate(const std::string& theString, const DefinesMap& theDefinesMap);
+SEXY_EXPORT std::string			XMLDecodeString(const std::string& theString);
+SEXY_EXPORT std::string			XMLEncodeString(const std::string& theString);
+SEXY_EXPORT std::wstring		XMLDecodeString(const std::wstring& theString);
+SEXY_EXPORT std::wstring		XMLEncodeString(const std::wstring& theString);
 
-bool				Deltree(const std::string& thePath);
-bool				FileExists(const std::string& theFileName);
-void				MkDir(const std::string& theDir);
-std::string			GetFileName(const std::string& thePath, bool noExtension = false);
-std::string			GetFileDir(const std::string& thePath, bool withSlash = false);
-std::string			RemoveTrailingSlash(const std::string& theDirectory);
-std::string			AddTrailingSlash(const std::string& theDirectory, bool backSlash = false);
-time_t				GetFileDate(const std::string& theFileName);
-std::string			GetCurDir();
-std::string			GetFullPath(const std::string& theRelPath);
-std::string			GetPathFrom(const std::string& theRelPath, const std::string& theDir);
-bool				AllowAllAccess(const std::string& theFileName);
+SEXY_EXPORT bool				Deltree(const std::string& thePath);
+SEXY_EXPORT bool				FileExists(const std::string& theFileName);
+SEXY_EXPORT void				MkDir(const std::string& theDir);
+SEXY_EXPORT std::string			GetFileName(const std::string& thePath, bool noExtension = false);
+SEXY_EXPORT std::string			GetFileDir(const std::string& thePath, bool withSlash = false);
+SEXY_EXPORT std::string			RemoveTrailingSlash(const std::string& theDirectory);
+SEXY_EXPORT std::string			AddTrailingSlash(const std::string& theDirectory, bool backSlash = false);
+SEXY_EXPORT time_t				GetFileDate(const std::string& theFileName);
+SEXY_EXPORT std::string			GetCurDir();
+SEXY_EXPORT std::string			GetFullPath(const std::string& theRelPath);
+SEXY_EXPORT std::string			GetPathFrom(const std::string& theRelPath, const std::string& theDir);
+SEXY_EXPORT bool				AllowAllAccess(const std::string& theFileName);
 
 
 inline void			inlineUpper(std::string &theData)

@@ -1,6 +1,8 @@
 #ifndef __MTRAND_H__
 #define __MTRAND_H__
 
+#include "Common.h"
+
 #include <string>
 
 namespace Sexy
@@ -8,7 +10,7 @@ namespace Sexy
 
 #define MTRAND_N 624
 
-class MTRand
+class SEXY_EXPORT MTRand
 {
 	unsigned long mt[MTRAND_N]; /* the array for the state vector  */
 	int mti;

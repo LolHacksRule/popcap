@@ -9,7 +9,7 @@ namespace Sexy
 class CheckboxListener;
 class Image;
 
-class Checkbox : public Widget
+class SEXY_EXPORT Checkbox : public Widget
 {	
 protected:
 	CheckboxListener*		mListener;

@@ -9,7 +9,7 @@ namespace Sexy
 class Image;
 class ButtonListener;
 
-class ButtonWidget : public Widget
+class SEXY_EXPORT ButtonWidget : public Widget
 {
 public:
 	enum {

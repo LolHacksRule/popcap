@@ -9,7 +9,7 @@
 namespace Sexy
 {
 
-class SoundInstance
+class SEXY_EXPORT SoundInstance
 {
 public:
 	SoundInstance() {}

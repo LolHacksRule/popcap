@@ -3,7 +3,7 @@
 
 namespace Sexy {
 
-DWORD GetTickCount();
+SEXY_EXPORT DWORD GetTickCount();
 
 }
 

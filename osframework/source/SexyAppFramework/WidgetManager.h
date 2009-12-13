@@ -27,7 +27,7 @@ enum
 	WIDGETFLAGS_ALLOW_FOCUS		= 32,	
 };
 
-class PreModalInfo
+class SEXY_EXPORT PreModalInfo
 {
 public:
 	Widget*					mBaseModalWidget;
@@ -40,7 +40,7 @@ typedef std::list<PreModalInfo> PreModalInfoList;
 
 typedef std::vector<std::pair<Widget*, int> > DeferredOverlayVector;
 
-class WidgetManager : public WidgetContainer
+class SEXY_EXPORT WidgetManager : public WidgetContainer
 {
 public:	
 	Widget*					mDefaultTab;

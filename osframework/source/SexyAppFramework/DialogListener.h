@@ -4,7 +4,7 @@
 namespace Sexy
 {
 
-class DialogListener
+class SEXY_EXPORT DialogListener
 {
 public:
         virtual ~DialogListener() {}

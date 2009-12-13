@@ -12,14 +12,14 @@ class ButtonWidget;
 class DialogButton;
 class Font;
 
-extern SexyString DIALOG_YES_STRING;
-extern SexyString DIALOG_NO_STRING;
-extern SexyString DIALOG_OK_STRING;
-extern SexyString DIALOG_CANCEL_STRING;
+extern SEXY_EXPORT SexyString DIALOG_YES_STRING;
+extern SEXY_EXPORT SexyString DIALOG_NO_STRING;
+extern SEXY_EXPORT SexyString DIALOG_OK_STRING;
+extern SEXY_EXPORT SexyString DIALOG_CANCEL_STRING;
 
 typedef std::vector<std::string> StringVector;
 
-class Dialog : public Widget, public ButtonListener
+class SEXY_EXPORT Dialog : public Widget, public ButtonListener
 {
 public:
 	enum

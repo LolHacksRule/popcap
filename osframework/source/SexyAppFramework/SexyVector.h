@@ -1,6 +1,7 @@
 #ifndef __SEXYVECTOR_H__
 #define __SEXYVECTOR_H__
 
+#include "Common.h"
 #include <math.h>
 
 namespace Sexy
@@ -8,7 +9,7 @@ namespace Sexy
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-class SexyVector2
+class SEXY_EXPORT SexyVector2
 {
 public:
 	float x,y;

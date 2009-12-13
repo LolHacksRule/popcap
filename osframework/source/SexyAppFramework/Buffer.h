@@ -9,7 +9,7 @@ namespace Sexy
 
 typedef std::vector<uchar> ByteVector;
 
-class Buffer
+class SEXY_EXPORT Buffer
 {
 public:
 	ByteVector				mData;

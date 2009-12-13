@@ -4,7 +4,7 @@
 namespace Sexy
 {
 
-class ButtonListener
+class SEXY_EXPORT ButtonListener
 {	
 public:
         virtual ~ButtonListener() {}

@@ -1,9 +1,11 @@
 #ifndef __RATIO_H__
 #define __RATIO_H__
 
+#include "Common.h"
+
 namespace Sexy
 {
-	struct Ratio
+	struct SEXY_EXPORT  Ratio
 	{
 		Ratio();
 		Ratio(int theNumerator, int theDenominator);

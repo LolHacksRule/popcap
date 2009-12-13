@@ -5,20 +5,17 @@
 #if !defined(__XML_WRITER__)
 #define __XML_WRITER__
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
+#ifdef _MSC_VER
 #pragma warning(disable:4786)
 #pragma warning(disable:4503)
-
+#endif
 
 #include <stack>
 #include "XMLParser.h"
 
 namespace Sexy
 {
-	class XMLWriter
+	class SEXY_EXPORT XMLWriter
 	{
 	protected:
 		std::string				mFileName;

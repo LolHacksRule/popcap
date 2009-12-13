@@ -26,7 +26,7 @@ struct Edge
 
 class Graphics;
 
-class GraphicsState
+class SEXY_EXPORT GraphicsState
 {
 public:
 	static Image			mStaticImage;
@@ -53,7 +53,7 @@ public:
 
 typedef std::list<GraphicsState> GraphicsStateList;
 
-class Graphics : public GraphicsState
+class SEXY_EXPORT Graphics : public GraphicsState
 {
 public:	
 	enum
@@ -177,7 +177,7 @@ public:
 	bool					Is3D() { return mIs3D; }
 };
 
-class GraphicsAutoState
+class SEXY_EXPORT GraphicsAutoState
 {
 public:
 	Graphics*				mG;

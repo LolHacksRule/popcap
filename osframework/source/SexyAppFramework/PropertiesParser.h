@@ -9,7 +9,7 @@ namespace Sexy
 
 class XMLParser;
 
-class PropertiesParser
+class SEXY_EXPORT PropertiesParser
 {
 public:
 	SexyAppBase*			mApp;

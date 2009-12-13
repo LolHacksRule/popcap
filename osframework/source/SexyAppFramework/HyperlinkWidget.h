@@ -6,7 +6,7 @@
 namespace Sexy
 {
 
-class HyperlinkWidget : public ButtonWidget
+class SEXY_EXPORT HyperlinkWidget : public ButtonWidget
 {
 public:
 	Color					mColor;

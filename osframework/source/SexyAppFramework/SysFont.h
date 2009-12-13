@@ -14,7 +14,7 @@ namespace Sexy
 class ImageFont;
 class SexyAppBase;
 
-class SysFont : public Font
+class SEXY_EXPORT SysFont : public Font
 {
 public:	
 	HFONT					mHFont;

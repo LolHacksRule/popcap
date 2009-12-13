@@ -4,7 +4,7 @@
 namespace Sexy 
 {
 
-class ListListener 
+class SEXY_EXPORT ListListener 
 {
 public:
 	virtual void ListClicked(int theId, int theIdx, int theClickCount) {}

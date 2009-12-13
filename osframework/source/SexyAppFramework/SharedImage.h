@@ -10,7 +10,7 @@ class Image;
 class DDImage;
 class MemoryImage;
 
-class SharedImage
+class SEXY_EXPORT SharedImage
 {
 public:
 	Image*				mImage;
@@ -21,7 +21,7 @@ public:
 
 typedef std::map<std::pair<std::string, std::string>, SharedImage> SharedImageMap;
 
-class SharedImageRef
+class SEXY_EXPORT SharedImageRef
 {
 public:
 	SharedImage*			mSharedImage;

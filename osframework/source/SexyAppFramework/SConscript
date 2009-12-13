@@ -194,7 +194,7 @@ if env['TARGET_OS'] in ['freebsd', 'netbsd', 'openbsd', 'darwin']:
     if gameenv['static']:
        gameenv.AppendUnique(LIBS = ['iconv'])
 
-env.AppendUnique(CPPDEFINES = ['BUILD_SEXYFRAMEWORK'],
+env.AppendUnique(CPPDEFINES = ['BUILDING_SEXYFRAMEWORK'],
                  LIBS = ['$STDCXX_LIBS'])
 if gameenv['static']:
     env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC'])

@@ -8,7 +8,7 @@ namespace Sexy
 	
 class ButtonListener;
 
-class ScrollbuttonWidget : public ButtonWidget 
+class SEXY_EXPORT ScrollbuttonWidget : public ButtonWidget 
 {
 public:
 	bool				mHorizontal;

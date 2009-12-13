@@ -16,7 +16,7 @@ class WidgetManager;
 
 typedef std::vector<Color> ColorVector;
 
-class Widget : public WidgetContainer
+class SEXY_EXPORT Widget : public WidgetContainer
 {
 public:
 	bool					mVisible;

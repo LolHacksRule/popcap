@@ -10,7 +10,7 @@ namespace Sexy
 
 class Graphics;
 
-class Font
+class SEXY_EXPORT Font
 {
 public:
 	int						mAscent;
