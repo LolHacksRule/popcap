@@ -29,7 +29,7 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('optimize', 'build optimize version', False))
     opts.Add(ListVariable ('optimize_level', 'the level of optimizing',
                            '2', ['0', 's', '1', '2']))
-    opts.Add(BoolVariable ('builddir', 'output to an alternative directory', False))
+    opts.Add(BoolVariable ('builddir', 'output to an alternative directory', True))
     opts.Add(BoolVariable ('static', 'build the framework as a static library', True))
     opts.Add(BoolVariable ('strip', 'strip debug informantion from objects', True))
     opts.Add(BoolVariable ('colorize_output', 'cmake like colorize output message', True))
