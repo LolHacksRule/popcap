@@ -108,7 +108,8 @@ if env['static']:
     imagelib_env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_IMAGELIB'])
     imagelib = imagelib_env.ConvenienceLibrary('ImageLib', srcs)
 else:
-    imagelib_env.AppendUnique(CPPDEFINES = ['BUILDING_IMAGELIB'])
+    imagelib_env.AppendUnique(CPPDEFINES = ['BUILDING_IMAGELIB'],
+                              LIBS = ['$STDCXX_LIBS'])
     imagelib = imagelib_env.SharedLibrary('ImageLib', srcs)
     game.AddExtraInstallableObject(gameenv, imagelib)
 

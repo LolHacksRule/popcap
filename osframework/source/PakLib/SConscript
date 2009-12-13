@@ -10,7 +10,8 @@ Import('env', 'gameenv')
 paklib_env = env.Clone()
 srcs = ['PakInterface.cpp']
 if not env['static']:
-    paklib_env.AppendUnique(CPPDEFINES = ['BUILDING_PAKLIB'])
+    paklib_env.AppendUnique(CPPDEFINES = ['BUILDING_PAKLIB'],
+                            LIBS = ['$STDCXX_LIBS'])
     paklib = paklib_env.SharedLibrary('PakLib', srcs)
     game.AddExtraInstallableObject(gameenv, paklib)
 else:
