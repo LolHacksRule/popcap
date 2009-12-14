@@ -87,6 +87,23 @@ def InstallObject(env, target, sources, additional_suffixes = [],
         return env.InstallAs(targets, stripped, *args, **kwargs)
     return env.Install(target, stripped, *args, **kwargs)
 
+def InstallDir(env, target, source):
+    if not is_List(source):
+        source = [source]
+    nodes = env.arg2nodes(source, env.fs.Entry)
+    targets = []
+    for node in nodes:
+        if env.fs.isfile (node.path):
+           targets += env.Install(target, node)
+        else:
+            files = ListDirFiles(node.abspath)
+            for f in files:
+                relpath = os.path.relpath(f, node.abspath)
+                targets += env.InstallAs(os.path.join(str(target),
+                                                      os.path.basename(node.path),
+                                                      relpath), f)
+    return targets
+
 def __InstallGameExras(env, game, destdir, extras, basedir):
     targets = []
     basedir = os.path.abspath(basedir)
@@ -134,11 +151,11 @@ def Md5sum(filename):
     f = file(filename,'rb')
     return hashlib.md5(f.read()).hexdigest()
 
-def ListDirFiles(path, list_dir = False):
+def ListDirFiles(path, empty_dir = False):
     result = []
     for root, dirs, files in os.walk(path):
-        if list_dir:
-            result += dirs
+        if not files and not dirs and empty_dir:
+            result.append(root)
         for f in files:
             result.append(os.path.join(root, f))
     return result
