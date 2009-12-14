@@ -363,7 +363,7 @@ bool UdpInputInterface::GetEvent (Event & event)
 	return false;
 }
 
-bool UdpInputInterface::GetInfo(InputInfo &theInfo)
+bool UdpInputInterface::GetInfo(InputInfo &theInfo, int subid)
 {
 	if (!mHasKey && !mHasPointer)
 		return false;

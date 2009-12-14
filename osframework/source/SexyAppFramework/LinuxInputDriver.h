@@ -40,7 +40,7 @@ public:
 
         virtual bool          HasEvent ();
         virtual bool          GetEvent (Event & event);
-	virtual bool          GetInfo (InputInfo &theInfo);
+	virtual bool          GetInfo (InputInfo &theInfo, int subid = 0);
 
 	const std::string &   GetDeviceName ()
 	{

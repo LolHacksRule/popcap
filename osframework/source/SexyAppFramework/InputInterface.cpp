@@ -71,9 +71,14 @@ bool InputInterface::GetProperty(const std::string& name,
 	return false;
 }
 
-bool InputInterface::GetInfo(InputInfo &theInfo)
+int InputInterface::GetNumDevices()
 {
-	theInfo.mName = "";
+	return 1;
+}
+
+bool InputInterface::GetInfo(InputInfo &theInfo, int subid)
+{
+	theInfo.mName = mInputDriver->mName;
 	theInfo.mHasPointer = true;
 	theInfo.mHasKey = false;
 	theInfo.mHasAcc = false;

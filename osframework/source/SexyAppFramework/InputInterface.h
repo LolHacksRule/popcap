@@ -44,7 +44,8 @@ public:
 	virtual void	      Connect ();
 	virtual void	      Reconnect();
 	virtual void	      Update ();
-	virtual bool          GetInfo(InputInfo &theInfo);
+	virtual int           GetNumDevices();
+	virtual bool          GetInfo(InputInfo &theInfo, int subid = 0);
 
 	virtual bool          GetProperty (const std::string& name,
 					   void* retval);

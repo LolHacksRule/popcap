@@ -286,7 +286,8 @@ void InputManager::GetStatus(InputStatusInfo &theInfo)
 {
 	AutoCrit anAutoCrit (mCritSect);
 
-	theInfo.mNumInput = mDrivers.size();
+	theInfo.mNumDriver = mDrivers.size();
+	theInfo.mNumInput = 0;
 	theInfo.mNumPointer = 0;
 	theInfo.mNumKeyboard = 0;
 	theInfo.mNum3DInput = 0;
@@ -295,11 +296,16 @@ void InputManager::GetStatus(InputStatusInfo &theInfo)
 	Drivers::iterator it;
 	for (it = mDrivers.begin (); it != mDrivers.end (); ++it)
 	{
-		if (!(*it)->GetInfo(anInfo))
-			continue;
+		int numDevices = (*it)->GetNumDevices();
+		theInfo.mNumInput += numDevices;
+		for (int i = 0; i < numDevices; i++)
+		{
+			if (!(*it)->GetInfo(anInfo))
+				continue;
 
-		UpdateStatusInfo(theInfo, anInfo);
-		anInfo.Reset();
+			UpdateStatusInfo(theInfo, anInfo);
+			anInfo.Reset();
+		}
 	}
 	if (mApp->mDDInterface && mApp->mDDInterface->GetInputInfo(anInfo))
 		UpdateStatusInfo(theInfo, anInfo);

@@ -1064,7 +1064,7 @@ bool LinuxInputInterface::GetEvent (Event & event)
 	return false;
 }
 
-bool LinuxInputInterface::GetInfo (InputInfo &theInfo)
+bool LinuxInputInterface::GetInfo (InputInfo &theInfo, int subid)
 {
 	if (mFd < 0)
 		return false;

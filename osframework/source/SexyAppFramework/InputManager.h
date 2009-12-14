@@ -17,6 +17,7 @@ struct InputStatusInfo {
 	int mNumKeyboard;
 	int mNum3DInput;
 	int mNumInput;
+	int mNumDriver;
 };
 
 class SEXY_EXPORT InputManager
