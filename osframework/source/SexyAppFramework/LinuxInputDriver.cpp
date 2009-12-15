@@ -760,8 +760,10 @@ static int translate_key(int keysym)
 			return keymap[i].keyCode;
 	}
 
-	if (keysym >= KEY_0 && keysym <= KEY_9)
-		return '0' + keysym - KEY_0;
+	if (keysym >= KEY_1 && keysym <= KEY_9)
+		return '1' + keysym - KEY_1;
+	if (keysym == KEY_0)
+		return '0';
 	return 0;
 }
 
