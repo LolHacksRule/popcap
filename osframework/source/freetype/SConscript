@@ -122,30 +122,30 @@ else:
 header_dir = 'include'
 lib_dir = 'lib'
 
-freetype_headers = freetype_env.Install (os.path.join (header_dir, 'freetype2'),
-                                         Glob(os.path.join (freetype_dir,
-                                                            'include', '*')) +
-                                         Glob(os.path.join (freetype_dir,
-                                                            'include', 'freetype', '*')) +
-                                         Glob(os.path.join (freetype_dir,
-                                                            'include', 'freetype', 'config', '*')))
-
-freetype = freetype_env.Install (lib_dir, freetype_lib)
-Depends (freetype, freetype_headers)
+freetype = freetype_env.Install (header_dir,
+                                 Glob(os.path.join (freetype_dir,
+                                                    'include', '*')))
+freetype += freetype_env.Install (os.path.join (header_dir, 'freetype2'),
+                                  Glob(os.path.join (freetype_dir,
+                                                     'include', 'freetype', '*')) +
+                                  Glob(os.path.join (freetype_dir,
+                                                     'include', 'freetype', 'config', '*')))
+freetype += freetype_env.Install (lib_dir, freetype_lib)
 
 freetype_env.Alias ('freetype_install', freetype)
 
 ### sdk
-header_dir = os.path.join('$sdkdir', 'include', 'freetype2')
+header_dir = os.path.join('$sdkdir', 'include')
 lib_dir = os.path.join('$sdkdir', 'lib')
 
-ft2_sdk = env.Install (os.path.join (header_dir, 'freetype2'),
+ft2_sdk = env.Install (header_dir,
                        Glob(os.path.join (freetype_dir,
-                                          'include', '*')) +
-                       Glob(os.path.join (freetype_dir,
-                                          'include', 'freetype', '*')) +
-                       Glob(os.path.join (freetype_dir,
-                                        'include', 'freetype', 'config', '*')))
+                                          'include', '*')))
+ft2_sdk += env.Install (os.path.join (header_dir, 'freetype2'),
+                        Glob(os.path.join (freetype_dir,
+                                           'include', 'freetype', '*')) +
+                        Glob(os.path.join (freetype_dir,
+                                            'include', 'freetype', 'config', '*')))
 ft2_sdk += env.Install (lib_dir, freetype_lib)
 
 env.Alias ('ft2_sdk_install', ft2_sdk)
