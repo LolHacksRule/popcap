@@ -151,7 +151,7 @@ bool XMLParser::GetUTF8Char(wchar_t* theChar, bool* error)
 
 		*theChar = (wchar_t)aTempChar;
 		*error = false;
-		return true;		
+		return true;
 	}
 
 	*error = false;
@@ -249,7 +249,7 @@ bool XMLParser::GetUTF16BEChar(wchar_t* theChar, bool* error)
 }
 
 bool XMLParser::OpenFile(const std::string& theFileName)
-{		
+{
 	mFile = p_fopen(theFileName.c_str(), "r");
 
 	if (mFile == NULL)
@@ -274,7 +274,7 @@ bool XMLParser::OpenFile(const std::string& theFileName)
 				mGetCharFunc = &XMLParser::GetUTF16Char;
 
 			p_ungetc(aChar2, mFile);
-			p_ungetc(aChar1, mFile);			
+			p_ungetc(aChar1, mFile);
 		}
 		if (mGetCharFunc = &XMLParser::GetAsciiChar)
 		{
@@ -289,7 +289,7 @@ bool XMLParser::OpenFile(const std::string& theFileName)
 
 				p_ungetc(aChar3, mFile);
 				p_ungetc(aChar2, mFile);
-				p_ungetc(aChar1, mFile);			
+				p_ungetc(aChar1, mFile);
 			}
 		}
 	}
@@ -305,9 +305,9 @@ void XMLParser::SetStringSource(const std::wstring& theString)
 
 	int aSize = theString.size();
 
-	mBufferedText.resize(aSize);	
+	mBufferedText.resize(aSize);
 	for (int i = 0; i < aSize; i++)
-		mBufferedText[i] = theString[aSize - i - 1];	
+		mBufferedText[i] = theString[aSize - i - 1];
 }
 
 void XMLParser::SetStringSource(const std::string& theString)
@@ -318,14 +318,14 @@ void XMLParser::SetStringSource(const std::string& theString)
 bool XMLParser::NextElement(XMLElement* theElement)
 {
 	for (;;)
-	{		
+	{
 		theElement->mType = XMLElement::TYPE_NONE;
 		theElement->mSection = mSection;
 		theElement->mValue = _S("");
-		theElement->mAttributes.clear();			
+		theElement->mAttributes.clear();
 		theElement->mInstruction.erase();
 
-		bool hasSpace = false;	
+		bool hasSpace = false;
 		bool inQuote = false;
 		bool gotEndQuote = false;
 
@@ -335,18 +335,18 @@ bool XMLParser::NextElement(XMLElement* theElement)
 		std::wstring aAttributeValue;
 
 		std::wstring aLastAttributeKey;
-		
+
 		for (;;)
 		{
 			// Process character by character
 
 			wchar_t c;
 			int aVal;
-			
+
 			if (mBufferedText.size() > 0)
-			{								
+			{
 				c = mBufferedText[mBufferedText.size()-1];
-				mBufferedText.pop_back();				
+				mBufferedText.pop_back();
 
 				aVal = 1;
 			}
@@ -370,7 +370,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 					aVal = 0;
 				}
 			}
-			
+
 			if (aVal == 1)
 			{
 				bool processChar = false;
@@ -385,12 +385,28 @@ bool XMLParser::NextElement(XMLElement* theElement)
 					// Just add text to theElement->mInstruction until we find -->
 
 					SexyString* aStrPtr = &theElement->mInstruction;
-					
-					*aStrPtr += (SexyChar)c;					
+
+					*aStrPtr += (SexyChar)c;
 
 					int aLen = aStrPtr->length();
 
 					if ((c == L'>') && (aLen >= 3) && ((*aStrPtr)[aLen - 2] == L'-') && ((*aStrPtr)[aLen - 3] == L'-'))
+					{
+						*aStrPtr = aStrPtr->substr(0, aLen - 3);
+						break;
+					}
+				}
+				else if (theElement->mType == XMLElement::TYPE_CDATA)
+				{
+					// Just add text to theElement->mInstruction until we find -->
+
+					SexyString* aStrPtr = &theElement->mInstruction;
+
+					*aStrPtr += (SexyChar)c;
+
+					int aLen = aStrPtr->length();
+
+					if ((c == L'>') && (aLen >= 3) && ((*aStrPtr)[aLen - 2] == L']') && ((*aStrPtr)[aLen - 3] == L']'))
 					{
 						*aStrPtr = aStrPtr->substr(0, aLen - 3);
 						break;
@@ -404,8 +420,8 @@ bool XMLParser::NextElement(XMLElement* theElement)
 
 					if ((theElement->mInstruction.length() != 0) || (::iswspace(c)))
 						aStrPtr = &theElement->mInstruction;
-					
-					*aStrPtr += (SexyChar)c;					
+
+					*aStrPtr += (SexyChar)c;
 
 					int aLen = aStrPtr->length();
 
@@ -436,7 +452,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 
 								//OLD: mBufferedText = c + mBufferedText;
 
-								mBufferedText.push_back(c);								
+								mBufferedText.push_back(c);
 								break;
 							}
 
@@ -446,6 +462,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 							}
 							else
 							{
+								printf ("theElement->mType %d %s\n", theElement->mType, theElement->mValue.c_str());
 								Fail(_S("Unexpected '<'"));
 								return false;
 							}
@@ -453,7 +470,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 						else if (c == L'>')
 						{
 							if (theElement->mType == XMLElement::TYPE_START)
-							{	
+							{
 								bool insertEnd = false;
 
 								if (aAttributeKey == L"/")
@@ -466,7 +483,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 								{
 									// Probably isn't committed yet
 									if (aAttributeKey.length() > 0)
-									{										
+									{
 //										theElement->mAttributes[aLastAttributeKey] = aAttributeValue;
 
 										aAttributeKey = XMLDecodeString(aAttributeKey);
@@ -489,7 +506,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 										{
 											// Its an empty element, fake start and end segments
 //											theElement->mAttributes[aLastAttributeKey] = aVal.substr(0, aLen - 1);
-											
+
 											AddAttribute(theElement, WStringToSexyString(aLastAttributeKey), XMLDecodeString(aVal.substr(0, aLen - 1)));
 
 											insertEnd = true;
@@ -510,7 +527,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 
 								// Do we want to fake an ending section?
 								if (insertEnd)
-								{									
+								{
 									SexyString anAddString = _S("</") + theElement->mValue + _S(">");
 
 									int anOldSize = mBufferedText.size();
@@ -531,7 +548,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 								if (mSection.length() != 0)
 									mSection += _S("/");
 
-								mSection += theElement->mValue;								
+								mSection += theElement->mValue;
 
 								break;
 							}
@@ -545,7 +562,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 								}
 
 								SexyString aLastSectionName = mSection.substr(aLastSlash + 1);
-								
+
 								if (aLastSectionName != theElement->mValue)
 								{
 									Fail(_S("End '") + theElement->mValue + _S("' Doesn't Match Start '") + aLastSectionName + _S("'"));
@@ -559,16 +576,17 @@ bool XMLParser::NextElement(XMLElement* theElement)
 
 								break;
 							}
-							else
+							else if (theElement->mType != XMLElement::TYPE_CDATA)
 							{
+								printf ("theElement->mType %d\n", theElement->mType);
 								Fail(_S("Unexpected '>'"));
 								return false;
 							}
 						}
 						else if ((c == L'/') && (theElement->mType == XMLElement::TYPE_START) && (theElement->mValue == _S("")))
-						{					
-							theElement->mType = XMLElement::TYPE_END;					
-						}				
+						{
+							theElement->mType = XMLElement::TYPE_END;
+						}
 						else if ((c == L'?') && (theElement->mType == XMLElement::TYPE_START) && (theElement->mValue == _S("")))
 						{
 							theElement->mType = XMLElement::TYPE_INSTRUCTION;
@@ -579,19 +597,37 @@ bool XMLParser::NextElement(XMLElement* theElement)
 								hasSpace = true;
 
 							// It's a comment!
-							if ((theElement->mType == XMLElement::TYPE_START) && (theElement->mValue == _S("!--")))
+							if ((theElement->mType == XMLElement::TYPE_START) &&
+							    (theElement->mValue == _S("!--")))
+							{
 								theElement->mType = XMLElement::TYPE_COMMENT;
+							}
+							else if ((theElement->mType == XMLElement::TYPE_START) &&
+								 (theElement->mValue == _S("![CDATA[")))
+							{
+								theElement->mType = XMLElement::TYPE_CDATA;
+								theElement->mInstruction += c;
+							}
 						}
 						else if (c > 32)
 						{
-							processChar = true;
+							if ((theElement->mType == XMLElement::TYPE_START) &&
+							    (theElement->mValue == _S("![CDATA[")))
+							{
+								theElement->mType = XMLElement::TYPE_CDATA;
+								theElement->mInstruction += c;
+							}
+							else
+							{
+								processChar = true;
+							}
 						}
 						else
 						{
 							Fail(_S("Illegal Character"));
 							return false;
 						}
-					} 
+					}
 					else
 					{
 						processChar = true;
@@ -627,7 +663,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 									{
 										doingAttribute = true;
 									}
-																
+
 									AttributeVal = false;
 								}
 
@@ -657,8 +693,8 @@ bool XMLParser::NextElement(XMLElement* theElement)
 							}
 
 							if (aStrPtr != NULL)
-							{								
-								*aStrPtr += c;						
+							{
+								*aStrPtr += c;
 							}
 						}
 						else
@@ -668,7 +704,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 								theElement->mValue += _S(" ");
 								hasSpace = false;
 							}
-							
+
 							theElement->mValue += (SexyChar)c;
 						}
 					}
@@ -678,10 +714,10 @@ bool XMLParser::NextElement(XMLElement* theElement)
 			{
 				if (theElement->mType != XMLElement::TYPE_NONE)
 					Fail(_S("Unexpected End of File"));
-					
+
 				return false;
-			}			
-		}		
+			}
+		}
 
 		if (aAttributeKey.length() > 0)
 		{
@@ -692,7 +728,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 			AddAttribute(theElement, WStringToSexyString(aAttributeKey), WStringToSexyString(aAttributeValue));
 		}
 
-		theElement->mValue = XMLDecodeString(theElement->mValue);				
+		theElement->mValue = XMLDecodeString(theElement->mValue);
 
 		// Ignore comments
 		if ((theElement->mType != XMLElement::TYPE_COMMENT) || mAllowComments)
@@ -719,3 +755,83 @@ std::string XMLParser::GetFileName()
 {
 	return mFileName;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

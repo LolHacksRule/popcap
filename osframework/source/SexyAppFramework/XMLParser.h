@@ -32,7 +32,8 @@ public:
 		TYPE_END,
 		TYPE_ELEMENT,
 		TYPE_INSTRUCTION,
-		TYPE_COMMENT
+		TYPE_COMMENT,
+		TYPE_CDATA
 	};
 public:
 	
