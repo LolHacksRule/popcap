@@ -142,11 +142,16 @@ def stripFonts(env, srcdir, fonts, podirname, destdir, langs):
                            accumtexts)
 
     ### strip fonts
+    fontforge = env.WhereIs('fontforge')
     for font in fonts:
-        basename = os.path.basename(str(font))
-        tmpname = os.path.splitext(basename)[0] + '-striped' + os.path.splitext(basename)[1]
-        fontstrip = env.File(os.path.join('#tools', 'fontforge', 'fontstrip.pe')).path
-        command = 'fontforge %s --font ${SOURCES[0]} -i ${SOURCES[1]} -o $TARGET' % (fontstrip)
-        sfont = env.Command(tmpname, [font, texts], command)
-        targets += env.InstallAs(os.path.join(destdir, basename), sfont)
+        if fontforge:
+            basename = os.path.basename(str(font))
+            tmpname = os.path.splitext(basename)[0] + '-striped' + os.path.splitext(basename)[1]
+            fontstrip = env.File(os.path.join('#tools', 'fontforge', 'fontstrip.pe')).path
+            command = 'fontforge %s --font ${SOURCES[0]} -i ${SOURCES[1]} -o $TARGET' % (fontstrip)
+            sfont = env.Command(tmpname, [font, texts], command)
+            targets += env.InstallAs(os.path.join(destdir, basename), sfont)
+        else:
+            targets += env.Install(destdir, font)
+
     return targets
