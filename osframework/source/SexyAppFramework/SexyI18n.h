@@ -5,6 +5,7 @@
 
 namespace Sexy {
 
+#define tr_noop(x) x
 const char* tr(const char *s);
 const std::string tr(const std::string &s);
 
