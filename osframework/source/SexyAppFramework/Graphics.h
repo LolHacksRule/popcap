@@ -177,7 +177,7 @@ public:
 	bool					Is3D() { return mIs3D; }
 
 	static void                                     SetPreferedEncoding(const std::string &encoding);
-	static const std::string                        getPreferedEncoding();
+	static const std::string                        GetPreferedEncoding();
 };
 
 class SEXY_EXPORT GraphicsAutoState
