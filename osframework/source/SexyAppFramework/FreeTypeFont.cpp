@@ -59,6 +59,8 @@ FreeTypeFont::~FreeTypeFont()
 
 int FreeTypeFont::StringWidth(const SexyString& theString, bool unicode)
 {
+	if (Graphics::getPreferedEncoding() == "UTF-8")
+		unicode = true;
 	return mScaledFont->StringWidth(theString, unicode);
 }
 
