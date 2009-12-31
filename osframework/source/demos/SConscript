@@ -5,6 +5,8 @@
 import os
 import sys
 import game
+import configs
+from intltoolize import intltoolize, installlocale
 
 srcdir = Dir('.')
 if srcdir.srcdir:
@@ -15,6 +17,7 @@ else:
 Import('gameenv')
 
 env = gameenv.Clone()
+language = env['language']
 env.PrependUnique(CPPPATH = ['#', '#SexyAppFramework'],
                   LIBPATH = [os.path.join ('..', 'SexyAppFramework'),
                              os.path.join ('..', 'PakLib'),
@@ -50,9 +53,8 @@ hungarr = env.Program('hungarr', [os.path.join ('Hun-garr', 'Board.cpp'),
                                   os.path.join ('Hun-garr', 'OptionsDialog.cpp'),
                                   os.path.join ('Hun-garr', 'TitleScreen.cpp'),
                                   os.path.join ('Hun-garr', 'Res.cpp'),
-                                  os.path.join ('Hun-garr', 'main.cpp')])
-
-language = env['language']
+                                  os.path.join ('Hun-garr', 'main.cpp')],
+                      CPPDEFINES = [('SEXY_LANG', configs.QuoteStr(language))])
 
 ### install game hungarr
 game_name = 'Hun-garr'
@@ -71,5 +73,13 @@ files.append(os.path.join(srcdir, 'sounds'))
 ### properties
 files.append(os.path.join(srcdir, 'properties'))
 
+### intltoolize
+intltoolize(env, os.path.join('.', 'Hun-garr'), 'po', 'hungarr')
+
+targets += installlocale(env, os.path.join('.', 'Hun-garr'),
+                         'po', 'hungarr', language,
+                         os.path.join(destdir, 'locale'))
 targets = game.InstallGame(env, game_name, hungarr, destdir, files, targets)
+
 env.Alias('hungarr_install', targets)
+
