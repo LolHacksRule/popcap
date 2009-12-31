@@ -1,0 +1,72 @@
+#!/bin/env fontforge
+# lessfont.pe
+
+fontfile = ""
+outfile = "myfont.ttf"
+textstr = ""
+
+if ($argc == 1)
+    Print("Usage: ", $0, " [-h|--help] [--font font to get glyfs] [--text text char to include in font] [-i|--inputfile]" )
+    Quit(1)
+endif
+
+while ($argc > 1)
+    temp = $1
+    if (Strsub(temp, 1, 2) == '-')
+        temp = Strsub(temp,1)
+    endif
+    
+    if ( temp == "-font" && $argc > 2)
+        shift
+        fontfile = $1
+    elseif ( (temp == "-o" || temp == "-outfile") && $argc > 2)
+        shift
+        outfile = $1
+    elseif ( temp == "-text" && $argc > 2)
+        shift
+        textstr = $1
+    elseif ( (temp == "-i" || temp == "-inputfile") && $argc > 2)
+        shift
+        textstr = LoadStringFromFile($1)
+    elseif ( temp == "-h" || temp == "-help" )
+        Print("Usage: ", $0, " [-h|--help] [--font font to get glyfs] [--text text char to include in font] [-i|--inputfile]" )
+        Quit(1)
+    endif
+    shift
+endloop
+
+if (fontfile=="")
+    Print("You should assign a font to find glyfs needed")
+    Quit(1)
+endif
+
+# included char collection
+char = Ucs4(textstr)
+Print("Text Length:", SizeOf(char))
+
+if (SizeOf(char) == 0)
+    Print("No found text char to include in font!")
+    Quit(1)
+endif
+
+Print("Loading ", fontfile, "...") 
+Open(fontfile) 
+
+Print("Char count in font: ", CharCnt())
+
+start_pos = 0x7b
+stop_pos = CharCnt()-1
+
+Select(start_pos, stop_pos)
+i=0
+while (i< SizeOf(char))
+    if (char[i] >= start_pos)
+        SelectFewer(char[i])
+    endif
+    i++
+endloop
+Clear()
+Generate(outfile)
+Close()
+Quit(0) 
+
