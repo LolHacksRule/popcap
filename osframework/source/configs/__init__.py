@@ -407,3 +407,6 @@ def SetupColorizeOutput(env):
     env['GAMEGENVERSIONSTR'] = game_gen_ver_message
     env['ARCHIVESTR'] = archive_message
     env['MD5SUMSTR'] = md5sum_message
+
+def QuoteStr(s):
+    return '\\"' + s + '\\"'
