@@ -77,7 +77,7 @@ if not opts.args.has_key('strip') and \
 ### create scons environment
 env = Environment (options = opts, ENV = os.environ,
                    tools = [ 'default', 'convlib', 'untar', 'archive',
-                             'scanreplace', 'md5sum'])
+                             'scanreplace', 'md5sum', 'gettext'])
 config.Configure (env)
 Help (opts.GenerateHelpText (env))
 
