@@ -68,16 +68,25 @@ def Configure(env):
     SetupColorizeOutput(env)
     FreeTypeConfigure(env)
     fontforgeConfigure(env)
+    gettextConfigure(env)
 
 def fontforgeConfigure(env):
     if not env.WhereIs('fontforge'):
         rootdir = env.Dir('#').abspath
         if sys.platform == 'linux2':
             env.AppendENVPath('PATH',
-                              os.path.join(rootdir, 'tools', 'fontforge', 'linux'))
+                              os.path.join(rootdir, 'tools',
+                                           'fontforge', 'linux'))
         elif sys.platform == 'win32':
             env.AppendENVPath('PATH',
-                              os.path.join(rootdir, 'tools', 'fontforge', 'win32'))
+                              os.path.join(rootdir, 'tools',
+                                           'fontforge', 'win32'))
+
+def gettextConfigure(env):
+    if sys.platform == 'win32':
+        env.AppendENVPath('PATH',
+                          os.path.join(rootdir, 'tools', 'gettext',
+                                       'win32', 'bin'))
 
 def PosixModuleLoaderAddOptions (opts):
     pass
