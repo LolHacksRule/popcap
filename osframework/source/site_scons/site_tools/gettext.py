@@ -5,7 +5,7 @@ def generate(env):
     try:
         env["MSGFMT"]
     except KeyError:
-        env["XGETTEXT"] = WhereIs("xgettext")
+        env["XGETTEXT"] = WhereIs("xgettext") or 'xgettext'
         env["MSGFMT"] = WhereIs("msgfmt")
         msgfmt = Builder(action = "$MSGFMT -c --statistics -o $TARGET $SOURCE",
                          src_suffix = ".po",
@@ -13,14 +13,14 @@ def generate(env):
                          single_source = True)
         env["BUILDERS"]["Msgfmt"] = msgfmt
 
-        env["MSGMERGE"] = WhereIs("msgmerge")
+        env["MSGMERGE"] = WhereIs("msgmerge") or 'msgmerge'
         msgmerge = Builder(action = "$MSGMERGE $TARGET $SOURCE -o $TARGET",
                            src_suffix = ".pot",
                            suffix = ".po",
                            single_source = True)
         env["BUILDERS"]["MsgMerge"] = msgmerge
 
-        env["MSGINIT"] = WhereIs("msginit")
+        env["MSGINIT"] = WhereIs("msginit") or 'msginit'
         msginit = Builder(action = "$MSGINIT -i $SOURCE -o $TARGET --no-translator",
                           src_suffix = ".pot",
                           suffix = ".po",
