@@ -93,7 +93,7 @@ def potoxml(target, source, env):
     import po2xml
     po2xml.po2xml(source[0].path, target[0].path)
 
-def installlocale(env, srcdir, podirname, domain, langs, localedir):
+def installLocale(env, srcdir, podirname, domain, langs, localedir):
     origsrcdir = getsrcdir(env, srcdir)
     podir = os.path.join(origsrcdir, podirname)
     buildpodir = os.path.join(srcdir, podirname)
@@ -109,4 +109,44 @@ def installlocale(env, srcdir, podirname, domain, langs, localedir):
             targets += xml
             target = os.path.join(localedir, lang, domain + '.xml')
             targets += env.InstallAs(target, xml)
+    return targets
+
+def accumtexts(target, source, env):
+    fp = file(target[0].abspath, 'w')
+    fp.write('a')
+    for lingua in source:
+        lfp = file(lingua.abspath, 'r')
+        for line in lfp.readlines():
+            fp.write(line)
+    fp.close()
+
+def stripFonts(env, srcdir, fonts, podirname, destdir, langs):
+    origsrcdir = getsrcdir(env, srcdir)
+    podir = os.path.join(origsrcdir, podirname)
+    buildpodir = os.path.join(srcdir, podirname)
+    linguas = getlinguas(env, srcdir, podirname)
+    if type(langs) is not list:
+        langs = [langs]
+    if type(fonts) is not list:
+        fonts = [fonts]
+
+    targets = []
+    ### accumtexts
+    pos = [ lang + '.po' for lang in langs ]
+    texts = os.path.join('font-extractor.txt')
+    toaccums = []
+    for lingua in linguas:
+        if os.path.basename(lingua) in pos:
+            toaccums.append(lingua)
+    targets += env.Command(texts, toaccums,
+                           accumtexts)
+
+    ### strip fonts
+    for font in fonts:
+        basename = os.path.basename(str(font))
+        tmpname = os.path.splitext(basename)[0] + '-striped' + os.path.splitext(basename)[1]
+        fontstrip = env.File(os.path.join('#tools', 'fontforge', 'fontstrip.pe')).path
+        command = 'fontforge %s --font ${SOURCES[0]} -i ${SOURCES[1]} -o $TARGET' % (fontstrip)
+        sfont = env.Command(tmpname, [font, texts], command)
+        targets += env.InstallAs(os.path.join(destdir, basename), sfont)
     return targets
