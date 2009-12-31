@@ -1,6 +1,63 @@
 #!/usr/bin/python
 import os
+import sys
+import stat
+
 from SCons.Defaults import *
+from SCons.Util import *
+
+if not hasattr(os.path, 'relpath'):
+    if sys.platform == 'win32':
+        def RelPath(path, start=os.path.curdir):
+            """Return a relative version of a path"""
+
+            from os.path import abspath, join, sep, pardir, splitunc
+
+            if not path:
+                raise ValueError("no path specified")
+            start_list = abspath(start).split(sep)
+            path_list = abspath(path).split(sep)
+            if start_list[0].lower() != path_list[0].lower():
+                unc_path, rest = splitunc(path)
+                unc_start, rest = splitunc(start)
+                if bool(unc_path) ^ bool(unc_start):
+                    raise ValueError("Cannot mix UNC and non-UNC paths (%s and %s)"
+                                                                        % (path, start))
+                else:
+                    raise ValueError("path is on drive %s, start on drive %s"
+                                                        % (path_list[0], start_list[0]))
+            # Work out how much of the filepath is shared by start and path.
+            for i in range(min(len(start_list), len(path_list))):
+                if start_list[i].lower() != path_list[i].lower():
+                    break
+            else:
+                i += 1
+
+            rel_list = [pardir] * (len(start_list)-i) + path_list[i:]
+            if not rel_list:
+                return curdir
+            return join(*rel_list)
+    else:
+        def RelPath(path, start=os.path.curdir):
+            """Return a relative version of a path"""
+
+            from os.path import abspath, join, sep, pardir, commonprefix
+
+            if not path:
+                raise ValueError("no path specified")
+
+            start_list = abspath(start).split(sep)
+            path_list = abspath(path).split(sep)
+
+            # Work out how much of the filepath is shared by start and path.
+            i = len(commonprefix([start_list, path_list]))
+
+            rel_list = [pardir] * (len(start_list)-i) + path_list[i:]
+            if not rel_list:
+                return curdir
+            return join(*rel_list)
+else:
+    RelPath = os.path.relpath
 
 def GetCurrentSrcDir(env):
     srcdir = env.Dir('.')
@@ -160,6 +217,23 @@ def ListDirFiles(path, empty_dir = False):
             result.append(os.path.join(root, f))
     return result
 
+def InstallDir(env, target, source):
+    if not is_List(source):
+        source = [source]
+    nodes = env.arg2nodes(source, env.fs.Entry)
+    targets = []
+    for node in nodes:
+        if env.fs.isfile (node.path):
+           targets += env.Install(target, node)
+        else:
+            files = ListDirFiles(node.abspath)
+            for f in files:
+                relpath = RelPath(f, node.abspath)
+                targets += env.InstallAs(os.path.join(str(target),
+                                                      os.path.basename(node.path),
+                                                      relpath), f)
+    return targets
+
 def InstallGameExtras(env, game, destdir, targets = []):
     ### install extra objects
     targets += InstallObject(env, destdir, env['extras_objs'])
@@ -227,7 +301,7 @@ def PackageGame(env, package_name, rootdir, targets = [], archive_format = None)
 
 def InstallGame(env, name, prog, destdir, files, targets = []):
     targets += InstallObject(env, destdir, prog)
-    targets += env.Install(destdir, files)
+    targets += InstallDir(env, destdir, files)
 
     env['GAME_EXE'] = FilterInstallableObject(env, prog)[0].name
     targets += InstallGameExtras(env, name, destdir, targets)
