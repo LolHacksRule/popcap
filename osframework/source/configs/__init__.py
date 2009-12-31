@@ -67,6 +67,17 @@ def Configure(env):
         env.AppendUnique(CPPDEFINES = ['SEXY_DEBUG'])
     SetupColorizeOutput(env)
     FreeTypeConfigure(env)
+    fontforgeConfigure(env)
+
+def fontforgeConfigure(env):
+    if not env.WhereIs('fontforge'):
+        rootdir = env.Dir('#').abspath
+        if sys.platform == 'linux2':
+            env.AppendENVPath('PATH',
+                              os.path.join(rootdir, 'tools', 'fontforge', 'linux'))
+        elif sys.platform == 'win32':
+            env.AppendENVPath('PATH',
+                              os.path.join(rootdir, 'tools', 'fontforge', 'win32'))
 
 def PosixModuleLoaderAddOptions (opts):
     pass
