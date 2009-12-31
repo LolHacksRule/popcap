@@ -67,7 +67,7 @@ def intltoolize(env, srcdir, podirname, domain,
     if package is None:
         package = domain
     command = '$XGETTEXT --package-name=%s --package-version=%s ' \
-              '-o $TARGET --keyword=tr -f $SOURCE' % (domain, '1.0.0')
+              '-o $TARGET --keyword=tr -f $SOURCE' % (package, package_version)
     potbuild = env.Command (os.path.join(podir, potbuild_name), potfiles,
                             command)
     env.Depends(potbuild, sources)
