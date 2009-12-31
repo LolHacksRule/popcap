@@ -78,6 +78,17 @@ Graphics::~Graphics()
 {
 }
 
+static std::string preferedEncoding;
+void Graphics::SetPreferedEncoding(const std::string &encoding)
+{
+	preferedEncoding = encoding;
+}
+
+const std::string Graphics::getPreferedEncoding()
+{
+	return preferedEncoding;
+}
+
 void Graphics::PushState()
 {
 	mStateStack.push_back(GraphicsState());
@@ -645,6 +656,8 @@ void Graphics::DrawLineAA(int theStartX, int theStartY, int theEndX, int theEndY
 
 void Graphics::DrawString(const SexyString& theString, int theX, int theY, bool unicode)
 {
+	if (Graphics::getPreferedEncoding() == "UTF-8")
+		unicode = true;
 	if (mFont != NULL)
 		mFont->DrawString(this, theX, theY, theString, mColor, mClipRect, unicode);
 }
@@ -1080,6 +1093,9 @@ void Graphics::DrawImageCel(Image* theImageStrip, const Rect& theDestRect, int t
 
 int Graphics::WriteString(const SexyString& theString, int theX, int theY, int theWidth, int theJustification, bool drawString, int theOffset, int theLength, int theOldColor, bool unicode)
 {
+	if (Graphics::getPreferedEncoding() == "UTF-8")
+		unicode = true;
+
 	Font* aFont = GetFont();
 	if (theOldColor==-1)
 		theOldColor = mColor.ToInt();

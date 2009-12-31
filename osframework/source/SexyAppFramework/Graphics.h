@@ -175,6 +175,9 @@ public:
 	int						GetWordWrappedHeight(int theWidth, const SexyString& theLine, int theLineSpacing = -1, int *theMaxWidth = NULL);
 
 	bool					Is3D() { return mIs3D; }
+
+	static void                                     SetPreferedEncoding(const std::string &encoding);
+	static const std::string                        getPreferedEncoding();
 };
 
 class SEXY_EXPORT GraphicsAutoState
