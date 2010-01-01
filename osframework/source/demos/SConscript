@@ -6,7 +6,7 @@ import os
 import sys
 import game
 import configs
-from intltoolize import intltoolize, installlocale
+from intltoolize import intltoolize, installLocale, stripFonts
 
 srcdir = Dir('.')
 if srcdir.srcdir:
@@ -65,7 +65,7 @@ targets = []
 
 ### data
 files = []
-files.append(os.path.join(srcdir, 'fonts'))
+#files.append(os.path.join(srcdir, 'fonts'))
 files.append(os.path.join(srcdir, 'images'))
 files.append(os.path.join(srcdir, 'music'))
 files.append(os.path.join(srcdir, 'sounds'))
@@ -76,9 +76,19 @@ files.append(os.path.join(srcdir, 'properties'))
 ### intltoolize
 intltoolize(env, os.path.join('.', 'Hun-garr'), 'po', 'hungarr')
 
-targets += installlocale(env, os.path.join('.', 'Hun-garr'),
+targets += installLocale(env, os.path.join('.', 'Hun-garr'),
                          'po', 'hungarr', language,
                          os.path.join(destdir, 'locale'))
+
+### fonts
+targets += env.Install(os.path.join(destdir, 'fonts'),
+                       Glob(os.path.join(srcdir, 'fonts', '*.gif')) +
+                       Glob(os.path.join(srcdir, 'fonts', '*.png')) +
+                       Glob(os.path.join(srcdir, 'fonts', '*.txt')))
+targets += stripFonts(env, os.path.join('.', 'Hun-garr'),
+                      Glob(os.path.join(srcdir, 'fonts', '*.ttf')),
+                      'po', os.path.join(destdir, 'fonts'), language)
+
 targets = game.InstallGame(env, game_name, hungarr, destdir, files, targets)
 
 env.Alias('hungarr_install', targets)
