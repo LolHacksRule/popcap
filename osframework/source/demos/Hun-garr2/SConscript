@@ -8,11 +8,7 @@ import game
 import configs
 from intltoolize import intltoolize, installLocale, stripFonts
 
-srcdir = Dir('.')
-if srcdir.srcdir:
-    srcdir = srcdir.srcdir.abspath
-else:
-    srcdir = srcdir.abspath
+srcdir = Dir('.').srcnode().abspath
 
 Import('gameenv')
 
@@ -20,6 +16,7 @@ env = gameenv.Clone()
 language = env['language']
 domain = 'hungarr2'
 env.PrependUnique(CPPPATH = ['#', '#SexyAppFramework'],
+                  CPPDEFINES = [('SEXY_LANG', configs.QuoteStr(language))],
                   LIBPATH = [os.path.join ('$top_builddir', 'SexyAppFramework'),
                              os.path.join ('$top_builddir', 'PakLib'),
                              os.path.join ('$top_builddir', 'ImageLib'),
@@ -32,8 +29,7 @@ hungarr = env.Program('hungarr2', ['Board.cpp',
                                    'OptionsDialog.cpp',
                                    'TitleScreen.cpp',
                                    'Res.cpp',
-                                   'main.cpp'],
-                      CPPDEFINES = [('SEXY_LANG', configs.QuoteStr(language))])
+                                   'main.cpp'])
 
 ### install game hungarr
 game_name = 'Hun-garr2'
