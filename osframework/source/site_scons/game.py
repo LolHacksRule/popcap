@@ -60,11 +60,7 @@ else:
     RelPath = os.path.relpath
 
 def GetCurrentSrcDir(env):
-    srcdir = env.Dir('.')
-    if srcdir.srcdir:
-        srcdir = srcdir.srcdir.abspath
-    else:
-        srcdir = srcdir.abspath
+    srcdir = env.Dir('.').srcnode().abspath
     return srcdir
 
 def GetGameDistDir(env, game):
