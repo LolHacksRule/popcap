@@ -1,0 +1,74 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+import os
+import sys
+import game
+import configs
+from intltoolize import intltoolize, installLocale, stripFonts
+
+srcdir = Dir('.')
+if srcdir.srcdir:
+    srcdir = srcdir.srcdir.abspath
+else:
+    srcdir = srcdir.abspath
+
+Import('gameenv')
+
+env = gameenv.Clone()
+language = env['language']
+domain = 'hungarr2'
+env.PrependUnique(CPPPATH = ['#', '#SexyAppFramework'],
+                  LIBPATH = [os.path.join ('$top_builddir', 'SexyAppFramework'),
+                             os.path.join ('$top_builddir', 'PakLib'),
+                             os.path.join ('$top_builddir', 'ImageLib'),
+                             os.path.join ('$top_builddir', 'audiere', 'lib')],
+                  LIBS = ['SexyAppFramework'])
+hungarr = env.Program('hungarr2', ['Board.cpp',
+                                   'GameApp.cpp',
+                                   'GameOverEffect.cpp',
+                                   'LevelupEffect.cpp',
+                                   'OptionsDialog.cpp',
+                                   'TitleScreen.cpp',
+                                   'Res.cpp',
+                                   'main.cpp'],
+                      CPPDEFINES = [('SEXY_LANG', configs.QuoteStr(language))])
+
+### install game hungarr
+game_name = 'Hun-garr2'
+destdir = game.GetGameDistDir(env, game_name)
+
+### install targets for hungarr
+targets = []
+
+### data
+files = []
+#files.append(os.path.join(srcdir, 'fonts'))
+files.append(os.path.join(srcdir, 'images'))
+files.append(os.path.join(srcdir, 'music'))
+files.append(os.path.join(srcdir, 'sounds'))
+
+### properties
+files.append(os.path.join(srcdir, 'properties'))
+
+### intltoolize
+intltoolize(env, '.', 'po', domain)
+
+targets += installLocale(env, '.',
+                         'po', domain, language,
+                         os.path.join(destdir, 'locale'))
+
+### fonts
+targets += env.Install(os.path.join(destdir, 'fonts'),
+                       Glob(os.path.join(srcdir, 'fonts', '*.gif')) +
+                       Glob(os.path.join(srcdir, 'fonts', '*.png')) +
+                       Glob(os.path.join(srcdir, 'fonts', '*.txt')))
+targets += stripFonts(env, '.',
+                      Glob(os.path.join(srcdir, 'fonts', '*.ttf')),
+                      'po', os.path.join(destdir, 'fonts'), language)
+
+targets = game.InstallGame(env, game_name, hungarr, destdir, files, targets)
+
+env.Alias('hungarr2_install', targets)
+
