@@ -84,6 +84,7 @@ def fontforgeConfigure(env):
 
 def gettextConfigure(env):
     if sys.platform == 'win32':
+        rootdir = env.Dir('#').abspath
         env.AppendENVPath('PATH',
                           os.path.join(rootdir, 'tools', 'gettext',
                                        'win32', 'bin'))
