@@ -53,7 +53,7 @@ hungarr = env.Program('hungarr', [os.path.join ('Hun-garr', 'Board.cpp'),
                                   os.path.join ('Hun-garr', 'TitleScreen.cpp'),
                                   os.path.join ('Hun-garr', 'Res.cpp'),
                                   os.path.join ('Hun-garr', 'main.cpp')],
-                      CPPDEFINES = [('SEXY_LANG', configs.QuoteStr(language))])
+                      CPPDEFINES = env['CPPDEFINES'] + [('SEXY_LANG', configs.QuoteStr(language))])
 
 ### install game hungarr
 game_name = 'Hun-garr'
