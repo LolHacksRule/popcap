@@ -225,11 +225,13 @@ env.Program('audiere_play',
 
 ### setup package info
 depends = []
-objects = audiere_lib
+objects = []
 if env['static_audiere']:
     depends += ['vorbisfile', 'vorbis', 'ogg']
+else:
+    objects = audiere_lib
 configs.SetPackageInfo([env, gameenv], 'audiere',
                        LIBS = ['audiere'] + depends,
                        CPPPATH = [os.path.join('$top_builddir', 'audiere', 'include')],
                        LIBPATH = [os.path.join('$top_builddir', 'audiere', 'lib')],
-                       OBJECTS = audiere_lib, TARGETS = audiere)
+                       OBJECTS = objects, TARGETS = audiere)
