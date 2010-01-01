@@ -8,7 +8,9 @@ import configs
 import game
 
 Import(['env', 'gameenv'])
+
 env = env.Clone()
+srcdir = Dir('.').srcnode().abspath
 
 srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         "CritSect.cpp", "CursorWidget.cpp", "Debug.cpp", "DescParser.cpp",
@@ -121,7 +123,7 @@ if env['TARGET_OS'] == 'win32':
     env.AppendUnique(LIBS = ['winmm'])
     gameenv.AppendUnique(LIBS = ['winmm'])
     env.AppendUnique(CPPDEFINES = ['SEXY_DIRECT_SOUND_DRIVER'])
-    game.AddExtraInstallableObject(gameenv, ['bass.dll'])
+    game.AddExtraInstallableObject(gameenv, [os.path.join(srcdir, 'bass.dll')])
 
 if 'POSIX_MODULE_LOADER' in env['LOADERS']:
     srcs += ["PosixModuleLoader.cpp"]
