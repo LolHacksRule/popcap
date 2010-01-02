@@ -3,20 +3,33 @@
 import os
 from xml.dom import minidom
 
-class ImageRes(object):
+class Res(object):
     def __init__(self, resid = '', prefix = ''):
         self.resid = resid
         self.prefix = prefix
+        self.type = ''
+        self.idtype = ''
 
-class FontRes(object):
-    def __init__(self, resid = '', prefix = ''):
-        self.resid = resid
-        self.prefix = prefix
+    def __str__(self):
+        return self.prefix + self.resid
 
-class SoundRes(object):
+class ImageRes(Res):
     def __init__(self, resid = '', prefix = ''):
-        self.resid = resid
-        self.prefix = prefix
+        Res.__init__(self, resid, prefix)
+        self.type = 'Image'
+        self.idtype = 'Image*'
+
+class FontRes(Res):
+    def __init__(self, resid = '', prefix = ''):
+        Res.__init__(self, resid, prefix)
+        self.type = 'Font'
+        self.idtype = 'Font*'
+
+class SoundRes(Res):
+    def __init__(self, resid = '', prefix = ''):
+        Res.__init__(self, resid, prefix)
+        self.type = 'Sound'
+        self.idtype = 'int'
 
 class ResGroup(object):
     def __init__(self, resid = ''):
@@ -24,6 +37,9 @@ class ResGroup(object):
         self.images = []
         self.fonts = []
         self.sounds = []
+
+    def getAll(self):
+        return self.fonts + self.images + self.sounds
 
 class ResGen(object):
     def __init__(self, fpath = 'resource.xml'):
@@ -89,29 +105,19 @@ class ResGen(object):
     def writeGroupHeader(self, fp, group):
         fp.write('\t// %s Resources\n' % group.resid)
         fp.write('\tbool Extract%sResources(ResourceManager *theMgr);\n' % group.resid)
-        for font in group.fonts:
-            fp.write('\textern Font* %s%s;\n' % (font.prefix, font.resid))
-        if group.fonts:
-            fp.write('\n')
-        for image in group.images:
-            fp.write('\textern Image* %s%s;\n' % (image.prefix, image.resid))
-        if group.images:
-            fp.write('\n');
-        for sound in group.sounds:
-            fp.write('\textern int %s%s;\n' % (sound.prefix, sound.resid))
-        if group.sounds:
+        allres = group.getAll()
+        for res in allres:
+            fp.write('\textern %s %s;\n' % (res.idtype, res))
+        if allres:
             fp.write('\n')
 
     def writeGroupId(self, fp):
         fp.write('\tenum ResourceId\n')
         fp.write('\t{\n')
         for group in self.groups:
-            for font in group.fonts:
-                fp.write('\t\t%s%s_ID,\n' % (font.prefix, font.resid))
-            for image in group.images:
-                fp.write('\t\t%s%s_ID,\n' % (image.prefix, image.resid))
-            for sound in group.sounds:
-                fp.write('\t\t%s%s_ID,\n' % (sound.prefix, sound.resid))
+            allres = group.getAll()
+            for res in allres:
+                fp.write('\t\t%s_ID,\n' % res)
         fp.write('\t\tRESOURCE_ID_MAX\n')
         fp.write('\t};\n')
 	fp.write("""
@@ -180,17 +186,10 @@ class ResGen(object):
 
     def writeCPPGroup(self, fp, group, namespace):
         fp.write('// %s Resources\n' % group.resid)
-        for font in group.fonts:
-            fp.write('Font* %s::%s%s;\n' % (namespace, font.prefix, font.resid))
-        if group.fonts:
-            fp.write('\n')
-        for image in group.images:
-            fp.write('Image* %s::%s%s;\n' % (namespace, image.prefix, image.resid))
-        if group.images:
-            fp.write('\n');
-        for sound in group.sounds:
-            fp.write('int %s::%s%s;\n' % (namespace, sound.prefix, sound.resid))
-        if group.sounds:
+        allres = group.fonts + group.images + group.sounds
+        for res in allres:
+            fp.write('%s %s::%s;\n' % (res.idtype, namespace, res))
+        if allres:
             fp.write('\n')
 
 
@@ -201,18 +200,11 @@ class ResGen(object):
         fp.write('\ttry\n')
         fp.write('\t{\n')
 
-        for font in group.fonts:
-            fp.write('\t\t%s%s = aMgr.GetFontThrow("%s%s");\n' % \
-                     (font.prefix, font.resid,
-                      font.prefix, font.resid))
-        for image in group.images:
-            fp.write('\t\t%s%s = aMgr.GetImageThrow("%s%s");\n' % \
-                     (image.prefix, image.resid,
-                      image.prefix, image.resid))
-        for sound in group.sounds:
-            fp.write('\t\t%s%s = aMgr.GetSoundThrow("%s%s");\n' % \
-                     (sound.prefix, sound.resid,
-                      sound.prefix, sound.resid))
+        allres = group.fonts + group.images + group.sounds
+        for res in allres:
+            fp.write('\t\t%s = aMgr.Get%sThrow("%s");\n' % \
+                     (res, res.type, res))
+
         fp.write('\t}\n')
 	fp.write('\tcatch(ResourceManagerException&)\n')
 	fp.write('\t{\n')
@@ -226,7 +218,7 @@ class ResGen(object):
 
         for group in self.groups:
             for res in group.fonts + group.images + group.sounds:
-                fp.write('\t&%s%s,\n' % (res.prefix, res.resid))
+                fp.write('\t&%s,\n' % res)
 
         fp.write('\tNULL\n')
         fp.write('};\n\n')
@@ -295,8 +287,8 @@ Sexy::ResourceId Sexy::GetIdBySound(int theSound)
 
         for group in self.groups:
             for res in group.fonts + group.images + group.sounds:
-                fp.write('\t\tcase %s%s_ID:\n' % (res.prefix, res.resid))
-                fp.write('\t\t\treturn "%s%s";\n' % (res.prefix, res.resid))
+                fp.write('\t\tcase %s_ID:\n' % res)
+                fp.write('\t\t\treturn "%s";\n' % res)
         fp.write('\t\tdefault:\n\t\t\tbreak;\n')
 
         fp.write("\t}\n\n")
