@@ -82,6 +82,12 @@ static bool parseMessage(XMLParser &parser,
 {
 	std::string msgid;
 	std::string msgstr;
+	std::string obsolete;
+
+	XMLParamMap::iterator anItr;
+	anItr = theXMLElement.mAttributes.find(_S("obsolete"));
+	if (anItr != theXMLElement.mAttributes.end())
+		obsolete = theXMLElement.mAttributes[_S("obsolete")];
 
 	for (;;)
 	{
@@ -167,7 +173,7 @@ static bool parseMessage(XMLParser &parser,
 		else if (aXMLElement.mType == XMLElement::TYPE_END)
 		{
 			//printf ("msgid: %s\nmsgstr: %s\n", msgid.c_str(), msgstr.c_str());
-			if (!msgstr.empty())
+			if (!msgstr.empty() && obsolete != "true")
 				map.insert (std::pair<std::string, std::string>(msgid, msgstr));
 			return true;
 		}
