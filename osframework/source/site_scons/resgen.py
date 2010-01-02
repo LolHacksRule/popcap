@@ -138,7 +138,7 @@ class ResGen(object):
         fp.write('\n')
         fp.write('using namespace Sexy;\n')
         if namespace != 'Sexy':
-            fp.write('using namespace %s\n' % namespace)
+            fp.write('using namespace %s;\n' % namespace)
         fp.write('\n')
 
         fp.write('static bool gNeedRecalcVariableToIdMap = false;\n\n');
