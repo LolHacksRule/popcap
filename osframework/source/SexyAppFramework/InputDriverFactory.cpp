@@ -49,7 +49,9 @@ InputDriverGetter InputDriverGetters []= {
 #ifdef SEXY_UDP_INPUT_DRIVER
 	GetUdpInputDriver,
 #endif
+#ifdef SEXY_MODULE_INPUT_DRIVER
 	GetModuleInputDriver,
+#endif
 	NULL
 };
 

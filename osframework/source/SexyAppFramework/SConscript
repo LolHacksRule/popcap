@@ -136,7 +136,7 @@ if 'WIN32_MODULE_LOADER' in env['LOADERS']:
     env.AppendUnique(CPPDEFINES = ['SEXY_WIN32_MODULE_LOADER'])
 
 #c module input driver
-srcs += ['ModuleInputDriver.cpp']
+# srcs += ['ModuleInputDriver.cpp']
 
 if 'FREETYPEFONT' in env['DRIVERS']:
     freetype_srcs = ["FreeTypeFontMap.cpp", 'FreeTypeBaseFont.cpp',
