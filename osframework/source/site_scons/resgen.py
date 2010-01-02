@@ -143,20 +143,21 @@ class ResGen(object):
 
         fp.write('static bool gNeedRecalcVariableToIdMap = false;\n\n');
 
-        self.writeCPPERBN(fp)
-        self.writeCPPGIBSI(fp)
+        self.writeCPPERBN(fp, namespace)
+        self.writeCPPGIBSI(fp, namespace)
 
         for group in self.groups:
             self.writeCPPGroup(fp, group, namespace)
 
-        self.writeCPPResourceID(fp)
-        self.writeCPPGetResources(fp)
+        self.writeCPPResourceID(fp, namespace)
+        self.writeCPPGetResources(fp, namespace)
 
         fp.close()
 
-    def writeCPPERBN(self, fp):
-        fp.write("""bool Sexy::ExtractResourcesByName(ResourceManager *theManager, const char *theName)
-{\n""")
+    def writeCPPERBN(self, fp, namespace):
+        d = {'ns': namespace}
+        fp.write("""bool %(ns)s::ExtractResourcesByName(ResourceManager *theManager, const char *theName)
+{\n""" % d)
         for group in self.groups:
             fp.write("""\tif (strcmp(theName, "%s") == 0)\n""" % group.resid)
             fp.write("""\t\treturn Extract%sResources(theManager);\n""" % group.resid)
@@ -165,9 +166,9 @@ class ResGen(object):
 	return false;
 }\n\n""")
 
-    def writeCPPGIBSI(self, fp):
+    def writeCPPGIBSI(self, fp, namespace):
         fp.write(
-"""Sexy::ResourceId Sexy::GetIdByStringId(const char *theStringId)
+"""%s::ResourceId %s::GetIdByStringId(const char *theStringId)
 {
 	typedef std::map<std::string,int> MyMap;
 	static MyMap aMap;
@@ -182,7 +183,7 @@ class ResGen(object):
 		return RESOURCE_ID_MAX;
 	else
 		return (ResourceId) anItr->second;
-}\n\n""")
+}\n\n"""  % (namespace, namespace))
 
     def writeCPPGroup(self, fp, group, namespace):
         fp.write('// %s Resources\n' % group.resid)
@@ -193,7 +194,8 @@ class ResGen(object):
             fp.write('\n')
 
 
-        fp.write("""bool Sexy::Extract%sResources(ResourceManager *theManager)\n""" % group.resid)
+        fp.write("""bool %s::Extract%sResources(ResourceManager *theManager)\n""" % \
+                 (namespace, group.resid))
         fp.write('{\n')
         fp.write('\tgNeedRecalcVariableToIdMap = true;\n\n')
 	fp.write('\tResourceManager &aMgr = *theManager;\n\n')
@@ -212,7 +214,7 @@ class ResGen(object):
         fp.write('\t}\n')
         fp.write('}\n\n')
 
-    def writeCPPResourceID(self, fp):
+    def writeCPPResourceID(self, fp, namespace):
         fp.write('static void* gResources[] =\n')
         fp.write('{\n')
 
@@ -223,29 +225,29 @@ class ResGen(object):
         fp.write('\tNULL\n')
         fp.write('};\n\n')
 
-    def writeCPPGetResources(self, fp):
+    def writeCPPGetResources(self, fp, namespace):
         fp.write(
-"""Image* Sexy::LoadImageById(ResourceManager *theManager, int theId)
+"""Image* %(ns)s::LoadImageById(ResourceManager *theManager, int theId)
 {
 	return (*((Image**)gResources[theId]) = theManager->LoadImage(GetStringIdById(theId)));
 }
 
-Image* Sexy::GetImageById(int theId)
+Image* %(ns)s::GetImageById(int theId)
 {
 	return *(Image**)gResources[theId];
 }
 
-Font* Sexy::GetFontById(int theId)
+Font* %(ns)s::GetFontById(int theId)
 {
 	return *(Font**)gResources[theId];
 }
 
-int Sexy::GetSoundById(int theId)
+int %(ns)s::GetSoundById(int theId)
 {
 	return *(int*)gResources[theId];
 }
 
-static Sexy::ResourceId GetIdByVariable(const void *theVariable)
+static %(ns)s::ResourceId GetIdByVariable(const void *theVariable)
 {
 	typedef std::map<int,int> MyMap;
 	static MyMap aMap;
@@ -264,22 +266,22 @@ static Sexy::ResourceId GetIdByVariable(const void *theVariable)
 		return (ResourceId) anItr->second;
 }
 
-Sexy::ResourceId Sexy::GetIdByImage(Image *theImage)
+%(ns)s::ResourceId %(ns)s::GetIdByImage(Image *theImage)
 {
 	return GetIdByVariable(theImage);
 }
 
-Sexy::ResourceId Sexy::GetIdByFont(Font *theFont)
+%(ns)s::ResourceId %(ns)s::GetIdByFont(Font *theFont)
 {
 	return GetIdByVariable(theFont);
 }
 
-Sexy::ResourceId Sexy::GetIdBySound(int theSound)
+%(ns)s::ResourceId %(ns)s::GetIdBySound(int theSound)
 {
 	return GetIdByVariable((void*)theSound);
-}\n\n""")
+}\n\n""" % { 'ns': namespace })
 
-        fp.write("""const char* Sexy::GetStringIdById(int theId)\n""")
+        fp.write("""const char* %s::GetStringIdById(int theId)\n""" % namespace)
         fp.write("{\n")
 	fp.write("\tswitch (theId)\n")
 	fp.write("\t{\n")
@@ -295,9 +297,9 @@ Sexy::ResourceId Sexy::GetIdBySound(int theSound)
         fp.write('\treturn "";\n')
         fp.write("}\n\n")
 
-    def write(self, name = 'Res'):
-        self.writeHeader(name)
-        self.writeCPP(name)
+    def write(self, name = 'Res', namespace = 'Sexy'):
+        self.writeHeader(name, namespace)
+        self.writeCPP(name, namespace)
 
 if __name__ == '__main__':
     import sys
@@ -307,4 +309,10 @@ if __name__ == '__main__':
 
     resgen = ResGen()
     resgen.parse(sys.argv[1])
-    resgen.write('Res')
+    if len(sys.argv) > 3:
+        resgen.write(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) > 2:
+        resgen.write(sys.argv[2])
+    else:
+        resgen.write()
+
