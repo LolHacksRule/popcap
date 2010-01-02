@@ -119,7 +119,7 @@ std::string Sexy::GetResourcesFolder()
 								      kCFURLPOSIXPathStyle);
 			const char * cAppPath = CFStringGetCStringPtr(appPath,
 								      CFStringGetFastestEncoding(appPath));
-			
+
 			CFURLRef resourceURL = CFBundleCopyResourcesDirectoryURL(mainBoundle);
 			CFStringRef resourcePath = CFURLCopyFileSystemPath(resourceURL,
 									   kCFURLPOSIXPathStyle);
@@ -155,7 +155,7 @@ std::string Sexy::GetAppDataFolder()
 
 		error = FSFindFolder(kOnAppropriateDisk, kPreferencesFolderType, kDontCreateFolder, &fsRef);
 		error = FSRefMakePath(&fsRef, (UInt8*)path, 1024);
-		
+
 		CFBundleRef mainBundle = CFBundleGetMainBundle();
 		CFStringRef identifier = CFBundleGetIdentifier(mainBundle);
 		const char * appId = CFStringGetCStringPtr(identifier,
@@ -379,14 +379,14 @@ bool Sexy::StringToInt(const std::string theString, int* theIntVal)
 	for (; i < theString.length(); i++)
 	{
 		char aChar = theString[i];
-		
+
 		if ((theRadix == 10) && (aChar >= '0') && (aChar <= '9'))
 			*theIntVal = (*theIntVal * 10) + (aChar - '0');
-		else if ((theRadix == 0x10) && 
-			(((aChar >= '0') && (aChar <= '9')) || 
-			 ((aChar >= 'A') && (aChar <= 'F')) || 
+		else if ((theRadix == 0x10) &&
+			(((aChar >= '0') && (aChar <= '9')) ||
+			 ((aChar >= 'A') && (aChar <= 'F')) ||
 			 ((aChar >= 'a') && (aChar <= 'f'))))
-		{			
+		{
 			if (aChar <= '9')
 				*theIntVal = (*theIntVal * 0x10) + (aChar - '0');
 			else if (aChar <= 'F')
@@ -431,14 +431,14 @@ bool Sexy::StringToInt(const std::wstring theString, int* theIntVal)
 	for (; i < theString.length(); i++)
 	{
 		wchar_t aChar = theString[i];
-		
+
 		if ((theRadix == 10) && (aChar >= L'0') && (aChar <= L'9'))
 			*theIntVal = (*theIntVal * 10) + (aChar - L'0');
-		else if ((theRadix == 0x10) && 
-			(((aChar >= L'0') && (aChar <= L'9')) || 
-			 ((aChar >= L'A') && (aChar <= L'F')) || 
+		else if ((theRadix == 0x10) &&
+			(((aChar >= L'0') && (aChar <= L'9')) ||
+			 ((aChar >= L'A') && (aChar <= L'F')) ||
 			 ((aChar >= L'a') && (aChar <= L'f'))))
-		{			
+		{
 			if (aChar <= L'9')
 				*theIntVal = (*theIntVal * 0x10) + (aChar - L'0');
 			else if (aChar <= L'F')
@@ -504,7 +504,7 @@ bool Sexy::StringToDouble(const std::string theString, double* theDoubleVal)
 
 		if ((aChar >= '0') && (aChar <= '9'))
 		{
-			*theDoubleVal += (aChar - '0') * aMult;	
+			*theDoubleVal += (aChar - '0') * aMult;
 			aMult /= 10.0;
 		}
 		else
@@ -561,7 +561,7 @@ bool Sexy::StringToDouble(const std::wstring theString, double* theDoubleVal)
 
 		if ((aChar >= L'0') && (aChar <= L'9'))
 		{
-			*theDoubleVal += (aChar - L'0') * aMult;	
+			*theDoubleVal += (aChar - L'0') * aMult;
 			aMult /= 10.0;
 		}
 		else
@@ -579,7 +579,7 @@ bool Sexy::StringToDouble(const std::wstring theString, double* theDoubleVal)
 
 // TODO: Use <locale> for localization of number output?
 SexyString Sexy::CommaSeperate(int theValue)
-{	
+{
 	if (theValue == 0)
 		return _S("0");
 
@@ -626,7 +626,7 @@ std::string Sexy::GetPathFrom(const std::string& theRelPath, const std::string& 
 	char aSlashChar = '/';
 
 	if ((theRelPath.find('\\') != -1) || (theDir.find('\\') != -1))
-		aSlashChar = '\\';	
+		aSlashChar = '\\';
 
 	if ((aNewPath.length() >= 2) && (aNewPath[1] == ':'))
 	{
@@ -656,10 +656,10 @@ std::string Sexy::GetPathFrom(const std::string& theRelPath, const std::string& 
 
 		std::string aChDir = aTempRelPath.substr(0, aFirstSlash);
 
-		aTempRelPath.erase(aTempRelPath.begin(), aTempRelPath.begin() + aFirstSlash + 1);						
+		aTempRelPath.erase(aTempRelPath.begin(), aTempRelPath.begin() + aFirstSlash + 1);
 
 		if (aChDir.compare("..") == 0)
-		{			
+		{
 			int aLastDirStart = aNewPath.length() - 1;
 			while ((aLastDirStart > 0) && (aNewPath[aLastDirStart-1] != '\\') && (aNewPath[aLastDirStart-1] != '/'))
 				aLastDirStart--;
@@ -674,7 +674,7 @@ std::string Sexy::GetPathFrom(const std::string& theRelPath, const std::string& 
 			{
 				aNewPath.erase(aNewPath.begin() + aLastDirStart, aNewPath.end());
 			}
-		}		
+		}
 		else if (aChDir.compare("") == 0)
 		{
 			aNewPath = aSlashChar;
@@ -776,19 +776,19 @@ bool Sexy::AllowAllAccess(const std::string& theFileName)
 		ea.Trustee.ptstrName = (LPTSTR) pEveryoneSID;
 
 		// Create a new ACL that contains the new ACEs.
-		PACL pACL = NULL; 
+		PACL pACL = NULL;
 		if (fnSetEntriesInAcl(1, &ea, NULL, &pACL) == ERROR_SUCCESS)
-		{		
-			// Initialize a security descriptor.  
-			PSECURITY_DESCRIPTOR pSD = (PSECURITY_DESCRIPTOR) new char[SECURITY_DESCRIPTOR_MIN_LENGTH]; 
-						 
-			if (fnInitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION)) 
-			{  							 
-				// Add the ACL to the security descriptor. 
-				if (fnSetSecurityDescriptorDacl(pSD, 
-						TRUE,     // bDaclPresent flag   
-						pACL, 
-						FALSE))   // not a default DACL 
+		{
+			// Initialize a security descriptor.
+			PSECURITY_DESCRIPTOR pSD = (PSECURITY_DESCRIPTOR) new char[SECURITY_DESCRIPTOR_MIN_LENGTH];
+
+			if (fnInitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION))
+			{
+				// Add the ACL to the security descriptor.
+				if (fnSetSecurityDescriptorDacl(pSD,
+						TRUE,     // bDaclPresent flag
+						pACL,
+						FALSE))   // not a default DACL
 				{
 					if (fnSetFileSecurity(theFileName.c_str(), DACL_SECURITY_INFORMATION, pSD))
 						result = true;
@@ -809,22 +809,22 @@ bool Sexy::Deltree(const std::string& thePath)
 	bool success = true;
 #ifdef WIN32
 	std::string aSourceDir = thePath;
-	
+
 	if (aSourceDir.length() < 2)
 		return false;
 
 	if ((aSourceDir[aSourceDir.length() - 1] != '\\') ||
 		(aSourceDir[aSourceDir.length() - 1] != '/'))
-		aSourceDir += "\\";		
-	
+		aSourceDir += "\\";
+
 	WIN32_FIND_DATAA aFindData;
 
-	HANDLE aFindHandle = FindFirstFileA((aSourceDir + "*.*").c_str(), &aFindData); 
+	HANDLE aFindHandle = FindFirstFileA((aSourceDir + "*.*").c_str(), &aFindData);
 	if (aFindHandle == INVALID_HANDLE_VALUE)
 		return false;
-	
+
 	do
-	{		
+	{
 		if ((aFindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
 		{
 			if ((strcmp(aFindData.cFileName, ".") != 0) &&
@@ -836,7 +836,7 @@ bool Sexy::Deltree(const std::string& thePath)
 			}
 		}
 		else
-		{	
+		{
 			std::string aFullName = aSourceDir + aFindData.cFileName;
 			if (!DeleteFileA(aFullName.c_str()))
 				success = false;
@@ -856,8 +856,8 @@ bool Sexy::FileExists(const std::string& theFileName)
 {
 #ifdef WIN32
 	WIN32_FIND_DATAA aFindData;
-	
-	HANDLE aFindHandle = FindFirstFileA(theFileName.c_str(), &aFindData); 
+
+	HANDLE aFindHandle = FindFirstFileA(theFileName.c_str(), &aFindData);
 	if (aFindHandle == INVALID_HANDLE_VALUE)
 		return false;
 
@@ -932,7 +932,7 @@ std::string Sexy::GetFileDir(const std::string& thePath, bool withSlash)
 std::string Sexy::RemoveTrailingSlash(const std::string& theDirectory)
 {
 	int aLen = theDirectory.length();
-	
+
 	if ((aLen > 0) && ((theDirectory[aLen-1] == '\\') || (theDirectory[aLen-1] == '/')))
 		return theDirectory.substr(0, aLen - 1);
 	else
@@ -962,9 +962,9 @@ time_t Sexy::GetFileDate(const std::string& theFileName)
 	HANDLE aFindHandle = ::FindFirstFileA(theFileName.c_str(), &aFindData);
 
 	if (aFindHandle != INVALID_HANDLE_VALUE)
-	{		
+	{
 		FILETIME aFileTime = aFindData.ftLastWriteTime;
-						
+
 		//FileTimeToUnixTime(&aFileTime, &aFileDate, FALSE);
 
 		LONGLONG ll = (__int64) aFileTime.dwHighDateTime << 32;
@@ -980,7 +980,7 @@ time_t Sexy::GetFileDate(const std::string& theFileName)
 	return aFileDate;
 }
 
-std::string Sexy::vformat(const char* fmt, va_list argPtr) 
+std::string Sexy::vformat(const char* fmt, va_list argPtr)
 {
     // We draw the line at a 1MB string.
     const int maxSize = 1000000;
@@ -1002,7 +1002,7 @@ std::string Sexy::vformat(const char* fmt, va_list argPtr)
 
 	//cout << "NumChars: " << numChars << endl;
 
-    if ((numChars >= 0) && (numChars <= attemptedSize)) 
+    if ((numChars >= 0) && (numChars <= attemptedSize))
 	{
 		// Needed for case of 160-character printf thing
 		stackBuffer[numChars] = '\0';
@@ -1014,8 +1014,8 @@ std::string Sexy::vformat(const char* fmt, va_list argPtr)
     // Now use the heap.
     char* heapBuffer = NULL;
 
-    while (((numChars == -1) || (numChars > attemptedSize)) && 
-		(attemptedSize < maxSize)) 
+    while (((numChars == -1) || (numChars > attemptedSize)) &&
+		(attemptedSize < maxSize))
 	{
         // Try a bigger size
         attemptedSize *= 2;
@@ -1036,7 +1036,7 @@ std::string Sexy::vformat(const char* fmt, va_list argPtr)
 }
 
 //overloaded StrFormat: should only be used by the xml strings
-std::string Sexy::StrFormat(const char* fmt ...) 
+std::string Sexy::StrFormat(const char* fmt ...)
 {
     va_list argList;
     va_start(argList, fmt);
@@ -1046,7 +1046,7 @@ std::string Sexy::StrFormat(const char* fmt ...)
     return result;
 }
 
-std::wstring Sexy::vformat(const wchar_t* fmt, va_list argPtr) 
+std::wstring Sexy::vformat(const wchar_t* fmt, va_list argPtr)
 {
     // We draw the line at a 1MB string.
     const int maxSize = 1000000;
@@ -1068,7 +1068,7 @@ std::wstring Sexy::vformat(const wchar_t* fmt, va_list argPtr)
 
 	//cout << "NumChars: " << numChars << endl;
 
-    if ((numChars >= 0) && (numChars <= attemptedSize)) 
+    if ((numChars >= 0) && (numChars <= attemptedSize))
 	{
 		// Needed for case of 160-character printf thing
 		stackBuffer[numChars] = '\0';
@@ -1080,8 +1080,8 @@ std::wstring Sexy::vformat(const wchar_t* fmt, va_list argPtr)
     // Now use the heap.
 	wchar_t* heapBuffer = NULL;
 
-    while (((numChars == -1) || (numChars > attemptedSize)) && 
-		(attemptedSize < maxSize)) 
+    while (((numChars == -1) || (numChars > attemptedSize)) &&
+		(attemptedSize < maxSize))
 	{
         // Try a bigger size
         attemptedSize *= 2;
@@ -1123,7 +1123,7 @@ std::string Sexy::Evaluate(const std::string& theString, const DefinesMap& theDe
 
 		if (aPercentPos == std::string::npos)
 			break;
-		
+
 		int aSecondPercentPos = anEvaluatedString.find('%', aPercentPos + 1);
 		if (aSecondPercentPos == std::string::npos)
 			break;
@@ -1131,11 +1131,11 @@ std::string Sexy::Evaluate(const std::string& theString, const DefinesMap& theDe
 		std::string aName = anEvaluatedString.substr(aPercentPos + 1, aSecondPercentPos - aPercentPos - 1);
 
 		std::string aValue;
-		DefinesMap::const_iterator anItr = theDefinesMap.find(aName);		
+		DefinesMap::const_iterator anItr = theDefinesMap.find(aName);
 		if (anItr != theDefinesMap.end())
 			aValue = anItr->second;
 		else
-			aValue = "";		
+			aValue = "";
 
 		anEvaluatedString.erase(anEvaluatedString.begin() + aPercentPos, anEvaluatedString.begin() + aSecondPercentPos + 1);
 		anEvaluatedString.insert(anEvaluatedString.begin() + aPercentPos, aValue.begin(), aValue.begin() + aValue.length());
@@ -1163,7 +1163,7 @@ std::string Sexy::XMLDecodeString(const std::string& theString)
 			{
 				std::string anEntName = theString.substr(i+1, aSemiPos-i-1);
 				i = aSemiPos;
-											
+
 				if (anEntName == "lt")
 					c = '<';
 				else if (anEntName == "amp")
@@ -1179,8 +1179,8 @@ std::string Sexy::XMLDecodeString(const std::string& theString)
 				else if (anEntName == "cr")
 					c = '\n';
 			}
-		}				
-		
+		}
+
 		aNewString += c;
 	}
 
@@ -1206,7 +1206,7 @@ std::wstring Sexy::XMLDecodeString(const std::wstring& theString)
 			{
 				std::wstring anEntName = theString.substr(i+1, aSemiPos-i-1);
 				i = aSemiPos;
-											
+
 				if (anEntName == L"lt")
 					c = L'<';
 				else if (anEntName == L"amp")
@@ -1222,8 +1222,8 @@ std::wstring Sexy::XMLDecodeString(const std::wstring& theString)
 				else if (anEntName == L"cr")
 					c = L'\n';
 			}
-		}				
-		
+		}
+
 		aNewString += c;
 	}
 
@@ -1248,7 +1248,7 @@ std::string Sexy::XMLEncodeString(const std::string& theString)
 				aNewString += "&nbsp;";
 				continue;
 			}
-			
+
 			hasSpace = true;
 		}
 		else
@@ -1261,13 +1261,13 @@ std::string Sexy::XMLEncodeString(const std::string& theString)
 			aNewString += (char) (0x80 | (c & 0x3F));
 		}
 		else*/
-		{		
+		{
 			switch (c)
 			{
 			case '<':
 				aNewString += "&lt;";
 				break;
-			case '&':		
+			case '&':
 				aNewString += "&amp;";
 				break;
 			case '>':
@@ -1309,7 +1309,7 @@ std::wstring Sexy::XMLEncodeString(const std::wstring& theString)
 				aNewString += L"&nbsp;";
 				continue;
 			}
-			
+
 			hasSpace = true;
 		}
 		else
@@ -1322,13 +1322,13 @@ std::wstring Sexy::XMLEncodeString(const std::wstring& theString)
 			aNewString += (char) (0x80 | (c & 0x3F));
 		}
 		else*/
-		{		
+		{
 			switch (c)
 			{
 			case L'<':
 				aNewString += L"&lt;";
 				break;
-			case L'&':		
+			case L'&':
 				aNewString += L"&amp;";
 				break;
 			case L'>':
