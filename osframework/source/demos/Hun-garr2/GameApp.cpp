@@ -49,9 +49,7 @@ GameApp::GameApp()
 	mLastPlanetHitSoundTime = -30;
 
 	setLocale(SEXY_LANG);
-	bindText("hungarr", "locale");
-	printf ("Menu is %s, list is %s, array is %s\n",
-		tr("menu"), tr("list"), tr("array"));
+	bindText("hungarr2", "locale");
 	Graphics::SetPreferedEncoding("UTF-8");
 }
 
