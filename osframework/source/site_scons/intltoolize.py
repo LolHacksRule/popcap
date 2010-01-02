@@ -148,7 +148,8 @@ def stripFonts(env, srcdir, fonts, podirname, destdir, langs):
             basename = os.path.basename(str(font))
             tmpname = os.path.splitext(basename)[0] + '-striped' + os.path.splitext(basename)[1]
             fontstrip = env.File(os.path.join('#tools', 'fontforge', 'fontstrip.pe')).path
-            command = 'fontforge %s --font ${SOURCES[0]} -i ${SOURCES[1]} -o $TARGET' % (fontstrip)
+            command = 'fontforge %s --font ${SOURCES[0]} -i ${SOURCES[1]} -o $TARGET 2>%s' % \
+	              (fontstrip, os.devnull)
             sfont = env.Command(tmpname, [font, texts], command)
             targets += env.InstallAs(os.path.join(destdir, basename), sfont)
         else:
