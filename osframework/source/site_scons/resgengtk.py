@@ -107,7 +107,7 @@ class ProjectDialog(gtk.Dialog):
             prefix = 'Res'
         return (name, xml, output, prefix)
 
-class ProjectListStore(gtk.Window):
+class ResourceGenerator(gtk.Window):
     def __init__(self, parent=None):
         # create window, etc
         gtk.Window.__init__(self)
@@ -231,11 +231,11 @@ class ProjectListStore(gtk.Window):
         import pickle
 
         self.projects = []
-        if not os.path.exists(ProjectListStore.path):
+        if not os.path.exists(ResourceGenerator.path):
             return self.projects
 
         try:
-            self.projects = pickle.load(file(ProjectListStore.path, 'rb'))
+            self.projects = pickle.load(file(ResourceGenerator.path, 'rb'))
         except Exception, e:
             print 'Failed to load existing projects', e
         return self.projects
@@ -244,9 +244,9 @@ class ProjectListStore(gtk.Window):
         import pickle
 
         try:
-            if not os.path.exists(os.path.dirname(ProjectListStore.path)):
-                os.makedirs(os.path.dirname(ProjectListStore.path))
-            pickle.dump(self.projects, file(ProjectListStore.path, 'wb'))
+            if not os.path.exists(os.path.dirname(ResourceGenerator.path)):
+                os.makedirs(os.path.dirname(ResourceGenerator.path))
+            pickle.dump(self.projects, file(ResourceGenerator.path, 'wb'))
         except:
             pass
 
@@ -341,7 +341,7 @@ class ProjectListStore(gtk.Window):
                 print e
 
 def main():
-    ProjectListStore()
+    ResourceGenerator()
     gtk.main()
 
 if __name__ == '__main__':
