@@ -273,11 +273,10 @@ class Application(Frame):
         self.saveProjects()
 
     def genCode(self, *args):
-        index = self.list.curselection()[0]
-        if not index:
+        if not self.list.curselection():
             return
-
-        item = self.projects[int(index)]
+        index = int(self.list.curselection()[0])
+        item = self.projects[index]
         try:
             gen = resgen.ResGen()
             gen.parse(item[COLUMN_XML])
