@@ -104,7 +104,7 @@ class ResGen(object):
 
         self.writeGroupId(fp)
 
-        fp.write('}\n\n')
+        fp.write('} // namespace %s\n\n' % namespace)
         fp.write('#endif\n')
         fp.close()
 
@@ -218,6 +218,7 @@ class ResGen(object):
 	fp.write('\t{\n')
         fp.write('\t\treturn false;\n')
         fp.write('\t}\n')
+        fp.write('\treturn true;\n')
         fp.write('}\n\n')
 
     def writeCPPResourceID(self, fp, namespace):
