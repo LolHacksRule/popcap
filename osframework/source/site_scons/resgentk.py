@@ -101,52 +101,36 @@ class Project(Dialog):
     def __init__(self, master = None, title = None):
         Dialog.__init__(self, master, title)
 
-    def body(self, top):
-        ### project name frame
-        frame = Frame(top)
-        frame.pack(padx = 4, pady = 4)
-
+    def body(self, frame):
         label = Label(frame, text = 'Project name:')
-        label.pack(side = LEFT)
+        label.grid(column = 0, row = 0)
         entry = Entry(frame)
-        entry.pack(side = LEFT)
+        entry.grid(column = 1, row = 0, sticky = W)
         self.name_entry = entry
 
-        ### resouce xml frame
-        frame = Frame(top)
-        frame.pack(padx = 4, pady = 4)
-
         label = Label(frame, text = 'Resouce xml:')
-        label.pack(side = LEFT)
-        entry = Entry(frame)
-        entry.pack(side = LEFT)
+        label.grid(column = 0, row = 1)
+        entry = Entry(frame, width = 50)
+        entry.grid(column = 1, row = 1, sticky = W)
         button = Button(frame, text = "Browse...", command = self.selectResouceXml)
-        button.pack(side = LEFT)
+        button.grid(column = 2, row = 1)
         self.resource_entry = entry
 
-        ### output directory frame
-        frame = Frame(top)
-        frame.pack(padx = 4, pady = 4)
-
         label = Label(frame, text = 'Output directory:')
-        label.pack(side = LEFT)
-        entry = Entry(frame)
-        entry.pack(side = LEFT)
+        label.grid(column = 0, row = 2)
+        entry = Entry(frame, width = 50)
+        entry.grid(column = 1, row = 2, sticky = W)
         button = Button(frame, text = "Browse...", command = self.selectOutputDir)
-        button.pack(side = LEFT)
+        button.grid(column = 2, row = 2)
         self.output_entry = entry
 
-        ### prefix frame
-        frame = Frame(top)
-        frame.pack(padx = 4, pady = 4)
-
         label = Label(frame, text = 'Prefix:')
-        label.pack(side = LEFT)
+        label.grid(column = 0, row = 3)
         entry = Entry(frame)
-        entry.pack(side = LEFT)
+        entry.grid(column = 1, row = 3, sticky = W)
         self.prefix_entry = entry
 
-        return top
+        return frame
 
     def validate(self):
         xml = self.resource_entry.get()
