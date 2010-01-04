@@ -83,11 +83,17 @@ class ResGen(object):
     header = """#ifndef __%s__ \n#define __%s__\n\n"""
     def writeHeader(self, name = 'Res', namespace = 'Sexy'):
         fp = file(name + '.h', 'wb')
-        fp.write(ResGen.header % (name.upper(), name.upper()))
-        fp.write('namespace %s {\n' % namespace)
+        guard = os.path.basename(name).upper()
+        fp.write(ResGen.header % (guard, guard))
+        fp.write('namespace Sexy {\n')
         fp.write('\tclass ResourceManager;\n')
         fp.write('\tclass Image;\n')
         fp.write('\tclass Font;\n')
+        fp.write('}\n\n')
+        fp.write('namespace %s {\n' % namespace)
+        fp.write('\tusing Sexy::ResourceManager;\n')
+        fp.write('\tusing Sexy::Image;\n')
+        fp.write('\tusing Sexy::Font;\n')
         fp.write('\n')
 	fp.write('\tImage* LoadImageById(ResourceManager *theManager, int theId);\n')
 	fp.write('\tbool ExtractResourcesByName(ResourceManager *theManager,'
@@ -133,7 +139,7 @@ class ResGen(object):
 
     def writeCPP(self, name = 'Res', namespace = 'Sexy'):
         fp = file(name + '.cpp', 'wb')
-        fp.write('#include "%s.h"\n' % name)
+        fp.write('#include "%s.h"\n' % os.path.basename(name))
         fp.write('#include "ResourceManager.h"\n')
         fp.write('\n')
         fp.write('using namespace Sexy;\n')
@@ -249,17 +255,17 @@ int %(ns)s::GetSoundById(int theId)
 
 static %(ns)s::ResourceId GetIdByVariable(const void *theVariable)
 {
-	typedef std::map<int,int> MyMap;
+	typedef std::map<long, int> MyMap;
 	static MyMap aMap;
 	if (gNeedRecalcVariableToIdMap)
 	{
 		gNeedRecalcVariableToIdMap = false;
 		aMap.clear();
 		for(int i = 0; i < RESOURCE_ID_MAX; i++)
-			aMap[*(int*)gResources[i]] = i;
+			aMap[*(long*)gResources[i]] = i;
 	}
 
-	MyMap::iterator anItr = aMap.find(*(int*)theVariable);
+	MyMap::iterator anItr = aMap.find(*(long*)theVariable);
 	if (anItr == aMap.end())
 		return RESOURCE_ID_MAX;
 	else
@@ -278,7 +284,8 @@ static %(ns)s::ResourceId GetIdByVariable(const void *theVariable)
 
 %(ns)s::ResourceId %(ns)s::GetIdBySound(int theSound)
 {
-	return GetIdByVariable((void*)theSound);
+	long theSoundId = theSound;
+	return GetIdByVariable((void*)theSoundId);
 }\n\n""" % { 'ns': namespace })
 
         fp.write("""const char* %s::GetStringIdById(int theId)\n""" % namespace)
