@@ -2,6 +2,9 @@
 import os
 import shutil
 
+from SCons.Defaults import *
+from SCons.Script import COMMAND_LINE_TARGETS
+
 ### generate/update domain.pot
 def generatePOTFILES(env, target, source):
     s = '\n'.join([s.path for s in source])
@@ -57,34 +60,41 @@ def intltoolize(env, srcdir, podirname, domain,
         return []
 
     targets = []
-    patterns = env.Split(file(os.path.join(podir, 'POTFILES')).read())
-    sources = [ env.Glob(os.path.join(str(srcdir), f)) for f in patterns ]
+    if 'update-pot' in COMMAND_LINE_TARGETS or 'update-po' in COMMAND_LINE_TARGETS:
+        patterns = env.Split(file(os.path.join(podir, 'POTFILES')).read())
+        sources = [ env.Glob(os.path.join(str(srcdir), f)) for f in patterns ]
 
-    potfiles = genPotFiles(env, buildpodir, domain, sources)
+        potfiles = genPotFiles(env, buildpodir, domain, sources)
 
-    potbuild_name = domain + '.pot' + '.build'
-    pot_name = domain + '.pot'
-    if package is None:
-        package = domain
-    command = '$XGETTEXT --package-name=%s --package-version=%s ' \
-              '-o $TARGET --keyword=tr -f $SOURCE' % (package, package_version)
-    potbuild = env.Command (os.path.join(podir, potbuild_name), potfiles,
-                            command)
-    env.Depends(potbuild, sources)
+        potbuild_name = domain + '.pot' + '.build'
+        pot_name = domain + '.pot'
+        if package is None:
+            package = domain
+        command = '$XGETTEXT --package-name=%s --package-version=%s ' \
+                  '-o $TARGET --keyword=tr -f $SOURCE' % (package, package_version)
+        potbuild = env.Command (os.path.join(podir, potbuild_name), potfiles,
+                                command)
+        env.AlwaysBuild(potbuild)
+        env.Depends(potbuild, sources)
 
-    pot = env.Command (os.path.join(podir, pot_name), potbuild, update_pot)
-    env.Alias('update-pot', pot)
-    env.Alias('update-po', pot)
-    targets.append(pot)
+        pot = env.Command (os.path.join(podir, pot_name), potbuild, update_pot)
+        env.AlwaysBuild(pot)
+        env.Precious(pot)
+        env.NoClean(pot)
+        env.Alias('update-pot', pot)
+        env.Alias('update-po', pot)
+        targets.append(pot)
 
     ### update *.po
-    linguas = getlinguas(env, srcdir, podirname)
-    for lingua in linguas:
-        update_po = env.MsgInitMerge(env.File(lingua), pot)
+    if 'update-po' in COMMAND_LINE_TARGETS:
+        linguas = getlinguas(env, srcdir, podirname)
+        for lingua in linguas:
+            update_po = env.MsgInitMerge(env.File(lingua), pot)
 
-        env.Precious(update_po)
-        env.NoClean(update_po)
-        env.Alias('update-po', update_po)
+            env.AlwaysBuild(update_po)
+            env.Precious(update_po)
+            env.NoClean(update_po)
+            env.Alias('update-po', update_po)
 
         targets.append(update_po)
     return targets
@@ -103,7 +113,8 @@ def installLocale(env, srcdir, podirname, domain, langs, localedir):
     pos = [ lang + '.po' for lang in langs ]
     targets = []
     for lingua in linguas:
-        if os.path.basename(lingua) in pos:
+        if os.path.basename(lingua) in pos and \
+           os.path.exists(lingua):
             xml = os.path.join(buildpodir, lang + '.xml')
             xml = env.Command(xml, lingua, potoxml)
             targets += xml
@@ -136,7 +147,7 @@ def stripFonts(env, srcdir, fonts, podirname, destdir, langs):
     texts = os.path.join('font-extractor.txt')
     toaccums = []
     for lingua in linguas:
-        if os.path.basename(lingua) in pos:
+        if os.path.basename(lingua) in pos and os.path.exists(lingua):
             toaccums.append(lingua)
     targets += env.Command(texts, toaccums,
                            accumtexts)
