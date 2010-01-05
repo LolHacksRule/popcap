@@ -166,6 +166,9 @@ class Project(Dialog):
         self.output_entry.insert(END, item[COLUMN_CODE])
         self.prefix_entry.insert(END, item[COLUMN_PREFIX])
 
+        self.resource_entry.xview(END)
+        self.output_entry.xview(END)
+
 class Application(Frame):
     def __init__(self, master = None):
         Frame.__init__(self, master)
@@ -185,8 +188,32 @@ class Application(Frame):
         yscroll.pack(fill = BOTH, side = LEFT)
         self.list.configure(yscrollcommand = yscroll.set)
 
-        self.text = Text(frame)
-        self.text.pack(side = RIGHT)
+        txtframe = Frame(frame)
+        txtframe.pack(fill = BOTH, side = LEFT)
+
+        label = Label(txtframe, text = 'Project name:')
+        label.grid(column = 0, row = 0)
+        entry = Entry(txtframe)
+        entry.grid(column = 1, row = 0, sticky = W)
+        self.name_entry = entry
+
+        label = Label(txtframe, text = 'Resouce xml:')
+        label.grid(column = 0, row = 1)
+        entry = Entry(txtframe, width = 50)
+        entry.grid(column = 1, row = 1, sticky = W)
+        self.resource_entry = entry
+
+        label = Label(txtframe, text = 'Output directory:')
+        label.grid(column = 0, row = 2)
+        entry = Entry(txtframe, width = 50)
+        entry.grid(column = 1, row = 2, sticky = W)
+        self.output_entry = entry
+
+        label = Label(txtframe, text = 'Prefix:')
+        label.grid(column = 0, row = 3)
+        entry = Entry(txtframe)
+        entry.grid(column = 1, row = 3, sticky = W)
+        self.prefix_entry = entry
 
         self.updateProjectList()
         self.updateProjectInfo()
@@ -226,16 +253,33 @@ class Application(Frame):
             self.list.insert(END, item[0])
 
     def updateProjectInfo(self, index = 0):
-        self.text.config(state = NORMAL)
-        self.text.delete(1.0, END)
         if index >= 0 and index < len(self.projects):
             item = self.projects[index]
-            s = "Project name: %s\n" % item[COLUMN_PROJECT]
-            s += "Resource xml: %s\n" % item[COLUMN_XML]
-            s += "Output directory: %s\n" % item[COLUMN_CODE]
-            s += "Prefix: %s\n" % item[COLUMN_PREFIX]
-            self.text.insert(END, s)
-        self.text.config(state = DISABLED)
+        else:
+            item = ('', '', '', '')
+
+        self.name_entry.config(state = NORMAL)
+        self.resource_entry.config(state = NORMAL)
+        self.output_entry.config(state = NORMAL)
+        self.prefix_entry.config(state = NORMAL)
+
+        self.name_entry.delete(0, END)
+        self.resource_entry.delete(0, END)
+        self.output_entry.delete(0, END)
+        self.prefix_entry.delete(0, END)
+
+        self.name_entry.insert(END, item[COLUMN_PROJECT])
+        self.resource_entry.insert(END, item[COLUMN_XML])
+        self.output_entry.insert(END, item[COLUMN_CODE])
+        self.prefix_entry.insert(END, item[COLUMN_PREFIX])
+
+        self.resource_entry.xview(END)
+        self.output_entry.xview(END)
+
+        self.name_entry.config(state = DISABLED)
+        self.resource_entry.config(state = DISABLED)
+        self.output_entry.config(state = DISABLED)
+        self.prefix_entry.config(state = DISABLED)
 
     def newProject(self, *args):
         dialog = Project(self)
