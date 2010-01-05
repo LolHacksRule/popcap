@@ -354,8 +354,9 @@ class Application(Frame):
 
     def listSelectionChanged(self, *args):
         # get selected line index
-        index = self.list.curselection()[0]
-        self.updateProjectInfo(int(index))
+        if self.list.curselection():
+            index = self.list.curselection()[0]
+            self.updateProjectInfo(int(index))
 
 app = Application()
 app.master.title("Resource code generator")
