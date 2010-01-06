@@ -3,7 +3,8 @@ import os
 import shutil
 
 from SCons.Defaults import *
-from SCons.Script import COMMAND_LINE_TARGETS
+from SCons.Script import COMMAND_LINE_TARGETS, ARGUMENTS
+from SCons.Action import Action
 
 ### generate/update domain.pot
 def generatePOTFILES(env, target, source):
@@ -11,8 +12,8 @@ def generatePOTFILES(env, target, source):
     file(target[0].path, 'w').write(s + '\n')
 
 def genPotFiles(env, podir, domain, source):
-    return env.Command (os.path.join(podir, domain + '.potfiles'),
-                        source, generatePOTFILES)
+    return env.Command (os.path.join(podir, domain + '-POTFILES.gen'),
+                        source, Action(generatePOTFILES, "Generating $TARGET"))
 
 def remove_pot_cdate(path):
     return "".join(filter(lambda line: "POT-Creation-Date: " not in line, open(path).readlines()))
@@ -51,6 +52,30 @@ def getlinguas(env, srcdir, podirname):
         result.append(os.path.join(podir, basename))
     return result
 
+def get_update_pot_targets():
+    target = ARGUMENTS.get('update-pot', '')
+    if not target:
+        return []
+    targets = target.split(',')
+    result = []
+    for t in targets:
+        t.strip()
+        if t:
+            result.append(t)
+    return result
+
+def get_update_po_targets():
+    target = ARGUMENTS.get('update-po', '')
+    if not target:
+        return []
+    targets = target.split(',')
+    result = []
+    for t in targets:
+        t.strip()
+        if t:
+            result.append(t)
+    return result
+
 def intltoolize(env, srcdir, podirname, domain,
                 package = None, package_version = '1.0.0'):
     origsrcdir = getsrcdir(env, srcdir)
@@ -60,7 +85,8 @@ def intltoolize(env, srcdir, podirname, domain,
         return []
 
     targets = []
-    if 'update-pot' in COMMAND_LINE_TARGETS or 'update-po' in COMMAND_LINE_TARGETS:
+    if 'update-pot' in COMMAND_LINE_TARGETS or 'update-po' in COMMAND_LINE_TARGETS or \
+       domain in get_update_pot_targets() or domain in get_update_po_targets():
         patterns = env.Split(file(os.path.join(podir, 'POTFILES')).read())
         sources = [ env.Glob(os.path.join(str(srcdir), f)) for f in patterns ]
 
@@ -73,12 +99,13 @@ def intltoolize(env, srcdir, podirname, domain,
         command = '$XGETTEXT --package-name=%s --package-version=%s ' \
                   '-o $TARGET --keyword=tr --keyword=tr_noop -f $SOURCE' % \
                   (package, package_version)
-        potbuild = env.Command (os.path.join(podir, potbuild_name), potfiles,
+        potbuild = env.Command (os.path.join(buildpodir, potbuild_name), potfiles,
                                 command)
         env.AlwaysBuild(potbuild)
         env.Depends(potbuild, sources)
 
-        pot = env.Command (os.path.join(podir, pot_name), potbuild, update_pot)
+        pot = env.Command (os.path.join(podir, pot_name), potbuild,
+                           Action(update_pot, "Updating $TARGET from $SOURCE"))
         env.AlwaysBuild(pot)
         env.Precious(pot)
         env.NoClean(pot)
@@ -87,7 +114,7 @@ def intltoolize(env, srcdir, podirname, domain,
         targets.append(pot)
 
     ### update *.po
-    if 'update-po' in COMMAND_LINE_TARGETS:
+    if 'update-po' in COMMAND_LINE_TARGETS or domain in get_update_po_targets():
         linguas = getlinguas(env, srcdir, podirname)
         for lingua in linguas:
             update_po = env.MsgInitMerge(env.File(lingua), pot)
@@ -117,7 +144,9 @@ def installLocale(env, srcdir, podirname, domain, langs, localedir):
         if os.path.basename(lingua) in pos and \
            os.path.exists(lingua):
             xml = os.path.join(buildpodir, lang + '.xml')
-            xml = env.Command(xml, lingua, potoxml)
+            xml = env.Command(xml, lingua,
+                              Action(potoxml,
+                                     "Converting $SOURCE to $TARGET"))
             targets += xml
             target = os.path.join(localedir, lang, domain + '.xml')
             targets += env.InstallAs(target, xml)
