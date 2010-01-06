@@ -5,7 +5,7 @@
 #include "Rect.h"
 #include "Debug.h"
 #include "SexyMatrix.h"
-#include "FontUtils.h"
+#include "SexyUtf8.h"
 
 #include <math.h>
 

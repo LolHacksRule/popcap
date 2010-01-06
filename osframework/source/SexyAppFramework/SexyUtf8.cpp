@@ -1,4 +1,4 @@
-#include "FontUtils.h"
+#include "SexyUtf8.h"
 #include "AutoCrit.h"
 
 #ifndef WIN32

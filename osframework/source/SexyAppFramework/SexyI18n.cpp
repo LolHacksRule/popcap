@@ -310,7 +310,7 @@ const char* dtr(const char *domain, const char *s)
 const std::string dtr(const std::string &domain, const std::string &s)
 {
 	return std::string(I18nManager::GetManager()->tr(domain.c_str(),
-						       s.c_str()));
+							 s.c_str()));
 }
 
 void setLocale(const char *locale)
@@ -322,7 +322,7 @@ void bindTextDomain(const char *domain, const char *dir)
 {
 	assert (domain && dir);
 	I18nManager::GetManager()->bindTextDomain(std::string(domain),
-						std::string(dir));
+						  std::string(dir));
 }
 
 void bindText(const char *domain, const char *dir)

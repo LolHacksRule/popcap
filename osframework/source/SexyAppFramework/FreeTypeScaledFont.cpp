@@ -3,7 +3,7 @@
 #include "SexyAppBase.h"
 #include "MemoryImage.h"
 #include "Graphics.h"
-#include "FontUtils.h"
+#include "SexyUtf8.h"
 
 #include "ImageLib.h"
 
