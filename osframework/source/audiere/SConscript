@@ -53,7 +53,7 @@ headers += env.Command (os.path.join (ogg_dir, 'include', 'ogg',
 
 sources = map (lambda f: os.path.join(ogg_dir, 'src', f),
               ['framing.c', 'bitwise.c'])
-Depends(sources, headers)
+#Depends(sources, headers)
 
 lib_dir = os.path.join('lib')
 header_dir = os.path.join('include', 'ogg')
@@ -66,7 +66,7 @@ ogg_headers = env.Install (header_dir,
 env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include')])
 
 ogg_lib = env.ConvenienceLibrary ('ogg', sources)
-Depends (sources, ogg_headers)
+#Depends (sources, ogg_headers)
 
 ogg = env.Install (lib_dir, ogg_lib)
 
@@ -84,7 +84,8 @@ sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
                'floor1.c', 'floor0.c', 'res0.c', 'mapping0.c', 'registry.c',
                'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c'])
 
-env.AppendUnique (CPPPATH = [os.path.join (vorbis_dir, 'include')])
+env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include'),
+                             os.path.join (vorbis_dir, 'include')])
 
 vorbis_lib = env.ConvenienceLibrary ('vorbis', sources)
 
@@ -142,7 +143,10 @@ srcs += [os.path.join ('mpaudec', 'mpaudec.c'),
 
 env.AppendUnique (CPPDEFINES = ['NO_FLAC', 'NO_DUMB', 'NO_SPEEX'])
 env.AppendUnique (CPPDEFINES = ['AUDIERE_EXPORTS'])
+env.PrependUnique (LIBPATH = ['lib'])
 env.AppendUnique (LIBS = ['vorbisfile', 'vorbis', 'ogg'])
+env.PrependUnique (CPPPATH = [os.path.join (vorbis_dir, 'include'),
+                              os.path.join (ogg_dir, 'include')])
 
 if 'win32' in env['TARGET_OS']:
     env.AppendUnique (CPPDEFINES = ['WIN32_LEAN_AND_MEAN', 'NOMINMAX',
