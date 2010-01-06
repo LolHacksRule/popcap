@@ -10,6 +10,7 @@ Import (['env', 'gameenv'])
 if not 'AUDIERESOUND' in env['DRIVERS']:
     Return ()
 
+sexyenv = env
 srcdir = Dir('.').srcnode().abspath
 
 ogg_name = 'libogg'
@@ -226,7 +227,7 @@ if env['static_audiere']:
     depends += ['vorbisfile', 'vorbis', 'ogg']
 else:
     objects = audiere_lib
-configs.SetPackageInfo([env, gameenv], 'audiere',
+configs.SetPackageInfo([sexyenv, gameenv], 'audiere',
                        LIBS = ['audiere'] + depends,
                        CPPPATH = [os.path.join('$top_builddir', 'audiere', 'include')],
                        LIBPATH = [os.path.join('$top_builddir', 'audiere', 'lib')],
