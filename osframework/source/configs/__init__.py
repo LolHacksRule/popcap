@@ -46,11 +46,11 @@ def AddOptions(opts):
 
 def Configure(env):
     env['WIN_PROG_FLAGS'] = ''
-    if not env.has_key('TARGET_OS'):
+    if not env.get('TARGET_OS', None):
         env['TARGET_OS'] = sys.platform
-    if not env.has_key('TARGET_PLATFORM'):
+    if not env.get('TARGET_PLATFORM', None):
         env['TARGET_PLATFORM'] = 'pc'
-    if not env.has_key('TARGET_CHIP'):
+    if not env.get('TARGET_CHIP', None):
         env['TARGET_CHIP'] = 'default'
     if not env.has_key('STDCXX_LIBS'):
         env.Append(STDCXX_LIBS = [])
