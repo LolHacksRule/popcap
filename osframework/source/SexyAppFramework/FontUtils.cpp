@@ -74,6 +74,32 @@ namespace Sexy
 		return len;
 	}
 
+	int
+	SexyUsc4ToUtf16 (uint32 unichar, short * utf16)
+	{
+		unsigned len;
+
+		if (unichar < 0x10000)
+		{
+			len = 1;
+		}
+		else
+		{
+			len = 2;
+		}
+
+		if (utf16)
+		{
+			if (len == 1) {
+				utf16[0] = unichar;
+			} else {
+				utf16[0] = (unichar - 0x10000) / 0x400 + 0xd800;
+				utf16[1] = (unichar - 0x10000) % 0x400 + 0xdc00;
+			}
+		}
+
+		return len;
+	}
 
 	int SexyUtf8ToUcs4Char (const char * str, uint32 * ucs4, int len)
 	{
@@ -191,6 +217,35 @@ namespace Sexy
 		ucs4[slen] = 0;
 		*retucs4 = ucs4;
 		return slen;
+	}
+
+	int SexyUtf8ToUtf16 (const char * utf8, int len, short ** retutf16)
+	{
+
+		int i, slen, clen;
+		short * utf16;
+
+		if (len < 0)
+			len = strlen (utf8);
+
+		slen = SexyUtf8Strlen (utf8, len);
+		if (slen < 0)
+			return -1;
+
+		utf16 = new short[slen * 2 + 1];
+		if (!utf16)
+			return -1;
+
+		for (i = 0; len > 0; len -= clen, utf8 += clen)
+		{
+			uint32 unichar;
+			clen = SexyUtf8ToUcs4Char (utf8, &unichar, len);
+			i += SexyUsc4ToUtf16(unichar, utf16 + i);
+		}
+
+		utf16[i] = 0;
+		*retutf16 = utf16;
+		return i;
 	}
 
 	bool SexyUtf8Validate (const char * utf8, int len)
@@ -355,19 +410,19 @@ namespace Sexy
 		AutoCrit aAutoCrit(aCritSect);
 		const unsigned int MAX_CHARSETS = 4;
 		static const char* charsets[MAX_CHARSETS] =
-			{
-				"GB18030",
-				"GBK",
-				"GB2312",
-				"BIG5"
-			};
+		{
+			"GB18030",
+			"GBK",
+			"GB2312",
+			"BIG5"
+		};
 		static iconv_t cds[MAX_CHARSETS] =
-			{
-				(iconv_t)-1,
-				(iconv_t)-1,
-				(iconv_t)-1,
-				(iconv_t)-1
-			};
+		{
+			(iconv_t)-1,
+			(iconv_t)-1,
+			(iconv_t)-1,
+			(iconv_t)-1
+		};
 
 		for (unsigned i = 0; i < MAX_CHARSETS; i++)
 		{
@@ -500,4 +555,30 @@ namespace Sexy
 		return -1;
 	}
 
+	bool SexyUtf8ToWString(const std::string& utf8,
+			       std::wstring& str)
+	{
+#ifdef WIN32
+		short *utf16;
+		int len;
+
+		len = SexyUtf8ToUtf16(utf8.c_str(), utf8.length(), &utf16);
+
+		if (len < 0)
+			return false;
+		for (int i = 0; i < len; i++)
+			str[i] = utf16[i];
+#else
+		uint32 *ucs4;
+		int len;
+
+		len = SexyUtf8ToUcs4(utf8.c_str(), utf8.length(), &ucs4);
+
+		if (len < 0)
+			return false;
+		for (int i = 0; i < len; i++)
+			str[i] = ucs4[i];
+#endif
+		return true;
+	}
 }
