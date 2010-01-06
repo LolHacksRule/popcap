@@ -71,7 +71,8 @@ def intltoolize(env, srcdir, podirname, domain,
         if package is None:
             package = domain
         command = '$XGETTEXT --package-name=%s --package-version=%s ' \
-                  '-o $TARGET --keyword=tr -f $SOURCE' % (package, package_version)
+                  '-o $TARGET --keyword=tr --keyword=tr_noop -f $SOURCE' % \
+                  (package, package_version)
         potbuild = env.Command (os.path.join(podir, potbuild_name), potfiles,
                                 command)
         env.AlwaysBuild(potbuild)
@@ -123,12 +124,20 @@ def installLocale(env, srcdir, podirname, domain, langs, localedir):
     return targets
 
 def accumtexts(target, source, env):
+    import polib
     fp = file(target[0].abspath, 'w')
     fp.write('a')
     for lingua in source:
-        lfp = file(lingua.abspath, 'r')
-        for line in lfp.readlines():
-            fp.write(line)
+        if lingua.suffix == '.po':
+            po = polib.pofile(lingua.abspath)
+            entries = [po.metadata_as_entry()]
+            entries += [e for e in po if not e.obsolete]
+            for entry in entries:
+                fp.write(unicode(entry).encode('utf-8'))
+        else:
+            lfp = file(lingua.abspath, 'r')
+            for line in lfp.readlines():
+                fp.write(line)
     fp.close()
 
 def stripFonts(env, srcdir, fonts, podirname, destdir, langs):
