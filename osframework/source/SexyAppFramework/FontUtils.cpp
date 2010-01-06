@@ -558,27 +558,37 @@ namespace Sexy
 	bool SexyUtf8ToWString(const std::string& utf8,
 			       std::wstring& str)
 	{
-#ifdef WIN32
-		short *utf16;
-		int len;
+		// asume the encoding of wstring is utf-16
+		if (sizeof(wchar_t) == 2)
+		{
+			short *utf16;
+			int len;
 
-		len = SexyUtf8ToUtf16(utf8.c_str(), utf8.length(), &utf16);
+			len = SexyUtf8ToUtf16(utf8.c_str(), utf8.length(), &utf16);
 
-		if (len < 0)
-			return false;
-		for (int i = 0; i < len; i++)
-			str[i] = utf16[i];
-#else
-		uint32 *ucs4;
-		int len;
+			if (len < 0)
+				return false;
+			for (int i = 0; i < len; i++)
+				str[i] = utf16[i];
 
-		len = SexyUtf8ToUcs4(utf8.c_str(), utf8.length(), &ucs4);
+			delete [] utf16;
+		}
+		else
+		{
+			// asume the encoding of wstring is ucs4 otherwise
+			uint32 *ucs4;
+			int len;
 
-		if (len < 0)
-			return false;
-		for (int i = 0; i < len; i++)
-			str[i] = ucs4[i];
-#endif
+			len = SexyUtf8ToUcs4(utf8.c_str(), utf8.length(), &ucs4);
+
+			if (len < 0)
+				return false;
+			for (int i = 0; i < len; i++)
+				str[i] = ucs4[i];
+
+			delete ucs4;
+		}
+
 		return true;
 	}
 }
