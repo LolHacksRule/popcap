@@ -533,7 +533,7 @@ namespace Sexy
 		return -1;
 	}
 
-	int SexyUtf8FromString(const std::string& string,
+	int SexyUtf8FromLocaleString(const std::string& string,
 			       std::string& utf8)
 	{
 		int len = SexyUtf8Strlen(string.c_str(), -1);

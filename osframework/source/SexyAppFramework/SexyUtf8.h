@@ -18,7 +18,7 @@ namespace Sexy
 
     SEXY_EXPORT int SexyUtf8FromLocale (const char * str, int len, char** result);
 
-    SEXY_EXPORT int SexyUtf8FromString(const std::string& string, std::string& utf8);
+    SEXY_EXPORT int SexyUtf8FromLocaleString(const std::string& string, std::string& utf8);
 
     SEXY_EXPORT bool SexyUtf8ToWString(const std::string& utf8, std::wstring& str);
 }

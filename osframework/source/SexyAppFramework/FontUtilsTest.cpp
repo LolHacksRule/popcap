@@ -14,7 +14,7 @@ static void test (std::string &source,
     ret = SexyUtf8Strlen (expected.c_str(), -1);
     assert (ret == (int)num_ucs4);
 
-    ret = SexyUtf8FromString (source, result);
+    ret = SexyUtf8FromLocaleString (source, result);
     assert (ret == (int)num_ucs4);
     assert (result == expected);
 }

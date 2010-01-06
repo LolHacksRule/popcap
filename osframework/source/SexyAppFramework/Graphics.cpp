@@ -1230,7 +1230,7 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 	int aStrLen = theLine.length();
 	if (aFont->IsSupportUnicode())
 	{
-		aStrLen = SexyUtf8FromString(theLine, aUtf8);
+		aStrLen = SexyUtf8FromLocaleString(theLine, aUtf8);
 		if (aStrLen > 0)
 		{
 			aUtf8Str = aUtf8.c_str();
