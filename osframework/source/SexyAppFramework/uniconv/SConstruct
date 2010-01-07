@@ -1,0 +1,26 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+env = Environment()
+srcs = ['codecs_cn.c', 'codecs_hk.c',  'codecs_iso2022.c',
+        'codecs_jp.c', 'codecs_kr.c',  'codecs_tw.c',
+        'multibytecodec.c']
+srcs += Glob('*-table.c')
+srcs += ['singlebytetables.c', 'singlebytecodec.c', 'uniconv.c',
+         'charsetalias.c', 'unicode.c', 'converter.c',
+         'tableconverter.c', 'utfconverter.c']
+env.AppendUnique(CCFLAGS = ['-Wall', '-g'],
+                 LINKFLAGS = ['-g'],
+		 CPPPATH = ['.'])
+cjkcodecs = env.Library ('uniconv', srcs)
+
+test = env.Program ('test', 'main.c',
+                    LIBS = ['uniconv'],
+                    LIBPATH = ['.'],
+                    CPPPATH = ['.'])
+conv = env.Program ('uconv', 'uconv.c',
+                    LIBS = ['uniconv'],
+                    LIBPATH = ['.'],
+                    CPPPATH = ['.'])
+
