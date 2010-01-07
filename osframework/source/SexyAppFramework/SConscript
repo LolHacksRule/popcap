@@ -196,11 +196,6 @@ if gameenv['static']:
     if env['TARGET_OS'] == 'win32':
         gameenv.AppendUnique(LIBS = ['ws2_32'])
 
-if env['TARGET_OS'] in ['freebsd', 'netbsd', 'openbsd', 'darwin']:
-    env.AppendUnique(LIBS = ['iconv'])
-    if gameenv['static']:
-       gameenv.AppendUnique(LIBS = ['iconv'])
-
 env.AppendUnique(CPPDEFINES = ['BUILDING_SEXYFRAMEWORK'],
                  LIBS = ['$STDCXX_LIBS'])
 if gameenv['static']:
@@ -231,7 +226,8 @@ headers = ['FlashWidget.h', 'Font.h', 'ImageFont.h', 'SexyVector.h', 'Image.h', 
            'CritSect.h', 'EditListener.h', 'GstSoundInstance.h', 'MTRand.h',
            'WidgetManager.h', 'CursorWidget.h', 'EditWidget.h', 'MusicInterface.h', 'SexyDebug.h',
            'XMLParser.h', 'Event.h', 'HTTPTransfer.h', 'NativeDisplay.h', 'SexyMatrix.h',
-           'Flags.h', 'HyperlinkWidget.h', 'NativeFont.h', 'SexyThread.h', 'XMLWriter.h']
+           'Flags.h', 'HyperlinkWidget.h', 'NativeFont.h', 'SexyThread.h', 'XMLWriter.h',
+           'SexyI18n.h', 'SexyLang.h']
 sexyapp_sdk = env.Install (header_dir, headers)
 sexyapp_sdk += env.Install (lib_dir, sexy_lib)
 env.Alias ('sexyapp_sdk_install', sexyapp_sdk)
