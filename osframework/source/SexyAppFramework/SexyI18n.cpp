@@ -63,6 +63,11 @@ void I18nManager::setLocale(const char *locale)
 		mLocale = locale;
 	else
 		mLocale = "";
+
+	// for example zh_CN.UTF-8
+	std::string::size_type pos = mLocale.find('.');
+	if (pos != std::string::npos)
+		mLocale = mLocale.substr(0, pos - 1);
 }
 
 void I18nManager::setDomain(const char *domain)
