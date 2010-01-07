@@ -1,18 +1,35 @@
 #include "SexyUtf8.h"
+#include "SexyLang.h"
+
 #include "AutoCrit.h"
 
 #ifndef WIN32
-#include <iconv.h>
 #include <errno.h>
 #include <langinfo.h>
 #endif
 
 #include <assert.h>
 
-#include "cjkcodecs/multibytecodec.h"
+#include "uniconv/uniconv.h"
 
 namespace Sexy
 {
+	static std::string localeEncoding;
+
+	std::string
+	SexyGetLocaleEncoding()
+	{
+		if (localeEncoding.empty())
+			return SexyGetCharset();
+		return localeEncoding;
+	}
+
+	void
+	SexySetLocaleEncoding(const std::string encoding)
+	{
+		localeEncoding = encoding;
+	}
+
 	static inline bool
 	SexyUnicodeValide(uint32 unichar)
 	{
@@ -253,115 +270,32 @@ namespace Sexy
 		return SexyUtf8Strlen(utf8, len) >= 0;
 	}
 
-	static int CJKCodecsConvert(const char * modname, const char* charset,
-				    const char* inbuf, size_t inlen,
-				    char** retoutbuf, size_t* retoutlen)
+	static int EncodingConvert(uniconv_t *cd, const char* inbuf, size_t inlen,
+			   char** retoutbuf, size_t* retoutlen)
 	{
-		MultibyteCodecState state;
-		const char* inp;
-		char * utf8;
-		char * utf8p;
-		size_t utf8len;
-		ucs4_t *ucs4;
-		ucs4_t *outp;
 		int ret;
-
-		ret = mbcs_init(&state, modname, charset);
-		if (ret < 0)
-			return -1;
-
-		ucs4 = new ucs4_t[inlen];
-		outp = ucs4;
-		inp = inbuf;
-		ret = mbcs_decode(&state, &inp, inlen, &outp, inlen);
-		if (ret != 0)
-		{
-			delete [] ucs4;
-			return -1;
-		}
-
-		utf8len = 0;
-		for (int i = 0; i < outp - ucs4; i++)
-		{
-			int chlen = SexyUsc4ToUtf8(ucs4[i], 0);
-			assert(chlen > 0);
-			utf8len += chlen;
-		}
-
-		utf8p = utf8 = new char[utf8len + 1];
-		for (int i = 0; i < outp - ucs4; i++)
-		{
-			int chlen = SexyUsc4ToUtf8(ucs4[i], utf8p);
-			assert(chlen > 0);
-			utf8p += chlen;
-		}
-		utf8p[0] = '\0';
-		*retoutbuf = utf8;
-		*retoutlen = utf8len;
-		return inp - inbuf;
-	}
-
-	static int CJKCodecsUtf8FallbackConvert (const char * str, int len,
-						 char** result)
-	{
-		static struct
-		{
-			const char* module;
-			const char* charset;
-		} charsets[] = {
-			{ "cn", "gb18030" },
-			{ "cn", "gbk" },
-			{ "tw", "big5" },
-			{ "tw", "cp950" },
-			{ 0, 0 }
-		};
-
-		for (unsigned i = 0; charsets[i].module; i++)
-		{
-			char* outbuf;
-			size_t outlen;
-			int ret = CJKCodecsConvert(charsets[i].module,
-						   charsets[i].charset,
-						   str, len, &outbuf, &outlen);
-			if (ret < 0)
-				return -1;
-			ret = SexyUtf8Strlen(outbuf, outlen);
-			*result = outbuf;
-			return ret;
-		}
-
-		return -1;
-	}
-
-#ifndef WIN32
-	static int CharsetConvert(iconv_t cd, const char* inbuf, size_t inlen,
-				  char** retoutbuf, size_t* retoutlen)
-	{
-		size_t ret;
 		char* outbuf;
 		size_t left;
 		size_t outleft;
 		size_t outlen;
 		char* out;
+		char* in;
 
 		outlen = inlen * 3 / 2 + 1;
 		out = outbuf = new char[outlen];
 		do
 		{
-			char* in = (char *)inbuf;
+			in = (char *)inbuf;
 			left = inlen;
 			outleft = outlen - 1;
-#if defined(__FreeBSD__)
-			ret = iconv(cd, (const char**)&in, &left, &out, &outleft);
-#else
-			ret = iconv(cd, &in, &left, &out, &outleft);
-#endif
-			if (ret == (size_t)-1 && errno != E2BIG)
+
+			ret = uniconv_conv(cd, (const char**)&in, left, &out, outleft);
+			if (ret < 0 && ret != UNICONV_E2BIG)
 			{
 				delete [] outbuf;
 				return -1;
 			}
-			else if (ret >= 0)
+			else if (!ret)
 			{
 				break;
 			}
@@ -371,32 +305,38 @@ namespace Sexy
 		} while (true);
 
 		*retoutbuf = outbuf;
-		*retoutlen = outlen - 1 - outleft;
+		*retoutlen = out - outbuf;
 		outbuf[*retoutlen] = '\0';
-		return inlen - left;
+		return in - inbuf;
 	}
 
 	static int Utf8FromLocale (const char * str, int len, char** result)
 	{
 		static CritSect aCritSect;
+		static uniconv_t *cd = 0;
+		static std::string encoding;
+
 		AutoCrit aAutoCrit(aCritSect);
-		static iconv_t cd = (iconv_t)-1;
+		const std::string charset = SexyGetLocaleEncoding();
 
-		if (cd == (iconv_t)-1)
+		if (!cd|| encoding != charset)
 		{
-			const char* charset = nl_langinfo(CODESET);
-			if (!charset || !stricmp (charset, "UTF-8") ||
-			    !stricmp (charset, "utf8"))
+			const std::string charset = SexyGetLocaleEncoding();
+			if (charset.empty() || !stricmp (charset.c_str(), "UTF-8") ||
+			    !stricmp (charset.c_str(), "utf8"))
 				return -1;
 
-			cd = iconv_open("UTF-8", charset);
-			if (cd == (iconv_t)-1)
+			if (cd)
+				uniconv_close(cd);
+			cd = uniconv_open(charset.c_str(), "UTF-8");
+			if (!cd)
 				return -1;
+			encoding = charset;
 		}
 
 		char* outbuf;
 		size_t outlen;
-		int ret = CharsetConvert(cd, str, len, &outbuf, &outlen);
+		int ret = EncodingConvert(cd, str, len, &outbuf, &outlen);
 		if (ret < 0)
 			return -1;
 		ret = SexyUtf8Strlen(outbuf, outlen);
@@ -408,36 +348,35 @@ namespace Sexy
 	{
 		static CritSect aCritSect;
 		AutoCrit aAutoCrit(aCritSect);
-		const unsigned int MAX_CHARSETS = 4;
+		const unsigned int MAX_CHARSETS = 6;
 		static const char* charsets[MAX_CHARSETS] =
 		{
 			"GB18030",
 			"GBK",
 			"GB2312",
-			"BIG5"
+			"BIG5",
+			"CP936",
+			"ISO8859-1"
 		};
-		static iconv_t cds[MAX_CHARSETS] =
+		static uniconv_t *cds[MAX_CHARSETS] =
 		{
-			(iconv_t)-1,
-			(iconv_t)-1,
-			(iconv_t)-1,
-			(iconv_t)-1
+			0, 0, 0, 0, 0, 0
 		};
 
 		for (unsigned i = 0; i < MAX_CHARSETS; i++)
 		{
-			if (cds[i] == (iconv_t)-1)
+			if (!cds[i])
 			{
-				cds[i] = iconv_open("UTF-8", charsets[i]);
-				if (cds[i] == (iconv_t)-1)
+				cds[i] = uniconv_open(charsets[i], "UTF-8");
+				if (!cds[i])
 					continue;
 			}
 
 			char* outbuf;
 			size_t outlen;
-			int ret = CharsetConvert(cds[i], str, len, &outbuf, &outlen);
+			int ret = EncodingConvert(cds[i], str, len, &outbuf, &outlen);
 			if (ret < 0)
-				return -1;
+				continue;
 			ret = SexyUtf8Strlen(outbuf, outlen);
 			if (ret < 0)
 				delete [] outbuf;
@@ -448,9 +387,9 @@ namespace Sexy
 
 		return -1;
 	}
-#else
-	int    ConvertUtf16toUtf8 (unsigned short* inbuf, size_t inlen,
-				   char* outbuf)
+
+	int ConvertUtf16toUtf8 (unsigned short* inbuf, size_t inlen,
+				char* outbuf)
 	{
 		const uint32 UNI_SUR_HIGH_START = 0xd800;
 		const uint32 UNI_SUR_HIGH_END   = 0xdbff;
@@ -480,38 +419,6 @@ namespace Sexy
 		return ret;
 	}
 
-	static int Utf8FromLocale (const char * str, int len, char** result)
-	{
-		int utf16len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-		if (utf16len <= 0)
-			return -1;
-
-		unsigned short * utf16 = new unsigned short[utf16len];
-		if (MultiByteToWideChar(CP_ACP, 0, str, -1, (WCHAR*)utf16, utf16len) <= 0)
-		{
-			delete [] utf16;
-			return -1;
-		}
-		int utf8len = ConvertUtf16toUtf8(utf16, utf16len - 1, 0);
-		if (utf8len < 0)
-		{
-			delete [] utf16;
-			return -1;
-		}
-
-		char* utf8 = new char[utf8len + 1];
-		ConvertUtf16toUtf8(utf16, utf16len, utf8);
-		utf8[utf8len] = '\0';
-		delete [] utf16;
-		*result = utf8;
-		return SexyUtf8Strlen(utf8, utf8len);;
-	}
-
-	static int Utf8FallbackConvert (const char * str, int len, char** result)
-	{
-		return -1;
-	}
-#endif
 	int SexyUtf8FromLocale (const char * str, int len, char** result)
 	{
 		int ret;
@@ -527,9 +434,6 @@ namespace Sexy
 		if (ret >= 0)
 			return ret;
 
-		ret = CJKCodecsUtf8FallbackConvert(str, len, result);
-		if (ret >= 0)
-			return ret;
 		return -1;
 	}
 
@@ -592,3 +496,4 @@ namespace Sexy
 		return true;
 	}
 }
+

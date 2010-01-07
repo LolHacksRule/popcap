@@ -27,12 +27,17 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         'DriverFactory.cpp', 'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
         'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp', 'SexyThread.cpp',
-        'SexyDebug.cpp', 'SexyI18n.cpp']
+        'SexyDebug.cpp', 'SexyI18n.cpp', 'SexyLang.cpp']
 
-srcs += map(lambda f:os.path.join ('cjkcodecs', f),
+### uniconv
+srcs += map(lambda f:os.path.join ('uniconv', f),
             ['codecs_cn.c', 'codecs_hk.c',  'codecs_iso2022.c',
              'codecs_jp.c', 'codecs_kr.c',  'codecs_tw.c',
-             'multibytecodec.c'])
+             'multibytecodec.c', 'singlebytetables.c', 'singlebytecodec.c',
+             'uniconv.c', 'charsetalias.c', 'unicode.c', 'converter.c',
+             'tableconverter.c', 'utfconverter.c'])
+srcs += Glob(os.path.join ('uniconv', '*-table.c'))
+env.AppendUnique(CPPPATH = ['uniconv'])
 
 srcs += ['RegistryInterface.cpp', 'RegistryInterfaceFactory.cpp',
          'XMLWriter.cpp']
