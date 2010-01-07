@@ -216,7 +216,7 @@ env.Clean (audiere, ['include', 'lib'])
 ### a test program
 env.Program('audiere_play',
             os.path.join(audiere_dir, 'examples', 'simple', 'simple.cpp'),
-            CPPPATH = [os.path.join(audiere_dir, 'srcs')] + env['CPPPATH'],
+            CPPPATH = [os.path.join(audiere_dir, 'src')] + env['CPPPATH'],
             LIBPATH = ['.'] + env['LIBPATH'],
             LIBS = ['audiere'] + env['LIBS'])
 
