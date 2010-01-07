@@ -39,6 +39,7 @@ FreeTypeBaseFont::~FreeTypeBaseFont()
 {
 	FreeTypeFontMap* aFontMap = FreeTypeFontMap::GetFreeTypeFontMap();
 	aFontMap->RemoveBaseFont(this);
+	DropUnlockedFace();
 	p_fclose(mFp);
 	if (mStream)
 		delete mStream;
