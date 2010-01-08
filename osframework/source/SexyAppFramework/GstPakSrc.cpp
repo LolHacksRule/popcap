@@ -90,10 +90,10 @@ gst_pak_src_base_init (gpointer g_class)
 	GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 	GstElementDetails details;
 
-	details.longname = "Pak Source";
-	details.klass = "Source/Pak";
-	details.description = "Read from arbitrary point in a file from pop package file";
-	details.author = "Luo Jinghua <sunmoon1997@gmail.com>";
+	details.longname = (gchar *)"Pak Source";
+	details.klass = (gchar *)"Source/Pak";
+	details.description = (gchar *)"Read from arbitrary point in a file from pop package file";
+	details.author = (gchar *)"Luo Jinghua <sunmoon1997@gmail.com>";
 	gst_element_class_set_details (gstelement_class,
 				       &details);
 	gst_element_class_add_pad_template (gstelement_class,
@@ -424,7 +424,7 @@ gst_pak_src_uri_get_type (void)
 static gchar **
 gst_pak_src_uri_get_protocols (void)
 {
-	static gchar *protocols[] = { "pak", NULL };
+	static gchar *protocols[] = { (gchar *)"pak", NULL };
 
 	return protocols;
 }
@@ -500,14 +500,14 @@ void gst_pak_src_plugin_register (void)
 		static GstPluginDesc desc = {
 			GST_VERSION_MAJOR,
 			GST_VERSION_MINOR,
-			"paksrc",
-			"pak source",
+			(gchar *)"paksrc",
+			(gchar *)"pak source",
 			plugin_init,
-			"0.1",
+			(gchar *)"0.1",
 			GST_LICENSE_UNKNOWN,
-			"",
-			"paksrc",
-			"",
+			(gchar *)"",
+			(gchar *)"paksrc",
+			(gchar *)"",
 			GST_PADDING_INIT
 		};
 
