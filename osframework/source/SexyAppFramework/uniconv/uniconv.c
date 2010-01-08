@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 struct _uniconv {
     struct converter *from;
@@ -42,7 +43,7 @@ uniconv_canonical_charset(const char *charset,
 }
 
 uniconv_t*
-uniconv_open(const char *from, const char *to)
+uniconv_open(const char *to, const char *from)
 {
     char frombuf[64];
     char tobuf[64];
@@ -89,41 +90,65 @@ uniconv_close(uniconv_t *uc)
 int
 uniconv_conv(uniconv_t *uc,
 	     const char **inbuf,
-	     size_t inleft,
+	     size_t *inleft,
 	     char **outbuf,
-	     size_t outleft)
+	     size_t *outleft)
 {
     int ret;
-    uc_char_t local_ucs4[UNICONV_MAX_LOCAL];
-    uc_char_t *ucs4, *inucs4;
     size_t ucs4len;
+    const char *saved_inbuf;
+    const char *saved_outbuf;
 
     if (!uc)
 	return UNICONV_EBADF;
 
-    if (!inbuf || !outbuf)
-	return UNICONV_EINVAL;
+    /* reset converter */
+    if (!inbuf && !outbuf) {
+	converter_reset(uc->from);
+	converter_reset(uc->to);
+	return UNICONV_SUCCESS;
+    }
 
-    if (inleft < UNICONV_MAX_LOCAL)
-	ucs4 = local_ucs4;
-    else
-	ucs4 = malloc(sizeof(uc_char_t) * inleft);
-    if (!ucs4)
-	return UNICONV_EINVAL;
+    /* converting/pushing input data */
+    if (inbuf) {
+	uc_char_t ucs4;
+	uc_char_t *ucsbuf;
 
-    inucs4 = ucs4;
-    ucs4len = inleft;
-    ret = uc->from->decode(uc->from, inbuf, inleft, &inucs4, ucs4len);
-    if (ret)
-	goto error_decode;
+	saved_inbuf = *inbuf;
+	saved_outbuf = *outbuf;
+	ret = UNICONV_SUCCESS;
+	while (*inleft) {
+	    size_t left = 0;
+	    const char *abuf;
+	    const char *aoutbuf;
 
-    ucs4len = inucs4 - ucs4;
-    inucs4 = ucs4;
-    ret = uc->to->encode(uc->to, (const ucs4_t **)&inucs4, ucs4len, outbuf, outleft);
+	    ucsbuf = &ucs4;
+	    abuf = *inbuf;
+	    left = *inleft;
+	    ret = uc->from->decode(uc->from, &abuf, left, &ucsbuf, 1);
+	    if (ret < 0 && ret != UNICONV_E2BIG)
+		return ret;
 
- error_decode:
-    if (ucs4 != local_ucs4)
-	free (ucs4);
+	    assert (ucsbuf - &ucs4 > 0 && ucsbuf - &ucs4 <= 1);
+	    ucs4len = ucsbuf - &ucs4;
+	    ucsbuf = &ucs4;
+	    aoutbuf = *outbuf;
+	    ret = uc->to->encode(uc->to, (const ucs4_t **)&ucsbuf, ucs4len,
+				 outbuf, *outleft);
+	    *outleft -= *outbuf - aoutbuf;
+	    if (ret < 0)
+		break;
+	    *inleft -= abuf - *inbuf;
+	    (*inbuf) = abuf;
+	}
+    } else {
+	/* converting pending data in buffer */
+	saved_inbuf = NULL;
+	saved_outbuf = *outbuf;
+	ret = uc->to->encode(uc->to, NULL, 0, outbuf, *outleft);
+	*outleft -= *outbuf - saved_outbuf;
+    }
+
     return ret;
 }
 

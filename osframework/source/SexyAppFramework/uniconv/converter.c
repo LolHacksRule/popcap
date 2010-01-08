@@ -24,10 +24,17 @@ converter_open(const char *charset)
     return NULL;
 }
 
-void converter_close(struct converter *conv)
+void
+converter_close(struct converter *conv)
 {
     if (!conv)
 	return;
+
     conv->close(conv);
 }
 
+void converter_reset(struct converter *conv)
+{
+    if (conv->reset)
+	conv->reset(conv);
+}

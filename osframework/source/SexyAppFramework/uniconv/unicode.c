@@ -12,7 +12,7 @@ unicode_valide(uc_char_t unichar)
 }
 
 int
-ucs4toutf16(uc_char_t unichar, short *utf16)
+ucs4toutf16(uc_char_t unichar, uc_uint16_t *utf16)
 {
     unsigned len;
 
@@ -39,13 +39,12 @@ ucs4toutf16(uc_char_t unichar, short *utf16)
 }
 
 int
-ucs4fromutf16(const short *str, uc_char_t *ret, int inlen)
+ucs4fromutf16(const uc_uint16_t *utf16, uc_char_t *ret, int inlen)
 {
     static const uc_char_t UNI_SUR_HIGH_START = 0xd800;
     static const uc_char_t UNI_SUR_HIGH_END   = 0xdbff;
     static const uc_char_t UNI_SUR_LOW_START  = 0xdc00;
     static const uc_char_t UNI_SUR_LOW_END    = 0xdfff;
-    const unsigned short *utf16 = (const unsigned short *)str;
     uc_char_t ch;
     int len = 1;
 

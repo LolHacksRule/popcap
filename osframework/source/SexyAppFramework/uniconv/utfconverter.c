@@ -21,6 +21,9 @@ utf8_encode(struct converter *conv,
 {
     size_t i;
 
+    if (!inbuf)
+	return UNICONV_SUCCESS;
+
     for (i = 0; i < inleft; i++) {
 	int seqlen = ucs4toutf8(**inbuf, NULL);
 	if (seqlen < 0)
@@ -48,7 +51,7 @@ utf8_decode(struct converter *conv,
 	uc_char_t unichar;
 	int seqlen = ucs4fromutf8(*inbuf, &unichar, inleft);
 	if (seqlen == -2)
-	    return UNICONV_E2BIG;
+	    return UNICONV_EINVAL;
 	else if (seqlen < 0)
 	    return UNICONV_EILSEQ;
 	if (!outleft)
@@ -73,13 +76,16 @@ utf16_encode(struct converter *conv,
 	     size_t outleft)
 {
     size_t i;
-    short **soutbuf = (short **)outbuf;
+    uc_uint16_t **soutbuf = (uc_uint16_t **)outbuf;
+
+    if (!inbuf)
+	return UNICONV_SUCCESS;
 
     for (i = 0; i < inleft; i++) {
 	int seqlen = ucs4toutf16(**inbuf, NULL);
 	if (seqlen < 0)
 	    return UNICONV_EILSEQ;
-	if (seqlen * sizeof(short) > outleft)
+	if (seqlen * sizeof(uc_uint16_t) > outleft)
 	    return UNICONV_E2BIG;
 
 	ucs4toutf16(**inbuf, *soutbuf);
@@ -93,18 +99,19 @@ utf16_encode(struct converter *conv,
 
 static int
 utf16_decode(struct converter *conv,
-	    const char **inbuf,
-	    size_t inleft,
-	    uc_char_t **outbuf,
-	    size_t outleft)
+	     const char **inbuf,
+	     size_t inleft,
+	     uc_char_t **outbuf,
+	     size_t outleft)
 {
-    const short **sinbuf = (const short**)inbuf;
+    const uc_uint16_t **sinbuf = (const uc_uint16_t**)inbuf;
 
     while (inleft) {
 	uc_char_t unichar;
-	int seqlen = ucs4fromutf16(*sinbuf, &unichar, inleft / sizeof(short));
+	int seqlen = ucs4fromutf16(*sinbuf, &unichar,
+				   inleft / sizeof(uc_uint16_t));
 	if (seqlen == -2)
-	    return UNICONV_E2BIG;
+	    return UNICONV_EINVAL;
 	else if (seqlen < 0)
 	    return UNICONV_EILSEQ;
 	if (!outleft)
@@ -115,7 +122,7 @@ utf16_decode(struct converter *conv,
 	outleft -= 1;
 
 	(*sinbuf) += seqlen;
-	inleft -= seqlen * sizeof(short);
+	inleft -= seqlen * sizeof(uc_uint16_t);
     }
 
     return UNICONV_SUCCESS;
@@ -128,6 +135,9 @@ utf32_encode(struct converter *conv,
 	     char **outbuf,
 	     size_t outleft)
 {
+    if (!inbuf)
+	return UNICONV_SUCCESS;
+
     if (inleft * sizeof(uc_char_t) > outleft)
 	return UNICONV_E2BIG;
 
@@ -145,7 +155,7 @@ utf32_decode(struct converter *conv,
 	    size_t outleft)
 {
     if (inleft & 3)
-	return UNICONV_EILSEQ;
+	return UNICONV_EINVAL;
     if (inleft > outleft)
 	return UNICONV_E2BIG;
 
@@ -184,5 +194,7 @@ utfconverter_open(const char *charset)
 	conv->base.decode = utf32_decode;
     }
     conv->base.close = utfconverter_close;
+    conv->base.reset = NULL;
+
     return &conv->base;
 }

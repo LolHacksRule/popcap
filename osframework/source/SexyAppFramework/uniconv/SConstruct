@@ -2,7 +2,8 @@
 # -*- python -*-
 # Author: Luo Jinghua
 
-env = Environment()
+env = Environment(tools = ['default', 'convlib'])
+bareenv = env.Clone()
 srcs = ['codecs_cn.c', 'codecs_hk.c',  'codecs_iso2022.c',
         'codecs_jp.c', 'codecs_kr.c',  'codecs_tw.c',
         'multibytecodec.c']
@@ -13,7 +14,13 @@ srcs += ['singlebytetables.c', 'singlebytecodec.c', 'uniconv.c',
 env.AppendUnique(CCFLAGS = ['-Wall', '-g'],
                  LINKFLAGS = ['-g'],
 		 CPPPATH = ['.'])
-cjkcodecs = env.Library ('uniconv', srcs)
+
+uniconv = env.ConvenienceLibrary ('uniconv', srcs)
+
+iconv = env.SharedLibrary('iconv', 'iconv.c',
+                          LIBS = ['uniconv'],
+                          LIBPATH = ['.'],
+                          CPPPATH = ['.'])
 
 test = env.Program ('test', 'main.c',
                     LIBS = ['uniconv'],
@@ -23,4 +30,4 @@ conv = env.Program ('uconv', 'uconv.c',
                     LIBS = ['uniconv'],
                     LIBPATH = ['.'],
                     CPPPATH = ['.'])
-
+conv2 = bareenv.Program ('uconv2', 'uconv2.c')

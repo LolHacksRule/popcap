@@ -271,7 +271,7 @@ namespace Sexy
 	}
 
 	static int EncodingConvert(uniconv_t *cd, const char* inbuf, size_t inlen,
-			   char** retoutbuf, size_t* retoutlen)
+				   char** retoutbuf, size_t* retoutlen)
 	{
 		int ret;
 		char* outbuf;
@@ -289,13 +289,13 @@ namespace Sexy
 			left = inlen;
 			outleft = outlen - 1;
 
-			ret = uniconv_conv(cd, (const char**)&in, left, &out, outleft);
+			ret = uniconv_conv(cd, (const char**)&in, &left, &out, &outleft);
 			if (ret < 0 && ret != UNICONV_E2BIG)
 			{
 				delete [] outbuf;
 				return -1;
 			}
-			else if (!ret)
+			else if (ret >= 0)
 			{
 				break;
 			}
@@ -328,7 +328,7 @@ namespace Sexy
 
 			if (cd)
 				uniconv_close(cd);
-			cd = uniconv_open(charset.c_str(), "UTF-8");
+			cd = uniconv_open("UTF-8", charset.c_str());
 			if (!cd)
 				return -1;
 			encoding = charset;
@@ -355,7 +355,7 @@ namespace Sexy
 			"GBK",
 			"GB2312",
 			"BIG5",
-			"CP936",
+			"CP950",
 			"ISO8859-1"
 		};
 		static uniconv_t *cds[MAX_CHARSETS] =
@@ -367,7 +367,7 @@ namespace Sexy
 		{
 			if (!cds[i])
 			{
-				cds[i] = uniconv_open(charsets[i], "UTF-8");
+				cds[i] = uniconv_open("UTF-8", charsets[i]);
 				if (!cds[i])
 					continue;
 			}

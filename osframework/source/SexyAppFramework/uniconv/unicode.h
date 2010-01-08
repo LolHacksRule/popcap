@@ -4,10 +4,10 @@
 #include <uniconvint.h>
 
 int
-ucs4toutf16(uc_char_t unichar, short *utf16);
+ucs4toutf16(uc_char_t unichar, uc_uint16_t *utf16);
 
 int
-ucs4fromutf16(const short *utf16, uc_char_t *ucs4, int len);
+ucs4fromutf16(const uc_uint16_t *utf16, uc_char_t *ucs4, int len);
 
 int
 ucs4toutf8(uc_char_t unichar, char *utf8);

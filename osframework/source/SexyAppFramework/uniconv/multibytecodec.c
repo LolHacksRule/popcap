@@ -142,23 +142,26 @@ mbcs_decode_init(MultibyteCodecState *state)
 	state->codec->decinit(&state->state, state->codec->config);
 }
 
-void
+int
 mbcs_decode_reset(MultibyteCodecState *state)
 {
     if (state->codec->decreset)
-	state->codec->decreset(&state->state, state->codec->config);
+	return state->codec->decreset(&state->state,
+				      state->codec->config);
+    return 0;
 }
 
 int
 mbcs_encode(MultibyteCodecState *state,
 	    const ucs4_t** inbuf, size_t inlen,
-	    char** outbuf, size_t outlen)
+	    char** outbuf, size_t outlen,
+	    int flags)
 {
     return state->codec->encode(&state->state,
 				state->codec->config,
 				inbuf, inlen,
 				(unsigned char **)outbuf, outlen,
-				ERROR_STRICT);
+				flags);
 }
 
 void
@@ -168,11 +171,12 @@ mbcs_encode_init(MultibyteCodecState *state)
       state->codec->encinit(&state->state, state->codec->config);
 }
 
-void
+int
 mbcs_encode_reset(MultibyteCodecState *state,
 		  char **outbuf, int outleft)
 {
     if (state->codec->encreset)
-	state->codec->encreset(&state->state, state->codec->config,
-			       (unsigned char **)outbuf, outleft);
+	return state->codec->encreset(&state->state, state->codec->config,
+				      (unsigned char **)outbuf, outleft);
+    return 0;
 }

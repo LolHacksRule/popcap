@@ -17,8 +17,12 @@ struct converter {
 	      size_t inbytesleft,
 	      uc_char_t **outbuf,
 	      size_t outleft);
-   void
-   (*close)(struct converter *conv);
+
+    void
+    (*reset)(struct converter *conv);
+
+    void
+    (*close)(struct converter *conv);
 };
 
 struct converter*
@@ -26,5 +30,8 @@ converter_open(const char *charset);
 
 void
 converter_close(struct converter *converter);
+
+void
+converter_reset(struct converter *converter);
 
 #endif

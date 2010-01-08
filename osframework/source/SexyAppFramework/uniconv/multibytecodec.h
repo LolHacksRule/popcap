@@ -6,23 +6,15 @@
 
 #ifndef _MULTIBYTECODEC_H_
 #define _MULTIBYTECODEC_H_
+
+#include <uniconvint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stddef.h>
-
-#ifdef uint32_t
-    typedef uint32_t ucs4_t;
-#else
-    typedef unsigned int ucs4_t;
-#endif
-
-#ifdef uint16_t
-    typedef uint16_t ucs2_t, DBCHAR;
-#else
-    typedef unsigned short ucs2_t, DBCHAR;
-#endif
+    typedef uc_char_t ucs4_t;
+    typedef uc_uint16_t ucs2_t, DBCHAR;
 
     typedef union {
 	void *p;
@@ -93,13 +85,13 @@ mbcs_init(MultibyteCodecState *state,
 void
 mbcs_decode_init(MultibyteCodecState *state);
 
-void
+int
 mbcs_decode_reset(MultibyteCodecState *state);
 
 void
 mbcs_encode_init(MultibyteCodecState *state);
 
-void
+int
 mbcs_encode_reset(MultibyteCodecState *state,
 		  char **outbuf, int outleft);
 
@@ -111,9 +103,11 @@ mbcs_decode(MultibyteCodecState *state,
 int
 mbcs_encode(MultibyteCodecState *state,
 	    const ucs4_t** inbuf, size_t inlen,
-	    char** outbuf, size_t outlen);
+	    char** outbuf, size_t outlen,
+	    int flags);
 
 #ifdef __cplusplus
 }
 #endif
+
 #endif

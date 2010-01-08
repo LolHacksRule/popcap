@@ -31,20 +31,24 @@ tabconverter_encode(struct converter *suc,
     struct tabconverter *uc = (struct tabconverter*)suc;
     int ret;
 
-    if (!uc)
-	return UNICONV_EINVAL;
-
     if (uc->singlebyte) {
+	/* flush */
+	if (!inbuf)
+	    return UNICONV_SUCCESS;
+
 	ret = sbcs_encode(&uc->sstate, inbuf, inleft, outbuf, outbytesleft);
     } else {
-	mbcs_encode_init(&uc->mstate);
-	ret = mbcs_encode(&uc->mstate, inbuf, inleft, outbuf, outbytesleft);
+	/* flush */
+	if (!inbuf)
+	    ret = mbcs_encode_reset(&uc->mstate, outbuf, outbytesleft);
+	else
+	    ret = mbcs_encode(&uc->mstate, inbuf, inleft, outbuf, outbytesleft, 0);
 	if (ret == MBERR_TOOFEW)
-	    ret = UNICONV_E2BIG;
-	else if (ret == MBERR_TOOSMALL || ret > 0)
-	    ret = UNICONV_EILSEQ;
-	else if (ret < 0)
 	    ret = UNICONV_EINVAL;
+	else if (ret == MBERR_TOOSMALL)
+	    ret = UNICONV_E2BIG;
+	else if (ret < 0 || ret > 0)
+	    ret = UNICONV_EILSEQ;
     }
 
     return ret;
@@ -60,23 +64,30 @@ tabconverter_decode(struct converter *suc,
     struct tabconverter *uc = (struct tabconverter*)suc;
     int ret;
 
-    if (!uc)
-	return UNICONV_EINVAL;
-
     if (uc->singlebyte) {
 	ret = sbcs_decode(&uc->sstate, inbuf, inbytesleft, outbuf, outleft);
     } else {
-	mbcs_decode_init(&uc->mstate);
 	ret = mbcs_decode(&uc->mstate, inbuf, inbytesleft, outbuf, outleft);
 	if (ret == MBERR_TOOFEW)
-	    ret = UNICONV_E2BIG;
-	else if (ret == MBERR_TOOSMALL || ret > 0)
-	    ret = UNICONV_EILSEQ;
-	else if (ret < 0)
 	    ret = UNICONV_EINVAL;
+	else if (ret == MBERR_TOOSMALL)
+	    ret = UNICONV_E2BIG;
+	else if (ret < 0 || ret > 0)
+	    ret = UNICONV_EILSEQ;
     }
 
     return ret;
+}
+
+static void
+tabconverter_reset(struct converter *suc)
+{
+    struct tabconverter *uc = (struct tabconverter *)suc;
+
+    if (uc->singlebyte) {
+	mbcs_encode_init(&uc->mstate);
+	mbcs_decode_init(&uc->mstate);
+    }
 }
 
 struct converter*
@@ -107,5 +118,6 @@ tabconverter_open(const char *charset)
     conv->base.encode = tabconverter_encode;
     conv->base.decode = tabconverter_decode;
     conv->base.close = tabconverter_close;
+    conv->base.reset = tabconverter_reset;
     return &conv->base;
 }
