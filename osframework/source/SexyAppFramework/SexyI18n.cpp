@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "SexyI18n.h"
+#include "SexyLang.h"
 #include "CritSect.h"
 #include "AutoCrit.h"
 #include "XMLParser.h"
@@ -60,14 +61,21 @@ void I18nManager::setLocale(const char *locale)
 		return;
 
 	if (locale)
-		mLocale = locale;
+	{
+		if (!*locale)
+			mLocale = SexyGetLocaleName("LC_MESSAGES");
+		else
+			mLocale = locale;
+	}
 	else
+	{
 		mLocale = "";
+	}
 
 	// for example zh_CN.UTF-8
 	std::string::size_type pos = mLocale.find('.');
 	if (pos != std::string::npos)
-		mLocale = mLocale.substr(0, pos - 1);
+		mLocale = mLocale.substr(0, pos);
 }
 
 void I18nManager::setDomain(const char *domain)
