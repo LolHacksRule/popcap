@@ -13,10 +13,10 @@ srcdir = Dir('.').srcnode().abspath
 Import('gameenv')
 
 env = gameenv.Clone()
-language = env['language']
+language = 'all' #env['language']
 domain = 'hungarr2'
 env.PrependUnique(CPPPATH = ['#', '#SexyAppFramework'],
-                  CPPDEFINES = [('SEXY_LANG', configs.QuoteStr(language))],
+                  CPPDEFINES = [('SEXY_LANG', configs.QuoteStr(''))],
                   LIBPATH = [os.path.join ('$top_builddir', 'SexyAppFramework'),
                              os.path.join ('$top_builddir', 'PakLib'),
                              os.path.join ('$top_builddir', 'ImageLib'),
