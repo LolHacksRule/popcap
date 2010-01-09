@@ -131,23 +131,33 @@ def potoxml(target, source, env):
     import po2xml
     po2xml.po2xml(source[0].path, target[0].path)
 
+def expandlangs(env, srcdir, podirname, langs):
+    if type(langs) is str and langs == 'all':
+        langs = []
+        linguas = getlinguas(env, srcdir, podirname)
+        for lin in linguas:
+            langs.append(os.path.splitext(os.path.basename(str(lin)))[0])
+    return langs
+
 def installLocale(env, srcdir, podirname, domain, langs, localedir):
     origsrcdir = getsrcdir(env, srcdir)
     podir = os.path.join(origsrcdir, podirname)
     buildpodir = os.path.join(srcdir, podirname)
     linguas = getlinguas(env, srcdir, podirname)
+    langs = expandlangs(env, srcdir, podirname, langs)
     if type(langs) is not list:
         langs = [langs]
     pos = [ lang + '.po' for lang in langs ]
     targets = []
     for lingua in linguas:
-        if os.path.basename(lingua) in pos and \
-           os.path.exists(lingua):
-            xml = os.path.join(buildpodir, lang + '.xml')
+        baselingua = os.path.basename(lingua)
+        if baselingua in pos and os.path.exists(lingua):
+            xml = os.path.join(buildpodir, lingua + '.xml')
             xml = env.Command(xml, lingua,
                               Action(potoxml,
                                      "Converting $SOURCE to $TARGET"))
             targets += xml
+            lang = os.path.splitext(baselingua)[0]
             target = os.path.join(localedir, lang, domain + '.xml')
             targets += env.InstallAs(target, xml)
     return targets
@@ -174,6 +184,7 @@ def stripFonts(env, srcdir, fonts, podirname, destdir, langs):
     podir = os.path.join(origsrcdir, podirname)
     buildpodir = os.path.join(srcdir, podirname)
     linguas = getlinguas(env, srcdir, podirname)
+    langs = expandlangs(env, srcdir, podirname, langs)
     if type(langs) is not list:
         langs = [langs]
     if type(fonts) is not list:
