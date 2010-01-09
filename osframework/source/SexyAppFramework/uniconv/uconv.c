@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <uniconv.h>
 #include <assert.h>
 
@@ -28,10 +29,15 @@ int main(int argc, char **argv)
 	return -1;
     }
 
+    if (!strcmp (argv[3], "-"))
+	infp = stdin;
     infp = fopen(argv[3], "rb");
     if (!infp)
 	return -1;
-    outfp = fopen(argv[4], "wb");
+    if (!strcmp (argv[4], "-"))
+	outfp = stdout;
+    else
+	outfp = fopen(argv[4], "wb");
     if (!outfp)
 	return -1;
 
@@ -87,8 +93,10 @@ int main(int argc, char **argv)
 	}
     }
 
-    fclose(outfp);
-    fclose(infp);
+    if (outfp != stdout)
+	fclose(outfp);
+    if (infp != stdin)
+	fclose(infp);
 
     uniconv_close(conv);
 
