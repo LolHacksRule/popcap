@@ -216,7 +216,7 @@ static bool parseMessages(XMLParser &parser,
 				if (!parser.NextElement(&aXMLElement))
 					return false;
 
-				if (!aXMLElement.mType == XMLElement::TYPE_CDATA)
+				if (aXMLElement.mType != XMLElement::TYPE_CDATA)
 					return false;
 
 				if (!parser.NextElement(&aXMLElement))
