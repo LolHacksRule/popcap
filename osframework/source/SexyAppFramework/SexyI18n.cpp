@@ -25,7 +25,7 @@ private:
 public:
 	static I18nManager* GetManager();
 	void setLocale(const char *locale);
-	void setDomain(const char *domain);
+	const char* setDomain(const char *domain);
 	void bindTextDomain (const std::string &domain,
 			     const std::string &dir);
 	const char* tr(const char *domain,
@@ -78,15 +78,17 @@ void I18nManager::setLocale(const char *locale)
 		mLocale = mLocale.substr(0, pos);
 }
 
-void I18nManager::setDomain(const char *domain)
+const char* I18nManager::setDomain(const char *domain)
 {
 	if (!mValid)
-		return;
+		return 0;
 
 	if (domain)
 		mDomain = domain;
 	else
 		mDomain = "";
+
+	return mDomain.c_str();
 }
 
 static bool parseMessage(XMLParser &parser,
@@ -329,6 +331,12 @@ const std::string dtr(const std::string &domain, const std::string &s)
 void setLocale(const char *locale)
 {
 	I18nManager::GetManager()->setLocale(locale);
+}
+
+const char* textDomain(const char *domain)
+{
+	assert (domain);
+	return I18nManager::GetManager()->setDomain(domain);
 }
 
 void bindTextDomain(const char *domain, const char *dir)
