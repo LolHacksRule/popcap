@@ -12,10 +12,31 @@
 
 namespace Sexy {
 
+
 // msgid -> msgstr
 typedef std::map<std::string, std::string> MsgStrMap;
-// domain -> MsgStrMap
-typedef std::map<std::string, MsgStrMap> PoFileMap;
+
+struct MsgTrans {
+	MsgStrMap mMap;
+};
+
+// lang -> translation
+typedef std::map<std::string, MsgTrans> MsgTransMap;
+
+// domain
+struct MsgDomain {
+	MsgDomain(const std::string &path) :
+		mPath(path), mCurTrans(0)
+	{
+	}
+
+	std::string mPath;
+	MsgTransMap mMap;
+	MsgTrans *mCurTrans;
+};
+
+// domain -> MsgDomain
+typedef std::map<std::string, MsgDomain> DomainMap;
 class I18nManager
 {
 private:
@@ -24,6 +45,8 @@ private:
 
 public:
 	static I18nManager* GetManager();
+	bool loadTrans(const std::string &domain);
+	void reloadTrans();
 	const char* setLocale(const char *locale);
 	const char* setDomain(const char *domain);
 	void bindTextDomain (const std::string &domain,
@@ -32,7 +55,7 @@ public:
 		       const char *s);
 
 private:
-	PoFileMap mPoMap;
+	DomainMap mMap;
 	std::string mLocale;
 	std::string mDomain;
 	bool mValid;
@@ -63,6 +86,7 @@ const char* I18nManager::setLocale(const char *locale)
 	if (!locale)
 		return mLocale.c_str();
 
+	std::string oldLocale = mLocale;
 	if (!locale[0])
 		mLocale = SexyGetLocaleName("LC_MESSAGES");
 	else
@@ -73,18 +97,25 @@ const char* I18nManager::setLocale(const char *locale)
 	if (pos != std::string::npos)
 		mLocale = mLocale.substr(0, pos);
 
+	// reload translations
+	if (oldLocale != mLocale)
+		reloadTrans();
+
 	return mLocale.c_str();
 }
 
-const char* I18nManager::setDomain(const char *domain)
+const char* I18nManager::setDomain(const char *sdomain)
 {
 	if (!mValid)
 		return 0;
 
-	if (!domain)
+	if (!sdomain)
 		return mDomain.c_str();
 
-	mDomain = domain;
+	std::string domain = mDomain;
+
+	AutoCrit aAutoCrit(mCritSect);
+	mDomain = sdomain;
 	return mDomain.c_str();
 }
 
@@ -186,7 +217,7 @@ static bool parseMessage(XMLParser &parser,
 		{
 			//printf ("msgid: %s\nmsgstr: %s\n", msgid.c_str(), msgstr.c_str());
 			if (!msgstr.empty() && obsolete != "true")
-				map.insert (std::pair<std::string, std::string>(msgid, msgstr));
+				map.insert (MsgStrMap::value_type(msgid, msgstr));
 			return true;
 		}
 	}
@@ -262,6 +293,45 @@ static bool parseXml(const std::string &path, MsgStrMap &map)
 	return false;
 }
 
+bool I18nManager::loadTrans(const std::string &domain)
+{
+	DomainMap::iterator it = mMap.find(domain);
+
+	if (it == mMap.end())
+		return true;
+
+	MsgDomain &msgDomain = it->second;
+	if (msgDomain.mMap.find(mLocale) != msgDomain.mMap.end()) {
+		msgDomain.mCurTrans = &msgDomain.mMap.find(mLocale)->second;
+		return true;
+	}
+
+	msgDomain.mMap.insert(MsgTransMap::value_type(mLocale, MsgTrans()));
+	MsgTrans &trans = msgDomain.mMap.find(mLocale)->second;
+
+	std::string path = msgDomain.mPath + "/" + mLocale + "/" + domain + ".xml";
+	if (!parseXml(path, trans.mMap)) {
+		printf ("Failed to parse: %s\n", path.c_str());
+		trans.mMap.clear();
+		msgDomain.mCurTrans = 0;
+		return false;
+	}
+	msgDomain.mCurTrans = &trans;
+
+	return true;
+}
+
+void I18nManager::reloadTrans()
+{
+	if (mLocale.empty())
+		return;
+
+	DomainMap::iterator it;
+
+	for (it = mMap.begin(); it != mMap.end(); ++it)
+		loadTrans(it->first);
+}
+
 void I18nManager::bindTextDomain (const std::string &domain,
 				  const std::string &dir)
 {
@@ -271,18 +341,12 @@ void I18nManager::bindTextDomain (const std::string &domain,
 	if (mLocale.empty())
 		return;
 
-	std::string path = dir + "/" + mLocale + "/" + domain + ".xml";
-	MsgStrMap map;
-	if (!parseXml(path, map))
-	{
-		printf ("Failed to parse: %s\n", path.c_str());
-		return;
-	}
-
 	AutoCrit aAutoCrit(mCritSect);
-	if (mPoMap.find(domain) != mPoMap.end())
-		return;
-	mPoMap.insert(std::pair<std::string, MsgStrMap>(domain, map));
+	DomainMap::iterator it = mMap.find(domain);
+	if (it == mMap.end())
+		mMap.insert(DomainMap::value_type(domain,
+						  MsgDomain(dir)));
+	loadTrans(domain);
 }
 
 const char* I18nManager::tr(const char *sdomain,
@@ -291,13 +355,22 @@ const char* I18nManager::tr(const char *sdomain,
 	if (!mValid)
 		return s;
 
+	if (mLocale.empty())
+		return s;
+
 	AutoCrit aAutoCrit(mCritSect);
 	std::string domain = sdomain ? sdomain : mDomain;
-	PoFileMap::iterator it = mPoMap.find(domain);
-	if (it == mPoMap.end())
+	DomainMap::iterator it = mMap.find(domain);
+	if (it == mMap.end())
 		return s;
-	MsgStrMap::iterator mit = it->second.find(std::string(s));
-	if (mit != it->second.end())
+
+	MsgDomain &msgDomain = it->second;
+	if (!msgDomain.mCurTrans)
+		return s;
+
+	MsgTrans *trans = msgDomain.mCurTrans;
+	MsgStrMap::iterator mit = trans->mMap.find(std::string(s));
+	if (mit != trans->mMap.end())
 		return mit->second.c_str();
 	return s;
 }
