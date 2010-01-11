@@ -12,7 +12,7 @@ const std::string tr(const std::string &s);
 const char* dtr(const char *domain, const char *s);
 const std::string dtr(const std::string &domain, const std::string &s);
 
-void setLocale(const char *locale);
+const char* setLocale(const char *locale);
 const char* textDomain(const char *domain);
 void bindText(const char *domain, const char *dir);
 void bindTextDomain(const char *domain, const char *dir);

@@ -24,7 +24,7 @@ private:
 
 public:
 	static I18nManager* GetManager();
-	void setLocale(const char *locale);
+	const char* setLocale(const char *locale);
 	const char* setDomain(const char *domain);
 	void bindTextDomain (const std::string &domain,
 			     const std::string &dir);
@@ -55,10 +55,10 @@ I18nManager::~I18nManager()
 	mValid = false;
 }
 
-void I18nManager::setLocale(const char *locale)
+const char* I18nManager::setLocale(const char *locale)
 {
 	if (!mValid)
-		return;
+		return 0;
 
 	if (locale)
 	{
@@ -76,6 +76,8 @@ void I18nManager::setLocale(const char *locale)
 	std::string::size_type pos = mLocale.find('.');
 	if (pos != std::string::npos)
 		mLocale = mLocale.substr(0, pos);
+
+	return mLocale.c_str();
 }
 
 const char* I18nManager::setDomain(const char *domain)
@@ -328,9 +330,9 @@ const std::string dtr(const std::string &domain, const std::string &s)
 							 s.c_str()));
 }
 
-void setLocale(const char *locale)
+const char* setLocale(const char *locale)
 {
-	I18nManager::GetManager()->setLocale(locale);
+	return I18nManager::GetManager()->setLocale(locale);
 }
 
 const char* textDomain(const char *domain)
