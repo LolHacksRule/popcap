@@ -60,17 +60,13 @@ const char* I18nManager::setLocale(const char *locale)
 	if (!mValid)
 		return 0;
 
-	if (locale)
-	{
-		if (!*locale)
-			mLocale = SexyGetLocaleName("LC_MESSAGES");
-		else
-			mLocale = locale;
-	}
+	if (!locale)
+		return mLocale.c_str();
+
+	if (!locale[0])
+		mLocale = SexyGetLocaleName("LC_MESSAGES");
 	else
-	{
-		mLocale = "";
-	}
+		mLocale = locale;
 
 	// for example zh_CN.UTF-8
 	std::string::size_type pos = mLocale.find('.');
@@ -85,11 +81,10 @@ const char* I18nManager::setDomain(const char *domain)
 	if (!mValid)
 		return 0;
 
-	if (domain)
-		mDomain = domain;
-	else
-		mDomain = "";
+	if (!domain)
+		return mDomain.c_str();
 
+	mDomain = domain;
 	return mDomain.c_str();
 }
 
