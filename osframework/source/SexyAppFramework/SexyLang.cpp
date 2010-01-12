@@ -10,7 +10,7 @@
 static std::string
 GetCanonicalCharset(const std::string &charset)
 {
-	std::string aliases[][2] = {
+	static const std::string aliases[][2] = {
 		{ "CP936", "GBK" },
 		{ "CP1361", "JOHAB" },
 		{ "CP20127", "ASCII" },
