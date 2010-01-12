@@ -432,25 +432,52 @@ const char* I18nManager::tr(const char *sdomain,
 
 const char* tr(const char *s)
 {
+	if (!s)
+		return s;
 	return I18nManager::GetManager()->tr(0, 0, s);
 }
 
-const std::string tr(const std::string &s)
+std::string tr(const std::string &s)
 {
 	return std::string(I18nManager::GetManager()->tr(0, 0, s.c_str()));
 }
 
+const char* tr(const char *ctx, const char *s)
+{
+	return I18nManager::GetManager()->tr(0, ctx, s);
+}
+
+std::string tr(const std::string &ctx, const std::string &s)
+{
+	return std::string(I18nManager::GetManager()->
+			   tr(0, ctx.c_str(), s.c_str()));
+}
+
 const char* dtr(const char *domain, const char *s)
 {
-	if (!domain || !s)
-		return 0;
+	if (!s)
+		return s;
 	return I18nManager::GetManager()->tr(domain, 0, s);
 }
 
-const std::string dtr(const std::string &domain, const std::string &s)
+std::string dtr(const std::string &domain, const std::string &s)
 {
 	return std::string(I18nManager::GetManager()->tr(domain.c_str(),
 							 0, s.c_str()));
+}
+
+const char* dtr(const char *domain, const char *ctx, const char *s)
+{
+	if (!s)
+		return s;
+	return I18nManager::GetManager()->tr(domain, ctx, s);
+}
+
+std::string dtr(const std::string &domain, const std::string &ctx,
+		const std::string &s)
+{
+	return std::string(I18nManager::GetManager()->
+			   tr(domain.c_str(), ctx.c_str(), s.c_str()));
 }
 
 const char* setLocale(const char *locale)
