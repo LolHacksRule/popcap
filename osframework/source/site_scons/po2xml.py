@@ -46,7 +46,7 @@ def write_entry(entry, doc, root, compat = False):
     ### msgctxt
     if not compat and entry.msgctxt:
         msgctxt = doc.createElement("msgctxt")
-        text_node = doc.createTextNode(entry.msgctxt)
+        text_node = doc.createCDATASection(entry.msgctxt)
         msgctxt.appendChild(text_node)
         msg.appendChild(msgctxt)
 
@@ -157,7 +157,7 @@ def read_entry(node):
     ### msgctxt
     msgctxts = node.getElementsByTagName('msgctxt')
     if msgctxts:
-        data = findTexthildNode(msgctxts[0]).data.strip()
+        data = findCDataChildNode(msgctxts[0]).data.strip()
         entry.msgctxt = data
 
     ### msgid
