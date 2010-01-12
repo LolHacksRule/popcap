@@ -97,7 +97,8 @@ def intltoolize(env, srcdir, podirname, domain,
         if package is None:
             package = domain
         command = '$XGETTEXT --package-name=%s --package-version=%s ' \
-                  '-o $TARGET --keyword=tr --keyword=tr_noop -f $SOURCE' % \
+                  '-o $TARGET --keyword=tr --keyword=tr_noop --keyword=dtr:2 ' \
+                  '-f $SOURCE' % \
                   (package, package_version)
         potbuild = env.Command (os.path.join(buildpodir, potbuild_name), potfiles,
                                 command)
