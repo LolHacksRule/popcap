@@ -46,6 +46,9 @@ private:
 public:
 	static I18nManager* GetManager();
 	bool loadTrans(const std::string &domain);
+	bool loadTransForLang(MsgDomain &msgDomain,
+			      const std::string &domain,
+			      const std::string &lang);
 	void reloadTrans();
 	const char* setLocale(const char *locale);
 	const char* setDomain(const char *domain);
@@ -86,11 +89,16 @@ const char* I18nManager::setLocale(const char *locale)
 	if (!locale)
 		return mLocale.c_str();
 
+	AutoCrit aAutoCrit(mCritSect);
+
 	std::string oldLocale = mLocale;
 	if (!locale[0])
 		mLocale = SexyGetLocaleName("LC_MESSAGES");
 	else
 		mLocale = locale;
+
+	if (mLocale == "C" || mLocale == "POSIX")
+		mLocale = "en_US";
 
 	// for example zh_CN.UTF-8
 	std::string::size_type pos = mLocale.find('.');
@@ -111,8 +119,6 @@ const char* I18nManager::setDomain(const char *sdomain)
 
 	if (!sdomain)
 		return mDomain.c_str();
-
-	std::string domain = mDomain;
 
 	AutoCrit aAutoCrit(mCritSect);
 	mDomain = sdomain;
@@ -293,6 +299,33 @@ static bool parseXml(const std::string &path, MsgStrMap &map)
 	return false;
 }
 
+bool I18nManager::loadTransForLang(MsgDomain &msgDomain,
+				   const std::string &domain,
+				   const std::string &lang)
+{
+	// reset the current translation
+	msgDomain.mCurTrans = 0;
+
+	// check if it's already loaded
+	MsgTransMap::iterator it = msgDomain.mMap.find(lang);
+	if (it != msgDomain.mMap.end() && !it->second.mMap.empty()) {
+		msgDomain.mCurTrans = &it->second;
+		return true;
+	}
+
+	// try to load it
+	msgDomain.mMap.insert(MsgTransMap::value_type(lang, MsgTrans()));
+
+	MsgTrans &trans = msgDomain.mMap.find(lang)->second;
+	std::string path = msgDomain.mPath + "/" + lang + "/" + domain + ".xml";
+	if (!parseXml(path, trans.mMap)) {
+		trans.mMap.clear();
+		return false;
+	}
+	msgDomain.mCurTrans = &trans;
+	return true;
+}
+
 bool I18nManager::loadTrans(const std::string &domain)
 {
 	DomainMap::iterator it = mMap.find(domain);
@@ -301,24 +334,19 @@ bool I18nManager::loadTrans(const std::string &domain)
 		return true;
 
 	MsgDomain &msgDomain = it->second;
-	if (msgDomain.mMap.find(mLocale) != msgDomain.mMap.end()) {
-		msgDomain.mCurTrans = &msgDomain.mMap.find(mLocale)->second;
+
+	// load the current translation
+	if (loadTransForLang(msgDomain, domain, mLocale))
 		return true;
-	}
 
-	msgDomain.mMap.insert(MsgTransMap::value_type(mLocale, MsgTrans()));
-	MsgTrans &trans = msgDomain.mMap.find(mLocale)->second;
+	// try to load a alternative translation
+	// for example, load zh translation if the current lang is zh_CN
+	size_t pos = mLocale.find('_');
+	if (pos != std::string::npos &&
+	    loadTransForLang(msgDomain, domain, mLocale.substr(0, pos)))
+		return true;
 
-	std::string path = msgDomain.mPath + "/" + mLocale + "/" + domain + ".xml";
-	if (!parseXml(path, trans.mMap)) {
-		printf ("Failed to parse: %s\n", path.c_str());
-		trans.mMap.clear();
-		msgDomain.mCurTrans = 0;
-		return false;
-	}
-	msgDomain.mCurTrans = &trans;
-
-	return true;
+	return false;
 }
 
 void I18nManager::reloadTrans()
@@ -338,14 +366,13 @@ void I18nManager::bindTextDomain (const std::string &domain,
 	if (!mValid)
 		return;
 
-	if (mLocale.empty())
-		return;
-
 	AutoCrit aAutoCrit(mCritSect);
 	DomainMap::iterator it = mMap.find(domain);
 	if (it == mMap.end())
 		mMap.insert(DomainMap::value_type(domain,
 						  MsgDomain(dir)));
+	if (mLocale.empty())
+		return;
 	loadTrans(domain);
 }
 
