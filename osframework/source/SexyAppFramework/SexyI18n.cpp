@@ -12,6 +12,7 @@
 
 namespace Sexy {
 
+const std::string msgctxtDel = "<|||>";
 
 // msgid -> msgstr
 typedef std::map<std::string, std::string> MsgStrMap;
@@ -55,6 +56,7 @@ public:
 	void bindTextDomain (const std::string &domain,
 			     const std::string &dir);
 	const char* tr(const char *domain,
+		       const char *ctx,
 		       const char *s);
 
 private:
@@ -130,6 +132,7 @@ static bool parseMessage(XMLParser &parser,
 			 MsgStrMap &map)
 {
 	std::string msgid;
+	std::string msgctxt;
 	std::string msgstr;
 	std::string obsolete;
 
@@ -188,6 +191,22 @@ static bool parseMessage(XMLParser &parser,
 				if (aXMLElement.mType != XMLElement::TYPE_END)
 					return false;
 			}
+			else if (aXMLElement.mValue == _S("msgctxt"))
+			{
+				// CDATA
+				if (!parser.NextElement(&aXMLElement))
+					return false;
+
+				msgctxt = aXMLElement.mInstruction;
+				//printf ("msgctxt: %s\n", msgctxt.c_str());
+
+				// END
+				if (!parser.NextElement(&aXMLElement))
+					return false;
+
+				if (aXMLElement.mType != XMLElement::TYPE_END)
+					return false;
+			}
 			else if (aXMLElement.mValue == _S("msgstr_plural"))
 			{
 				// CDATA
@@ -222,8 +241,11 @@ static bool parseMessage(XMLParser &parser,
 		else if (aXMLElement.mType == XMLElement::TYPE_END)
 		{
 			//printf ("msgid: %s\nmsgstr: %s\n", msgid.c_str(), msgstr.c_str());
-			if (!msgstr.empty() && obsolete != "true")
+			if (!msgstr.empty() && obsolete != "true") {
+				if (!msgctxt.empty())
+					msgid = msgctxt + msgctxtDel + msgid;
 				map.insert (MsgStrMap::value_type(msgid, msgstr));
+			}
 			return true;
 		}
 	}
@@ -377,6 +399,7 @@ void I18nManager::bindTextDomain (const std::string &domain,
 }
 
 const char* I18nManager::tr(const char *sdomain,
+			    const char *ctx,
 			    const char *s)
 {
 	if (!mValid)
@@ -396,7 +419,12 @@ const char* I18nManager::tr(const char *sdomain,
 		return s;
 
 	MsgTrans *trans = msgDomain.mCurTrans;
-	MsgStrMap::iterator mit = trans->mMap.find(std::string(s));
+	std::string msgid;
+	if (ctx)
+		msgid = std::string(ctx) + msgctxtDel + std::string(s);
+	else
+		msgid = std::string(s);
+	MsgStrMap::iterator mit = trans->mMap.find(msgid);
 	if (mit != trans->mMap.end())
 		return mit->second.c_str();
 	return s;
@@ -404,25 +432,25 @@ const char* I18nManager::tr(const char *sdomain,
 
 const char* tr(const char *s)
 {
-	return I18nManager::GetManager()->tr(0, s);
+	return I18nManager::GetManager()->tr(0, 0, s);
 }
 
 const std::string tr(const std::string &s)
 {
-	return std::string(I18nManager::GetManager()->tr(0, s.c_str()));
+	return std::string(I18nManager::GetManager()->tr(0, 0, s.c_str()));
 }
 
 const char* dtr(const char *domain, const char *s)
 {
 	if (!domain || !s)
 		return 0;
-	return I18nManager::GetManager()->tr(domain, s);
+	return I18nManager::GetManager()->tr(domain, 0, s);
 }
 
 const std::string dtr(const std::string &domain, const std::string &s)
 {
 	return std::string(I18nManager::GetManager()->tr(domain.c_str(),
-							 s.c_str()));
+							 0, s.c_str()));
 }
 
 const char* setLocale(const char *locale)
