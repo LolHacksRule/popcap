@@ -147,6 +147,12 @@ void NativeDisplay::PushWork(DelayedWork* theWork)
 	mWorkQueue.push_back(theWork);
 }
 
+bool NativeDisplay::IsWorkPending(void)
+{
+	AutoCrit anAutoCrit(mWorkQueuCritSect);
+	return mWorkQueue.empty();
+}
+
 DelayedWork* NativeDisplay::PopWork(void)
 {
 	AutoCrit anAutoCrit(mWorkQueuCritSect);

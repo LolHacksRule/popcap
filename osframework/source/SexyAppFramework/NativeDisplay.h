@@ -112,6 +112,7 @@ public:
 public:
 	void                                        FlushWork(void);
 	void                                        PushWork(DelayedWork* theWork);
+	bool                                        IsWorkPending(void);
 
 private:
 	DelayedWork*                                PopWork(void);
