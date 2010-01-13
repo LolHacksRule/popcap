@@ -117,7 +117,7 @@ std::string dtr(const std::string &domain, const std::string &ctx,
  *
  * @param locale the locale, can be %NULL
  *
- * @return a current locale of calling process
+ * @return the current locale of calling process
  */
 const char* setLocale(const char *locale);
 
@@ -131,7 +131,8 @@ const char* setLocale(const char *locale);
 const char* textDomain(const char *domain);
 
 /**
- * sets the base directory of the hierarchy containing message catalogs for a given message domain
+ * sets the base directory of the hierarchy containing message
+ * catalogs for a given message domain
  *
  * @param domain the message domain
  * @param dir the base directory to load translated strings
@@ -141,7 +142,8 @@ const char* textDomain(const char *domain);
 void bindText(const char *domain, const char *dir);
 
 /**
- * sets the base directory of the hierarchy containing message catalogs for a given message domain
+ * sets the base directory of the hierarchy containing message
+ * catalogs for a given message domain
  *
  * @param domain the message domain
  * @param dir the base directory to load translated strings
