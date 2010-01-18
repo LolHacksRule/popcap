@@ -870,12 +870,11 @@ bool ResourceManager::DoLoadFont(FontRes* theRes)
 							theRes->mSize, bold,
 							theRes->mItalic,
 							theRes->mUnderline);
-		if (aFont)
-		{
-			aFont->mDrawShadow = theRes->mShadow;
-			aFont->mSimulateBold = simulateBold;
-			aFont->mOutLine = theRes->mOutLine;
-		}
+		if (!aFont)
+			return false;
+		aFont->mDrawShadow = theRes->mShadow;
+		aFont->mSimulateBold = simulateBold;
+		aFont->mOutLine = theRes->mOutLine;
 	}
 	else if (theRes->mImagePath.empty())
 	{
