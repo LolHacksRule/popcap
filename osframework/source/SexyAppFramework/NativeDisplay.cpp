@@ -1,6 +1,7 @@
 #include "NativeDisplay.h"
 #include "MemoryImage.h"
 #include "Font.h"
+#include "AutoCrit.h"
 
 #ifdef SEXY_FREETYPE_FONT
 #include "FreeTypeFont.h"
