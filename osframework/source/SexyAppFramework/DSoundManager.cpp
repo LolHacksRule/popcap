@@ -776,6 +776,12 @@ bool DSoundManager::LoadSound(unsigned int theSfxID, const std::string& theFilen
 	}
 #endif
 
+	if (aFilename.find(".au") >= 0 && LoadAUSound(theSfxID, aFilename))
+	{
+		WriteWAV(theSfxID, aCachedName, aFilename);
+		return true;
+	}
+
 	if (LoadAUSound(theSfxID, aFilename + ".au"))
 	{
 		WriteWAV(theSfxID, aCachedName, aFilename + ".au");
