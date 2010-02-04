@@ -369,6 +369,7 @@ void SexyAppBase::Cleanup(bool force)
 		delete aSharedImage->mImage;
 		mSharedImageMap.erase(aSharedImageItr++);
 	}
+	DeleteExtraImageData();
 
 	if (mDDInterface)
 		mDDInterface->FlushWork();
