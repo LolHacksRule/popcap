@@ -58,7 +58,6 @@ enum ImageFlags {
 	IMAGE_FLAGS_NONE          = 0,
 	IMAGE_FLAGS_DOUBLE_BUFFER = 1 << 0,
 	IMAGE_FLAGS_FLIP_AS_COPY  = 1 << 1,
-	IMAGE_FLAGS_MINI_SUBDIV   = 2 << 2
 	IMAGE_FLAGS_MINI_SUBDIV   = 1 << 2,
 	IMAGE_FLAGS_A4R4G4B4      = 1 << 3,
 	IMAGE_FLAGS_A8R8G8B8      = 1 << 4
@@ -75,6 +74,8 @@ class SEXY_EXPORT Image
 
 public:
 	bool					mDrawn;
+	DWORD                                   mDrawnTime;
+	DWORD                                   mTexMemSize;
 	std::string				mFilePath;
 	int					mWidth;
 	int					mHeight;
