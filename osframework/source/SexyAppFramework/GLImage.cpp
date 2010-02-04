@@ -70,7 +70,7 @@ public:
 	int			  mTexBlockWidth;
 	int			  mTexBlockHeight;
 	int			  mBitsChangedCount;
-	int			  mTexMemSize;
+	DWORD			  mTexMemSize;
 	float			  mMaxTotalU;
 	float			  mMaxTotalV;
 
@@ -79,9 +79,10 @@ public:
 
 	GLInterface*              mInterface;
 	int                       mImageFlags;
+	Image*                    mImage;
 
 public:
-	GLTexture(GLInterface* theInterface);
+	GLTexture(GLInterface* theInterface, Image* theImage);
 	~GLTexture();
 
 	void                      SetTextureFilter(bool linear);
@@ -247,7 +248,7 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 	return old ? old : texture;
 }
 
-GLTexture::GLTexture (GLInterface *theInterface)
+GLTexture::GLTexture (GLInterface *theInterface, Image* theImage)
 {
 	mWidth = 0;
 	mHeight = 0;
@@ -261,6 +262,7 @@ GLTexture::GLTexture (GLInterface *theInterface)
 	mTarget = 0;
 	mInterface = theInterface;
 	mImageFlags = 0;
+	mImage = theImage;
 }
 
 GLTexture::~GLTexture ()
@@ -303,11 +305,15 @@ static void SetBlendFunc(int theDrawMode, bool premultiply = false)
 
 void GLTexture::ReleaseTextures ()
 {
-	for(int i = 0; i < (int)mTextures.size(); i++)
+	assert (mTexMemSize == mImage->mTexMemSize);
+	mInterface->FreeTexMemSpace(mTexMemSize);
+
+	for(size_t i = 0; i < mTextures.size(); i++)
 		mInterface->DelayedDeleteTexture(mTextures[i].mTexture);
 
 	mTextures.clear();
 	mTexMemSize = 0;
+	mImage->mTexMemSize = 0;
 }
 
 void GLTexture::CreateTextureDimensions (MemoryImage* theImage)
@@ -477,11 +483,20 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 		createTextures = true;
 	}
 
-	int i, x, y;
+	size_t i, x, y;
 
-	int aHeight = theImage->GetHeight ();
-	int aWidth = theImage->GetWidth ();
+	size_t aHeight = theImage->GetHeight ();
+	size_t aWidth = theImage->GetWidth ();
 	int aFormatSize = 4;
+
+	DWORD aTextMemSize = 0;
+	for(i = 0; i < mTextures.size(); i++)
+	{
+		GLTextureBlock &aBlock = mTextures[i];
+		aTextMemSize += aBlock.mWidth * aBlock.mHeight * aFormatSize;
+	}
+	if (!mInterface->EnsureTexMemSpace(aTextMemSize))
+		printf ("No enough texture memory!\n");
 
 	i = 0;
 	for (y = 0; y < aHeight; y += mTexBlockHeight)
@@ -494,7 +509,7 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 				aBlock.mTexture = CreateTexture (mInterface, theImage, 0, x, y,
 								 aBlock.mWidth, aBlock.mHeight);
 				if (aBlock.mTexture == 0) // create texture failure
-					return;
+					continue;
 
 				mTexMemSize += aBlock.mWidth * aBlock.mHeight * aFormatSize;
 			}
@@ -505,6 +520,9 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 			}
 		}
 	}
+	if (createTextures)
+		mInterface->AllocTexMemSpace(mTexMemSize);
+	theImage->mTexMemSize = mTexMemSize;
 
 	mWidth = theImage->mWidth;
 	mHeight = theImage->mHeight;
@@ -1227,7 +1245,7 @@ GLTexture* GLImage::EnsureSrcTexture(GLInterface* theInterface, Image* theImage)
 	GLTexture* aTexture = (GLTexture*)aMemoryImage->mNativeData;
 	if (!aTexture)
 	{
-		aTexture = new GLTexture(theInterface);
+		aTexture = new GLTexture(theInterface, theImage);
 		aMemoryImage->mNativeData = (void*)aTexture;
 	}
 	if (aTexture->CheckCreateTextures (aMemoryImage))
@@ -1235,6 +1253,7 @@ GLTexture* GLImage::EnsureSrcTexture(GLInterface* theInterface, Image* theImage)
 		if (aMemoryImage->mWantPal)
 			aMemoryImage->Palletize();
 	}
+	aMemoryImage->mDrawnTime = Sexy::GetTickCount();
 
 	return aTexture;
 }
@@ -2016,12 +2035,11 @@ void GLImage::Flip(enum FlipFlags flags)
 GLTexture* GLImage::EnsureTexture()
 {
 	if (!mTexture)
-	{
-		mTexture = new GLTexture(mInterface);
-	}
+		mTexture = new GLTexture(mInterface, this);
 
 	if (mTexture->CheckCreateTextures (this) && mWantPal)
 		Palletize();
+	mDrawnTime = Sexy::GetTickCount();
 
 	return mTexture;
 }
@@ -2056,6 +2074,7 @@ void GLImage::RemoveImageData(MemoryImage* theImage)
 		return;
 
 	GLTexture* aData = (GLTexture*)theImage->mNativeData;
+	assert (aData->mTexMemSize == theImage->mTexMemSize);
 	theImage->mNativeData = 0;
 	delete aData;
 }

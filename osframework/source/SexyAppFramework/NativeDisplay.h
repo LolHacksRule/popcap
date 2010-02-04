@@ -32,7 +32,7 @@ public:
 
 class SEXY_EXPORT NativeDisplay
 {
-public:
+ public:
 	CritSect				mCritSect;
 
 	int					mRGBBits;
@@ -66,7 +66,13 @@ public:
 	CritSect				mWorkQueuCritSect;
 	Thread                                  mMainThread;
 
-public:
+	CritSect				mTexMemSpaceCritSect;
+	bool                                    mTraceTexMemAlloc;
+	DWORD                                   mCurTexMemSpace;
+	DWORD                                   mMaxTexMemSpace;
+	SexyAppBase*				mApp;
+
+ public:
 	NativeDisplay();
 	virtual ~NativeDisplay();
 
@@ -109,12 +115,17 @@ public:
         virtual bool                                GetEvent(struct Event & event);
 	virtual bool                                GetInputInfo(InputInfo &anInfo);
 
-public:
+ public:
 	void                                        FlushWork(void);
 	void                                        PushWork(DelayedWork* theWork);
 	bool                                        IsWorkPending(void);
 
-private:
+ public:
+	virtual void                                AllocTexMemSpace(DWORD theTexMemSize);
+	virtual void                                FreeTexMemSpace(DWORD theTexMemSize);
+	virtual bool                                EnsureTexMemSpace(DWORD theTexMemSize);
+
+ private:
 	DelayedWork*                                PopWork(void);
 };
 

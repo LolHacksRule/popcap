@@ -1,4 +1,5 @@
 #include "NativeDisplay.h"
+#include "SexyAppBase.h"
 #include "MemoryImage.h"
 #include "Font.h"
 #include "AutoCrit.h"
@@ -6,6 +7,9 @@
 #ifdef SEXY_FREETYPE_FONT
 #include "FreeTypeFont.h"
 #endif
+
+#include <stdlib.h>
+#include <ctype.h>
 
 using namespace Sexy;
 
@@ -29,6 +33,14 @@ NativeDisplay::NativeDisplay()
 
 	mCursorX = 0;
 	mCursorY = 0;
+
+	mCurTexMemSpace = 0;
+	mMaxTexMemSpace = 0;
+	if (getenv("SEXY_MAX_TEX_MEM_SPACE"))
+		mMaxTexMemSpace = atoi(getenv("SEXY_MAX_TEX_MEM_SPACE"));
+	mTraceTexMemAlloc = getenv("SEXY_TRACE_TEX_MEM_ALLOC") != 0;
+
+	mApp = 0;
 	mMainThread = Thread::Self();
 }
 
@@ -175,4 +187,59 @@ void NativeDisplay::FlushWork()
 		aWork->Work();
 		delete aWork;
 	}
+}
+
+void NativeDisplay::AllocTexMemSpace(DWORD theTexMemSize)
+{
+	AutoCrit aAutoCrit(mTexMemSpaceCritSect);
+	mCurTexMemSpace += theTexMemSize;
+
+	if (mTraceTexMemAlloc)
+		printf ("Alloc: MaxTexMemSpace: %u CurTexMemSpace: %u -> %u\n",
+			mMaxTexMemSpace, mCurTexMemSpace - theTexMemSize,
+			mCurTexMemSpace);
+}
+
+void NativeDisplay::FreeTexMemSpace(DWORD theTexMemSize)
+{
+	if (!theTexMemSize)
+		return;
+
+	AutoCrit aAutoCrit(mTexMemSpaceCritSect);
+	if (mCurTexMemSpace >= theTexMemSize)
+		mCurTexMemSpace -= theTexMemSize;
+	else
+		mCurTexMemSpace = 0;
+
+	if (mTraceTexMemAlloc)
+		printf ("Free: MaxTexMemSpace: %u CurTexMemSpace: %u -> %u\n",
+			mMaxTexMemSpace, mCurTexMemSpace + theTexMemSize,
+			mCurTexMemSpace);
+}
+
+bool NativeDisplay::EnsureTexMemSpace(DWORD theTexMemSize)
+{
+	if (!mMaxTexMemSpace)
+		return true;
+	if (!mApp)
+		return false;
+
+	if (mTraceTexMemAlloc)
+		printf ("MaxTexMemSpace: %u CurTexMemSpace: %u required: %u\n",
+			mMaxTexMemSpace, mCurTexMemSpace, theTexMemSize);
+
+	if (mCurTexMemSpace < mMaxTexMemSpace &&
+	    mCurTexMemSpace + theTexMemSize < mMaxTexMemSpace)
+		return true;
+
+	if (mTraceTexMemAlloc)
+		printf ("Try to evict some textures to free space.\n");
+
+	mApp->Evict3DImageData(theTexMemSize);
+
+	if (mTraceTexMemAlloc)
+		printf ("MaxTexMemSpace: %u CurTexMemSpace: %u required: %u\n",
+			mMaxTexMemSpace, mCurTexMemSpace, theTexMemSize);
+
+	return true;
 }

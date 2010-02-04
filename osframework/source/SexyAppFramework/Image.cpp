@@ -13,6 +13,8 @@ Image::Image()
 
 	mAnimInfo = NULL;
 	mDrawn = false;
+	mDrawnTime = 0;
+	mTexMemSize = 0;
 	mFlags = IMAGE_FLAGS_NONE;
 	mWrapModeU = WRAP_CLAMP;
 	mWrapModeV = WRAP_CLAMP;
@@ -25,6 +27,8 @@ Image::Image(const Image& theImage) :
 	mNumCols(theImage.mNumCols)
 {
 	mDrawn = false;
+	mDrawnTime = 0;
+	mTexMemSize = 0;
 	mFilePath = theImage.mFilePath;
 	if (theImage.mAnimInfo != NULL)
 		mAnimInfo = new AnimInfo(*theImage.mAnimInfo);

@@ -324,6 +324,7 @@ SexyAppBase::SexyAppBase()
 	mDemoCmdNum = 0;
 	mDemoCmdOrder = -1; // Means we haven't processed any demo commands yet
 	mDemoCmdBitPos = 0;
+	mLastDrawnTime = 0;
 
 	mWidgetManager = new WidgetManager(this);
 	mResourceManager = new ResourceManager(this);
@@ -1158,6 +1159,7 @@ bool SexyAppBase::DrawDirtyStuff()
 	mDDInterface->FlushWork();
 
 	mIsDrawing = true;
+	mLastDrawnTime = Sexy::GetTickCount();
 	bool drewScreen = mWidgetManager->DrawScreen();
 	mIsDrawing = false;
 
@@ -1716,6 +1718,12 @@ void SexyAppBase::MakeWindow()
 		}
 		DBG_ASSERT (aVideoDriver != NULL);
 		mDDInterface = aVideoDriver->Create(this);
+		if (!mDDInterface)
+		{
+			std::cout<<"Couldn't initialize video driver."<<std::endl;
+			DoExit (1);
+		}
+		mDDInterface->mApp = this;
 	}
 	InitDDInterface();
 	mWidgetManager->mImage =
@@ -1747,6 +1755,7 @@ void SexyAppBase::MakeWindow()
 
 void SexyAppBase::DeleteNativeImageData()
 {
+	AutoCrit anAutoCrit(mCritSect);
 	MemoryImageSet::iterator anItr = mMemoryImageSet.begin();
 	while (anItr != mMemoryImageSet.end())
 	{
@@ -1764,6 +1773,49 @@ void SexyAppBase::DeleteExtraImageData()
 	{
 		MemoryImage* aMemoryImage = *anItr;
 		aMemoryImage->DeleteExtraBuffers();
+		++anItr;
+	}
+}
+
+void SexyAppBase::Evict3DImageData(DWORD theMemSize)
+{
+	static MTRand aRand;
+
+	AutoCrit anAutoCrit(mCritSect);
+
+	// be smart
+	MemoryImageSet::iterator anItr = mMemoryImageSet.begin();
+	while (anItr != mMemoryImageSet.end() && theMemSize)
+	{
+		MemoryImage* aMemoryImage = *anItr;
+		if (mDDInterface && aMemoryImage->mTexMemSize &&
+		    mLastDrawnTime - aMemoryImage->mDrawnTime > 10000)
+		{
+			if (aMemoryImage->mTexMemSize < theMemSize)
+				theMemSize -= aMemoryImage->mTexMemSize;
+			else
+				theMemSize = 0;
+			mDDInterface->RemoveImageData(aMemoryImage);
+		}
+		++anItr;
+	}
+
+	if (!theMemSize)
+		return;
+
+	// try hard
+	anItr = mMemoryImageSet.begin();
+	while (anItr != mMemoryImageSet.end() && theMemSize)
+	{
+		MemoryImage* aMemoryImage = *anItr;
+		if (mDDInterface && aMemoryImage->mTexMemSize)
+		{
+			if (aMemoryImage->mTexMemSize < theMemSize)
+				theMemSize -= aMemoryImage->mTexMemSize;
+			else
+				theMemSize = 0;
+			mDDInterface->RemoveImageData(aMemoryImage);
+		}
 		++anItr;
 	}
 }
@@ -3635,7 +3687,7 @@ SharedImageRef SexyAppBase::GetSharedImage(const std::string& theFileName, const
 
 void SexyAppBase::CleanSharedImages()
 {
-	//AutoCrit anAutoCrit(mDDInterface->mCritSect);
+	mCritSect.Enter();
 	if (mCleanupSharedImages)
 	{
 		// Delete shared images with reference counts of 0
@@ -3649,8 +3701,12 @@ void SexyAppBase::CleanSharedImages()
 			SharedImage* aSharedImage = &aSharedImageItr->second;
 			if (aSharedImage->mRefCount == 0)
 			{
-				delete aSharedImage->mImage;
+				Image *anImage = aSharedImage->mImage;
 				mSharedImageMap.erase(aSharedImageItr++);
+
+				mCritSect.Leave();
+				delete anImage;
+				mCritSect.Enter();
 			}
 			else
 				++aSharedImageItr;
@@ -3658,6 +3714,7 @@ void SexyAppBase::CleanSharedImages()
 
 		mCleanupSharedImages = false;
 	}
+	mCritSect.Leave();
 }
 
 void SexyAppBase::CheckControllerStatus()

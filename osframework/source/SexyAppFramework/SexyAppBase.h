@@ -245,6 +245,7 @@ public:
 	DWORD					mLastDrawTick;
 	DWORD					mNextDrawTick;
 	int						mStepMode;  // 0 = off, 1 = step, 2 = waiting for step
+	DWORD                                   mLastDrawnTime;
 
 	int						mCursorNum;
 	SoundManager*			        mSoundManager;
@@ -375,9 +376,13 @@ protected:
 	virtual void			MakeWindow();
 	virtual void			EnforceCursor();
 	virtual void			ReInitImages();
+
+public:
 	virtual void			DeleteNativeImageData();
 	virtual void			DeleteExtraImageData();
+	virtual void                    Evict3DImageData(DWORD theMemSize);
 
+protected:
 	// Loading thread methods
 	virtual void			LoadingThreadCompleted();
 	static void				LoadingThreadProcStub(void *theArg);
