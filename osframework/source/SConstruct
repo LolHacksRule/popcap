@@ -11,6 +11,9 @@ opts = Variables ()
 
 ### update Variables from config_file
 config_file = 'Config.py'
+if not os.path.exists(config_file):
+    config_file = 'config.py'
+
 if opts.args.has_key('config_file') and opts.args['config_file']:
     config_file = options.args['config_file']
 
