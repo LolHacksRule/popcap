@@ -16,7 +16,7 @@ struct Span
 	int						mWidth;
 };
 
-enum AnimType
+enum SEXY_EXPORT AnimType
 {
 	AnimType_None,
 	AnimType_Once,
@@ -55,15 +55,16 @@ enum FlipFlags {
 };
 
 enum ImageFlags {
-	IMAGE_FLAGS_NONE          = 0,
+	IMAGE_FLAGS_NONE	  = 0,
 	IMAGE_FLAGS_DOUBLE_BUFFER = 1 << 0,
 	IMAGE_FLAGS_FLIP_AS_COPY  = 1 << 1,
-	IMAGE_FLAGS_MINI_SUBDIV   = 1 << 2,
-	IMAGE_FLAGS_A4R4G4B4      = 1 << 3,
-	IMAGE_FLAGS_A8R8G8B8      = 1 << 4
+	IMAGE_FLAGS_MINI_SUBDIV	  = 1 << 2,
+	IMAGE_FLAGS_A4R4G4B4	  = 1 << 3,
+	IMAGE_FLAGS_A8R8G8B8	  = 1 << 4
 };
 
-enum WrapMode {
+enum WrapMode
+{
 	WRAP_CLAMP,
 	WRAP_REPEAT
 };
@@ -74,8 +75,9 @@ class SEXY_EXPORT Image
 
 public:
 	bool					mDrawn;
-	DWORD                                   mDrawnTime;
-	DWORD                                   mTexMemSize;
+	DWORD					mDrawnTime;
+	DWORD					mTexMemSize;
+
 	std::string				mFilePath;
 	int					mWidth;
 	int					mHeight;
@@ -87,9 +89,9 @@ public:
 	// for animations
 	AnimInfo				*mAnimInfo;
 
-        int                                      mFlags;
-	int                                      mWrapModeU;
-	int                                      mWrapModeV;
+	int					 mFlags;
+	int					 mWrapModeU;
+	int					 mWrapModeV;
 
 public:
 	Image();
@@ -108,7 +110,7 @@ public:
 	Graphics*				GetGraphics();
 
 	virtual void			SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits = true);
-        virtual uint32*                 GetBits();
+	virtual uint32*			GetBits();
 
 	virtual bool			PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect, const Color &theColor, int theDrawMode, int tx, int ty, bool convex);
 
@@ -131,10 +133,13 @@ public:
 
 	virtual bool			Palletize();
 
-        virtual void                    Flip(enum FlipFlags flags = FLIP_NONE);
-	virtual void                    SetWrapMode(WrapMode u, WrapMode v);
+	virtual void			Flip(enum FlipFlags flags = FLIP_NONE);
+	virtual bool			HasTransform();
 	virtual void			PushTransform(const SexyMatrix3 &theTransform, bool concatenate = true);
 	virtual void			PopTransform();
+	virtual void			SetWrapMode(WrapMode u, WrapMode v);
+
+	virtual bool			Is3D();
 };
 
 }

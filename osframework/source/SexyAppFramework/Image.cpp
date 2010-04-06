@@ -12,12 +12,13 @@ Image::Image()
 	mNumCols = 1;
 
 	mAnimInfo = NULL;
-	mDrawn = false;
-	mDrawnTime = 0;
-	mTexMemSize = 0;
 	mFlags = IMAGE_FLAGS_NONE;
 	mWrapModeU = WRAP_CLAMP;
 	mWrapModeV = WRAP_CLAMP;
+
+	mDrawn = false;
+	mDrawnTime = 0;
+	mTexMemSize = 0;
 }
 
 Image::Image(const Image& theImage) :
@@ -30,6 +31,7 @@ Image::Image(const Image& theImage) :
 	mDrawnTime = 0;
 	mTexMemSize = 0;
 	mFilePath = theImage.mFilePath;
+
 	if (theImage.mAnimInfo != NULL)
 		mAnimInfo = new AnimInfo(*theImage.mAnimInfo);
 	else
@@ -206,7 +208,6 @@ Rect Image::GetAnimCelRect(int theTime)
 
 void Image::CopyAttributes(Image *from)
 {
-	mFilePath = from->mFilePath;
 	mNumCols = from->mNumCols;
 	mNumRows = from->mNumRows;
 	delete mAnimInfo;
@@ -315,16 +316,26 @@ void Image::Flip(enum FlipFlags flags)
 {
 }
 
-void Image:: SetWrapMode(WrapMode u, WrapMode v)
+bool Image::HasTransform()
 {
-	mWrapModeU = u;
-	mWrapModeV = v;
+	return false;
 }
 
-void Image::PushTransform(const SexyMatrix3 &theTransform, bool)
+void Image::PushTransform(const SexyMatrix3 &theTransform, bool concatenate)
 {
 }
 
 void Image::PopTransform()
 {
+}
+
+void Image::SetWrapMode(WrapMode u, WrapMode v)
+{
+	mWrapModeU = u;
+	mWrapModeV = v;
+}
+
+bool Image::Is3D()
+{
+	return false;
 }
