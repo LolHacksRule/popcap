@@ -68,7 +68,7 @@ Graphics::Graphics(Image* theDestImage)
 	}
 	else
 	{
-		mIs3D = false;
+		mIs3D = mDestImage->Is3D();
 	}
 
 	mClipRect = Rect(0, 0, mDestImage->GetWidth(), mDestImage->GetHeight());
@@ -172,7 +172,7 @@ bool Graphics::GetLinearBlend()
 
 void Graphics::ClearRect(int theX, int theY, int theWidth, int theHeight)
 {
-	Rect aDestRect = Rect(theX + mTransX, theY + mTransY, theWidth, theHeight).Intersection(mClipRect);
+	Rect aDestRect = Rect(int(theX + mTransX), int(theY + mTransY), theWidth, theHeight).Intersection(mClipRect);
 	mDestImage->ClearRect(aDestRect);
 }
 
@@ -186,7 +186,7 @@ void Graphics::FillRect(int theX, int theY, int theWidth, int theHeight)
 	if (mColor.mAlpha == 0)
 		return;
 
-	Rect aDestRect = Rect(theX + mTransX, theY + mTransY, theWidth, theHeight).Intersection(mClipRect);
+	Rect aDestRect = Rect(int(theX + mTransX), int(theY + mTransY), theWidth, theHeight).Intersection(mClipRect);
 	mDestImage->FillRect(aDestRect, mColor, mDrawMode);
 }
 
@@ -200,8 +200,8 @@ void Graphics::DrawRect(int theX, int theY, int theWidth, int theHeight)
 	if (mColor.mAlpha == 0)
 		return;
 
-	Rect aDestRect = Rect(theX + mTransX, theY + mTransY, theWidth, theHeight);
-	Rect aFullDestRect = Rect(theX + mTransX, theY + mTransY, theWidth + 1, theHeight + 1);
+	Rect aDestRect = Rect(int(theX + mTransX), int(theY + mTransY), theWidth, theHeight);
+	Rect aFullDestRect = Rect(int(theX + mTransX), int(theY + mTransY), theWidth + 1, theHeight + 1);
 	Rect aFullClippedRect = aFullDestRect.Intersection(mClipRect);
 
 	if (aFullDestRect == aFullClippedRect)
@@ -279,39 +279,39 @@ void Graphics::PFInsert(int i, int y) // append edge i to end of active list
 
 void Graphics::PolyFill(const Point *theVertexList, int theNumVertices, bool convex)
 {
-	if (convex && mDestImage->PolyFill3D(theVertexList,theNumVertices,&mClipRect,mColor,mDrawMode,mTransX,mTransY,convex))
+	if (convex && mDestImage->PolyFill3D(theVertexList,theNumVertices,&mClipRect,mColor,mDrawMode,int(mTransX),int(mTransY),convex))
 		return;
 
 	Span aSpans[MAX_TEMP_SPANS];
 	int aSpanPos = 0;
 
-    int k, y0, y1, y, i, j, xl, xr;
-    int *ind;		/* list of vertex indices, sorted by mPFPoints[ind[j]].y */
+	int k, y0, y1, y, i, j, xl, xr;
+	int *ind;		/* list of vertex indices, sorted by mPFPoints[ind[j]].y */
 
 	int aMinX = mClipRect.mX;
 	int aMaxX = mClipRect.mX + mClipRect.mWidth - 1;
 	int aMinY = mClipRect.mY;
 	int aMaxY = mClipRect.mY + mClipRect.mHeight - 1;
 
-    mPFNumVertices = theNumVertices;
-    mPFPoints = theVertexList;
+	mPFNumVertices = theNumVertices;
+	mPFPoints = theVertexList;
 
 	if (mPFNumVertices<=0) return;
 
-    ind = new int[mPFNumVertices];
-    mPFActiveEdgeList = new Edge[mPFNumVertices];
+	ind = new int[mPFNumVertices];
+	mPFActiveEdgeList = new Edge[mPFNumVertices];
 
-    /* create y-sorted array of indices ind[k] into vertex list */
-    for (k=0; k<mPFNumVertices; k++)
+	/* create y-sorted array of indices ind[k] into vertex list */
+	for (k=0; k<mPFNumVertices; k++)
 		ind[k] = k;
-    qsort(ind, mPFNumVertices, sizeof ind[0], PFCompareInd);	/* sort ind by mPFPoints[ind[k]].y */
+	qsort(ind, mPFNumVertices, sizeof ind[0], PFCompareInd);	/* sort ind by mPFPoints[ind[k]].y */
 
-    mPFNumActiveEdges = 0;				/* start with empty active list */
-    k = 0;				/* ind[k] is next vertex to process */
-    y0 = (int) max(aMinY, (int)ceil(mPFPoints[ind[0]].mY-0.5 + mTransY));		/* ymin of polygon */
-    y1 = (int) min(aMaxY, (int)floor(mPFPoints[ind[mPFNumVertices-1]].mY-0.5 + mTransY));	/* ymax of polygon */
+	mPFNumActiveEdges = 0;				/* start with empty active list */
+	k = 0;				/* ind[k] is next vertex to process */
+	y0 = (int) max(aMinY, (int)ceil(mPFPoints[ind[0]].mY-0.5 + mTransY));		/* ymin of polygon */
+	y1 = (int) min(aMaxY, (int)floor(mPFPoints[ind[mPFNumVertices-1]].mY-0.5 + mTransY));	/* ymax of polygon */
 
-    for (y=y0; y<=y1; y++)
+	for (y=y0; y<=y1; y++)
 	{
 		// step through scanlines
 		// scanline y is at y+.5 in continuous coordinates
@@ -373,7 +373,7 @@ void Graphics::PolyFill(const Point *theVertexList, int theNumVertices, bool con
 
 void Graphics::PolyFillAA(const Point *theVertexList, int theNumVertices, bool convex)
 {
-	if (convex && mDestImage->PolyFill3D(theVertexList,theNumVertices,&mClipRect,mColor,mDrawMode,mTransX,mTransY,convex))
+	if (convex && mDestImage->PolyFill3D(theVertexList,theNumVertices,&mClipRect,mColor,mDrawMode,int(mTransX),int(mTransY),convex))
 		return;
 
 	int i;
@@ -654,12 +654,18 @@ void Graphics::DrawLineAA(int theStartX, int theStartY, int theEndX, int theEndY
 	mDestImage->DrawLineAA(aStartX, aStartY, aEndX, aEndY, mColor, mDrawMode);
 }
 
-void Graphics::DrawString(const SexyString& theString, int theX, int theY, bool unicode)
+void Graphics::DrawString(const std::string& theString, int theX, int theY, bool unicode)
 {
 	if (Graphics::GetPreferedEncoding() == "UTF-8")
 		unicode = true;
 	if (mFont != NULL)
 		mFont->DrawString(this, theX, theY, theString, mColor, mClipRect, unicode);
+}
+
+void Graphics::DrawString(const std::wstring& theString, int theX, int theY)
+{
+	if (mFont != NULL)
+		mFont->DrawString(this, theX, theY, theString, mColor, mClipRect);
 }
 
 void Graphics::DrawImage(Sexy::Image* theImage, int theX, int theY)
@@ -670,8 +676,8 @@ void Graphics::DrawImage(Sexy::Image* theImage, int theX, int theY)
 		return;
 	}
 
-	theX += mTransX;
-	theY += mTransY;
+	theX += int(mTransX);
+	theY += int(mTransY);
 
 	Rect aDestRect = Rect(theX, theY, theImage->GetWidth(), theImage->GetHeight()).Intersection(mClipRect);
 	Rect aSrcRect(aDestRect.mX - theX, aDestRect.mY - theY, aDestRect.mWidth, aDestRect.mHeight);
@@ -689,12 +695,15 @@ void Graphics::DrawImage(Image* theImage, int theX, int theY, const Rect& theSrc
 		(theSrcRect.mY + theSrcRect.mHeight > theImage->GetHeight()))
 		return;
 
-	theX += mTransX;
-	theY += mTransY;
+	theX += int(mTransX);
+	theY += int(mTransY);
 
 	if (mScaleX!=1 || mScaleY!=1)
 	{
-		Rect aDestRect(mScaleOrigX+floor((theX-mScaleOrigX)*mScaleX),mScaleOrigY+floor((theY-mScaleOrigY)*mScaleY),ceil(theSrcRect.mWidth*mScaleX),ceil(theSrcRect.mHeight*mScaleY));
+		Rect aDestRect(int(mScaleOrigX+floor((theX-mScaleOrigX)*mScaleX)),
+			       int(mScaleOrigY+floor((theY-mScaleOrigY)*mScaleY)),
+			       int(ceil(theSrcRect.mWidth*mScaleX)),
+			       int(ceil(theSrcRect.mHeight*mScaleY)));
 		mDestImage->StretchBlt(theImage, aDestRect, theSrcRect, mClipRect, mColorizeImages ? mColor : Color::White, mDrawMode, mFastStretch);
 		return;
 	}
@@ -719,8 +728,8 @@ void Graphics::DrawImageMirror(Image* theImage, int theX, int theY, const Rect& 
 		return;
 	}
 
-	theX += mTransX;
-	theY += mTransY;
+	theX += int(mTransX);
+	theY += int(mTransY);
 
 	DBG_ASSERTE(theSrcRect.mX + theSrcRect.mWidth <= theImage->GetWidth());
 	DBG_ASSERTE(theSrcRect.mY + theSrcRect.mHeight <= theImage->GetHeight());
@@ -749,7 +758,9 @@ void Graphics::DrawImageMirror(Image* theImage, const Rect& theDestRect, const R
 		return;
 	}
 
-	Rect aDestRect = Rect(theDestRect.mX + mTransX, theDestRect.mY + mTransY, theDestRect.mWidth, theDestRect.mHeight);
+	Rect aDestRect = Rect(int(theDestRect.mX + mTransX),
+			      int(theDestRect.mY + mTransY),
+			      theDestRect.mWidth, theDestRect.mHeight);
 
 	mDestImage->StretchBltMirror(theImage, aDestRect, theSrcRect, mClipRect, mColorizeImages ? mColor : Color::White, mDrawMode, mFastStretch);
 }
@@ -757,7 +768,8 @@ void Graphics::DrawImageMirror(Image* theImage, const Rect& theDestRect, const R
 
 void Graphics::DrawImage(Image* theImage, int theX, int theY, int theStretchedWidth, int theStretchedHeight)
 {
-	Rect aDestRect = Rect(theX + mTransX, theY + mTransY, theStretchedWidth, theStretchedHeight);
+	Rect aDestRect = Rect(int(theX + mTransX), int(theY + mTransY),
+			      theStretchedWidth, theStretchedHeight);
 	Rect aSrcRect = Rect(0, 0, theImage->mWidth, theImage->mHeight);
 
 	mDestImage->StretchBlt(theImage, aDestRect, aSrcRect, mClipRect, mColorizeImages ? mColor : Color::White, mDrawMode, mFastStretch);
@@ -765,7 +777,9 @@ void Graphics::DrawImage(Image* theImage, int theX, int theY, int theStretchedWi
 
 void Graphics::DrawImage(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect)
 {
-	Rect aDestRect = Rect(theDestRect.mX + mTransX, theDestRect.mY + mTransY, theDestRect.mWidth, theDestRect.mHeight);
+	Rect aDestRect = Rect(int(theDestRect.mX + mTransX),
+			      int(theDestRect.mY + mTransY),
+			      theDestRect.mWidth, theDestRect.mHeight);
 
 	mDestImage->StretchBlt(theImage, aDestRect, theSrcRect, mClipRect, mColorizeImages ? mColor : Color::White, mDrawMode, mFastStretch);
 }
@@ -881,7 +895,8 @@ void Graphics::DrawImageTransformHelper(Image* theImage, const Transform &theTra
 		if (useFloat)
 			DrawImageRotatedF(theImage,x,y,theTransform.mRot,rx,ry,&theSrcRect);
 		else
-			DrawImageRotated(theImage,x,y,theTransform.mRot,rx,ry,&theSrcRect);
+			DrawImageRotated(theImage, int(x), int(y), theTransform.mRot,
+					 int(rx), int(ry), &theSrcRect);
 	}
 	else if (theTransform.mHaveScale)
 	{
@@ -892,7 +907,7 @@ void Graphics::DrawImageTransformHelper(Image* theImage, const Transform &theTra
 			{
 				x = x + theTransform.mTransX1 + theTransform.mTransX2 - w2 + 0.5f;
 				y = y + theTransform.mTransY1 + theTransform.mTransY2 - h2 + 0.5f;
-				DrawImageMirror(theImage,x,y,theSrcRect);
+				DrawImageMirror(theImage, int(x), int(y), theSrcRect);
 				return;
 			}
 			mirror = true;
@@ -904,7 +919,7 @@ void Graphics::DrawImageTransformHelper(Image* theImage, const Transform &theTra
 		x = x + theTransform.mTransX2 - sw;
 		y = y + theTransform.mTransY2 - sh;
 
-		Rect aDestRect(x,y,sw*2,sh*2);
+		Rect aDestRect(int(x), int(y), int(sw*2), int(sh*2));
 		DrawImageMirror(theImage,aDestRect,theSrcRect,mirror);
 	}
 	else
@@ -915,7 +930,7 @@ void Graphics::DrawImageTransformHelper(Image* theImage, const Transform &theTra
 		if (useFloat)
 			DrawImageF(theImage,x,y,theSrcRect);
 		else
-			DrawImage(theImage,x,y,theSrcRect);
+			DrawImage(theImage, int(x), int(y), theSrcRect);
 	}
 }
 
@@ -959,7 +974,7 @@ void Graphics::SetClipRect(int theX, int theY, int theWidth, int theHeight)
 {
 	mClipRect =
 		Rect(0, 0, mDestImage->GetWidth(), mDestImage->GetHeight()).Intersection(
-			Rect(theX + mTransX, theY + mTransY, theWidth, theHeight));
+			Rect(int(theX + mTransX), int(theY + mTransY), theWidth, theHeight));
 }
 
 void Graphics::SetClipRect(const Rect& theRect)
@@ -969,7 +984,9 @@ void Graphics::SetClipRect(const Rect& theRect)
 
 void Graphics::ClipRect(int theX, int theY, int theWidth, int theHeight)
 {
-	mClipRect = mClipRect.Intersection(Rect(theX + mTransX, theY + mTransY, theWidth, theHeight));
+	mClipRect = mClipRect.Intersection(Rect(int(theX + mTransX),
+						int(theY + mTransY),
+						theWidth, theHeight));
 }
 
 void Graphics::ClipRect(const Rect& theRect)
@@ -997,9 +1014,14 @@ void Graphics::SetScale(float theScaleX, float theScaleY, float theOrigX, float 
 	mScaleOrigY = theOrigY + mTransY;
 }
 
-int Graphics::StringWidth(const SexyString& theString, bool unicode)
+int Graphics::StringWidth(const std::string& theString, bool unicode)
 {
 	return mFont->StringWidth(theString, unicode);
+}
+
+int Graphics::StringWidth(const std::wstring& theString)
+{
+	return mFont->StringWidth(theString);
 }
 
 void Graphics::DrawImageBox(const Rect& theDest, Image* theComponentImage)
@@ -1091,12 +1113,14 @@ void Graphics::DrawImageCel(Image* theImageStrip, const Rect& theDestRect, int t
 	DrawImage(theImageStrip,theDestRect,aSrcRect);
 }
 
-int Graphics::WriteString(const SexyString& theString, int theX, int theY, int theWidth, int theJustification, bool drawString, int theOffset, int theLength, int theOldColor, bool unicode)
+int Graphics::WriteString(const std::string& theString, int theX, int theY, int theWidth,
+			  int theJustification, bool drawString, int theOffset, int theLength,
+			  int theOldColor, bool unicode)
 {
 	if (Graphics::GetPreferedEncoding() == "UTF-8")
 		unicode = true;
 
-	Font* aFont = GetFont();
+	//Font* aFont = GetFont();
 	if (theOldColor==-1)
 		theOldColor = mColor.ToInt();
 
@@ -1119,7 +1143,7 @@ int Graphics::WriteString(const SexyString& theString, int theX, int theY, int t
 		theLength = theOffset + theLength;
 
 
-	SexyString aString;
+	std::string aString;
 	int aXOffset = 0;
 
 	for (int i = theOffset; i < theLength; i++)
@@ -1128,7 +1152,7 @@ int Graphics::WriteString(const SexyString& theString, int theX, int theY, int t
 		{
 			if (i+1<theLength && theString[i+1] == '^') // literal '^'
 			{
-				aString += _S('^');
+				aString += '^';
 				i++;
 			}
 			else if (i>theLength-8) // badly formatted color specification
@@ -1136,9 +1160,9 @@ int Graphics::WriteString(const SexyString& theString, int theX, int theY, int t
 			else // change color instruction
 			{
 				DWORD aColor = 0;
-				if (theString[i+1]==_S('o'))
+				if (theString[i+1]=='o')
 				{
-					if (sexystrncmp(theString.c_str()+i+1, _S("oldclr"), 6) == 0)
+					if (strncmp(theString.c_str()+i+1, "oldclr", 6) == 0)
 						aColor = theOldColor;
 				}
 				else
@@ -1186,11 +1210,110 @@ int Graphics::WriteString(const SexyString& theString, int theX, int theY, int t
 	return aXOffset;
 }
 
-static int WriteWordWrappedHelper(Graphics *g, const SexyString& theString, int theX, int theY, int theWidth, int theJustification,
-				  bool drawString, int theOffset, int theLength, int theOldColor, int theMaxChars,
-				  bool unicode)
+int Graphics::WriteString(const std::wstring& theString, int theX, int theY, int theWidth,
+			  int theJustification, bool drawString, int theOffset, int theLength,
+			  int theOldColor)
 {
-	if (theOffset+theLength >theMaxChars)
+	//Font* aFont = GetFont();
+	if (theOldColor==-1)
+		theOldColor = mColor.ToInt();
+
+	if (drawString)
+	{
+		switch (theJustification)
+		{
+		case 0:
+			theX += (theWidth - WriteString(theString, theX, theY, theWidth, -1, false, theOffset, theLength, theOldColor))/2;
+			break;
+		case 1:
+			theX += theWidth - WriteString(theString, theX, theY, theWidth, -1, false, theOffset, theLength, theOldColor);
+			break;
+		}
+	}
+
+	if(theLength<0 || theOffset+theLength>(int)theString.length())
+		theLength = (int)theString.length();
+	else
+		theLength = theOffset + theLength;
+
+
+	std::wstring aString;
+	int aXOffset = 0;
+
+	for (int i = theOffset; i < theLength; i++)
+	{
+		if ((theString[i] == L'^') && mWriteColoredString)
+		{
+			if (i+1<theLength && theString[i+1] == L'^') // literal '^'
+			{
+				aString += L'^';
+				i++;
+			}
+			else if (i>theLength-8) // badly formatted color specification
+				break;
+			else // change color instruction
+			{
+				DWORD aColor = 0;
+				if (theString[i+1]== L'o')
+				{
+					if (wcsncasecmp(theString.c_str()+i+1, L"oldclr", 6) == 0)
+						aColor = theOldColor;
+				}
+				else
+				{
+					for (int aDigitNum = 0; aDigitNum < 6; aDigitNum++)
+					{
+						SexyChar aChar = theString[i+aDigitNum+1];
+						int aVal = 0;
+
+						if ((aChar >= L'0') && (aChar <= L'9'))
+							aVal = aChar - _S('0');
+						else if ((aChar >= L'A') && (aChar <= 'F'))
+							aVal = (aChar - L'A') + 10;
+						else if ((aChar >= L'a') && (aChar <= L'f'))
+							aVal = (aChar - L'a') + 10;
+
+						aColor += (aVal << ((5 - aDigitNum) * 4));
+					}
+				}
+
+				if (drawString)
+				{
+					DrawString(aString, theX + aXOffset, theY);
+					SetColor(Color((aColor >> 16) & 0xFF,
+						       (aColor >> 8) & 0xFF,
+						       (aColor) & 0xFF,
+						       GetColor().mAlpha));
+				}
+
+				i += 7;
+
+				aXOffset += GetFont()->StringWidth(aString);
+
+				aString = L"";
+			}
+		}
+		else
+			aString += theString[i];
+	}
+
+	if (drawString)
+	{
+		DrawString(aString, theX + aXOffset, theY);
+	}
+
+	aXOffset += GetFont()->StringWidth(aString);
+
+	return aXOffset;
+}
+
+static int WriteWordWrappedHelper(Graphics *g, const std::string& theString,
+				  int theX, int theY, int theWidth, int theJustification,
+				  bool drawString, int theOffset, int theLength,
+				  int theOldColor, int theMaxChars,
+				  bool unicode = false)
+{
+	if (theOffset + theLength >theMaxChars)
 	{
 		int aUtf8Len = SexyUtf8Strlen(theString.c_str() + theOffset, theLength);
 		if (aUtf8Len < 0 || theOffset + theLength >theMaxChars * 3)
@@ -1205,10 +1328,25 @@ static int WriteWordWrappedHelper(Graphics *g, const SexyString& theString, int 
 		}
 	}
 
-	return g->WriteString(theString,theX,theY,theWidth,theJustification,drawString,theOffset,theLength,theOldColor, unicode);
+	return g->WriteString(theString,theX,theY,theWidth,theJustification,drawString,
+			      theOffset,theLength,theOldColor, unicode);
 }
 
-int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, int theLineSpacing, int theJustification, int *theMaxWidth, int theMaxChars, int *theLastWidth)
+static int WriteWordWrappedHelper(Graphics *g, const std::wstring& theString,
+				  int theX, int theY, int theWidth, int theJustification,
+				  bool drawString, int theOffset, int theLength,
+				  int theOldColor, int theMaxChars)
+{
+	if (theOffset + theLength >theMaxChars)
+		theLength = theMaxChars - theOffset;
+
+	return g->WriteString(theString,theX,theY,theWidth,theJustification,drawString,
+			      theOffset,theLength,theOldColor);
+}
+
+int	Graphics::WriteWordWrapped(const Rect& theRect, const std::string& theLine,
+				   int theLineSpacing, int theJustification,
+				   int *theMaxWidth, int theMaxChars, int *theLastWidth)
 {
 	Color anOrigColor = GetColor();
 	int anOrigColorInt = anOrigColor.ToInt();
@@ -1227,19 +1365,21 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 
 	std::string aUtf8;
 	const char * aUtf8Str = 0;
+	bool isUnicode = false;
 	int aStrLen = theLine.length();
 	if (aFont->IsSupportUnicode())
 	{
 		aStrLen = SexyUtf8FromLocaleString(theLine, aUtf8);
 		if (aStrLen > 0)
 		{
+			isUnicode = true;
 			aUtf8Str = aUtf8.c_str();
 			aStrLen = aUtf8.length();
 		}
 	}
 
-	SexyString aCurString;
-	ulong aCurPos = 0;
+	std::string aCurString;
+	long aCurPos = 0;
 	int aLineStartPos = 0;
 	int aCurWidth = 0;
 	int aCurChar = 0;
@@ -1316,7 +1456,7 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 				//aWrittenWidth = WriteWordWrappedHelper(this, theLine, theRect.mX, theRect.mY + aYOffset, theRect.mWidth,
 				//	theJustification, true, aLineStartPos, aSpacePos-aLineStartPos, anOrigColorInt, theMaxChars);
 
-				int aPhysPos = theRect.mY + aYOffset + mTransY;
+				int aPhysPos = int(theRect.mY + aYOffset + mTransY);
 				if ((aPhysPos >= mClipRect.mY) && (aPhysPos < mClipRect.mY + mClipRect.mHeight + theLineSpacing))
 				{
 					if (aUtf8Str)
@@ -1335,10 +1475,9 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 				if (aWrittenWidth < 0)
 					break;
 
-				aCurPos = aSpacePos + 1;
-				if (aCurChar != _S('\n'))
+				aCurPos = aSpacePos + aCurCharLen;
+				if (aCurChar != _S('\n') && aCurChar == _S(' '))
 				{
-					aCurPos += aCurCharLen;
 					while (aCurPos < aStrLen)
 					{
 						if (aUtf8Str && aUtf8Str[aCurPos] == ' ')
@@ -1428,12 +1567,209 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const SexyString& theLine, i
 	return aYOffset + aFont->GetDescent() - theLineSpacing;
 }
 
-int	Graphics::DrawStringColor(const SexyString& theLine, int theX, int theY, int theOldColor, bool unicode)
+
+int	Graphics::WriteWordWrapped(const Rect& theRect, const std::wstring& theLine,
+				   int theLineSpacing, int theJustification,
+				   int *theMaxWidth, int theMaxChars, int *theLastWidth)
+{
+	Color anOrigColor = GetColor();
+	int anOrigColorInt = anOrigColor.ToInt();
+	if ((anOrigColorInt&0xFF000000)==0xFF000000)
+		anOrigColorInt &= ~0xFF000000;
+
+	if (theMaxChars<0)
+		theMaxChars = (int)theLine.length();
+
+	Font* aFont = GetFont();
+
+	int aYOffset = aFont->GetAscent() - aFont->GetAscentPadding();
+
+	if (theLineSpacing == -1)
+		theLineSpacing = aFont->GetLineSpacing();
+
+	int aStrLen = theLine.length();
+
+	std::wstring aCurString;
+	long aCurPos = 0;
+	int aLineStartPos = 0;
+	int aCurWidth = 0;
+	int aCurChar = 0;
+	int aNextChar = 0;
+	int aPrevChar = 0;
+	int aSpacePos = -1;
+	int aMaxWidth = 0;
+	int anIndentX = 0;
+	int aCurCharLen = 1;
+
+	if (theLastWidth != NULL)
+	{
+		anIndentX = *theLastWidth;
+		aCurWidth = anIndentX;
+	}
+
+	while (aCurPos < aStrLen)
+	{
+		aCurChar = theLine[aCurPos];
+		aNextChar = theLine[aCurPos + 1];
+		if (aCurChar== L'^' && mWriteColoredString) // Handle special color modifier
+		{
+			if(aCurPos + 1 < aStrLen)
+			{
+				if(aNextChar== L'^')
+				{
+					aCurPos += aCurCharLen; // literal '^' -> just skip the extra '^'
+				}
+				else
+				{
+					aCurPos += 8;
+					continue; // skip the color specifier when calculating the width
+				}
+			}
+		}
+		else if(aCurChar== L' ')
+		{
+			aSpacePos = aCurPos;
+		}
+		else if(aCurChar== L'\n')
+		{
+			aCurWidth = theRect.mWidth+1; // force word wrap
+			aSpacePos = aCurPos;
+			aCurPos += aCurCharLen; // skip enter on next go round
+		}
+
+		aCurWidth += aFont->CharWidthKern(aCurChar, aPrevChar);
+		aPrevChar = aCurChar;
+
+		if(aCurWidth > theRect.mWidth) // need to wrap
+		{
+			int aWrittenWidth;
+			if(aSpacePos!=-1)
+			{
+				//aWrittenWidth = WriteWordWrappedHelper(this, theLine, theRect.mX, theRect.mY + aYOffset, theRect.mWidth,
+				//	theJustification, true, aLineStartPos, aSpacePos-aLineStartPos, anOrigColorInt, theMaxChars);
+
+				int aPhysPos = int(theRect.mY + aYOffset + mTransY);
+				if ((aPhysPos >= mClipRect.mY) && (aPhysPos < mClipRect.mY + mClipRect.mHeight + theLineSpacing))
+				{
+						WriteWordWrappedHelper(this, theLine,
+								       theRect.mX + anIndentX,
+								       theRect.mY + aYOffset,
+								       theRect.mWidth,
+								       theJustification,
+								       true, aLineStartPos,
+								       aSpacePos-aLineStartPos,
+								       anOrigColorInt,
+								       theMaxChars);
+				}
+
+				aWrittenWidth = aCurWidth + anIndentX;
+
+				if (aWrittenWidth < 0)
+					break;
+
+				aCurPos = aSpacePos + aCurCharLen;
+				if (aCurChar != L'\n' && aCurChar == L' ')
+				{
+					while (aCurPos < aStrLen)
+					{
+						if (theLine[aCurPos] == _S(' '))
+							break;
+						aCurPos++;
+					}
+				}
+				aLineStartPos = aCurPos;
+			}
+			else
+			{
+				if((int)aCurPos < aLineStartPos + 1)
+				{
+					aCurPos += aCurCharLen; // ensure at least one character gets written
+				}
+
+				aWrittenWidth = WriteWordWrappedHelper(this, theLine,
+								       theRect.mX + anIndentX,
+								       theRect.mY + aYOffset,
+								       theRect.mWidth,
+								       theJustification,
+								       true, aLineStartPos,
+								       aCurPos-aLineStartPos,
+								       anOrigColorInt,
+								       theMaxChars);
+
+				if (aWrittenWidth<0)
+					break;
+
+				if (theMaxWidth!=NULL && aWrittenWidth>*theMaxWidth)
+					*theMaxWidth = aWrittenWidth;
+				if (theLastWidth!=NULL)
+					*theLastWidth = aWrittenWidth;
+			}
+
+			if (aWrittenWidth > aMaxWidth)
+				aMaxWidth = aWrittenWidth;
+
+			aLineStartPos = aCurPos;
+			aSpacePos = -1;
+			aCurWidth = 0;
+			aPrevChar = 0;
+			anIndentX = 0;
+			aYOffset += theLineSpacing;
+		}
+		else
+		{
+			aCurPos += aCurCharLen;
+		}
+	}
+
+	if (aLineStartPos < aStrLen) // write the last piece
+	{
+		int aWrittenWidth;
+
+		aWrittenWidth = WriteWordWrappedHelper(this, theLine, theRect.mX + anIndentX,
+						       theRect.mY + aYOffset, theRect.mWidth,
+						       theJustification, true, aLineStartPos,
+						       theLine.length()-aLineStartPos,
+						       anOrigColorInt, theMaxChars);
+
+		if (aWrittenWidth>=0)
+		{
+			if (aWrittenWidth > aMaxWidth)
+				aMaxWidth = aWrittenWidth;
+
+			if (theMaxWidth!=NULL && aWrittenWidth>*theMaxWidth)
+				*theMaxWidth = aWrittenWidth;
+			if (theLastWidth!=NULL)
+				*theLastWidth = aWrittenWidth;
+
+			aYOffset += theLineSpacing;
+		}
+	}
+	else if (aCurChar == '\n')
+	{
+		aYOffset += theLineSpacing;
+		if (theLastWidth != NULL)
+			*theLastWidth = 0;
+	}
+
+	SetColor(anOrigColor);
+
+	if (theMaxWidth!=NULL)
+		*theMaxWidth = aMaxWidth;
+
+	return aYOffset + aFont->GetDescent() - theLineSpacing;
+}
+
+int	Graphics::DrawStringColor(const std::string& theLine, int theX, int theY, int theOldColor, bool unicode)
 {
 	return WriteString(theLine, theX, theY, -1, -1,true,0,-1,theOldColor, unicode);
 }
 
-int	Graphics::DrawStringWordWrapped(const SexyString& theLine, int theX, int theY, int theWrapWidth, int theLineSpacing, int theJustification, int *theMaxWidth)
+int	Graphics::DrawStringColor(const std::wstring& theLine, int theX, int theY, int theOldColor)
+{
+	return WriteString(theLine, theX, theY, -1, -1,true,0,-1,theOldColor);
+}
+
+int	Graphics::DrawStringWordWrapped(const std::string& theLine, int theX, int theY, int theWrapWidth, int theLineSpacing, int theJustification, int *theMaxWidth)
 {
 	int aYOffset = mFont->GetAscent() - mFont->GetAscentPadding();
 
@@ -1441,7 +1777,24 @@ int	Graphics::DrawStringWordWrapped(const SexyString& theLine, int theX, int the
 	return WriteWordWrapped(aRect, theLine, theLineSpacing, theJustification, theMaxWidth);
 }
 
-int	Graphics::GetWordWrappedHeight(int theWidth, const SexyString& theLine, int theLineSpacing, int *theMaxWidth)
+int	Graphics::DrawStringWordWrapped(const std::wstring& theLine, int theX, int theY, int theWrapWidth, int theLineSpacing, int theJustification, int *theMaxWidth)
+{
+	int aYOffset = mFont->GetAscent() - mFont->GetAscentPadding();
+
+	Rect aRect(theX,theY-aYOffset,theWrapWidth,0);
+	return WriteWordWrapped(aRect, theLine, theLineSpacing, theJustification, theMaxWidth);
+}
+
+int	Graphics::GetWordWrappedHeight(int theWidth, const std::string& theLine, int theLineSpacing, int *theMaxWidth)
+{
+	Graphics aTestG;
+	aTestG.SetFont(mFont);
+	int aHeight = aTestG.WriteWordWrapped(Rect(0, 0, theWidth, 0), theLine, theLineSpacing, -1, theMaxWidth);
+
+	return aHeight;
+}
+
+int	Graphics::GetWordWrappedHeight(int theWidth, const std::wstring& theLine, int theLineSpacing, int *theMaxWidth)
 {
 	Graphics aTestG;
 	aTestG.SetFont(mFont);

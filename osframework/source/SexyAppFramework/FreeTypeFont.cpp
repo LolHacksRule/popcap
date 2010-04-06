@@ -57,18 +57,30 @@ FreeTypeFont::~FreeTypeFont()
 	mScaledFont->Unref();
 }
 
-int FreeTypeFont::StringWidth(const SexyString& theString, bool unicode)
+int FreeTypeFont::StringWidth(const std::string& theString, bool unicode)
 {
-	if (Graphics::GetPreferedEncoding() == "UTF-8")
-		unicode = true;
+       if (Graphics::GetPreferedEncoding() == "UTF-8")
+               unicode = true;
 	return mScaledFont->StringWidth(theString, unicode);
 }
 
-void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
+void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const std::string& theString,
 			      const Color& theColor, const Rect& theClipRect, bool unicode)
 {
 	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect,
 				unicode, mDrawShadow, mOutLine);
+}
+
+int FreeTypeFont::StringWidth(const std::wstring& theString)
+{
+	return mScaledFont->StringWidth(theString);
+}
+
+void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const std::wstring& theString,
+			      const Color& theColor, const Rect& theClipRect)
+{
+	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect,
+				mDrawShadow, mOutLine);
 }
 
 int FreeTypeFont::CharWidth(int theChar)

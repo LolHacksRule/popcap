@@ -111,8 +111,9 @@ public:
 	void					DrawRect(const Rect& theRect);
 	void					ClearRect(int theX, int theY, int theWidth, int theHeight);	
 	void					ClearRect(const Rect& theRect);
-	void					DrawString(const SexyString& theString, int theX, int theY, bool unicode = false);
-	
+	void					DrawString(const std::string& theString, int theX, int theY, bool unicode = false);
+	void					DrawString(const std::wstring& theString, int theX, int theY);
+
 private:
 	bool					DrawLineClipHelper(double* theStartX, double* theStartY, double *theEndX, double* theEndY);
 public:
@@ -164,15 +165,21 @@ public:
 	// In progress: Only affects DrawImage
 	void					SetScale(float theScaleX, float theScaleY, float theOrigX, float theOrigY);
 
-	int						StringWidth(const SexyString& theString, bool unicode = false);
+	int						StringWidth(const std::string& theString, bool unicode = false);
+	int						StringWidth(const std::wstring& theString);
 	void					DrawImageBox(const Rect& theDest, Image* theComponentImage);
 	void					DrawImageBox(const Rect& theSrc, const Rect& theDest, Image* theComponentImage);
 
-	int						WriteString(const SexyString& theString, int theX, int theY, int theWidth = -1, int theJustification = 0, bool drawString = true, int theOffset = 0, int theLength = -1, int theOldColor = -1, bool unicode = false);
-	int						WriteWordWrapped(const Rect& theRect, const SexyString& theLine, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL, int theMaxChars = -1, int* theLastWidth = NULL);
-	int						DrawStringColor(const SexyString& theString, int theX, int theY, int theOldColor = -1, bool unicode = false); //works like DrawString but can have color tags like ^ff0000^.
-	int						DrawStringWordWrapped(const SexyString& theLine, int theX, int theY, int theWrapWidth = 10000000, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL); //works like DrawString but also word wraps
-	int						GetWordWrappedHeight(int theWidth, const SexyString& theLine, int theLineSpacing = -1, int *theMaxWidth = NULL);
+	int						WriteString(const std::string& theString, int theX, int theY, int theWidth = -1, int theJustification = 0, bool drawString = true, int theOffset = 0, int theLength = -1, int theOldColor = -1, bool unicode = false);
+	int						WriteString(const std::wstring& theString, int theX, int theY, int theWidth = -1, int theJustification = 0, bool drawString = true, int theOffset = 0, int theLength = -1, int theOldColor = -1);
+	int						WriteWordWrapped(const Rect& theRect, const std::string& theLine, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL, int theMaxChars = -1, int* theLastWidth = NULL);
+	int						WriteWordWrapped(const Rect& theRect, const std::wstring& theLine, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL, int theMaxChars = -1, int* theLastWidth = NULL);
+	int						DrawStringColor(const std::string& theString, int theX, int theY, int theOldColor = -1, bool unicode = false); //works like DrawString but can have color tags like ^ff0000^.
+	int						DrawStringColor(const std::wstring& theString, int theX, int theY, int theOldColor = -1); //works like DrawString but can have color tags like ^ff0000^.
+	int						DrawStringWordWrapped(const std::string& theLine, int theX, int theY, int theWrapWidth = 10000000, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL); //works like DrawString but also word wraps
+	int						DrawStringWordWrapped(const std::wstring& theLine, int theX, int theY, int theWrapWidth = 10000000, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL); //works like DrawString but also word wraps
+	int						GetWordWrappedHeight(int theWidth, const std::string& theLine, int theLineSpacing = -1, int *theMaxWidth = NULL);
+	int						GetWordWrappedHeight(int theWidth, const std::wstring& theLine, int theLineSpacing = -1, int *theMaxWidth = NULL);
 
 	bool					Is3D() { return mIs3D; }
 

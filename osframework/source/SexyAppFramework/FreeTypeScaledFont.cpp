@@ -71,9 +71,9 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 	{
 		float scale = mFace->units_per_EM;
 
-		mAscent	 = mFace->ascender * mSize / scale;
-		mDescent = -mFace->descender * mSize / scale;
-		mHeight	 = mFace->height * mSize / scale;
+		mAscent	 = int(mFace->ascender * mSize / scale);
+		mDescent = int(-mFace->descender * mSize / scale);
+		mHeight	 = int(mFace->height * mSize / scale);
 		mLineSpacingOffset = mHeight - mAscent - mDescent;
 	}
 	UnlockFace();
@@ -156,7 +156,7 @@ void FreeTypeScaledFont::FreeTypeGlyphAreaFree(FreeTypeGlyphArea* area)
 	delete area;
 }
 
-int FreeTypeScaledFont::StringWidth(const SexyString& theString, bool unicode)
+int FreeTypeScaledFont::StringWidth(const std::string& theString, bool unicode)
 {
 	if (!mBaseFont)
 		return 0;
@@ -174,7 +174,7 @@ int FreeTypeScaledFont::StringWidth(const SexyString& theString, bool unicode)
 	int min_y = 0, max_y = 0;
 
 	GlyphVector glyphs;
-	GlyphsFromString(theString, glyphs, unicode, false);
+	GlyphsFromString(theString, glyphs, false, unicode);
 	for (unsigned int i = 0; i < glyphs.size(); i++)
 	{
 		FreeTypeGlyphEntry* entry = glyphs[i].entry;
@@ -185,10 +185,75 @@ int FreeTypeScaledFont::StringWidth(const SexyString& theString, bool unicode)
 		int  left, top;
 		int  right, bottom;
 
-		left   = floor(x + metrics->x_bearing);
-		top    = floor(y + metrics->y_bearing);
-		right  = ceil(x + metrics->x_advance);
-		bottom = ceil(y + metrics->y_advance);
+		left   = int(floor(x + metrics->x_bearing));
+		top    = int(floor(y + metrics->y_bearing));
+		right  = int(ceil(x + metrics->x_advance));
+		bottom = int(ceil(y + metrics->y_advance));
+
+		x += metrics->x_advance;
+		y += metrics->y_advance;
+
+		if (first)
+		{
+			min_x = left;
+			max_x = right;
+			min_y = top;
+			max_y = bottom;
+			first = false;
+		}
+		else
+		{
+			if (left < min_x)
+				min_x = left;
+			if (right > max_x)
+				max_x = right;
+			if (top < min_y)
+				min_y = top;
+			if (bottom > max_y)
+				max_y = bottom;
+		}
+
+		if (entry->mArea)
+			entry->mArea->state &= ~FREETYPE_GLYPH_AREA_LOCKED;
+	}
+
+	UnlockFace();
+	return max_x - min_x;
+}
+
+int FreeTypeScaledFont::StringWidth(const std::wstring& theString)
+{
+	if (!mBaseFont)
+		return 0;
+
+	LockFace();
+	if (!mFace)
+	{
+		UnlockFace();
+		return 0;
+	}
+
+	bool first = true;
+	float x = 0, y = 0;
+	int min_x = 0, max_x = 0;
+	int min_y = 0, max_y = 0;
+
+	GlyphVector glyphs;
+	GlyphsFromString(theString, glyphs, false);
+	for (unsigned int i = 0; i < glyphs.size(); i++)
+	{
+		FreeTypeGlyphEntry* entry = glyphs[i].entry;
+		if (!entry)
+			continue;
+
+		FreeTypeExtents* metrics = &entry->mMetrics;
+		int  left, top;
+		int  right, bottom;
+
+		left   = int(floor(x + metrics->x_bearing));
+		top    = int(floor(y + metrics->y_bearing));
+		right  = int(ceil(x + metrics->x_advance));
+		bottom = int(ceil(y + metrics->y_advance));
 
 		x += metrics->x_advance;
 		y += metrics->y_advance;
@@ -222,13 +287,13 @@ int FreeTypeScaledFont::StringWidth(const SexyString& theString, bool unicode)
 }
 
 int FreeTypeScaledFont::Utf8FromString(const std::string& string,
-				       bool unicode, std::string& utf8)
+				       bool unicode,
+				       std::string& utf8)
 {
 	int len;
 	char* result;
 
 	len = SexyUtf8Strlen(string.c_str(), -1);
-
 	if (unicode && len >= 0)
 	{
 		utf8 = string;
@@ -247,7 +312,7 @@ int FreeTypeScaledFont::Utf8FromString(const std::string& string,
 }
 
 void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector& glyphs,
-					  bool unicode, bool render)
+					  bool render, bool unicode)
 {
 	std::string utf8;
 
@@ -309,20 +374,38 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 	}
 }
 
-void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyString& theString,
-				    const Color& theColor, const Rect& theClipRect,
-				    bool unicode, bool drawShadow, bool drawOutline)
+void FreeTypeScaledFont::GlyphsFromString(const std::wstring& string, GlyphVector& glyphs,
+					  bool render)
 {
-	if (!mBaseFont)
-		return;
+	std::string utf8;
 
-	LockFace();
-	if (!mFace)
+	glyphs.clear();
+
+	FT_Face face = mFace;
+	for (size_t i = 0; i < string.length(); i++)
 	{
-		UnlockFace();
-		return;
-	}
+		if (string[i] == L'\n' || string[i] == L'\r')
+			continue;
 
+		int index = FT_Get_Char_Index (face, string[i]);
+		FreeTypeGlyphEntry* entry = LookupGlyph(index, render);
+
+		if (!entry)
+			continue;
+
+		FreeTypeGlyph glyph;
+		glyph.index = index;
+		glyph.entry = entry;
+		glyphs.push_back(glyph);
+		if (entry->mArea && render)
+			entry->mArea->state |= FREETYPE_GLYPH_AREA_LOCKED;
+	}
+}
+
+void FreeTypeScaledFont::DrawGlyph(Graphics* g, int theX, int theY, GlyphVector glyphs,
+				   const Color& theColor, const Rect& theClipRect,
+				   bool drawShadow, bool drawOutline)
+{
 	float x = theX, y = theY;
 
 	Color aFontColor = theColor;
@@ -337,9 +420,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 	Color anOrigColor = g->GetColor();
 	g->SetColor(theColor);
 
-	GlyphVector glyphs;
-	GlyphsFromString(theString, glyphs, unicode, true);
-	for (unsigned int i = 0; i < glyphs.size(); i++)
+	for (size_t i = 0; i < glyphs.size(); i++)
 	{
 		FreeTypeGlyphEntry* entry = glyphs[i].entry;
 
@@ -352,11 +433,11 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 			{
 				g->SetColor(aShadowColor);
 				if (drawOutline)
-				    g->DrawImage(entry->mImage,
-						 (int)floor(x + entry->mXOffSet - 1),
-						 (int)floor(y + entry->mYOffSet - 1),
-						 Rect(entry->mArea->x, entry->mArea->y,
-						      entry->mWidth, entry->mHeight));
+					g->DrawImage(entry->mImage,
+					     (int)floor(x + entry->mXOffSet - 1),
+					     (int)floor(y + entry->mYOffSet - 1),
+					     Rect(entry->mArea->x, entry->mArea->y,
+						  entry->mWidth, entry->mHeight));
 				g->DrawImage(entry->mImage,
 					     (int)floor(x + entry->mXOffSet + 1),
 					     (int)floor(y + entry->mYOffSet + 1),
@@ -382,16 +463,63 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const SexyS
 	g->SetColorizeImages(colorizeImages);
 
 #if 0
-	ImageLib::Image anImage;
-	anImage.mWidth = mImages[0]->mWidth;
-	anImage.mHeight = mImages[0]->mHeight;
-	anImage.mBits = mImages[0]->GetBits();
+	for (int i = 0; i < MAX_CACHED_IMAGES; i++)
+		if (mImages[i])
+		{
+			ImageLib::Image anImage;
+			anImage.mWidth = mImages[i]->mWidth;
+			anImage.mHeight = mImages[i]->mHeight;
+			anImage.mBits = mImages[i]->GetBits();
 
-	char filename[1024];
-	snprintf (filename, sizeof(filename), "font-%p-%f.png", this, mSize);
-	WritePNGImage(filename, &anImage );
-	anImage.mBits = 0;
+			char filename[1024];
+			snprintf (filename, sizeof(filename), "font-%d-%p-%f.png", i, this, mSize);
+			WritePNGImage(filename, &anImage );
+			anImage.mBits = 0;
+		}
 #endif
+}
+
+void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const std::string& theString,
+				    const Color& theColor, const Rect& theClipRect,
+				    bool unicode, bool drawShadow, bool drawOutline)
+{
+	if (!mBaseFont)
+		return;
+
+	LockFace();
+	if (!mFace)
+	{
+		UnlockFace();
+		return;
+	}
+
+	GlyphVector glyphs;
+
+	GlyphsFromString(theString, glyphs, true, unicode);
+	DrawGlyph(g, theX, theY, glyphs, theColor, theClipRect, drawShadow, drawOutline);
+
+	UnlockFace();
+}
+
+void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const std::wstring& theString,
+				    const Color& theColor, const Rect& theClipRect,
+				    bool drawShadow, bool drawOutline)
+{
+	if (!mBaseFont)
+		return;
+
+	LockFace();
+	if (!mFace)
+	{
+		UnlockFace();
+		return;
+	}
+
+	GlyphVector glyphs;
+
+	GlyphsFromString(theString, glyphs, true);
+	DrawGlyph(g, theX, theY, glyphs, theColor, theClipRect, drawShadow, drawOutline);
+
 	UnlockFace();
 }
 
@@ -411,7 +539,7 @@ int FreeTypeScaledFont::CharWidth(int theChar)
 	int index = FT_Get_Char_Index (mFace, theChar);
 	FreeTypeExtents* metrics = LookupGlyphMetrics(index);
 	if (metrics)
-		width = metrics->x_advance;
+		width = int(metrics->x_advance);
 
 	UnlockFace();
 	return width;
@@ -793,8 +921,8 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 		{
 			if (!mImages[i])
 			{
-				mImages[i] =
-					mApp->CreateImage(1 << mImageSizeOrder[i], 1 << mImageSizeOrder[i]);
+				mImages[i] = new MemoryImage(mApp);
+				mImages[i]->Create(1 << mImageSizeOrder[i], 1 << mImageSizeOrder[i]);
 				mImages[i]->Palletize();
 			}
 			*image = mImages[i];
@@ -809,8 +937,8 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 		{
 			if (!mImages[i])
 			{
-				mImages[i] =
-					mApp->CreateImage(1 << mImageSizeOrder[i], 1 << mImageSizeOrder[i]);
+				mImages[i] = new MemoryImage(mApp);
+				mImages[i]->Create(1 << mImageSizeOrder[i], 1 << mImageSizeOrder[i]);
 				mImages[i]->Palletize();
 			}
 			*image = mImages[i];

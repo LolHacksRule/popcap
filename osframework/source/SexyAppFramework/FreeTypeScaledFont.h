@@ -7,6 +7,7 @@
 namespace Sexy
 {
 	class Image;
+	class MemoryImage;
 	class ImageFont;
 	class SexyAppBase;
 	struct FreeTypeGlyphArea;
@@ -69,6 +70,8 @@ namespace Sexy
 	const unsigned int MAX_CACHED_IMAGES = 3;
 	const unsigned int DEFAULT_CACHE_ORDER = 7;
 	const unsigned int MAX_CACHE_LEVEL = 64;
+	typedef std::map<FT_UInt, FreeTypeGlyphEntry> GlyphMap;
+	typedef std::vector<FreeTypeGlyph>  GlyphVector;
 
 	class FreeTypeScaledFont
 	{
@@ -93,15 +96,31 @@ namespace Sexy
 		~FreeTypeScaledFont();
 
 	public:
-		int				StringWidth(const SexyString& theString,
+		void				DrawGlyph(Graphics* g, int theX, int theY,
+							  GlyphVector glyphs,
+							  const Color& theColor,
+							  const Rect& theClipRect,
+							  bool drawShadow = false,
+							  bool drawOutline = false);
+
+		int				StringWidth(const std::string& theString,
 							    bool unicode = false);
 		void				DrawString(Graphics* g, int theX, int theY,
-							   const SexyString& theString,
+							   const std::string& theString,
 							   const Color& theColor,
 							   const Rect& theClipRect,
 							   bool unicode = false,
 							   bool drawShadow = false,
 							   bool drawOutline = false);
+
+		int				StringWidth(const std::wstring& theString);
+		void				DrawString(Graphics* g, int theX, int theY,
+							   const std::wstring& theString,
+							   const Color& theColor,
+							   const Rect& theClipRect,
+							   bool drawShadow = false,
+							   bool drawOutline = false);
+
 		int				CharWidth(int theChar);
 		int				CharWidthKern(int theChar, int thePrevChar);
 
@@ -125,14 +144,11 @@ namespace Sexy
 		CritSect			mRefCritSect;
 		int				mRefCnt;
 
-		typedef std::map<FT_UInt, FreeTypeGlyphEntry> GlyphMap;
-		typedef std::vector<FreeTypeGlyph>  GlyphVector;
-
 		// Glyph info cache
 		GlyphMap			mGlyphMap;
 
 		// Glyph Image cache
-		Image*				mImages[MAX_CACHED_IMAGES];
+		MemoryImage*			mImages[MAX_CACHED_IMAGES];
 		int				mImageSizeOrder[MAX_CACHED_IMAGES];
 		FreeTypeGlyphArea		mImageAreas[MAX_CACHED_IMAGES];
 
@@ -160,8 +176,14 @@ namespace Sexy
 							       bool unicode,
 							       std::string& utf8);
 
-		void				GlyphsFromString(const std::string& string, GlyphVector& glyphs,
-								 bool unicode = false, bool render = false);
+		void				GlyphsFromString(const std::string& string,
+								 GlyphVector& glyphs,
+								 bool render = false,
+								 bool unicode = false);
+
+		void				GlyphsFromString(const std::wstring& string,
+								 GlyphVector& glyphs,
+								 bool render = false);
 
 	public:
 		void				Ref();

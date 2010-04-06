@@ -17,8 +17,8 @@ Font::Font()
 
 Font::Font(const Font& theFont) :
 	mAscent(theFont.mAscent),
-	mHeight(theFont.mHeight),
 	mAscentPadding(theFont.mAscentPadding),
+	mHeight(theFont.mHeight),
 	mLineSpacingOffset(theFont.mLineSpacingOffset),
 	mSupportUnicode(theFont.mSupportUnicode),
 	mDrawShadow(theFont.mDrawShadow),
@@ -66,7 +66,12 @@ int Font::GetLineSpacing()
 	return mHeight + mLineSpacingOffset;
 }
 
-int Font::StringWidth(const SexyString& theString, bool unicode)
+int Font::StringWidth(const std::string& theString, bool unicode)
+{
+	return 0;
+}
+
+int Font::StringWidth(const std::wstring& theString)
 {
 	return 0;
 }
@@ -82,6 +87,12 @@ int Font::CharWidthKern(int theChar, int thePrevChar)
 	return CharWidth(theChar);
 }
 
-void Font::DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect, bool unicode)
+void Font::DrawString(Graphics* g, int theX, int theY, const std::string& theString,
+		      const Color& theColor, const Rect& theClipRect, bool unicode)
+{
+}
+
+void Font::DrawString(Graphics* g, int theX, int theY, const std::wstring& theString,
+		      const Color& theColor, const Rect& theClipRect)
 {
 }
