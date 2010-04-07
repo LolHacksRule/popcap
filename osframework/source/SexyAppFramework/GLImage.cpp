@@ -74,18 +74,18 @@ public:
 	float			  mMaxTotalU;
 	float			  mMaxTotalV;
 
-	bool                      mRectangleTexture;
-	GLenum                    mTarget;
+	bool			  mRectangleTexture;
+	GLenum			  mTarget;
 
-	GLInterface*              mInterface;
-	int                       mImageFlags;
-	Image*                    mImage;
+	GLInterface*		  mInterface;
+	int			  mImageFlags;
+	Image*			  mImage;
 
 public:
 	GLTexture(GLInterface* theInterface, Image* theImage);
 	~GLTexture();
 
-	void                      SetTextureFilter(bool linear);
+	void			  SetTextureFilter(bool linear);
 	void			  ReleaseTextures ();
 	void			  CreateTextureDimensions (MemoryImage *theImage);
 	void			  CreateTextures (MemoryImage *theImage);
@@ -128,7 +128,7 @@ multiply_pixel (uint pixel)
 		green = multiply_alpha (alpha, green);
 		blue  = multiply_alpha (alpha, blue);
 	}
-	return  (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+	return	(alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
 }
 
 static inline void
@@ -178,15 +178,19 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	uint32* bits = theImage->GetBits ();
+	uint32* bits = theImage->mBits;
+	uint32* tab = theImage->mColorTable;
+	uchar*	indices = theImage->mColorIndices;
 	uint32* copy = new uint32[w * h];
 	if (copy) {
 		int i;
 
 		int aWidth = std::min (w, (theImage->GetWidth() - x));
 		int aHeight = std::min (h, (theImage->GetHeight() - y));
+#if 0
 		int aWidthExtra = w > aWidth ? w - aWidth : 0;
 		int aHeightExtra = h > aHeight ? h - aHeight : 0;
+#endif
 		GLenum format, intlformat;
 
 		if (theInterface->mTexBGRA == GL_TRUE)
@@ -205,31 +209,74 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 		}
 		int imageWidth = theImage->GetWidth();
 		uint32 * dst = copy;
-		uint32 * src = bits + y * imageWidth + x;
 
-		for (i = 0; i < aHeight; i++) {
-			int j;
-			if (format == GL_RGBA)
+		if (indices)
+		{
+			uint32 pmtab[256];
+			uchar * src = indices + y * imageWidth + x;
+
+			for (i = 0; i < 256; i++)
 			{
-				for (j = 0; j < aWidth; j++)
-				{
-					uint32 pixel = multiply_pixel (src[j]);
-					dst[j] =
+				uint32 pixel = multiply_pixel (tab[i]);
+				if (format == GL_RGBA)
+					pmtab[i] =
 						(pixel	& 0xff00ff00) |
 						((pixel & 0x00ff0000) >> 16) |
 						((pixel & 0x000000ff) << 16);
-				}
+				else
+					pmtab[i] = pixel;
 			}
-			else
-			{
-				for (j = 0; j < aWidth; j++)
-					dst[j] = multiply_pixel (src[j]);
-			}
-			for (j = aWidth; j < w; j++)
-				dst[j] = dst[aWidth - 1];
 
-			dst += w;
-			src += imageWidth;
+			for (i = 0; i < aHeight; i++)
+			{
+				int j;
+
+				for (j = 0; j < aWidth; j++)
+					dst[j] = pmtab[src[j]];
+
+				for (j = aWidth; j < w; j++)
+					dst[j] = dst[aWidth - 1];
+
+				dst += w;
+				src += imageWidth;
+			}
+		}
+		else if (bits)
+		{
+			uint32 * src = bits + y * imageWidth + x;
+
+			for (i = 0; i < aHeight; i++)
+			{
+				int j;
+
+				if (format == GL_RGBA)
+				{
+					for (j = 0; j < aWidth; j++)
+					{
+						uint32 pixel = multiply_pixel (src[j]);
+						dst[j] =
+							(pixel	& 0xff00ff00) |
+							((pixel & 0x00ff0000) >> 16) |
+							((pixel & 0x000000ff) << 16);
+					}
+				}
+				else
+				{
+					for (j = 0; j < aWidth; j++)
+						dst[j] = multiply_pixel (src[j]);
+				}
+
+				for (j = aWidth; j < w; j++)
+					dst[j] = dst[aWidth - 1];
+
+				dst += w;
+				src += imageWidth;
+			}
+		}
+		else
+		{
+			memset(copy, 0, w * h * sizeof(uint32));
+			i = h;
 		}
 		for (; i < h; i++, dst += w)
 			memcpy (dst, copy + w * (aHeight - 1), w * 4);
@@ -1248,11 +1295,7 @@ GLTexture* GLImage::EnsureSrcTexture(GLInterface* theInterface, Image* theImage)
 		aTexture = new GLTexture(theInterface, theImage);
 		aMemoryImage->mNativeData = (void*)aTexture;
 	}
-	if (aTexture->CheckCreateTextures (aMemoryImage))
-	{
-		if (aMemoryImage->mWantPal)
-			aMemoryImage->Palletize();
-	}
+	aTexture->CheckCreateTextures (aMemoryImage);
 	aMemoryImage->mDrawnTime = Sexy::GetTickCount();
 
 	return aTexture;
@@ -2021,9 +2064,6 @@ void GLImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitB
 	if (theBits && !mBits)
 		MemoryImage::GetBits();
 	MemoryImage::SetBits(theBits, theWidth, theHeight, commitBits);
-
-	//if (mTexture)
-	//	mTexture->CheckCreateTextures (this);
 }
 
 void GLImage::Flip(enum FlipFlags flags)
@@ -2037,8 +2077,7 @@ GLTexture* GLImage::EnsureTexture()
 	if (!mTexture)
 		mTexture = new GLTexture(mInterface, this);
 
-	if (mTexture->CheckCreateTextures (this) && mWantPal)
-		Palletize();
+	mTexture->CheckCreateTextures (this);
 	mDrawnTime = Sexy::GetTickCount();
 
 	return mTexture;
@@ -2070,7 +2109,7 @@ int GLImage::GetTextureTarget()
 
 void GLImage::RemoveImageData(MemoryImage* theImage)
 {
-    	if (!theImage->mNativeData)
+	if (!theImage->mNativeData)
 		return;
 
 	GLTexture* aData = (GLTexture*)theImage->mNativeData;
