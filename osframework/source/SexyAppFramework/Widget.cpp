@@ -301,6 +301,7 @@ void Widget::GotFocus()
 	if (!mHasFocus)
 	{
 		mHasFocus = true;
+		mIsSelected = true;
 		MarkDirty();
 	}
 }
