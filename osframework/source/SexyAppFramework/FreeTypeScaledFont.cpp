@@ -652,9 +652,62 @@ FreeTypeGlyphEntry* FreeTypeScaledFont::LoadGlyph(FT_UInt index, bool render)
 				entry->mArea->width, entry->mArea->height);
 #endif
 			MemoryImage* anImage = (MemoryImage*)entry->mImage;
-			uint32* bits = anImage->GetBits();
-			if (bits)
+			if (anImage->mColorIndices)
 			{
+				uchar* bits = anImage->mColorIndices;
+				bits += entry->mArea->y * anImage->GetWidth() + entry->mArea->x;
+				unsigned char* srcbits = (unsigned char*)bitmap->buffer;
+
+				int i;
+				if (bitmap->pixel_mode == FT_PIXEL_MODE_GRAY)
+				{
+					for (i = 0; i < bitmap->rows; i++)
+					{
+						int j;
+						for (j = 0; j < bitmap->width; j++)
+							bits[j] = srcbits[j];
+						for (; j < entry->mArea->width; j++)
+							bits[j] = 0;
+						srcbits += bitmap->pitch;
+						bits += anImage->GetWidth();
+					}
+					for (; i < entry->mArea->height; i++)
+					{
+						for (int j = 0; j < entry->mArea->width; j++)
+							bits[j] = 0;
+						bits += anImage->GetWidth();
+					}
+				}
+				else
+				{
+					assert (bitmap->pixel_mode == FT_PIXEL_MODE_MONO);
+
+					for (i = 0; i < bitmap->rows; i++)
+					{
+						int j;
+						for (j = 0; j < bitmap->width; j++)
+						{
+							if (srcbits[(j >> 3)] & (0x80 >> (j & 7)))
+								bits[j] = 0xff;
+							else
+								bits[j] = 0x00;
+						}
+						for (; j < entry->mArea->width; j++)
+							bits[j] = 0;
+						srcbits += bitmap->pitch;
+						bits += anImage->GetWidth();
+					}
+					for (; i < entry->mArea->height; i++)
+					{
+						for (int j = 0; j < entry->mArea->width; j++)
+							bits[j] = 0;
+						bits += anImage->GetWidth();
+					}
+				}
+			}
+			else
+			{
+				uint32* bits = anImage->GetBits();
 				bits += entry->mArea->y * anImage->GetWidth() + entry->mArea->x;
 				unsigned char* srcbits = (unsigned char*)bitmap->buffer;
 
@@ -905,6 +958,20 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphAreaInArea(int width, int height
 	return 0;
 }
 
+static MemoryImage* CreateMemoryImage(SexyAppBase* app, int size)
+{
+       MemoryImage *image = new MemoryImage(app);
+
+       image->Create(size, size);
+       image->Palletize();
+       if (!image->mColorTable)
+               return image;
+
+       for (size_t i = 0; i < 256; i++)
+               image->mColorTable[i] = (i << 24) | 0xffffff;
+       return image;
+}
+
 FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_UInt index, Image** image)
 {
 	if (!width || !height)
@@ -920,11 +987,7 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 		if (area)
 		{
 			if (!mImages[i])
-			{
-				mImages[i] = new MemoryImage(mApp);
-				mImages[i]->Create(1 << mImageSizeOrder[i], 1 << mImageSizeOrder[i]);
-				mImages[i]->Palletize();
-			}
+				mImages[i] = CreateMemoryImage(mApp, 1 << mImageSizeOrder[i]);
 			*image = mImages[i];
 			return area;
 		}
@@ -936,11 +999,7 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 		if (area)
 		{
 			if (!mImages[i])
-			{
-				mImages[i] = new MemoryImage(mApp);
-				mImages[i]->Create(1 << mImageSizeOrder[i], 1 << mImageSizeOrder[i]);
-				mImages[i]->Palletize();
-			}
+				mImages[i] = CreateMemoryImage(mApp, 1 << mImageSizeOrder[i]);
 			*image = mImages[i];
 			return area;
 		}
