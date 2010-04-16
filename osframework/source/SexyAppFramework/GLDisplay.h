@@ -32,7 +32,7 @@ class MemoryImage;
 
 typedef std::set<GLImage*> GLImageSet;
 
-class GLInterface : public NativeDisplay
+class GLDisplay : public NativeDisplay
 {
 	friend class GLImage;
 public:
@@ -83,8 +83,8 @@ public:
 	GLboolean				mTexBGRA;
 
 public:
-	GLInterface(SexyAppBase* theApp);
-	virtual ~GLInterface();
+	GLDisplay(SexyAppBase* theApp);
+	virtual ~GLDisplay();
 
 	virtual bool				Is3DAccelerated();
 	virtual bool				Is3DAccelerationSupported();

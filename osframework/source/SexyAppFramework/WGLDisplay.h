@@ -3,7 +3,7 @@
 
 #include "Common.h"
 #include "CritSect.h"
-#include "GLInterface.h"
+#include "GLDisplay.h"
 #include "Rect.h"
 #include "Ratio.h"
 
@@ -16,11 +16,11 @@ class SexyAppBase;
 class Image;
 class MemoryImage;
 
-class WGLInterface : public GLInterface
+class WGLDisplay : public GLDisplay
 {
 public:
-	WGLInterface(SexyAppBase* theApp);
-	virtual ~WGLInterface();
+	WGLDisplay(SexyAppBase* theApp);
+	virtual ~WGLDisplay();
 
 	virtual int				Init();
 	virtual void				Cleanup();

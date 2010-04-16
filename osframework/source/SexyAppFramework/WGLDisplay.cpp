@@ -1,5 +1,5 @@
 #include "SexyAppBase.h"
-#include "WGLInterface.h"
+#include "WGLDisplay.h"
 #include "GLImage.h"
 #include "AutoCrit.h"
 #include "Graphics.h"
@@ -18,8 +18,8 @@
 
 using namespace Sexy;
 
-WGLInterface::WGLInterface (SexyAppBase* theApp)
-	: GLInterface (theApp)
+WGLDisplay::WGLDisplay (SexyAppBase* theApp)
+	: GLDisplay (theApp)
 {
 	mWindow = 0;
 	mWidth = mApp->mWidth;
@@ -30,7 +30,7 @@ WGLInterface::WGLInterface (SexyAppBase* theApp)
 	mContext = 0;
 }
 
-WGLInterface::~WGLInterface ()
+WGLDisplay::~WGLDisplay ()
 {
 	Cleanup();
 }
@@ -69,16 +69,16 @@ static int WinKeyToKeyCode(WPARAM winKey)
     return 0;
 }
 
-LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
+LONG WINAPI WGLDisplay::WndProc (HWND	   hWnd,
 				   UINT	   uMsg,
 				   WPARAM  wParam,
 				   LPARAM  lParam)
 {
 	LONG ret;
 
-	WGLInterface * interface;
+	WGLDisplay * interface;
 
-	interface = (WGLInterface*)GetWindowLongPtr (hWnd, GWLP_USERDATA);
+	interface = (WGLDisplay*)GetWindowLongPtr (hWnd, GWLP_USERDATA);
 	if (!interface)
 		return DefWindowProc (hWnd, uMsg, wParam, lParam);
 
@@ -198,14 +198,14 @@ LONG WINAPI WGLInterface::WndProc (HWND	   hWnd,
 	return ret;
 }
 
-int WGLInterface::Init (void)
+int WGLDisplay::Init (void)
 {
 	Cleanup();
 
 	AutoCrit anAutoCrit (mCritSect);
 	mInitialized = false;
 
-	GLInterface::Init();
+	GLDisplay::Init();
 
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
@@ -352,13 +352,13 @@ int WGLInterface::Init (void)
 	return -1;
 }
 
-void WGLInterface::Cleanup ()
+void WGLDisplay::Cleanup ()
 {
 	AutoCrit anAutoCrit(mCritSect);
 
 	mInitialized = false;
 
-	GLInterface::Cleanup ();
+	GLDisplay::Cleanup ();
 
 	if (!mSysCursor)
 		ShowCursor (TRUE);
@@ -390,13 +390,13 @@ void WGLInterface::Cleanup ()
 	UnregisterClass ("SexyGL", GetModuleHandle (NULL));
 }
 
-void WGLInterface::RemapMouse(int& theX, int& theY)
+void WGLDisplay::RemapMouse(int& theX, int& theY)
 {
     theX = (float)theX * mDisplayWidth / mWindowWidth;
     theY = (float)theY * mDisplayHeight / mWindowHeight;
 }
 
-Image* WGLInterface::CreateImage(SexyAppBase * theApp,
+Image* WGLDisplay::CreateImage(SexyAppBase * theApp,
 				 int width, int height)
 {
 	GLImage* anImage = new GLImage(this);
@@ -407,7 +407,7 @@ Image* WGLInterface::CreateImage(SexyAppBase * theApp,
 	return anImage;
 }
 
-void WGLInterface::PumpMsg()
+void WGLDisplay::PumpMsg()
 {
 	MSG msg;
 	while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE) == TRUE)
@@ -422,7 +422,7 @@ void WGLInterface::PumpMsg()
 	}
 }
 
-bool WGLInterface::HasEvent()
+bool WGLDisplay::HasEvent()
 {
 	if (!mWindow)
 		return false;
@@ -432,7 +432,7 @@ bool WGLInterface::HasEvent()
 	return false;
 }
 
-bool WGLInterface::GetEvent(struct Event &event)
+bool WGLDisplay::GetEvent(struct Event &event)
 {
 	if (!mWindow)
 		return false;
@@ -447,13 +447,13 @@ bool WGLInterface::GetEvent(struct Event &event)
 	return true;
 }
 
-void WGLInterface::SwapBuffers()
+void WGLDisplay::SwapBuffers()
 {
 	if (mHDC)
 		::SwapBuffers (mHDC);
 }
 
-bool WGLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
+bool WGLDisplay::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
 	if (theImage == mApp->mArrowCursor)
 	{
@@ -474,7 +474,7 @@ bool WGLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 		mSysCursor = false;
 	}
 
-	return GLInterface::SetCursorImage(theImage, theHotX, theHotY);
+	return GLDisplay::SetCursorImage(theImage, theHotX, theHotY);
 }
 
 class WGLVideoDriver: public VideoDriver {
@@ -486,7 +486,7 @@ public:
 
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
-		return new WGLInterface (theApp);
+		return new WGLDisplay (theApp);
 	}
 };
 

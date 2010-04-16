@@ -1,7 +1,7 @@
 #include <math.h>
 
 #include "GLImage.h"
-#include "GLInterface.h"
+#include "GLDisplay.h"
 #include "Rect.h"
 #include "Graphics.h"
 #include "SexyAppBase.h"
@@ -77,12 +77,12 @@ public:
 	bool			  mRectangleTexture;
 	GLenum			  mTarget;
 
-	GLInterface*		  mInterface;
+	GLDisplay*		  mInterface;
 	int			  mImageFlags;
 	Image*			  mImage;
 
 public:
-	GLTexture(GLInterface* theInterface, Image* theImage);
+	GLTexture(GLDisplay* theInterface, Image* theImage);
 	~GLTexture();
 
 	void			  SetTextureFilter(bool linear);
@@ -147,7 +147,7 @@ ColorToMultipliedRGBA(Color theColor)
 	return rgba;
 }
 
-static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
+static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 			     GLuint old, int x, int y, int width, int height)
 {
 	GLuint texture;
@@ -295,7 +295,7 @@ static GLuint CreateTexture (GLInterface * theInterface, MemoryImage* theImage,
 	return old ? old : texture;
 }
 
-GLTexture::GLTexture (GLInterface *theInterface, Image* theImage)
+GLTexture::GLTexture (GLDisplay *theInterface, Image* theImage)
 {
 	mWidth = 0;
 	mHeight = 0;
@@ -1281,7 +1281,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 	}
 }
 
-GLTexture* GLImage::EnsureSrcTexture(GLInterface* theInterface, Image* theImage)
+GLTexture* GLImage::EnsureSrcTexture(GLDisplay* theInterface, Image* theImage)
 {
 	GLImage * srcImage = dynamic_cast<GLImage*>(theImage);
 
@@ -1301,7 +1301,7 @@ GLTexture* GLImage::EnsureSrcTexture(GLInterface* theInterface, Image* theImage)
 	return aTexture;
 }
 
-GLImage::GLImage(GLInterface* theInterface) :
+GLImage::GLImage(GLDisplay* theInterface) :
 	MemoryImage(theInterface->mApp),
 	mInterface(theInterface),
 	mDirty(0)
@@ -1313,7 +1313,7 @@ GLImage::GLImage(GLInterface* theInterface) :
 GLImage::GLImage() :
 	MemoryImage(gSexyAppBase)
 {
-	mInterface = dynamic_cast<GLInterface *>(gSexyAppBase->mDDInterface);
+	mInterface = dynamic_cast<GLDisplay *>(gSexyAppBase->mDDInterface);
 	mTexture = 0;
 	Init();
 }
@@ -1376,7 +1376,7 @@ void GLImage::DeleteSurface()
 
 void GLImage::ReAttach(NativeDisplay *theNative)
 {
-	mInterface = (GLInterface*)theNative;
+	mInterface = (GLDisplay*)theNative;
 }
 
 void GLImage::ReInit()

@@ -3,7 +3,7 @@
 
 #include "Common.h"
 #include "CritSect.h"
-#include "GLInterface.h"
+#include "GLDisplay.h"
 #include "Rect.h"
 #include "Ratio.h"
 #include "SexyMatrix.h"
@@ -18,11 +18,11 @@ class SexyAppBase;
 class Image;
 class MemoryImage;
 
-class GLXInterface : public GLInterface
+class GLXDisplay : public GLDisplay
 {
 public:
-	GLXInterface(SexyAppBase* theApp);
-	virtual ~GLXInterface();
+	GLXDisplay(SexyAppBase* theApp);
+	virtual ~GLXDisplay();
 
 	virtual int			        Init();
 	virtual bool                            CanReinit();

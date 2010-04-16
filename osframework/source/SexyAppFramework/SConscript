@@ -55,37 +55,37 @@ else:
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
 
 if 'DIRECTFB' in env['DRIVERS']:
-    srcs += ["DFBImage.cpp", "DFBFont.cpp", "DFBInterface.cpp"]
+    srcs += ["DFBImage.cpp", "DFBFont.cpp", "DFBDisplay.cpp"]
     env['DIRECTFB']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_DFB_DRIVER'])
 
 if 'AGL' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLInterface.cpp"]
-    srcs += ["AGLInterface.mm"]
+    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
+    srcs += ["AGLDisplay.mm"]
     env['AGL']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_AGL_DRIVER'])
 
 if 'GLX' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLInterface.cpp"]
-    srcs += ["GLXInterface.cpp"]
+    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
+    srcs += ["GLXDisplay.cpp"]
     env['GLX']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_GLX_DRIVER'])
 
 if 'WGL' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLInterface.cpp"]
-    srcs += ["WGLInterface.cpp"]
+    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
+    srcs += ["WGLDisplay.cpp"]
     env['WGL']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_WGL_DRIVER'])
 
 if 'CEGLES' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLInterface.cpp"]
-    srcs += ["CEGLESInterface.cpp"]
+    srcs += ["GLImage.cpp", "GLDislay.cpp"]
+    srcs += ["CEGLESDisplay.cpp"]
     env['CEGLES']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_CEGLES_DRIVER'])
 
 if 'XGLES' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLInterface.cpp"]
-    srcs += ["XGLESInterface.cpp"]
+    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
+    srcs += ["XGLESDisplay.cpp"]
     env['XGLES']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_XGLES_DRIVER'])
 

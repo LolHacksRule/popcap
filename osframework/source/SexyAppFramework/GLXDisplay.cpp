@@ -1,5 +1,5 @@
 #include "SexyAppBase.h"
-#include "GLXInterface.h"
+#include "GLXDisplay.h"
 #include "GLImage.h"
 #include "AutoCrit.h"
 #include "Graphics.h"
@@ -18,8 +18,8 @@
 
 using namespace Sexy;
 
-GLXInterface::GLXInterface (SexyAppBase* theApp)
-	: GLInterface (theApp)
+GLXDisplay::GLXDisplay (SexyAppBase* theApp)
+	: GLDisplay (theApp)
 {
 	mDpy = 0;
 	mWindow = None;
@@ -28,7 +28,7 @@ GLXInterface::GLXInterface (SexyAppBase* theApp)
 	mHeight = mApp->mHeight;
 }
 
-GLXInterface::~GLXInterface ()
+GLXDisplay::~GLXDisplay ()
 {
 	Cleanup();
 }
@@ -40,9 +40,9 @@ static Bool WaitForMapNotify(Display *d, XEvent *e, char* arg)
 	return GL_FALSE;
 }
 
-Bool GLXInterface::WaitForSubstructureNotify(Display *d, XEvent *e, char* arg)
+Bool GLXDisplay::WaitForSubstructureNotify(Display *d, XEvent *e, char* arg)
 {
-	GLXInterface * interface = (GLXInterface*)arg;
+	GLXDisplay * interface = (GLXDisplay*)arg;
 
 	if ((e->type == ConfigureNotify) &&
 	    (e->xmap.window == interface->mWindow)) {
@@ -54,14 +54,14 @@ Bool GLXInterface::WaitForSubstructureNotify(Display *d, XEvent *e, char* arg)
 	return GL_FALSE;
 }
 
-int GLXInterface::Init (void)
+int GLXDisplay::Init (void)
 {
 	Cleanup();
 
 	AutoCrit anAutoCrit (mCritSect);
 	mInitialized = false;
 
-	GLInterface::Init();
+	GLDisplay::Init();
 
 	mDpy = XOpenDisplay (NULL);
 	if (!mDpy)
@@ -187,13 +187,13 @@ fail:
 	return -1;
 }
 
-void GLXInterface::Cleanup ()
+void GLXDisplay::Cleanup ()
 {
 	AutoCrit anAutoCrit(mCritSect);
 
 	mInitialized = false;
 
-	GLInterface::Cleanup ();
+	GLDisplay::Cleanup ();
 
 	if (mScreenImage)
 		delete mScreenImage;
@@ -215,12 +215,12 @@ void GLXInterface::Cleanup ()
 	mDpy = NULL;
 }
 
-bool GLXInterface::CanReinit(void)
+bool GLXDisplay::CanReinit(void)
 {
 	return mInitialized;
 }
 
-bool GLXInterface::Reinit (void)
+bool GLXDisplay::Reinit (void)
 {
 	XEvent event;
 
@@ -259,16 +259,16 @@ bool GLXInterface::Reinit (void)
 	mPresentationRect.mWidth = mWidth;
 	mPresentationRect.mHeight = mHeight;
 
-	return GLInterface::Reinit();
+	return GLDisplay::Reinit();
 }
 
-void GLXInterface::RemapMouse(int& theX, int& theY)
+void GLXDisplay::RemapMouse(int& theX, int& theY)
 {
 	theX *= (float)mWidth / mWindowWidth;
 	theY *= (float)mHeight / mWindowHeight;
 }
 
-Image* GLXInterface::CreateImage(SexyAppBase * theApp,
+Image* GLXDisplay::CreateImage(SexyAppBase * theApp,
 				 int width, int height)
 {
 	GLImage* anImage = new GLImage(this);
@@ -279,7 +279,7 @@ Image* GLXInterface::CreateImage(SexyAppBase * theApp,
 	return anImage;
 }
 
-bool GLXInterface::HasEvent()
+bool GLXDisplay::HasEvent()
 {
 	if (!mDpy)
 		return false;
@@ -317,7 +317,7 @@ static int XKsymToKeyCode(KeySym keysym)
 	return 0;
 }
 
-bool GLXInterface::GetEvent(struct Event &event)
+bool GLXDisplay::GetEvent(struct Event &event)
 {
 	if (!mDpy)
 		return false;
@@ -459,13 +459,13 @@ bool GLXInterface::GetEvent(struct Event &event)
 	return true;
 }
 
-void GLXInterface::SwapBuffers()
+void GLXDisplay::SwapBuffers()
 {
 	if (mDpy && mWindow)
 		glXSwapBuffers (mDpy, mWindow);
 }
 
-bool GLXInterface::GetInputInfo(InputInfo &anInfo)
+bool GLXDisplay::GetInputInfo(InputInfo &anInfo)
 {
 	if (getenv("SEXY_GLX_NO_INPUT"))
 		return false;
@@ -484,7 +484,7 @@ public:
 
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
-		return new GLXInterface (theApp);
+		return new GLXDisplay (theApp);
 	}
 };
 

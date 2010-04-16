@@ -1,5 +1,5 @@
 #include "SexyAppBase.h"
-#include "AGLInterface.h"
+#include "AGLDisplay.h"
 #include "GLImage.h"
 #include "AutoCrit.h"
 #include "Graphics.h"
@@ -18,15 +18,15 @@ using namespace Sexy;
 @interface AppDelegate : NSResponder
 {
 	BOOL mQuit;
-	AGLInterface* mInterface;
+	AGLDisplay* mInterface;
 }
 
-- (id)initWithInterface:(AGLInterface *)aInterface;
+- (id)initWithInterface:(AGLDisplay *)aInterface;
 @end
 
 @implementation AppDelegate
 
-- (id)initWithInterface:(AGLInterface *)aInterface
+- (id)initWithInterface:(AGLDisplay *)aInterface
 {
 	self = [super init];
 	if (self)
@@ -98,8 +98,8 @@ using namespace Sexy;
 }
 @end
 
-AGLInterface::AGLInterface (SexyAppBase* theApp)
-	: GLInterface (theApp)
+AGLDisplay::AGLDisplay (SexyAppBase* theApp)
+	: GLDisplay (theApp)
 {
 	static bool first = false;
 
@@ -130,7 +130,7 @@ AGLInterface::AGLInterface (SexyAppBase* theApp)
 	InitKeyMap ();
 }
 
-void AGLInterface::InitKeyMap ()
+void AGLDisplay::InitKeyMap ()
 {
 	struct {
 		int NSKeyCode;
@@ -158,7 +158,7 @@ void AGLInterface::InitKeyMap ()
 		mKeyMap[keymap[i].NSKeyCode] = keymap[i].KeyCode; 
 }
 
-int AGLInterface::KeyCodeFromNSKeyCode (int NSKeyCode)
+int AGLDisplay::KeyCodeFromNSKeyCode (int NSKeyCode)
 {
 	printf ("keycode %d\n", NSKeyCode);
 	std::map<int, int>::iterator it;
@@ -169,19 +169,19 @@ int AGLInterface::KeyCodeFromNSKeyCode (int NSKeyCode)
 	return it->second;
 }
 
-AGLInterface::~AGLInterface ()
+AGLDisplay::~AGLDisplay ()
 {
 	Cleanup();
 }
 
-int AGLInterface::Init (void)
+int AGLDisplay::Init (void)
 {
 	Cleanup();
 
 	AutoCrit anAutoCrit (mCritSect);
 	mInitialized = false;
 
-	GLInterface::Init();
+	GLDisplay::Init();
 
 	int index;
 	bool result;
@@ -316,13 +316,13 @@ int AGLInterface::Init (void)
 	return -1;
 }
 
-void AGLInterface::Cleanup ()
+void AGLDisplay::Cleanup ()
 {
 	AutoCrit anAutoCrit(mCritSect);
 
 	mInitialized = false;
 
-	GLInterface::Cleanup ();
+	GLDisplay::Cleanup ();
 
 	if (mScreenImage)
 		delete mScreenImage;
@@ -359,13 +359,13 @@ void AGLInterface::Cleanup ()
 	}
 }
 
-void AGLInterface::RemapMouse(int& theX, int& theY)
+void AGLDisplay::RemapMouse(int& theX, int& theY)
 {
 	theX = theX * (float)mDisplayWidth / mWindowWidth;
 	theY = theY * (float)mDisplayHeight / mWindowHeight;
 }
 
-Image* AGLInterface::CreateImage(SexyAppBase * theApp,
+Image* AGLDisplay::CreateImage(SexyAppBase * theApp,
 				 int width, int height)
 {
 	GLImage* anImage = new GLImage(this);
@@ -376,12 +376,12 @@ Image* AGLInterface::CreateImage(SexyAppBase * theApp,
 	return anImage;
 }
 
-bool AGLInterface::HasEvent()
+bool AGLDisplay::HasEvent()
 {
 	return false;
 }
 
-bool AGLInterface::GetEvent(struct Event &event)
+bool AGLDisplay::GetEvent(struct Event &event)
 {
 	NSEvent* nsevent;
 
@@ -525,7 +525,7 @@ bool AGLInterface::GetEvent(struct Event &event)
 	return true;
 }
 
-void AGLInterface::SwapBuffers()
+void AGLDisplay::SwapBuffers()
 {
 	if (mContext)
 		[mContext flushBuffer ];
@@ -540,7 +540,7 @@ public:
 
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
-		return new AGLInterface (theApp);
+		return new AGLDisplay (theApp);
         }
 };
 

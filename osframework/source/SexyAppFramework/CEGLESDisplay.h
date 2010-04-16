@@ -3,7 +3,7 @@
 
 #include "Common.h"
 #include "CritSect.h"
-#include "GLInterface.h"
+#include "GLDisplay.h"
 #include "Rect.h"
 #include "Ratio.h"
 
@@ -19,11 +19,11 @@ class SexyAppBase;
 class Image;
 class MemoryImage;
 
-class CEGLESInterface : public GLInterface
+class CEGLESDisplay : public GLDisplay
 {
 public:
-	CEGLESInterface(SexyAppBase* theApp);
-	virtual ~CEGLESInterface();
+	CEGLESDisplay(SexyAppBase* theApp);
+	virtual ~CEGLESDisplay();
 
 	virtual int				Init();
 	virtual bool				CanReinit();

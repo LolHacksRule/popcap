@@ -1,5 +1,5 @@
 #include "SexyAppBase.h"
-#include "XGLESInterface.h"
+#include "XGLESDisplay.h"
 #include "GLImage.h"
 #include "AutoCrit.h"
 #include "Graphics.h"
@@ -18,8 +18,8 @@
 
 using namespace Sexy;
 
-XGLESInterface::XGLESInterface (SexyAppBase* theApp)
-	: GLInterface (theApp)
+XGLESDisplay::XGLESDisplay (SexyAppBase* theApp)
+	: GLDisplay (theApp)
 {
 	mNativeDpy = 0;
 	mNativeWindow = None;
@@ -31,7 +31,7 @@ XGLESInterface::XGLESInterface (SexyAppBase* theApp)
 	mHeight = mApp->mHeight;
 }
 
-XGLESInterface::~XGLESInterface ()
+XGLESDisplay::~XGLESDisplay ()
 {
 	Cleanup();
 }
@@ -43,9 +43,9 @@ static Bool WaitForMapNotify(Display *d, XEvent *e, char* arg)
 	return GL_FALSE;
 }
 
-Bool XGLESInterface::WaitForSubstructureNotify(Display *d, XEvent *e, char* arg)
+Bool XGLESDisplay::WaitForSubstructureNotify(Display *d, XEvent *e, char* arg)
 {
-	XGLESInterface * interface = (XGLESInterface*)arg;
+	XGLESDisplay * interface = (XGLESDisplay*)arg;
 
 	if ((e->type == ConfigureNotify) &&
 	    (e->xmap.window == interface->mNativeWindow)) {
@@ -57,14 +57,14 @@ Bool XGLESInterface::WaitForSubstructureNotify(Display *d, XEvent *e, char* arg)
 	return GL_FALSE;
 }
 
-int XGLESInterface::Init (void)
+int XGLESDisplay::Init (void)
 {
 	Cleanup();
 
 	AutoCrit anAutoCrit (mCritSect);
 	mInitialized = false;
 
-	GLInterface::Init();
+	GLDisplay::Init();
 
 	mNativeDpy = XOpenDisplay (NULL);
 	if (!mNativeDpy)
@@ -265,13 +265,13 @@ fail:
 	return -1;
 }
 
-void XGLESInterface::Cleanup ()
+void XGLESDisplay::Cleanup ()
 {
 	AutoCrit anAutoCrit(mCritSect);
 
 	mInitialized = false;
 
-	GLInterface::Cleanup ();
+	GLDisplay::Cleanup ();
 
 	if (mScreenImage)
 		delete mScreenImage;
@@ -303,12 +303,12 @@ void XGLESInterface::Cleanup ()
 	mNativeDpy = NULL;
 }
 
-bool XGLESInterface::CanReinit(void)
+bool XGLESDisplay::CanReinit(void)
 {
 	return mInitialized;
 }
 
-bool XGLESInterface::Reinit (void)
+bool XGLESDisplay::Reinit (void)
 {
 	XEvent event;
 
@@ -347,16 +347,16 @@ bool XGLESInterface::Reinit (void)
 	mPresentationRect.mWidth = mWidth;
 	mPresentationRect.mHeight = mHeight;
 
-	return GLInterface::Reinit();
+	return GLDisplay::Reinit();
 }
 
-void XGLESInterface::RemapMouse(int& theX, int& theY)
+void XGLESDisplay::RemapMouse(int& theX, int& theY)
 {
 	theX *= (float)mWidth / mWindowWidth;
 	theY *= (float)mHeight / mWindowHeight;
 }
 
-Image* XGLESInterface::CreateImage(SexyAppBase * theApp,
+Image* XGLESDisplay::CreateImage(SexyAppBase * theApp,
 				 int width, int height)
 {
 	GLImage* anImage = new GLImage(this);
@@ -367,7 +367,7 @@ Image* XGLESInterface::CreateImage(SexyAppBase * theApp,
 	return anImage;
 }
 
-bool XGLESInterface::HasEvent()
+bool XGLESDisplay::HasEvent()
 {
 	if (!mNativeDpy)
 		return false;
@@ -407,7 +407,7 @@ static int XKsymToKeyCode(KeySym keysym)
 	return 0;
 }
 
-bool XGLESInterface::GetEvent(struct Event &event)
+bool XGLESDisplay::GetEvent(struct Event &event)
 {
 	if (!mNativeDpy)
 		return false;
@@ -549,7 +549,7 @@ bool XGLESInterface::GetEvent(struct Event &event)
 	return true;
 }
 
-void XGLESInterface::SwapBuffers()
+void XGLESDisplay::SwapBuffers()
 {
 	if (mDpy && mSurface)
 		eglSwapBuffers (mDpy, mSurface);
@@ -564,7 +564,7 @@ public:
 
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
-		return new XGLESInterface (theApp);
+		return new XGLESDisplay (theApp);
 	}
 };
 

@@ -1796,6 +1796,7 @@ void SexyAppBase::Evict3DImageData(DWORD theMemSize)
 			else
 				theMemSize = 0;
 			mDDInterface->RemoveImageData(aMemoryImage);
+			assert (aMemoryImage->mTexMemSize == 0);
 		}
 		++anItr;
 	}
@@ -1815,9 +1816,13 @@ void SexyAppBase::Evict3DImageData(DWORD theMemSize)
 			else
 				theMemSize = 0;
 			mDDInterface->RemoveImageData(aMemoryImage);
+			assert (aMemoryImage->mTexMemSize == 0);
 		}
 		++anItr;
 	}
+
+	if (theMemSize)
+		abort ();
 }
 
 void SexyAppBase::ReInitImages()

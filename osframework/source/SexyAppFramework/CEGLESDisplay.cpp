@@ -1,5 +1,5 @@
 #include "SexyAppBase.h"
-#include "CEGLESInterface.h"
+#include "CEGLESDisplay.h"
 #include "GLImage.h"
 #include "AutoCrit.h"
 #include "Graphics.h"
@@ -13,8 +13,8 @@
 
 using namespace Sexy;
 
-CEGLESInterface::CEGLESInterface (SexyAppBase* theApp)
-	: GLInterface (theApp)
+CEGLESDisplay::CEGLESDisplay (SexyAppBase* theApp)
+	: GLDisplay (theApp)
 {
 	mOverScan = 0.9;
 	mDpy = NULL;
@@ -25,7 +25,7 @@ CEGLESInterface::CEGLESInterface (SexyAppBase* theApp)
 	mHeight = mApp->mHeight;
 }
 
-CEGLESInterface::~CEGLESInterface ()
+CEGLESDisplay::~CEGLESDisplay ()
 {
 	Cleanup();
 }
@@ -69,14 +69,14 @@ static void init_gdl_plane ()
 #endif
 }
 
-int CEGLESInterface::Init (void)
+int CEGLESDisplay::Init (void)
 {
 	Cleanup();
 
 	AutoCrit anAutoCrit (mCritSect);
 	mInitialized = false;
 
-	GLInterface::Init();
+	GLDisplay::Init();
 
 	EGLBoolean ret;
 
@@ -207,7 +207,7 @@ int CEGLESInterface::Init (void)
 	return -1;
 }
 
-void CEGLESInterface::Cleanup ()
+void CEGLESDisplay::Cleanup ()
 {
 	FlushWork();
 
@@ -215,7 +215,7 @@ void CEGLESInterface::Cleanup ()
 
 	mInitialized = false;
 
-	GLInterface::Cleanup ();
+	GLDisplay::Cleanup ();
 
 	if (mScreenImage)
 		delete mScreenImage;
@@ -239,12 +239,12 @@ void CEGLESInterface::Cleanup ()
 	mDpy = NULL;
 }
 
-bool CEGLESInterface::CanReinit (void)
+bool CEGLESDisplay::CanReinit (void)
 {
 	return mInitialized;
 }
 
-bool CEGLESInterface::Reinit (void)
+bool CEGLESDisplay::Reinit (void)
 {
 	if (mApp->mIsWindowed)
 		mOverScan = 1.0f;
@@ -275,14 +275,14 @@ bool CEGLESInterface::Reinit (void)
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
 
-	return GLInterface::Reinit();
+	return GLDisplay::Reinit();
 }
 
-void CEGLESInterface::RemapMouse(int& theX, int& theY)
+void CEGLESDisplay::RemapMouse(int& theX, int& theY)
 {
 }
 
-Image* CEGLESInterface::CreateImage(SexyAppBase * theApp,
+Image* CEGLESDisplay::CreateImage(SexyAppBase * theApp,
 				     int width, int height)
 {
 	GLImage* anImage = new GLImage(this);
@@ -293,17 +293,17 @@ Image* CEGLESInterface::CreateImage(SexyAppBase * theApp,
 	return anImage;
 }
 
-bool CEGLESInterface::HasEvent()
+bool CEGLESDisplay::HasEvent()
 {
 	return false;
 }
 
-bool CEGLESInterface::GetEvent(struct Event &event)
+bool CEGLESDisplay::GetEvent(struct Event &event)
 {
 	return false;
 }
 
-void CEGLESInterface::SwapBuffers()
+void CEGLESDisplay::SwapBuffers()
 {
 	if (mSurface)
 		eglSwapBuffers (mDpy, mSurface);
@@ -318,7 +318,7 @@ public:
 
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
-		return new CEGLESInterface (theApp);
+		return new CEGLESDisplay (theApp);
 	}
 };
 

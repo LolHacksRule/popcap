@@ -1,4 +1,4 @@
-#include "GLInterface.h"
+#include "GLDisplay.h"
 #include "GLImage.h"
 #include "SexyAppBase.h"
 #include "AutoCrit.h"
@@ -22,7 +22,7 @@ using namespace Sexy;
 #define SEXY_GL_IS_DEBUG() getenv("SEXY_GL_DEBUG")
 #endif
 
-GLInterface::GLInterface(SexyAppBase* theApp)
+GLDisplay::GLDisplay(SexyAppBase* theApp)
 {
 	mApp = theApp;
 	mScreenImage = NULL;
@@ -47,34 +47,34 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 	mTexBGRA = GL_FALSE;
 }
 
-GLInterface::~GLInterface()
+GLDisplay::~GLDisplay()
 {
 	Cleanup();
 }
 
-bool GLInterface::Is3DAccelerated()
+bool GLDisplay::Is3DAccelerated()
 {
     return mIs3D;
 }
 
-bool GLInterface::Is3DAccelerationSupported()
+bool GLDisplay::Is3DAccelerationSupported()
 {
     return true;
 }
 
-bool GLInterface::Is3DAccelerationRecommended()
+bool GLDisplay::Is3DAccelerationRecommended()
 {
     return true;
 }
 
-Image* GLInterface::GetScreenImage()
+Image* GLDisplay::GetScreenImage()
 {
 	return mScreenImage;
 }
 
-int GLInterface::Init(void)
+int GLDisplay::Init(void)
 {
-	GLInterface::Cleanup();
+	GLDisplay::Cleanup();
 
 	mMinTextureWidth = 1;
 	mMinTextureHeight = 1;
@@ -86,13 +86,13 @@ int GLInterface::Init(void)
 	return 0;
 }
 
-bool GLInterface::Reinit(void)
+bool GLDisplay::Reinit(void)
 {
 	InitGL();
 	return true;
 }
 
-void GLInterface::Cleanup()
+void GLDisplay::Cleanup()
 {
 	FlushWork();
 	mInitialized = false;
@@ -116,17 +116,17 @@ void GLInterface::Cleanup()
 	mCursorDirty = true;
 }
 
-bool GLInterface::Redraw(Rect* theClipRect)
+bool GLDisplay::Redraw(Rect* theClipRect)
 {
     return false;
 }
 
-void GLInterface::SwapBuffers()
+void GLDisplay::SwapBuffers()
 {
 	FlushWork();
 }
 
-void GLInterface::Reshape()
+void GLDisplay::Reshape()
 {
 	float x, y, w, h;
 
@@ -140,7 +140,7 @@ void GLInterface::Reshape()
 		printf ("GL viewport: (%.2f, %.2f, %.2f, %.2f)\n", x, y, w, h);
 }
 
-void GLInterface::InitGL()
+void GLDisplay::InitGL()
 {
 	Reshape();
 
@@ -222,7 +222,7 @@ void GLInterface::InitGL()
 	SwapBuffers ();
 }
 
-void GLInterface::GenGoodTexSize()
+void GLDisplay::GenGoodTexSize()
 {
 	DBG_ASSERT(mMaxTextureWidth <= 8096);
 
@@ -251,7 +251,7 @@ void GLInterface::GenGoodTexSize()
 	}
 }
 
-void GLInterface::CalulateBestTexDimensions (int & theWidth, int & theHeight,
+void GLDisplay::CalulateBestTexDimensions (int & theWidth, int & theHeight,
 					     bool isEdge, bool usePOT)
 {
 	int aWidth = theWidth;
@@ -293,14 +293,14 @@ void GLInterface::CalulateBestTexDimensions (int & theWidth, int & theHeight,
 	theHeight = aHeight;
 }
 
-bool GLInterface::EnableCursor(bool enable)
+bool GLDisplay::EnableCursor(bool enable)
 {
 	mCursorEnabled = enable;
 	mCursorDirty = true;
 	return true;
 }
 
-bool GLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
+bool GLDisplay::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
 	MemoryImage * aMemoryImage = dynamic_cast<MemoryImage*>(theImage);
 
@@ -311,7 +311,7 @@ bool GLInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 	return true;
 }
 
-void GLInterface::SetCursorPos(int theCursorX, int theCursorY)
+void GLDisplay::SetCursorPos(int theCursorX, int theCursorY)
 {
 	mCursorOldX = mCursorX;
 	mCursorOldY = mCursorY;
@@ -319,7 +319,7 @@ void GLInterface::SetCursorPos(int theCursorX, int theCursorY)
 	mCursorY = theCursorY;
 }
 
-bool GLInterface::UpdateCursor(int theCursorX, int theCursorY)
+bool GLDisplay::UpdateCursor(int theCursorX, int theCursorY)
 {
 	SetCursorPos (theCursorX, theCursorY);
 	if (mCursorDrawnX != mCursorX || mCursorDrawnY != mCursorY)
@@ -327,7 +327,7 @@ bool GLInterface::UpdateCursor(int theCursorX, int theCursorY)
 	return mCursorDirty;
 }
 
-bool GLInterface::DrawCursor(Graphics* g)
+bool GLDisplay::DrawCursor(Graphics* g)
 {
 	mCursorDirty = false;
 
@@ -341,12 +341,12 @@ bool GLInterface::DrawCursor(Graphics* g)
 	return true;
 }
 
-int GLInterface::GetTextureTarget()
+int GLDisplay::GetTextureTarget()
 {
 	return GL_TEXTURE_2D;
 }
 
-void GLInterface::RemoveImageData(MemoryImage* theImage)
+void GLDisplay::RemoveImageData(MemoryImage* theImage)
 {
 	GLImage::RemoveImageData(theImage);
 }
@@ -368,7 +368,7 @@ private:
 };
 }
 
-void GLInterface::DelayedDeleteTexture(GLuint name)
+void GLDisplay::DelayedDeleteTexture(GLuint name)
 {
 	if (mMainThread != Thread::Self())
 		PushWork(new DelayedDeleteTextureWork(name));

@@ -3,7 +3,7 @@
 
 #include "Common.h"
 #include "CritSect.h"
-#include "GLInterface.h"
+#include "GLDisplay.h"
 #include "Rect.h"
 #include "Ratio.h"
 #include "SexyMatrix.h"
@@ -20,11 +20,11 @@ class SexyAppBase;
 class Image;
 class MemoryImage;
 
-class XGLESInterface : public GLInterface
+class XGLESDisplay : public GLDisplay
 {
 public:
-	XGLESInterface(SexyAppBase* theApp);
-	virtual ~XGLESInterface();
+	XGLESDisplay(SexyAppBase* theApp);
+	virtual ~XGLESDisplay();
 
 	virtual int			        Init();
 	virtual bool                            CanReinit();

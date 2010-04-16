@@ -769,14 +769,12 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 		SEXY_PERF_END("ResourceManager:Palletize");
 	}
 
-#if 0
 	if (theRes->mA4R4G4B4)
-		aDDImage->mD3DFlags |= D3DImageFlag_UseA4R4G4B4;
+		aDDImage->mD3DFlags |= IMAGE_FLAGS_A4R4G4B4;
 
 	if (theRes->mA8R8G8B8)
-		aDDImage->mD3DFlags |= D3DImageFlag_UseA8R8G8B8;
+		aDDImage->mD3DFlags |= IMAGE_FLAGS_A8R8G8B8;
 
-#endif
 	if (theRes->mMinimizeSubdivisions)
 		aDDImage->mFlags |= IMAGE_FLAGS_MINI_SUBDIV;
 

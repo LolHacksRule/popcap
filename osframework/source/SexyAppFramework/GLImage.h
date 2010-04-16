@@ -2,12 +2,12 @@
 #define __GLIMAGE_H__
 
 #include "MemoryImage.h"
-#include "GLInterface.h"
+#include "GLDisplay.h"
 
 namespace Sexy
 {
 
-class GLInterface;
+class GLDisplay;
 class GLTexture;
 
 class GLImage : public MemoryImage
@@ -18,7 +18,7 @@ protected:
 	void				DeleteAllNonSurfaceData();
 
 public:
-	GLInterface*			mInterface;
+	GLDisplay*			mInterface;
 	GLTexture*			mTexture;
 
 public:
@@ -66,7 +66,7 @@ public:
 
 public:
 	GLImage();
-	GLImage(GLInterface* theInterface);
+	GLImage(GLDisplay* theInterface);
 	virtual ~GLImage();
 
 	void				DeleteSurface();
@@ -113,7 +113,7 @@ public:
 	virtual void			 PopTransform();
 
  public:
-	static GLTexture*                EnsureSrcTexture(GLInterface *theInterface,
+	static GLTexture*                EnsureSrcTexture(GLDisplay   *theInterface,
 							  Image       *theImage);
 	static void                      RemoveImageData(MemoryImage *theImage);
 };
