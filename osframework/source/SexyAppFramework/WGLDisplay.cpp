@@ -253,6 +253,7 @@ int WGLDisplay::Init (void)
 	if (!mWindow)
 		goto fail;
 
+	mApp->mHWnd = mWindow;
 	mHDC = GetDC (mWindow);
 
 	PIXELFORMATDESCRIPTOR pfd, *ppfd;

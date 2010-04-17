@@ -11,6 +11,18 @@ using namespace zylom::zylomso;
 
 using namespace Sexy;
 
+#ifdef _WIN64
+#define Eax Rax
+#define Ebx Rbx
+#define Ecx Rcx
+#define Edx Rdx
+#define Esi Rsi
+#define Edi Rdi
+#define Ebp Rbp
+#define Esp Rsp
+#define Eip Rip
+#endif
+
 LPTOP_LEVEL_EXCEPTION_FILTER SEHCatcher::mPreviousFilter;
 SexyAppBase*				SEHCatcher::mApp = NULL;
 HFONT						SEHCatcher::mDialogFont = NULL;
@@ -32,6 +44,7 @@ UNDECORATESYMBOLNAMEPROC	SEHCatcher::mUnDecorateSymbolName = NULL;
 SYMCLEANUPPROC				SEHCatcher::mSymCleanup = NULL;
 STACKWALKPROC				SEHCatcher::mStackWalk = NULL;
 SYMFUNCTIONTABLEACCESSPROC	SEHCatcher::mSymFunctionTableAccess = NULL;
+SYMGETMODULEBASEPROC64		SEHCatcher::mSymGetModuleBase64 = NULL;
 SYMGETMODULEBASEPROC		SEHCatcher::mSymGetModuleBase = NULL;
 SYMGETSYMFROMADDRPROC		SEHCatcher::mSymGetSymFromAddr = NULL;
 HTTPTransfer				SEHCatcher::mSubmitReportTransfer;
@@ -137,6 +150,11 @@ bool SEHCatcher::LoadImageHelp()
     if (!mSymFunctionTableAccess)
         return false;
 
+#ifdef _WIN64
+    mSymGetModuleBase64 = (SYMGETMODULEBASEPROC64) GetProcAddress(mImageHelpLib, "SymGetModuleBase64");
+    if (!mSymGetModuleBase64)
+        return false;
+#endif
     mSymGetModuleBase = (SYMGETMODULEBASEPROC) GetProcAddress(mImageHelpLib, "SymGetModuleBase");
     if (!mSymGetModuleBase)
         return false;
@@ -532,8 +550,12 @@ std::string SEHCatcher::ImageHelpWalk(PCONTEXT theContext, int theSkipCount)
 
 	for (;;)
 	{
+#ifdef _WIN64
+		if (true)
+#else
 		if (!mStackWalk(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), GetCurrentThread(),
-						&sf, NULL  /*theContext*/, NULL, mSymFunctionTableAccess, mSymGetModuleBase, 0))
+				&sf, NULL  /*theContext*/, NULL, mSymFunctionTableAccess, mSymGetModuleBase, 0))
+#endif
 		{
 			DWORD lastErr = GetLastError();
 			sprintf(aBuffer, "StackWalk failed (error %d)\r\n", lastErr);

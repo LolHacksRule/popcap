@@ -30,45 +30,49 @@ BassMusicInterface::BassMusicInterface(HWND theHWnd)
 	HMIXEROBJ phmx;
 	MIXERCAPS pmxcaps;
 
-	mixerOpen((HMIXER*) &phmx, 0, 0, 0, MIXER_OBJECTF_MIXER);
-	mixerGetDevCaps(0, &pmxcaps, sizeof(pmxcaps));
+	if (gBass->mVersion < 0x204)
+	{
+		mixerOpen((HMIXER*) &phmx, 0, 0, 0, MIXER_OBJECTF_MIXER);
+		mixerGetDevCaps(0, &pmxcaps, sizeof(pmxcaps));
 
-	mxlc.cbStruct = sizeof(mxlc);
-	mxlc.cbmxctrl = sizeof(mlct);
-	mxlc.pamxctrl = &mlct;
-	mxlc.dwControlType = MIXERCONTROL_CONTROLTYPE_VOLUME;
-	mixerLine.cbStruct = sizeof(mixerLine);
-	mixerLine.dwComponentType = MIXERLINE_COMPONENTTYPE_SRC_WAVEOUT;
-	mixerGetLineInfo(phmx, &mixerLine, MIXER_GETLINEINFOF_COMPONENTTYPE);
-	mxlc.dwLineID = mixerLine.dwLineID;
-	mixerGetLineControls(phmx, &mxlc, MIXER_GETLINECONTROLSF_ONEBYTYPE);
+		mxlc.cbStruct = sizeof(mxlc);
+		mxlc.cbmxctrl = sizeof(mlct);
+		mxlc.pamxctrl = &mlct;
+		mxlc.dwControlType = MIXERCONTROL_CONTROLTYPE_VOLUME;
+		mixerLine.cbStruct = sizeof(mixerLine);
+		mixerLine.dwComponentType = MIXERLINE_COMPONENTTYPE_SRC_WAVEOUT;
+		mixerGetLineInfo(phmx, &mixerLine, MIXER_GETLINEINFOF_COMPONENTTYPE);
+		mxlc.dwLineID = mixerLine.dwLineID;
+		mixerGetLineControls(phmx, &mxlc, MIXER_GETLINECONTROLSF_ONEBYTYPE);
+	
+		mcd.cbStruct = sizeof(mcd);
+		mcd.dwControlID = mlct.dwControlID;
+		mcd.cChannels = 1;
+		mcd.cMultipleItems = 0;
+		mcd.cbDetails = sizeof(mxcd_u);
+		mcd.paDetails = &mxcd_u;
 
-	mcd.cbStruct = sizeof(mcd);
-	mcd.dwControlID = mlct.dwControlID;
-	mcd.cChannels = 1;
-	mcd.cMultipleItems = 0;
-	mcd.cbDetails = sizeof(mxcd_u);
-	mcd.paDetails = &mxcd_u;
-
-	mixerGetControlDetails(phmx, &mcd, 0L);
-
+		mixerGetControlDetails(phmx, &mcd, 0L);
+	}
 	//return mxcd_u.dwValue;
 
 	BOOL success;
 
 	if (gBass->mVersion2)
 	{
-		success = gBass->BASS_Init2(1, 44100, 0, theHWnd, NULL);
+		success = gBass->BASS_Init2(-1, 44100, 0, theHWnd, NULL);
 		gBass->BASS_SetConfig(BASS_CONFIG_BUFFER, 2000);
 	}
 	else
 		success = gBass->BASS_Init(-1, 44100, 0, theHWnd);
 
-	mixerSetControlDetails(phmx, &mcd, 0L);
+	if (gBass->mVersion < 0x204)
+		mixerSetControlDetails(phmx, &mcd, 0L);
 
-	gBass->BASS_Start();
+	//gBass->BASS_Start();
 
-	mixerClose((HMIXER) phmx);
+	if (gBass->mVersion < 0x204)
+		mixerClose((HMIXER) phmx);
 
 	mMaxMusicVolume = 40;
 
@@ -77,7 +81,7 @@ BassMusicInterface::BassMusicInterface(HWND theHWnd)
 
 BassMusicInterface::~BassMusicInterface()
 {
-	gBass->BASS_Stop();
+	//gBass->BASS_Stop();
 	gBass->BASS_Free();
 
 	FreeBassDLL();

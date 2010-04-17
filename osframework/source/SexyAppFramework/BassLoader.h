@@ -25,8 +25,11 @@ struct BASS_INSTANCE
 
 
 
-    HMODULE         mModule;
-	bool			mVersion2;
+	bool        mOk;  
+	HMODULE     mModule;
+	DWORD       mVersion;
+	bool	    mVersion2;
+
 
 	DWORD(WINAPI *BASS_GetVersion)();
 
@@ -46,10 +49,21 @@ struct BASS_INSTANCE
 	BOOL(WINAPI *BASS_ChannelStop)(DWORD handle);
 	BOOL(WINAPI *BASS_ChannelPlay)(DWORD handle, BOOL restart);
 	BOOL(WINAPI *BASS_ChannelPause)(DWORD handle);
+
+	//2.4 above
+	BOOL (WINAPI *BASS_ChannelSetAttribute)(DWORD handle, DWORD attrib, float value);
+	BOOL (WINAPI *BASS_ChannelGetAttribute)(DWORD handle, DWORD attrib, float *value);
+
 	BOOL(WINAPI *BASS_ChannelSetAttributes)(DWORD handle, int freq, int volume, int pan);
 	BOOL(WINAPI *BASS_ChannelGetAttributes)(DWORD handle, DWORD* freq, DWORD* volume, int* pan);
+
 	BOOL(WINAPI *BASS_ChannelSetPosition)(DWORD handle, QWORD pos);
 	QWORD(WINAPI *BASS_ChannelGetPosition)(DWORD handle);
+
+	QWORD (WINAPI *BASS_ChannelGetLength2)(DWORD handle, DWORD mode);
+	BOOL (WINAPI *BASS_ChannelSetPosition2)(DWORD handle, QWORD pos, DWORD mode);
+	QWORD (WINAPI *BASS_ChannelGetPosition2)(DWORD handle, DWORD mode);
+
 	BOOL (WINAPI *BASS_ChannelSetFlags)(DWORD handle, DWORD flags);
 	DWORD(WINAPI *BASS_ChannelIsActive)(DWORD handle);
 	BOOL (WINAPI *BASS_ChannelSlideAttributes)(DWORD handle, int freq, int volume, int pan, DWORD time);
@@ -96,7 +110,7 @@ extern BASS_INSTANCE *gBass;
 
 BASS_INSTANCE* BASS_CreateInstance(char *dllName);
 void BASS_FreeInstance(BASS_INSTANCE *instance);
-void LoadBassDLL(); // exits on failure
+bool LoadBassDLL(); // exits on failure
 void FreeBassDLL();
 
 } // namespace Sexy

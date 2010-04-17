@@ -3,7 +3,10 @@
 
 #include "Common.h"
 #include <time.h>
-#ifdef __MINGW32__
+
+#ifdef WIN32
+#include <time.h>
+#else
 #include <sys/time.h>
 #endif
 
@@ -15,8 +18,9 @@ namespace Sexy
 class SEXY_EXPORT PerfTimer 
 {
 protected:
-#ifdef _MSC_VER
+#ifdef WIN32
 	LARGE_INTEGER mStart;
+	LARGE_INTEGER mFreq;
 #else
         struct timeval mStart;
 #endif
@@ -31,11 +35,6 @@ public:
 	void Stop();
 
 	double GetDuration();
-
-#ifdef _MSC_VER
-	static __int64 GetCPUSpeed(); // in Hz
-	static int GetCPUSpeedMHz();
-#endif
 };
 
 ///////////////////////////////////////////////////////////////////////////////

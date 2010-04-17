@@ -33,6 +33,10 @@
 namespace Sexy
 {
 
+#ifndef SEXY_DISABLE_MODVAL
+#define SEXY_DISABLE_MODVAL
+#endif
+
 #if defined(SEXY_DISABLE_MODVAL) || defined(RELEASEFINAL) || !defined(WIN32) || !defined(_MSC_VER)
 #define M(val)  (val)
 #define M1(val) (val)
@@ -60,12 +64,44 @@ namespace Sexy
 #define M9(val) M(val)
 #endif
 
+#ifdef SEXY_DISABLE_MODVAL
+
+inline int		ModVal(int theAreaNum, const char* theFileName, int theInt)
+{
+	return theInt;
+}
+
+inline double		ModVal(int theAreaNum, const char* theFileName, double theDouble)
+{
+	return theDouble;
+}
+
+inline float		ModVal(int theAreaNum, const char* theFileName, float theFloat)
+{
+	return theFloat;
+}
+
+inline const char*	ModVal(int theAreaNum, const char* theFileName, const char *theStr)
+{
+	return theStr;
+}
+
+inline bool		ReparseModValues()
+{
+	return true;
+}
+
+inline void		AddModValEnum(const std::string &theEnumName, int theVal)
+{
+}
+#else
 int				ModVal(int theAreaNum, const char* theFileName, int theInt);
 double			ModVal(int theAreaNum, const char* theFileName, double theDouble);
 float			ModVal(int theAreaNum, const char* theFileName, float theFloat);
 const char*		ModVal(int theAreaNum, const char* theFileName, const char *theStr);
 bool			ReparseModValues();
 void			AddModValEnum(const std::string &theEnumName, int theVal);
+#endif
 
 }
 

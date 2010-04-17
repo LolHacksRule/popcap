@@ -1,30 +1,20 @@
 #include "PerfTimer.h"
 #include <map>
 
-#ifndef _MSC_VER
-#include <sys/time.h>
-#endif
-
 using namespace Sexy;
+
 #ifndef _MSC_VER
 #define mutable
 #else
 #define int64_t __int64
 #endif
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 inline int QueryCounters(int64_t *lpPerformanceCount)
 {
-#ifdef _MSC_VER
-	/* returns TSC only */
-	_asm
-	{
-		mov ebx, dword ptr [lpPerformanceCount]
-		rdtsc
-			mov dword ptr [ebx], eax
-			mov dword ptr [ebx+4], edx
-	}
+#ifdef WIN32
+	LARGE_INTEGER now;
+	QueryPerformanceCounter(&now);
+	*lpPerformanceCount = now.QuadPart;
 #else
 	struct timeval now;
 
@@ -34,58 +24,27 @@ inline int QueryCounters(int64_t *lpPerformanceCount)
 	return 1;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-#ifdef _MSC_VER
-inline int DeltaCounters(int64_t *lpPerformanceCount)
+inline int64_t GetFrequence()
 {
-	_asm
-	{
-		mov ebx, dword ptr [lpPerformanceCount]
-		rdtsc
-			sub eax, dword ptr [ebx]
-			sbb edx, dword ptr [ebx+4]
-			mov dword ptr [ebx],   eax
-				mov dword ptr [ebx+4], edx
-	}
+#ifdef WIN32
+	LARGE_INTEGER freq;
+	
+	freq.QuadPart = 1;
+	QueryPerformanceFrequency(&freq);
+	return freq.QuadPart;
+#else
 	return 1;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-static int64_t CalcCPUSpeed()
-{
-	int aPriority = GetThreadPriority(GetCurrentThread());
-	SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_HIGHEST);
-	LARGE_INTEGER	goal, current, period;
-	int64_t Ticks;
-
-	if( !QueryPerformanceFrequency( &period ) ) return 0;
-
-	QueryPerformanceCounter(&goal);
-	goal.QuadPart+=period.QuadPart/100;
-	QueryCounters( &Ticks );
-	do
-	{
-		QueryPerformanceCounter(&current);
-	} while(current.QuadPart<goal.QuadPart);
-	DeltaCounters( &Ticks );
-
-	SetThreadPriority(GetCurrentThread(),aPriority);
-	return( Ticks * 100 );		// Hz
-
-}
-
-static int64_t gCPUSpeed = 0;
 #endif
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 PerfTimer::PerfTimer()
 {
 	mDuration = 0;
-#ifdef _MSC_VER
+#ifdef WIN32
 	mStart.QuadPart = 0;
+	mFreq.QuadPart = 0;
 #else
 	mStart.tv_sec = 0;
 	mStart.tv_usec = 0;
@@ -97,7 +56,7 @@ PerfTimer::PerfTimer()
 ///////////////////////////////////////////////////////////////////////////////
 void PerfTimer::CalcDuration()
 {
-#ifdef _MSC_VER
+#ifdef WIN32
 	LARGE_INTEGER anEnd, aFreq;
 	QueryPerformanceCounter(&anEnd);
 	QueryPerformanceFrequency(&aFreq);
@@ -115,7 +74,7 @@ void PerfTimer::CalcDuration()
 void PerfTimer::Start()
 {
 	mRunning = true;
-#ifdef _MSC_VER
+#ifdef WIN32
 	QueryPerformanceCounter(&mStart);
 #else
 	gettimeofday(&mStart, NULL);
@@ -142,29 +101,6 @@ double PerfTimer::GetDuration()
 
 	return mDuration;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-#ifdef _MSC_VER
-int64_t PerfTimer::GetCPUSpeed()
-{
-	if(gCPUSpeed<=0)
-	{
-		gCPUSpeed = CalcCPUSpeed();
-		if (gCPUSpeed<=0)
-			gCPUSpeed = 1;
-	}
-
-	return gCPUSpeed;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-int PerfTimer::GetCPUSpeedMHz()
-{
-	return (int)(gCPUSpeed/1000000);
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -303,11 +239,7 @@ void SexyPerf::EndPerf()
 
 	gPerfOn = false;
 
-#ifdef _MSC_VER
-	int64_t aFreq = PerfTimer::GetCPUSpeed();
-#else
-	int64_t aFreq = 1;
-#endif
+	int64_t aFreq = GetFrequence();
 
 	gDuration = ((double)(anEndTime - gStartTime - gCollateTime))*1000/aFreq;
 

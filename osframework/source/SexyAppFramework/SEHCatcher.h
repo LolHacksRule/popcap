@@ -28,6 +28,10 @@ typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC)(HANDLE, DWORD);
 
 typedef DWORD (__stdcall *SYMGETMODULEBASEPROC)(HANDLE, DWORD);
 
+#ifdef _WIN64
+typedef DWORD64 (__stdcall *SYMGETMODULEBASEPROC64)(HANDLE, DWORD64);
+#endif
+
 typedef BOOL (__stdcall *SYMGETSYMFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_SYMBOL);
 
 class SEHCatcher 
@@ -58,6 +62,9 @@ public:
 	static STACKWALKPROC	mStackWalk;
 	static SYMFUNCTIONTABLEACCESSPROC mSymFunctionTableAccess;
 	static SYMGETMODULEBASEPROC mSymGetModuleBase;
+#ifdef _WIN64
+	static SYMGETMODULEBASEPROC64 mSymGetModuleBase64;
+#endif
 	static SYMGETSYMFROMADDRPROC mSymGetSymFromAddr;
 	static HTTPTransfer		mSubmitReportTransfer;
 	static bool				mExiting;

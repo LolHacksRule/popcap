@@ -1,4 +1,4 @@
-#ifdef _MSC_VER
+#if 0
 #include "ModVal.h"
 #include "Common.h"
 #include <fstream>
@@ -668,5 +668,4 @@ bool Sexy::ReparseModValues()
 
 	return true;
 }
-
 #endif

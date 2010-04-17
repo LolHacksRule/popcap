@@ -1,12 +1,15 @@
 #include "DSoundManager.h"
-#include <io.h>
-#include <fcntl.h>
 #include "Debug.h"
 #include "DSoundInstance.h"
+#include "BassLoader.h"
 #include "BassMusicInterface.h"
 #include "FModLoader.h"
-#include <math.h>
+#include "SexyAppBase.h"
 #include "../PakLib/PakInterface.h"
+
+#include <io.h>
+#include <fcntl.h>
+#include <math.h>
 
 using namespace Sexy;
 
@@ -1126,8 +1129,14 @@ class DSoundDriver: public SoundDriver {
 public:
 	DSoundDriver ()
 		: SoundDriver("DSound", 20),
-		  mInitialized (false)
+		  mInitialized (false),
+		  mHasBass(false)
 	{
+	}
+
+	~DSoundDriver()
+	{
+		FreeBassDLL();
 	}
 
 	void Init ()
@@ -1135,6 +1144,7 @@ public:
 		if (mInitialized)
 			return;
 
+		mHasBass = LoadBassDLL();
 		mInitialized = true;
 	}
 
@@ -1147,10 +1157,14 @@ public:
 	MusicInterface* CreateMusicInterface (SexyAppBase * theApp)
 	{
 		Init ();
+
+		if (!mHasBass)
+			return 0;
 		return new BassMusicInterface (GetDesktopWindow());
 	}
 private:
 	bool	 mInitialized;
+	bool     mHasBass;
 };
 
 static DSoundDriver aDSoundDriver;
