@@ -505,7 +505,8 @@ bool WidgetManager::DrawScreen()
 
 	FlushDeferredOverlayWidgets(0x7FFFFFFF);
 	g.Translate(mMouseDestRect.mX, mMouseDestRect.mY);
-	if (aVisibleRect.Contains (aCursorX, aCursorY) && aInterface->DrawCursor (&g))
+	if (drewStuff && aVisibleRect.Contains (aCursorX, aCursorY) &&
+	    aInterface->DrawCursor (&g))
 		drewStuff = true;
 	if (drewStuff)
 		aImage->Flip(FLIP_WAIT_SYNC);
