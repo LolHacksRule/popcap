@@ -33,6 +33,8 @@
 #include <shellapi.h> 
 #include <mmsystem.h>
 #define snprintf _snprintf
+#define wcsncmp wcsicmp
+#define wcsncasecmp wcsnicmp
 #else
 #include <stdint.h>
 #include <string.h>
