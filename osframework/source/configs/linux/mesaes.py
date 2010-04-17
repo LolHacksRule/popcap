@@ -7,6 +7,7 @@ import SCons
 import os
 
 def AddOptions (opts):
+    configs.SetOptionsDefault('freetype', True)
     configs.linux.AddOptions (opts)
     configs.AudiereSoundAddOptions (opts)
 
