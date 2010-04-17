@@ -465,18 +465,18 @@ bool WidgetManager::DrawScreen()
 
 	bool redrawAll = cursorChanged;
 
+	Rect aVisibleRect;
+	aVisibleRect.mX = -mMouseDestRect.mX;
+	aVisibleRect.mY = -mMouseDestRect.mY;
+	aVisibleRect.mWidth = mWidth;
+	aVisibleRect.mHeight = mHeight;
+
+	Graphics g(aScrG);
+	g.ClipRect(aVisibleRect);
+	g.Translate(-mMouseDestRect.mX, -mMouseDestRect.mY);
+	bool is3D = mApp->Is3DAccelerated();
 	if (aDirtyCount > 0 || cursorChanged)
 	{
-		Rect aVisibleRect;
-		aVisibleRect.mX = -mMouseDestRect.mX;
-		aVisibleRect.mY = -mMouseDestRect.mY;
-		aVisibleRect.mWidth = mWidth;
-		aVisibleRect.mHeight = mHeight;
-
-		Graphics g(aScrG);
-		g.ClipRect(aVisibleRect);
-		g.Translate(-mMouseDestRect.mX, -mMouseDestRect.mY);
-		bool is3D = mApp->Is3DAccelerated();
 
 		WidgetList::iterator anItr = mWidgets.begin();
 		while (anItr != mWidgets.end())
@@ -501,14 +501,14 @@ bool WidgetManager::DrawScreen()
 
 			++anItr;
 		}
-
-		g.Translate(mMouseDestRect.mX, mMouseDestRect.mY);
-		if (aVisibleRect.Contains (aCursorX, aCursorY) && aInterface->DrawCursor (&g))
-			drewStuff = true;
-		aImage->Flip(FLIP_WAIT_SYNC);
 	}
 
 	FlushDeferredOverlayWidgets(0x7FFFFFFF);
+	g.Translate(mMouseDestRect.mX, mMouseDestRect.mY);
+	if (aVisibleRect.Contains (aCursorX, aCursorY) && aInterface->DrawCursor (&g))
+		drewStuff = true;
+	if (drewStuff)
+		aImage->Flip(FLIP_WAIT_SYNC);
 
 	//if (aImage != NULL && surfaceLocked)
 	//aImage->UnlockSurface();
