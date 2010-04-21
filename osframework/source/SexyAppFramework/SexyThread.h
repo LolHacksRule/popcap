@@ -17,7 +17,9 @@ class SEXY_EXPORT Thread
  public:
     Thread();
     Thread(const Thread &other);
+    ~Thread();
 
+    Thread&                   operator = (const Thread &other);
     bool                      operator == (const Thread &other);
     bool                      operator != (const Thread &other);
 
@@ -32,6 +34,7 @@ class SEXY_EXPORT Thread
  private:
 #ifdef WIN32
     HANDLE mThread;
+    DWORD mThreadId;
 #else
     pthread_t mThread;
 #endif

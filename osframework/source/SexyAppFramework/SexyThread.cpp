@@ -1,6 +1,7 @@
 #include "SexyThread.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 using namespace Sexy;
 
@@ -8,12 +9,77 @@ Thread::Thread(void)
 {
 	mValid = false;
 	memset (&mThread, 0, sizeof (mThread));
+#ifdef WIN32
+	mThreadId = 0;
+#endif
 }
 
 Thread::Thread(const Thread & other)
 {
+	if (this == &other)
+		return;
+
+#ifdef WIN32
+	if (other.mValid)
+	{
+		HANDLE handle = other.mThread;
+		HANDLE process = GetCurrentProcess ();
+
+		DuplicateHandle (process, handle, process,
+				 &mThread, 0, FALSE,
+				 DUPLICATE_SAME_ACCESS);
+		mThreadId = other.mThreadId;
+		mValid = true;
+	}
+	else
+	{
+		mValid = false;
+		memset (&mThread, 0, sizeof (mThread));
+		mThreadId = 0;
+	}
+#else
 	mValid = other.mValid;
 	mThread = other.mThread;
+#endif
+}
+
+Thread::~Thread()
+{
+#ifdef WIN32
+	if (mValid)
+		CloseHandle(mThread);
+#endif
+}
+
+Thread& Thread::operator = (const Thread &other)
+{
+	if (this == &other)
+		return *this;
+
+#ifdef WIN32
+	if (other.mValid)
+	{
+		HANDLE handle = other.mThread;
+		HANDLE process = GetCurrentProcess ();
+
+		DuplicateHandle (process, handle, process,
+				 &mThread, 0, FALSE,
+				 DUPLICATE_SAME_ACCESS);
+		mThreadId = other.mThreadId;
+		mValid = true;
+	}
+	else
+	{
+		mValid = false;
+		memset (&mThread, 0, sizeof (mThread));
+		mThreadId = 0;
+	}
+#else
+	mValid = other.mValid;
+	mThread = other.mThread;
+#endif
+
+	return *this;
 }
 
 bool Thread::operator == (const Thread & other)
@@ -22,7 +88,7 @@ bool Thread::operator == (const Thread & other)
 		return false;
 
 #ifdef WIN32
-	return mThread == other.mThread;
+	return mThreadId == other.mThreadId;
 #else
 	return pthread_equal (mThread, other.mThread);
 #endif
@@ -34,7 +100,7 @@ bool Thread::operator != (const Thread & other)
 		return false;
 
 #ifdef WIN32
-	return mThread != other.mThread;
+	return mThreadId != other.mThreadId;
 #else
 	return !pthread_equal (mThread, other.mThread);
 #endif
@@ -82,6 +148,7 @@ Thread Thread::Create (void (*start_routine) (void *),
 		delete theThreadArg;
 		return thread;
 	}
+	thread.mThreadId = thrdaddr;
 #else
 	pthread_attr_t attr;
 	int ret;
@@ -107,7 +174,12 @@ Thread Thread::Self (void)
 	Thread thread;
 
 #ifdef WIN32
-	thread.mThread = GetCurrentThread ();
+	HANDLE handle = GetCurrentThread ();
+	HANDLE process = GetCurrentProcess ();
+	DuplicateHandle (process, handle, process,
+			 &thread.mThread, 0, FALSE,
+			 DUPLICATE_SAME_ACCESS);
+	thread.mThreadId = GetCurrentThreadId ();
 #else
 	thread.mThread = pthread_self ();
 #endif
