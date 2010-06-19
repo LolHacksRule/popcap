@@ -5,7 +5,7 @@
 #include "Graphics.h"
 #include "PerfTimer.h"
 #include "Debug.h"
-#include "FontUtils.h"
+#include "SexyUtf8.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
 #include "InputManager.h"
@@ -116,7 +116,7 @@ AGLDisplay::AGLDisplay (SexyAppBase* theApp)
 		[NSApp finishLaunching];
 
 		path = [[NSBundle mainBundle] bundlePath];
-		NSLog (path);
+		NSLog (@"bounde path: %@", path);
 	}
 	mWindow = NULL;
 	mContext = NULL;
@@ -284,7 +284,7 @@ int AGLDisplay::Init (void)
 		[mWindow makeFirstResponder:view];
 
 		std::string aUtf8Title = mApp->mTitle;
-		SexyUtf8FromString(mApp->mTitle, aUtf8Title);
+		SexyUtf8FromLocaleString(mApp->mTitle, aUtf8Title);
 		[mWindow setTitle:[NSString stringWithCString:aUtf8Title.c_str()
 					    length:aUtf8Title.length()]];
 		[NSCursor hide];
@@ -394,7 +394,7 @@ bool AGLDisplay::GetEvent(struct Event &event)
 	event.type = EVENT_NONE;
 
 	int keycode;
-	NSString * chars;
+	NSString * chars = nil;
 
 	nsevent = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:nil
 			 inMode:NSDefaultRunLoopMode dequeue:YES];
@@ -406,7 +406,7 @@ bool AGLDisplay::GetEvent(struct Event &event)
 			if ([nsevent modifierFlags] & NSCommandKeyMask)
 				[NSApp sendEvent:nsevent];
 			keycode = [nsevent keyCode];
-			NSString * chars = [nsevent characters];
+			chars = [nsevent characters];
 			event.type = EVENT_KEY_DOWN;
 			event.flags = EVENT_FLAGS_KEY_CODE;
 			event.u.key.keyCode = KeyCodeFromNSKeyCode (keycode); 	
