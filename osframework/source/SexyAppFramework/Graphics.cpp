@@ -1254,9 +1254,10 @@ int Graphics::WriteString(const std::wstring& theString, int theX, int theY, int
 			else // change color instruction
 			{
 				DWORD aColor = 0;
-				if (theString[i+1]== L'o')
+				if (theString[i+1]== L'o' || theString[i+1] == L'O')
 				{
-					if (wcsncasecmp(theString.c_str()+i+1, L"oldclr", 6) == 0)
+					std::wstring s = StringToLower(theString.substr(i + 1, 6));
+					if (s == L"oldclr")
 						aColor = theOldColor;
 				}
 				else
