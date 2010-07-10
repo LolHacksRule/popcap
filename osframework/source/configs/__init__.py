@@ -133,8 +133,7 @@ def EnableAudiereSound (env):
                               LINKFLAGS = [('-framework', 'CoreAudio'),
                                            ('-framework', 'Cocoa'),
                                            ('-framework', 'AudioUnit'),
-                                           ('-framework', 'AudioToolbox')],
-                              CCFLAGS = [('-framework', 'CoreAudio')])
+                                           ('-framework', 'AudioToolbox')])
         elif 'win32' in env['config'] or 'mingw' in env['config']:
             pass
     else:

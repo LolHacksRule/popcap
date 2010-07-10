@@ -10,8 +10,7 @@ def AddOptions (opts):
 
 def EnableAGL(env):
     env.PrependUnique (LINKFLAGS = [('-framework', 'OpenGL'),
-                                    ('-framework', 'Cocoa')],
-                       CPPFLAGS = [('-framework', 'OpenGL')])
+                                    ('-framework', 'Cocoa')])
 
 def Configure(env):
     configs.darwin.Configure (env)
