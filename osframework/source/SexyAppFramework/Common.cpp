@@ -101,7 +101,9 @@ bool Sexy::CheckForVista()
 
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
+#ifndef SEXY_IOS
 #include <CoreServices/CoreServices.h>
+#endif
 #endif
 
 static std::string gResourceFolder = "";
@@ -147,11 +149,12 @@ void Sexy::SetResourcesFolder(const std::string & theFolder)
 std::string Sexy::GetAppDataFolder()
 {
 #ifdef __APPLE__
+#ifndef SEXY_IOS
 	if (!Sexy::gAppDataFolder.length())
 	{
+		OSErr   error;
 		FSRef   fsRef;
 		char    path[1024];
-		OSErr   error;
 
 		error = FSFindFolder(kOnAppropriateDisk, kPreferencesFolderType, kDontCreateFolder, &fsRef);
 		error = FSRefMakePath(&fsRef, (UInt8*)path, 1024);
@@ -163,6 +166,7 @@ std::string Sexy::GetAppDataFolder()
 		if (appId)
 			Sexy::gAppDataFolder += std::string(path) + "/" + std::string(appId);
 	}
+#endif
 #endif
 	return Sexy::gAppDataFolder;
 }
