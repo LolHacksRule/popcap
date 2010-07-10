@@ -224,7 +224,7 @@ void GLDisplay::InitGL()
 
 void GLDisplay::GenGoodTexSize()
 {
-	DBG_ASSERT(mMaxTextureWidth <= 8096);
+	DBG_ASSERT(mMaxTextureWidth <= 10240);
 
 	int i;
 	int pot = 1;

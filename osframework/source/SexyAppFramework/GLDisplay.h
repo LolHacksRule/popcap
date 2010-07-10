@@ -73,7 +73,7 @@ public:
 	GLint					mMinTextureHeight;
 	GLint					mMaxTextureWidth;
 	GLint					mMaxTextureHeight;
-	GLint					mGoodTextureSize[8096];
+	GLint					mGoodTextureSize[10240];
 	GLboolean				mTextureNPOT;
 	const char*				mGLExtensions;
 
