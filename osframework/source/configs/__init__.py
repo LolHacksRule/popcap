@@ -134,6 +134,12 @@ def EnableAudiereSound (env):
                                            ('-framework', 'Cocoa'),
                                            ('-framework', 'AudioUnit'),
                                            ('-framework', 'AudioToolbox')])
+        elif 'ios' in env['config']:
+            env.AppendUnique (CPPDEFINES = ['HAVE_CORE_AUDIO'],
+                              LINKFLAGS = [('-framework', 'CoreAudio'),
+                                           ('-framework', 'Foundation'),
+                                           ('-framework', 'AudioUnit'),
+                                           ('-framework', 'AudioToolbox')])
         elif 'win32' in env['config'] or 'mingw' in env['config']:
             pass
     else:
