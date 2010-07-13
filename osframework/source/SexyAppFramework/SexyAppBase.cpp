@@ -373,7 +373,7 @@ void SexyAppBase::Cleanup(bool force)
 	DeleteExtraImageData();
 
 	if (mDDInterface)
-		mDDInterface->FlushWork();
+		mDDInterface->Update();
 
         delete mArrowCursor;
 	mArrowCursor = 0;
@@ -1156,14 +1156,14 @@ bool SexyAppBase::DrawDirtyStuff()
 		return false;
 	}
 
-	mDDInterface->FlushWork();
+	mDDInterface->Update();
 
 	mIsDrawing = true;
 	mLastDrawnTime = Sexy::GetTickCount();
 	bool drewScreen = mWidgetManager->DrawScreen();
 	mIsDrawing = false;
 
-	mDDInterface->FlushWork();
+	mDDInterface->Update();
 
 	if ((drewScreen || (aStartTime - mLastDrawTick >= 1000) || (mCustomCursorDirty)) &&
 	    ((int) (aStartTime - mNextDrawTick) >= 0))
