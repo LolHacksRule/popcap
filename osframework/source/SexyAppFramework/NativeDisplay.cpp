@@ -243,3 +243,8 @@ bool NativeDisplay::EnsureTexMemSpace(DWORD theTexMemSize)
 
 	return true;
 }
+
+void NativeDisplay::Update()
+{
+	FlushWork();
+}

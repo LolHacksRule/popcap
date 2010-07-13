@@ -120,6 +120,8 @@ class SEXY_EXPORT NativeDisplay
 	void                                        PushWork(DelayedWork* theWork);
 	bool                                        IsWorkPending(void);
 
+	virtual void                                Update();
+
  public:
 	virtual void                                AllocTexMemSpace(DWORD theTexMemSize);
 	virtual void                                FreeTexMemSpace(DWORD theTexMemSize);
