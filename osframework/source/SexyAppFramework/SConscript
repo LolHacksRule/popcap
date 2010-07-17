@@ -67,7 +67,7 @@ if 'AGL' in env['DRIVERS']:
 
 if 'EAGL' in env['DRIVERS']:
     srcs += ["GLImage.cpp", "GLDisplay.cpp"]
-    srcs += ["EAGLDisplay.mm", "EAGLView.m", "EAGLES1Renderer.m"]
+    srcs += ["EAGLDisplay.mm", "EAGLView.m"]
     env['EAGL']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_EAGL_DRIVER', 'SEXY_OPENGLES'])
 

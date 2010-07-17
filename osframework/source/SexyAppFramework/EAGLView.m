@@ -15,70 +15,80 @@
 // You must implement this method
 + (Class)layerClass
 {
-    return [CAEAGLLayer class];
+  return [CAEAGLLayer class];
 }
 
-- (id)init
+- (id)initWithFrame:(CGRect)frame
 {    
-    if ((self = [super init]))
-    {
-        // Get the layer
-        CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
+  if ((self = [super initWithFrame:frame])) {
+    // Get the layer
+    CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
 
-        eaglLayer.opaque = TRUE;
-        eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
-                                        [NSNumber numberWithBool:FALSE], kEAGLDrawablePropertyRetainedBacking,
-					kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
+    eaglLayer.opaque = TRUE;
+    eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
+						     [NSNumber numberWithBool:FALSE], kEAGLDrawablePropertyRetainedBacking,
+						 kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
 
-        renderer = [[EAGLES1Renderer alloc] init];
-	if (!renderer) {
-		[self release];
-		return nil;
-        }
+
+    context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
+
+    if (!context || ![EAGLContext setCurrentContext:context]) {
+      if (context)
+	[context release];
+      [self release];
+      return nil;
     }
 
-    return self;
+    // Create default framebuffer object. The backing will be allocated for the current layer in -resizeFromLayer
+    glGenFramebuffersOES(1, &framebuffer);
+    glGenRenderbuffersOES(1, &colorRenderbuffer);
+    glBindFramebufferOES(GL_FRAMEBUFFER_OES, framebuffer);
+    glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
+    glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, colorRenderbuffer);
+  }
+
+  return self;
 }
 
-//The EAGL view is stored in the nib file. When it's unarchived it's sent -initWithCoder:
-- (id)initWithCoder:(NSCoder*)coder
-{    
-    if ((self = [super initWithCoder:coder]))
-    {
-        // Get the layer
-        CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
-
-        eaglLayer.opaque = TRUE;
-        eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
-                                        [NSNumber numberWithBool:FALSE], kEAGLDrawablePropertyRetainedBacking,
-					kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
-
-        renderer = [[EAGLES1Renderer alloc] init];
-	if (!renderer) {
-		[self release];
-		return nil;
-        }
-    }
-
-    return self;
-}
-
-- (void)present:(id)sender
+- (BOOL)resizeFromLayer
 {
-    [renderer render];
+    // Allocate color buffer backing based on the current layer size
+    NSLog(@"resizeFromLayer(%@)", self.layer);
+
+    glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
+    [context renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(id<EAGLDrawable>)self.layer];
+    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &width);
+    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &height);
+    if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES)
+    {
+        NSLog(@"Failed to make complete framebuffer object %x (%dx%d)",
+	      glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES), width, height);
+        return NO;
+    }
+
+    // This application only creates a single default framebuffer which is already bound at this point.
+    // This call is redundant, but needed if dealing with multiple framebuffers.
+    glBindFramebufferOES(GL_FRAMEBUFFER_OES, framebuffer);
+    return YES;
+}
+
+- (void)swapBuffers
+{
+  glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
+  [context presentRenderbuffer:GL_RENDERBUFFER_OES];
 }
 
 - (void)layoutSubviews
 {
-    [renderer resizeFromLayer:(CAEAGLLayer*)self.layer];
-    [self present:nil];
+  [self resizeFromLayer];
 }
 
 - (void)dealloc
 {
-    [renderer release];
+  [EAGLContext setCurrentContext:nil];
+  [context release];
 
-    [super dealloc];
+  [super dealloc];
 }
 
 @end

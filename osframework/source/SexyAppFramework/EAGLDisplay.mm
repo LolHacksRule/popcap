@@ -139,15 +139,14 @@ int EAGLDisplay::Init (void)
 		mWindowWidth = mDesktopWidth;
 		mWindowHeight = mDesktopHeight;
 	}
-	mWindow = [[UIWindow alloc] init];
+	mWindow = [[UIWindow alloc] initWithFrame:displayRect];
 	if (!mWindow)
 	  goto fail;
-	mView = [[EAGLView alloc] init];
+	mView = [[EAGLView alloc] initWithFrame:displayRect];
 	if (!mView)
 	  goto close_window;
 
-	[mWindow setFrame: displayRect];
-	[mView setFrame: displayRect];
+	//[mWindow setFrame: displayRect];
 
 	[mWindow addSubview:mView];
 	[mView retain];
@@ -252,7 +251,7 @@ void EAGLDisplay::SwapBuffers()
 	if (mWindow && mView)
 	{
 		EAGLView* view = (EAGLView*)mView;
-		[view present:nil];
+		[view swapBuffers];
 	}
 }
 

@@ -8,8 +8,8 @@
 
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
-
-#import "EAGLRenderer.h"
+#import <OpenGLES/ES1/gl.h>
+#import <OpenGLES/ES1/glext.h>
 
 // This class wraps the CAEAGLLayer from CoreAnimation into a convenient UIView subclass.
 // The view content is basically an EAGL surface you render your OpenGL scene into.
@@ -17,9 +17,19 @@
 @interface EAGLView : UIView
 {    
 @private
-    id <EAGLRenderer> renderer;
+  EAGLContext *context;
+
+  // The pixel dimensions of the CAEAGLLayer
+  GLint width;
+  GLint height;
+
+    // The OpenGL ES names for the framebuffer and renderbuffer used to render to this view
+  GLuint framebuffer;
+  GLuint colorRenderbuffer;
 }
 
-- (void)present:(id)sender;
+- (id)initWithFrame:(CGRect)frame;
+- (BOOL)resizeFromLayer;
+- (void)swapBuffers;
 
 @end
