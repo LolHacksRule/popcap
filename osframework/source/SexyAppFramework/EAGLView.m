@@ -8,8 +8,6 @@
 
 #import "EAGLView.h"
 
-#import "EAGLES1Renderer.h"
-
 @implementation EAGLView
 
 // You must implement this method
