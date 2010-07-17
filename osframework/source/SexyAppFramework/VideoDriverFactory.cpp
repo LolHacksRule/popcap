@@ -34,6 +34,7 @@ VideoDriverFactory*  VideoDriverFactory::GetVideoDriverFactory ()
  * binary.
  */
 extern VideoDriver* GetAGLVideoDriver();
+extern VideoDriver* GetEAGLVideoDriver();
 extern VideoDriver* GetGLXVideoDriver();
 extern VideoDriver* GetDFBVideoDriver();
 extern VideoDriver* GetWGLVideoDriver();
@@ -43,6 +44,9 @@ typedef VideoDriver* (* VideoDriverGetter)();
 VideoDriverGetter VideoDriverGetters []= {
 #ifdef SEXY_AGL_DRIVER
 	GetAGLVideoDriver,
+#endif
+#ifdef SEXY_EAGL_DRIVER
+	GetEAGLVideoDriver,
 #endif
 #ifdef SEXY_GLX_DRIVER
 	GetGLXVideoDriver,

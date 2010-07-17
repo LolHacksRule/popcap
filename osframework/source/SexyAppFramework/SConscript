@@ -65,6 +65,12 @@ if 'AGL' in env['DRIVERS']:
     env['AGL']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_AGL_DRIVER'])
 
+if 'EAGL' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
+    srcs += ["EAGLDisplay.mm", "EAGLView.m", "EAGLES1Renderer.m"]
+    env['EAGL']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_EAGL_DRIVER', 'SEXY_OPENGLES'])
+
 if 'GLX' in env['DRIVERS']:
     srcs += ["GLImage.cpp", "GLDisplay.cpp"]
     srcs += ["GLXDisplay.cpp"]
@@ -168,6 +174,8 @@ if gameenv['static']:
         gameenv['DIRECTFB']['ENABLE'](gameenv)
     if 'AGL' in env['DRIVERS']:
         gameenv['AGL']['ENABLE'](gameenv)
+    if 'EAGL' in env['DRIVERS']:
+        gameenv['EAGL']['ENABLE'](gameenv)
     if 'GLX' in env['DRIVERS']:
         gameenv['GLX']['ENABLE'](gameenv)
     if 'WGL' in env['DRIVERS']:
@@ -227,7 +235,7 @@ headers = ['FlashWidget.h', 'Font.h', 'ImageFont.h', 'SexyVector.h', 'Image.h', 
            'WidgetManager.h', 'CursorWidget.h', 'EditWidget.h', 'MusicInterface.h', 'SexyDebug.h',
            'XMLParser.h', 'Event.h', 'HTTPTransfer.h', 'NativeDisplay.h', 'SexyMatrix.h',
            'Flags.h', 'HyperlinkWidget.h', 'NativeFont.h', 'SexyThread.h', 'XMLWriter.h',
-           'SexyI18n.h', 'SexyLang.h']
+           'SexyI18n.h', 'SexyLang.h', 'SexyTimer.h']
 sexyapp_sdk = env.Install (header_dir, headers)
 sexyapp_sdk += env.Install (lib_dir, sexy_lib)
 env.Alias ('sexyapp_sdk_install', sexyapp_sdk)

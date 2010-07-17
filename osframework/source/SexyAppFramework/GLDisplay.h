@@ -8,7 +8,12 @@
 #include "Ratio.h"
 
 #ifdef SEXY_OPENGLES
+#ifdef __APPLE__
+#include <OpenGLES/ES1/gl.h>
+#include <OpenGLES/ES1/glext.h>
+#else
 #include <GLES/gl.h>
+#endif
 #elif defined(SEXY_AGL_DRIVER)
 #include <OpenGL/gl.h>
 #else
