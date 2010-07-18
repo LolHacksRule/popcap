@@ -205,7 +205,8 @@ int EAGLDisplay::Init (void)
 
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	InitGL ();
-
+	mTexBGRA = GL_FALSE;
+	
 	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
 
 	mInitCount++;
@@ -291,6 +292,7 @@ void EAGLDisplay::SwapBuffers()
 	{
 		EAGLView* view = (EAGLView*)mView;
 		[view swapBuffers];
+		Reshape();
 	}
 }
 
