@@ -43,6 +43,8 @@
     glBindFramebufferOES(GL_FRAMEBUFFER_OES, framebuffer);
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
     glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, colorRenderbuffer);
+
+    [self resizeFromLayer];
   }
 
   return self;

@@ -17,51 +17,92 @@ using namespace Sexy;
 
 @interface AppDelegate : NSObject <UIApplicationDelegate>
 {
-	BOOL mQuit;
-	EAGLDisplay* mDpy;
+	BOOL quit;
+	EAGLDisplay* dpy;
+	NSTimer *timer;
 }
 
 - (id)initWithDisplay:(EAGLDisplay *)aDpy;
+- (void)updateApp:(id)sender;
 @end
 
 @implementation AppDelegate
+
+- (id)init
+{
+	self = [super init];
+	if (self)
+	{
+		dpy = 0;
+		timer = 0;
+		quit = FALSE;
+	}
+	return (self);
+}
 
 - (id)initWithDisplay:(EAGLDisplay *)aDpy
 {
 	self = [super init];
 	if (self)
-		mDpy = aDpy;;
+	{
+		dpy = aDpy;
+		timer = 0;
+		quit = FALSE;
+	}
 	return (self);
 }
 
 - (void)applicationDidFinishLaunching:(UIApplication *)anApp
 {
-	mQuit = FALSE;
-}
-
-- (void)terminate:(id)sender
-{
-	mQuit = TRUE;
+	NSLog(@"applicationDidFinishLaunching");
+	quit = FALSE;
+	if (gSexyAppBase)
+	{
+		gSexyAppBase->Init();
+		gSexyAppBase->Startup();
+	}
 }
 
 - (BOOL)isQuit
 {
-	return mQuit;
+	return quit;
 }
 
-- (BOOL)AcceptsFirstResponder
+- (void)applicationWillResignActive:(UIApplication *)application
 {
-	return YES;
+	NSLog(@"applicationWillResignActive");
 }
 
-- (BOOL)becomeFirstResponder
+- (void)applicationDidBecomeActive:(UIApplication *)application
 {
-	return YES;
+	NSLog(@"applicationDidBecomeActive");
+	if (!timer)
+		timer = [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(1.0 / 100.0)
+							        target:self selector:@selector(updateApp:)
+						                userInfo:nil repeats:TRUE];
 }
 
-- (void)windowWillClose:(NSNotification *)aNotification
+- (void)applicationWillTerminate:(UIApplication *)application
 {
-	mQuit = TRUE;
+	NSLog(@"applicatioWillTerminaten");
+	quit = TRUE;
+
+	if (timer)
+		[timer invalidate];
+	timer = nil;
+
+	if (gSexyAppBase)
+	{
+		gSexyAppBase->Terminate();
+		//delete gSexyAppBase;
+	}
+}
+- (void)updateApp:(id)sender
+{
+	if (!gSexyAppBase)
+		return;
+
+	gSexyAppBase->UpdateApp();
 }
 @end
 
@@ -146,10 +187,10 @@ int EAGLDisplay::Init (void)
 	if (!mView)
 	  goto close_window;
 
-	//[mWindow setFrame: displayRect];
-
 	[mWindow addSubview:mView];
 	[mView retain];
+
+	[mWindow makeKeyAndVisible];
 
 	CGRect frame;
 	frame = [mView frame];
@@ -230,8 +271,6 @@ bool EAGLDisplay::GetEvent(struct Event &event)
 	UIEvent* nsevent;
 	UIApplication* app = [UIApplication sharedApplication];
 	AppDelegate* delegate = [app delegate];
-
-	[[NSRunLoop currentRunLoop] runUntilDate:[NSDate date]];
 
 	if ([delegate isQuit])
 	{
