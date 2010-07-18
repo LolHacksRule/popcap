@@ -452,7 +452,9 @@ public:
 	virtual void			HandleNotifyGameMessage(int theType, int theParam); // for HWND_BROADCAST of mNotifyGameMessage (0-1000 are reserved for SexyAppBase for theType)
 	virtual void			HandleGameAlreadyRunning();
 
+	virtual void                    Startup();
 	virtual void			Start();
+	virtual void                    Terminate();
 	virtual void			Init();
 	virtual void			PreDDInterfaceInitHook();
 	virtual void			PostDDInterfaceInitHook();

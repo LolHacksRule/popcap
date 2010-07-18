@@ -2558,7 +2558,7 @@ void SexyAppBase::PreTerminate()
 {
 }
 
-void SexyAppBase::Start()
+void SexyAppBase::Startup()
 {
 	if (mShutdown)
 		return;
@@ -2568,17 +2568,26 @@ void SexyAppBase::Start()
 	if (mAutoStartLoadingThread)
 		StartLoadingThread();
 
-	int aCount = 0;
-	int aSleepCount = 0;
-
 	DWORD aStartTime = GetTickCount();
 
 	mRunning = true;
 	mLastTime = aStartTime;
 	mLastUserInputTick = aStartTime;
 	mLastTimerTime = aStartTime;
+}
 
+void SexyAppBase::Start()
+{
+	if (mShutdown)
+		return;
+
+	Startup();
 	DoMainLoop();
+	Terminate();
+}
+
+void SexyAppBase::Terminate()
+{
 	ProcessSafeDeleteList();
 
 	mRunning = false;
