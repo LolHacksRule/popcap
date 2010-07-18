@@ -170,7 +170,7 @@ int EAGLDisplay::Init (void)
 	mDesktopWidth = displayRect.size.width;
 	mDesktopHeight = displayRect.size.height;
 
-	if (mApp->mIsWindowed)
+	if (mApp->mIsWindowed && false)
 	{
 		mWindowWidth = mWidth;
 		mWindowHeight = mHeight;
