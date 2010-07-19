@@ -40,7 +40,7 @@ public:
         virtual bool                            HasEvent();
         virtual bool                            GetEvent(struct Event &event);
 
-private:
+public:
 	UIWindow*                               mWindow;
 	UIView*                                 mView;
 	EAGLContext*                            mContext;

@@ -94,7 +94,7 @@ using namespace Sexy;
 	if (gSexyAppBase)
 	{
 		gSexyAppBase->Terminate();
-		//delete gSexyAppBase;
+		delete gSexyAppBase;
 	}
 }
 - (void)updateApp:(id)sender
@@ -103,6 +103,86 @@ using namespace Sexy;
 		return;
 
 	gSexyAppBase->UpdateApp();
+	if (gSexyAppBase->mShutdown)
+	{
+		[self applicationWillTerminate:[UIApplication sharedApplication]];
+		exit(0);
+	}
+}
+@end
+
+@interface TouchDelegate : NSObject <EAGLTouchDelegate>
+{
+}
+@end
+
+@implementation TouchDelegate
+
+- (id)init
+{
+	self = [super init];
+	return (self);
+}
+
+- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
+{
+	NSLog(@"touchesBegan");
+}
+
+- (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event
+{
+	NSLog(@"touchesMoved");
+
+	if (!gSexyAppBase)
+		return;
+
+	SexyAppBase *app = gSexyAppBase;
+	EAGLDisplay *dpy = (EAGLDisplay*)app->mDDInterface;
+	UITouch *touch = [touches anyObject];
+	CGPoint currentPosition = [touch locationInView:dpy->mView];
+	int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
+	int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
+
+	Event evt;
+	evt.type = EVENT_MOUSE_MOTION;
+	evt.flags = EVENT_FLAGS_AXIS;
+	evt.u.mouse.x = x;
+	evt.u.mouse.y = y;
+	app->mInputManager->PushEvent(evt);
+}
+
+- (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event
+{
+	NSLog(@"touchesEnded");
+
+	if (!gSexyAppBase)
+		return;
+
+	SexyAppBase *app = gSexyAppBase;
+	UITouch *touch = [touches anyObject];
+	EAGLDisplay *dpy = (EAGLDisplay*)app->mDDInterface;
+	CGPoint currentPosition = [touch locationInView:dpy->mView];
+	int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
+	int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
+
+	if (touch.tapCount == 1 || touch.tapCount == 2)
+	{
+		Event evt;
+		evt.type = EVENT_MOUSE_BUTTON_PRESS;
+		evt.flags = EVENT_FLAGS_AXIS;
+		evt.u.mouse.button = touch.tapCount;
+		evt.u.mouse.x = x;
+		evt.u.mouse.y = y;
+		app->mInputManager->PushEvent(evt);
+
+		evt.type = EVENT_MOUSE_BUTTON_RELEASE;
+		app->mInputManager->PushEvent(evt);
+	}
+}
+
+- (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event
+{
+	NSLog(@"touchEnded");
 }
 @end
 
@@ -187,10 +267,15 @@ int EAGLDisplay::Init (void)
 	if (!mView)
 	  goto close_window;
 
+	[(EAGLView*)mView setTouchDelegate:[[TouchDelegate alloc] init]];
 	[mWindow addSubview:mView];
 	[mView retain];
 
 	[mWindow makeKeyAndVisible];
+	[mWindow setUserInteractionEnabled:YES];
+	[mWindow setMultipleTouchEnabled:YES];
+	[mView setUserInteractionEnabled:YES];
+	[mView setMultipleTouchEnabled:YES];
 
 	CGRect frame;
 	frame = [mView frame];

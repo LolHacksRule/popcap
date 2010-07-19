@@ -10,6 +10,8 @@
 
 @implementation EAGLView
 
+@synthesize touchDelegate;
+
 // You must implement this method
 + (Class)layerClass
 {
@@ -64,6 +66,7 @@
         NSLog(@"Failed to make complete framebuffer object %x (%dx%d)",
 	      glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES), width, height);
         return NO;
+
     }
 
     // This application only creates a single default framebuffer which is already bound at this point.
@@ -81,6 +84,30 @@
 - (void)layoutSubviews
 {
   [self resizeFromLayer];
+}
+
+- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
+{
+  if (touchDelegate)
+    [touchDelegate touchesBegan:touches withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event
+{
+  if (touchDelegate)
+    [touchDelegate touchesMoved:touches withEvent:event];
+}
+
+- (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event
+{
+  if (touchDelegate)
+    [touchDelegate touchesEnded:touches withEvent:event];
+}
+
+- (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event
+{
+  if (touchDelegate)
+    [touchDelegate touchesCancelled:touches withEvent:event];
 }
 
 - (void)dealloc
