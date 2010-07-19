@@ -120,26 +120,28 @@ bool InputManager::PopEvent (Event &event)
 	    event.type == EVENT_MOUSE_BUTTON_RELEASE ||
 	    event.type == EVENT_MOUSE_MOTION)
 	{
-		int x, y;
+		if (event.flags & (EVENT_FLAGS_REL_AXIS | EVENT_FLAGS_AXIS))
+		{
+			int x, y;
 
-		x = event.u.mouse.x;
-		y = event.u.mouse.y;
-		if (event.flags & EVENT_FLAGS_REL_AXIS)
-		{
-			mX += x;
-			mY += y;
-		}
-		else if (event.flags & EVENT_FLAGS_AXIS)
-		{
-			mX = x;
-			mY = y;
-			if (event.flags & EVENT_FLAGS_AXIS_RANGE)
+			x = event.u.mouse.x;
+			y = event.u.mouse.y;
+			if (event.flags & EVENT_FLAGS_REL_AXIS)
 			{
-				mX = x * mWidth / event.u.mouse.maxx;
-				mY = x * mHeight / event.u.mouse.maxy;
+				mX += x;
+				mY += y;
+			}
+			else if (event.flags & EVENT_FLAGS_AXIS)
+			{
+				mX = x;
+				mY = y;
+				if (event.flags & EVENT_FLAGS_AXIS_RANGE)
+				{
+					mX = x * mWidth / event.u.mouse.maxx;
+					mY = x * mHeight / event.u.mouse.maxy;
+				}
 			}
 		}
-
 		if (mX < 0)
 			mX = 0;
 		if (mY < 0)
