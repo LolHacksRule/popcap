@@ -29,16 +29,19 @@ enum EventType {
 #define MAKE_USER_EVENT_TYPE(a, b, c)				   \
     ((((a) & 0xff) << 24) | (((b) & 0xff) << 16) | ((c) & 0xffff)) \
 
-#define EVENT_FLAGS_AXIS     (1U << 0)
-#define EVENT_FLAGS_REL_AXIS (1U << 1)
-#define EVENT_FLAGS_BUTTON   (1U << 2)
-#define EVENT_FLAGS_KEY_CODE (1U << 3)
-#define EVENT_FLAGS_KEY_CHAR (1U << 4)
+#define EVENT_FLAGS_AXIS       (1U << 0)
+#define EVENT_FLAGS_REL_AXIS   (1U << 1)
+#define EVENT_FLAGS_BUTTON     (1U << 2)
+#define EVENT_FLAGS_KEY_CODE   (1U << 3)
+#define EVENT_FLAGS_KEY_CHAR   (1U << 4)
+#define EVENT_FLAGS_AXIS_RANGE (1U << 5)
 
 struct MouseEvent {
 	int	       x;
 	int	       y;
 	int	       button;
+	int            maxx;
+	int            maxy;
 };
 
 struct KeyEvent {
