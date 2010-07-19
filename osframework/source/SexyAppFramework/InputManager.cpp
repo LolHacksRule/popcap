@@ -133,6 +133,11 @@ bool InputManager::PopEvent (Event &event)
 		{
 			mX = x;
 			mY = y;
+			if (event.flags & EVENT_FLAGS_AXIS_RANGE)
+			{
+				mX = x * mWidth / event.u.mouse.maxx;
+				mY = x * mHeight / event.u.mouse.maxy;
+			}
 		}
 
 		if (mX < 0)
