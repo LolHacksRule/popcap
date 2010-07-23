@@ -111,8 +111,11 @@ using namespace Sexy;
 }
 @end
 
+typedef std::map<UITouch*, int> TouchMap;
 @interface TouchDelegate : NSObject <EAGLTouchDelegate>
 {
+	int touchId;
+	TouchMap touchMap;
 }
 @end
 
@@ -121,12 +124,44 @@ using namespace Sexy;
 - (id)init
 {
 	self = [super init];
+	if (self)
+		touchId = 0;
 	return (self);
 }
 
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
 {
 	NSLog(@"touchesBegan");
+	for (UITouch* touch in touches)
+	{
+		if (touchMap.find(touch) == touchMap.end())
+			touchMap.insert(TouchMap::value_type(touch, touchId++));
+	}
+
+	SexyAppBase *app = gSexyAppBase;
+	EAGLDisplay *dpy = (EAGLDisplay*)app->mDDInterface;
+	std::list<Event> events;
+	NSUInteger i = 0;
+	for (UITouch *touch in touches)
+	{
+		CGPoint currentPosition = [touch locationInView:dpy->mView];
+		int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
+		int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
+
+		Event evt;
+		evt.type = EVENT_TOUCH;
+		evt.flags = 0;
+		if (i++ != [touches count] - 1)
+			evt.flags |= EVENT_FLAGS_INCOMPLETE;
+		evt.u.touch.id = touchMap[touch];
+		evt.u.touch.state = TOUCH_DOWN;
+		evt.u.touch.x = x;
+		evt.u.touch.y = y;
+		evt.u.touch.pressure = 100;
+		events.push_back(evt);
+		
+	}
+	app->mInputManager->PushEvents(events);
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event
@@ -138,17 +173,27 @@ using namespace Sexy;
 
 	SexyAppBase *app = gSexyAppBase;
 	EAGLDisplay *dpy = (EAGLDisplay*)app->mDDInterface;
-	UITouch *touch = [touches anyObject];
-	CGPoint currentPosition = [touch locationInView:dpy->mView];
-	int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
-	int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
+	std::list<Event> events;
+	NSUInteger i = 0;
+	for (UITouch *touch in touches)
+	{
+		CGPoint currentPosition = [touch locationInView:dpy->mView];
+		int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
+		int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
 
-	Event evt;
-	evt.type = EVENT_MOUSE_MOTION;
-	evt.flags = EVENT_FLAGS_AXIS;
-	evt.u.mouse.x = x;
-	evt.u.mouse.y = y;
-	app->mInputManager->PushEvent(evt);
+		Event evt;
+		evt.type = EVENT_TOUCH;
+		evt.flags = 0;
+		if (i++ != [touches count] - 1)
+			evt.flags |= EVENT_FLAGS_INCOMPLETE;
+		evt.u.touch.id = touchMap[touch];
+		evt.u.touch.state = TOUCH_MOVE;
+		evt.u.touch.x = x;
+		evt.u.touch.y = y;
+		evt.u.touch.pressure = 100;
+		events.push_back(evt);
+	}
+	app->mInputManager->PushEvents(events);
 }
 
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event
@@ -161,28 +206,73 @@ using namespace Sexy;
 	SexyAppBase *app = gSexyAppBase;
 	UITouch *touch = [touches anyObject];
 	EAGLDisplay *dpy = (EAGLDisplay*)app->mDDInterface;
-	CGPoint currentPosition = [touch locationInView:dpy->mView];
-	int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
-	int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
-
-	if (touch.tapCount == 1 || touch.tapCount == 2)
+	std::list<Event> events;
+	NSUInteger i = 0;
+	for (UITouch *touch in touches)
 	{
-		Event evt;
-		evt.type = EVENT_MOUSE_BUTTON_PRESS;
-		evt.flags = EVENT_FLAGS_AXIS;
-		evt.u.mouse.button = touch.tapCount;
-		evt.u.mouse.x = x;
-		evt.u.mouse.y = y;
-		app->mInputManager->PushEvent(evt);
+		CGPoint currentPosition = [touch locationInView:dpy->mView];
+		int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
+		int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
 
-		evt.type = EVENT_MOUSE_BUTTON_RELEASE;
-		app->mInputManager->PushEvent(evt);
+		Event evt;
+		evt.type = EVENT_TOUCH;
+		evt.flags = 0;
+		if (i++ != [touches count] - 1)
+			evt.flags |= EVENT_FLAGS_INCOMPLETE;
+		evt.u.touch.id = touchMap[touch];
+		evt.u.touch.state = TOUCH_UP;
+		evt.u.touch.x = x;
+		evt.u.touch.y = y;
+		evt.u.touch.pressure = 100;
+		events.push_back(evt);
+		
+	}
+	app->mInputManager->PushEvents(events);
+
+	if ([touches count] == 1)
+	{
+		touchMap.clear();
+		touchId = 0;
 	}
 }
 
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event
 {
 	NSLog(@"touchEnded");
+	if (!gSexyAppBase)
+		return;
+
+	SexyAppBase *app = gSexyAppBase;
+	UITouch *touch = [touches anyObject];
+	EAGLDisplay *dpy = (EAGLDisplay*)app->mDDInterface;
+	std::list<Event> events;
+	NSUInteger i = 0;
+	for (UITouch *touch in touches)
+	{
+		CGPoint currentPosition = [touch locationInView:dpy->mView];
+		int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
+		int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
+
+		Event evt;
+		evt.type = EVENT_TOUCH;
+		evt.flags = 0;
+		if (i++ != [touches count] - 1)
+			evt.flags |= EVENT_FLAGS_INCOMPLETE;
+		evt.u.touch.id = touchMap[touch];
+		evt.u.touch.state = TOUCH_CANCEL;
+		evt.u.touch.x = x;
+		evt.u.touch.y = y;
+		evt.u.touch.pressure = 100;
+		events.push_back(evt);
+		
+	}
+	app->mInputManager->PushEvents(events);
+
+	if ([touches count] == 1)
+	{
+		touchMap.clear();
+		touchId = 0;
+	}
 }
 @end
 
