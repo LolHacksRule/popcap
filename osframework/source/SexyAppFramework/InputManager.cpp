@@ -102,7 +102,14 @@ void InputManager::PushEvent (Event &event)
 
 	if (event.type != EVENT_NONE &&
 	    mEventQueue.size () <= mMaxEvents)
+	{
+		if (!(event.flags & EVENT_FLAGS_TIMESTAMP))
+		{
+			event.timestamp = Sexy::GetTickCount();
+			event.flags |= EVENT_FLAGS_TIMESTAMP;
+		}
 		mEventQueue.push_back (event);
+	}
 }
 
 void InputManager::PushEvents (std::list<Event> &events)
@@ -118,7 +125,14 @@ void InputManager::PushEvents (std::list<Event> &events)
 		Event &event = *it;
 
 		if (event.type != EVENT_NONE)
-		    mEventQueue.push_back (event);
+		{
+			if (!(event.flags & EVENT_FLAGS_TIMESTAMP))
+			{
+				event.timestamp = Sexy::GetTickCount();
+				event.flags |= EVENT_FLAGS_TIMESTAMP;
+			}
+			mEventQueue.push_back (event);
+		}
 	}
 }
 
