@@ -105,6 +105,23 @@ void InputManager::PushEvent (Event &event)
 		mEventQueue.push_back (event);
 }
 
+void InputManager::PushEvents (std::list<Event> &events)
+{
+	AutoCrit anAutoCrit (mCritSect);
+
+	if (mEventQueue.size () + events.size() >= mMaxEvents)
+		return;
+
+	for (std::list<Event>::iterator it = events.begin();
+	     it != events.end(); ++it)
+	{
+		Event &event = *it;
+
+		if (event.type != EVENT_NONE)
+		    mEventQueue.push_back (event);
+	}
+}
+
 bool InputManager::PopEvent (Event &event)
 {
 	AutoCrit anAutoCrit (mCritSect);

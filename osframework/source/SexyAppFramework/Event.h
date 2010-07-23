@@ -23,6 +23,7 @@ enum EventType {
 	EVENT_DEVICE_DISCOVERED      = 13,
 	EVENT_ACC                    = 14,
 	EVENT_ANGLE                  = 15,
+	EVENT_TOUCH                  = 16,
 	EVENT_USER		     = 65535
 };
 
@@ -35,6 +36,8 @@ enum EventType {
 #define EVENT_FLAGS_KEY_CODE   (1U << 3)
 #define EVENT_FLAGS_KEY_CHAR   (1U << 4)
 #define EVENT_FLAGS_AXIS_RANGE (1U << 5)
+#define EVENT_FLAGS_TIMESTAMP  (1U << 6)
+#define EVENT_FLAGS_INCOMPLETE (1U << 31)
 
 struct MouseEvent {
 	int	       x;
@@ -69,8 +72,23 @@ struct AngleEvent {
 	float angleZ;
 };
 
+enum TouchState {
+	TOUCH_DOWN   = 0,
+	TOUCH_MOVE   = 1,
+	TOUCH_UP     = 2,
+	TOUCH_CANCEL = 3
+};
+
+struct TouchEvent {
+	int id;
+	int state;
+	int x;
+	int y;
+	int pressure;
+};
+
 struct UserEvent {
-	int	       reserved[8];
+	int	       reserved[7];
 };
 
 struct Event {
@@ -78,6 +96,7 @@ struct Event {
 	unsigned int		     flags;
 	int			     id;
 	int                          subid;
+	unsigned int                 timestamp;
 	union {
 		struct MouseEvent    mouse;
 		struct KeyEvent	     key;
@@ -86,6 +105,7 @@ struct Event {
 		struct UserEvent     user;
 		struct AccEvent      acc;
 		struct AngleEvent    angle;
+		struct TouchEvent    touch;
 	}			     u;
 };
 

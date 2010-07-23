@@ -34,6 +34,7 @@ class SEXY_EXPORT InputManager
  public:
         bool          HasEvent();
         void          PushEvent(Event &event);
+	void          PushEvents(std::list<Event> &events);
         bool          PopEvent(Event &event);
         void          Update(void);
         void          ConnectAll(void);
