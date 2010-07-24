@@ -45,6 +45,10 @@ env.Program('demo5', [os.path.join ('Demo5', 'Board.cpp'),
                       os.path.join ('Demo5', 'TitleScreen.cpp'),
                       os.path.join ('Demo5', 'Res.cpp'),
                       os.path.join ('Demo5', 'main.cpp')])
+if env.get('iosplatform', None):
+    main = 'main.mm'
+else:
+    main = 'main.cpp'
 hungarr = env.Program('hungarr', [os.path.join ('Hun-garr', 'Board.cpp'),
                                   os.path.join ('Hun-garr', 'GameApp.cpp'),
                                   os.path.join ('Hun-garr', 'GameOverEffect.cpp'),
@@ -52,7 +56,7 @@ hungarr = env.Program('hungarr', [os.path.join ('Hun-garr', 'Board.cpp'),
                                   os.path.join ('Hun-garr', 'OptionsDialog.cpp'),
                                   os.path.join ('Hun-garr', 'TitleScreen.cpp'),
                                   os.path.join ('Hun-garr', 'Res.cpp'),
-                                  os.path.join ('Hun-garr', 'main.cpp')],
+                                  os.path.join ('Hun-garr', main)],
                       CPPDEFINES = env['CPPDEFINES'] + [('SEXY_LANG', configs.QuoteStr(language))])
 
 ### install game hungarr
