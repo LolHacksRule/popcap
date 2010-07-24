@@ -915,7 +915,10 @@ bool WidgetManager::TouchDown(const EventVector &events)
 			TouchEnter(aWidget);
 	}
 	if (aWidget)
+	{
 		aWidget->TouchDown(touches);
+		aWidget->TouchMove(touches);
+	}
 
 	mLastTouch = touches;
 	return true;
