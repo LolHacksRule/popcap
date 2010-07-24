@@ -145,6 +145,7 @@ typedef std::map<UITouch*, int> TouchMap;
 	for (UITouch *touch in touches)
 	{
 		CGPoint currentPosition = [touch locationInView:dpy->mView];
+		NSLog(@"position: %.1f %.1f", currentPosition.x, currentPosition.y);
 		int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
 		int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
 
@@ -178,6 +179,7 @@ typedef std::map<UITouch*, int> TouchMap;
 	for (UITouch *touch in touches)
 	{
 		CGPoint currentPosition = [touch locationInView:dpy->mView];
+		NSLog(@"position: %.1f %.1f", currentPosition.x, currentPosition.y);
 		int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
 		int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
 
@@ -331,31 +333,51 @@ int EAGLDisplay::Init (void)
 	int index;
 	bool result;
 	CGRect displayRect;
+	CGRect windowRect;
+	UIInterfaceOrientation orientation;
+
+	orientation = [[UIApplication sharedApplication] statusBarOrientation];
 
 	result = false;
 	displayRect = [[UIScreen mainScreen] bounds];
+	windowRect = displayRect;
 
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
-	mDesktopWidth = displayRect.size.width;
-	mDesktopHeight = displayRect.size.height;
 
-	if (mApp->mIsWindowed && false)
-	{
-		mWindowWidth = mWidth;
-		mWindowHeight = mHeight;
-	}
-	else
-	{
-		mWindowWidth = mDesktopWidth;
-		mWindowHeight = mDesktopHeight;
-	}
+	if (orientation == UIInterfaceOrientationLandscapeRight)
+		std::swap(windowRect.size.width, windowRect.size.height);
+
+	mDesktopWidth = windowRect.size.width;
+	mDesktopHeight = windowRect.size.height;
+	mWindowWidth = mDesktopWidth;
+	mWindowHeight = mDesktopHeight;
 	mWindow = [[UIWindow alloc] initWithFrame:displayRect];
 	if (!mWindow)
 	  goto fail;
-	mView = [[EAGLView alloc] initWithFrame:displayRect];
+	mView = [[EAGLView alloc] initWithFrame:windowRect];
 	if (!mView)
 	  goto close_window;
+
+        if (orientation == UIInterfaceOrientationLandscapeRight)
+        { 
+		CGAffineTransform transform = mView.transform;
+
+		// use the status bar frame to determine the center point of the window's content area.
+		CGRect bounds = mView.frame;
+		CGPoint center = CGPointMake(bounds.size.height / 2.0, bounds.size.width / 2.0);
+		// set the center point of the view to the center point of the window's content area.
+		mView.center = center;
+
+		NSLog(@"bounds %0.2f %0.2f center %0.2f %.2f",
+		      bounds.size.width, bounds.size.height,
+		      center.x, center.y);
+
+		// Rotate the view 90 degrees around its new center point. 
+		transform = CGAffineTransformRotate(transform, (M_PI / 2.0));
+		mView.transform = transform;
+		//std::swap(mWindowWidth, mWindowHeight);
+        }
 
 	[(EAGLView*)mView setTouchDelegate:[[TouchDelegate alloc] init]];
 	[mWindow addSubview:mView];
@@ -368,6 +390,9 @@ int EAGLDisplay::Init (void)
 	[mView setMultipleTouchEnabled:YES];
 
 	CGRect frame;
+
+	frame = [mWindow frame];
+	NSLog(@"UIWindow: frame %.1fx%.1f", frame.size.width, frame.size.height);
 	frame = [mView frame];
 	NSLog(@"UIView: frame %.1fx%.1f", frame.size.width, frame.size.height);
 
