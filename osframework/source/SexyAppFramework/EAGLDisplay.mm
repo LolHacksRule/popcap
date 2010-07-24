@@ -77,7 +77,7 @@ using namespace Sexy;
 {
 	NSLog(@"applicationDidBecomeActive");
 	if (!timer)
-		timer = [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(1.0 / 100.0)
+		timer = [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(1.0 / 400.0)
 							        target:self selector:@selector(updateApp:)
 						                userInfo:nil repeats:TRUE];
 }
