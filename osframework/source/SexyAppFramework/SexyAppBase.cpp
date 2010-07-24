@@ -1079,8 +1079,8 @@ void SexyAppBase::Redraw(Rect* theClipRect)
 	if (gScreenSaverActive)
 		return;
 
-	if (mDDInterface)
-		mDDInterface->Redraw(theClipRect);
+	if (mWidgetManager && mWidgetManager->mImage)
+		mWidgetManager->mImage->Flip(FLIP_WAIT_SYNC);
 	mFPSFlipCount++;
 }
 
@@ -1118,7 +1118,7 @@ bool SexyAppBase::DrawDirtyStuff()
 
 	if (gIsFailing) // just try to reinit
 	{
-		Redraw(NULL);
+		//Redraw(NULL);
 		mHasPendingDraw = false;
 		mLastDrawWasEmpty = true;
 		return false;
@@ -1160,6 +1160,7 @@ bool SexyAppBase::DrawDirtyStuff()
 
 	mIsDrawing = true;
 	mLastDrawnTime = Sexy::GetTickCount();
+	mWidgetManager->MarkDirtyFull();
 	bool drewScreen = mWidgetManager->DrawScreen();
 	mIsDrawing = false;
 
@@ -1174,10 +1175,14 @@ bool SexyAppBase::DrawDirtyStuff()
 
 		DWORD aMidTime = GetTickCount();
 
-		mFPSCount++;
-		mFPSTime += aMidTime - aStartTime;
+		if (drewScreen)
+		{
+			mFPSCount++;
+			mFPSTime += aMidTime - aStartTime;
 
-		mDrawTime += aMidTime - aStartTime;
+			mDrawTime += aMidTime - aStartTime;
+		}
+
 
 #if 0
 		if (mShowFPS)
@@ -1199,19 +1204,33 @@ bool SexyAppBase::DrawDirtyStuff()
 		DWORD aPreScreenBltTime = GetTickCount();
 		mLastDrawTick = aPreScreenBltTime;
 
-		Redraw(NULL);
+		if (drewScreen)
+		{
+			Redraw(NULL);
+		}
+		else
+		{
+			Event evt;
+
+			evt.type = EVENT_EXPOSE;
+			evt.flags = 0;
+			mInputManager->PushEvent(evt);
+		}
 
 		// This is our one UpdateFTimeAcc if we are vsynched
 		UpdateFTimeAcc();
 
 		DWORD aEndTime = GetTickCount();
 
-		mScreenBltTime = aEndTime - aPreScreenBltTime;
+		if (drewScreen)
+			mScreenBltTime = aEndTime - aPreScreenBltTime;
 
 		if (1 && mFPSTime >= 2000) // Show FPS about every 5 seconds
 		{
 			uint32 aTickNow = GetTickCount();
 
+			//printf("FPSCount: %d FlipCount: %d\n", mFPSCount, mFPSFlipCount);
+			//printf("FPSTime: %u elasped %u\n", mFPSTime, aTickNow - mFPSStartTick);
 			printf("Theoretical FPS: %d\n", (int) (mFPSCount * 1000 / mFPSTime));
 			printf("Actual      FPS: %d\n", (mFPSFlipCount * 1000) / std::max((aTickNow - mFPSStartTick), 1U));
 			printf("Dirty Rate     : %d\n", (mFPSDirtyCount * 1000) / std::max((aTickNow - mFPSStartTick), 1U));
@@ -2449,11 +2468,15 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_ACTIVE:
+		mAccuEvents.clear();
+
 		mActive = event.u.active.active;
 		RehupFocus();
 		break;
 
 	case EVENT_EXPOSE:
+		mAccuEvents.clear();
+
 		mWidgetManager->MarkDirtyFull();
 		break;
 

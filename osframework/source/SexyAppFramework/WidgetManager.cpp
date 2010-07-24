@@ -508,8 +508,6 @@ bool WidgetManager::DrawScreen()
 	if (drewStuff && aVisibleRect.Contains (aCursorX, aCursorY) &&
 	    aInterface->DrawCursor (&g))
 		drewStuff = true;
-	if (drewStuff)
-		aImage->Flip(FLIP_WAIT_SYNC);
 
 	//if (aImage != NULL && surfaceLocked)
 	//aImage->UnlockSurface();
