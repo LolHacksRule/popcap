@@ -36,6 +36,10 @@ public:
 	virtual void			MouseDrag(int x, int y);
 	virtual void			MouseUp(int x, int y);
 	virtual void			MouseLeave();
+	virtual void                    TouchDown(int id, int x, int y, int tapCount);
+	virtual void                    TouchUp(int id, int x, int y , int tapCount);
+	virtual void                    TouchMove(int id, int x, int y);
+	virtual void                    TouchCancel(const TouchVector &touches);
 
 	virtual bool                    KeyDown(KeyCode theKey);
 };

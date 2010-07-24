@@ -4,7 +4,7 @@
 #include "Common.h"
 #include "KeyCodes.h"
 #include "Event.h"
-#include "WidgetContainer.h"
+#include "Widget.h"
 
 namespace Sexy
 {
@@ -39,6 +39,28 @@ public:
 typedef std::list<PreModalInfo> PreModalInfoList;
 
 typedef std::vector<std::pair<Widget*, int> > DeferredOverlayVector;
+typedef std::vector<Event> EventVector;
+
+struct TouchInfo {
+	unsigned int timestamp;
+	int          tapCount;
+	int          x;
+	int          y;
+
+	TouchInfo()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		timestamp = 0;
+		tapCount = 0;
+		x = 0;
+		y = 0;
+	}
+};
+typedef std::map<int, TouchInfo> TouchInfoMap;
 
 class SEXY_EXPORT WidgetManager : public WidgetContainer
 {
@@ -75,12 +97,17 @@ public:
 	bool					mKeyDown[0xFF];
 	int						mLastDownButtonId;	
 	
+	TouchInfoMap                            mTouchInfoMap;
+	TouchVector                             mLastTouch;
+
 	int						mWidgetFlags;
 
 protected:
 	int						GetWidgetFlags();
 	void					MouseEnter(Widget* theWidget);
 	void					MouseLeave(Widget* theWidget);
+	void					TouchEnter(Widget* theWidget);
+	void					TouchLeave(Widget* theWidget);
 
 protected:
 	void					SetBaseModal(Widget* theWidget, const FlagsMod& theBelowFlagsMod);
@@ -125,11 +152,18 @@ public:
 	bool					KeyChar(SexyChar theChar);
 	bool					KeyDown(KeyCode key);
 	bool					KeyUp(KeyCode key);
+	bool                                    TouchDown(const EventVector &events);
+	bool                                    TouchMove(const EventVector &events);
+	bool                                    TouchUp(const EventVector &events);
+	bool                                    TouchCancel(const EventVector &events);
 	bool                                    UserEvent(const Event event);
 
 	bool					IsLeftButtonDown();
 	bool					IsMiddleButtonDown();
 	bool					IsRightButtonDown();
+
+private:
+	TouchInfo*                              GetTouchInfo(int id);
 };
 
 }

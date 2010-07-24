@@ -35,6 +35,7 @@ public:
 
 	virtual void			MouseDown(int x, int y, int theClickCount) { Widget::MouseDown(x, y, theClickCount); }
 	virtual void			MouseDown(int x, int y, int theBtnNum, int theClickCount);
+	virtual void                    TouchDown(int id, int x, int y, int tapCount);
 	virtual void			Draw(Graphics* g);
 
 	virtual bool                    KeyDown(KeyCode theKey);

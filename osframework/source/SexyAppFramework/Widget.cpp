@@ -31,6 +31,7 @@ Widget::Widget()
 	mTabPrev = NULL;
 	mTabNext = NULL;
 	mFocus = 0;
+	mActiveTouchId = -1;
 }
 
 Widget::~Widget()
@@ -652,6 +653,91 @@ bool Widget::KeyUp(KeyCode theKey)
 	}
 
 	return false;
+}
+
+void Widget::TouchEnter()
+{
+}
+
+void Widget::TouchLeave()
+{
+}
+
+void Widget::TouchDown(int id, int x, int y, int tapCount)
+{
+}
+
+void Widget::TouchMove(int id, int x, int y)
+{
+}
+
+void Widget::TouchUp(int id, int x, int y, int tapCount)
+{
+}
+
+void Widget::TouchCancel(int id, int x, int y)
+{
+}
+
+void Widget::TouchDown(const TouchVector &touches)
+{
+	if (mActiveTouchId > 0)
+		return;
+
+	mActiveTouchId = touches[0].id;
+
+	Point pos = GetAbsPos();
+	int x = touches[0].x - pos.mX;
+	int y = touches[0].y - pos.mY;
+	TouchDown(touches[0].id, x, y, touches[0].tapCount);
+}
+
+void Widget::TouchMove(const TouchVector &touches)
+{
+	size_t i;
+	for (i = 0; i < touches.size(); i++)
+		if (touches[0].id == mActiveTouchId)
+			break;
+	if (i == touches.size())
+		return;
+
+	Point pos = GetAbsPos();
+	int x = touches[0].x - pos.mX;
+	int y = touches[0].y - pos.mY;
+	TouchMove(touches[i].id, x, y);
+}
+
+void Widget::TouchUp(const TouchVector &touches)
+{
+	size_t i;
+	for (i = 0; i < touches.size(); i++)
+		if (touches[0].id == mActiveTouchId)
+			break;
+	if (i == touches.size())
+		return;
+
+	Point pos = GetAbsPos();
+	int x = touches[0].x - pos.mX;
+	int y = touches[0].y - pos.mY;
+	TouchUp(touches[i].id, x, y, touches[i].tapCount);
+	mActiveTouchId = -1;
+
+}
+
+void Widget::TouchCancel(const TouchVector &touches)
+{
+	size_t i;
+	for (i = 0; i < touches.size(); i++)
+		if (touches[0].id == mActiveTouchId)
+			break;
+	if (i == touches.size())
+		i = 0;
+
+	Point pos = GetAbsPos();
+	int x = touches[0].x - pos.mX;
+	int y = touches[0].y - pos.mY;
+	TouchCancel(touches[i].id, x, y);
+	mActiveTouchId = -1;
 }
 
 void Widget::ShowFinger(bool on)

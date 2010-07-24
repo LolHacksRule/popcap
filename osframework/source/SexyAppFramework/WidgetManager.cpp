@@ -861,6 +861,164 @@ bool WidgetManager::KeyUp(KeyCode key)
 	return true;
 }
 
+TouchInfo* WidgetManager::GetTouchInfo(int id)
+{
+	if (mTouchInfoMap.find(id) != mTouchInfoMap.end())
+		mTouchInfoMap.insert(TouchInfoMap::value_type(id, TouchInfo()));
+
+	return &mTouchInfoMap[id];
+}
+
+bool WidgetManager::TouchDown(const EventVector &events)
+{
+	mLastInputUpdateCnt = mUpdateCnt;
+
+	TouchVector touches;
+
+	for (size_t i = 0; i < events.size(); i++)
+	{
+		TouchInfo *info = GetTouchInfo(events[i].u.touch.id);
+
+		touches.push_back(Touch());
+		touches[i].id = events[i].u.touch.id;
+		touches[i].timestamp = events[i].timestamp;
+		touches[i].x = events[i].u.touch.x;
+		touches[i].y = events[i].u.touch.y;
+		touches[i].pressure = events[i].u.touch.pressure;
+		if (touches[i].timestamp - info->timestamp >= 300)
+		{
+			info->tapCount = 0;
+			info->timestamp = touches[i].timestamp;
+		}
+		touches[i].tapCount = info->tapCount;
+		info->x = touches[i].x;
+		info->y = touches[i].y;
+	}
+	
+
+	int x = touches[0].x;
+	int y = touches[0].y;
+	int aLastMouseX = mLastMouseX;
+	int aLastMouseY = mLastMouseY;
+
+	mLastMouseX = x;
+	mLastMouseY = y;
+
+	int aWidgetX;
+	int aWidgetY;
+	Widget* aWidget = GetWidgetAt(x, y, &aWidgetX, &aWidgetY);
+
+	if (aWidget != mOverWidget)
+	{
+		mOverWidget = aWidget;
+		if (aWidget != NULL)
+			TouchEnter(aWidget);
+	}
+	if (aWidget)
+		aWidget->TouchDown(touches);
+
+	mLastTouch = touches;
+	return true;
+}
+
+bool WidgetManager::TouchMove(const EventVector &events)
+{
+	mLastInputUpdateCnt = mUpdateCnt;
+
+	TouchVector touches;
+
+	for (size_t i = 0; i < events.size(); i++)
+	{
+		TouchInfo *info = GetTouchInfo(events[i].u.touch.id);
+
+		touches.push_back(Touch());
+		touches[i].id = events[i].u.touch.id;
+		touches[i].timestamp = events[i].timestamp;
+		touches[i].x = events[i].u.touch.x;
+		touches[i].y = events[i].u.touch.y;
+		touches[i].pressure = events[i].u.touch.pressure;
+		if (touches[i].timestamp - info->timestamp >= 300)
+		{
+			info->tapCount = 0;
+			info->timestamp = touches[i].timestamp;
+		}
+		touches[i].tapCount = info->tapCount;
+		info->x = touches[i].x;
+		info->y = touches[i].y;
+	}
+
+	if (mOverWidget)
+		mOverWidget->TouchMove(touches);
+
+	mLastTouch = touches;
+	return true;
+}
+
+bool WidgetManager::TouchUp(const EventVector &events)
+{
+	mLastInputUpdateCnt = mUpdateCnt;
+
+	TouchVector touches;
+
+	for (size_t i = 0; i < events.size(); i++)
+	{
+		TouchInfo *info = GetTouchInfo(events[i].u.touch.id);
+
+		touches.push_back(Touch());
+		touches[i].id = events[i].u.touch.id;
+		touches[i].timestamp = events[i].timestamp;
+		touches[i].x = events[i].u.touch.x;
+		touches[i].y = events[i].u.touch.y;
+		touches[i].pressure = events[i].u.touch.pressure;
+		touches[i].tapCount = ++info->tapCount;
+
+		info->timestamp = touches[i].timestamp;
+		info->x = touches[i].x;
+		info->y = touches[i].y;
+	}
+
+	if (mOverWidget)
+	{
+		Widget *aWidget = mOverWidget;
+
+		aWidget->TouchUp(touches);
+		TouchLeave(aWidget);
+	}
+
+	mLastTouch = touches;
+	return true;
+}
+
+bool WidgetManager::TouchCancel(const EventVector &events)
+{
+	TouchVector touches;
+
+	for (size_t i = 0; i < events.size(); i++)
+	{
+		TouchInfo *info = GetTouchInfo(events[i].u.touch.id);
+
+		touches.push_back(Touch());
+		touches[i].id = events[i].u.touch.id;
+		touches[i].timestamp = events[i].timestamp;
+		touches[i].x = events[i].u.touch.x;
+		touches[i].y = events[i].u.touch.y;
+		touches[i].pressure = events[i].u.touch.pressure;
+		touches[i].tapCount = info->tapCount;
+
+		info->timestamp = touches[i].timestamp;
+		info->tapCount = 0;
+	}
+
+	if (mOverWidget)
+	{
+		Widget *aWidget = mOverWidget;
+		aWidget->TouchCancel(touches);
+		TouchLeave(aWidget);
+	}
+	mLastTouch = touches;
+	return true;
+}
+
 bool WidgetManager::UserEvent(const Event event)
 {
     	mLastInputUpdateCnt = mUpdateCnt;
@@ -869,4 +1027,18 @@ bool WidgetManager::UserEvent(const Event event)
 		mFocusWidget->UserEvent(event);
 
 	return true;
+}
+
+void WidgetManager::TouchEnter(Widget *theWidget)
+{
+	theWidget->mIsOver = true;
+
+	theWidget->TouchEnter();
+}
+
+void WidgetManager::TouchLeave(Widget *theWidget)
+{
+	theWidget->mIsOver = false;
+
+	theWidget->MouseLeave();
 }

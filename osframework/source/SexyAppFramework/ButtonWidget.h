@@ -73,6 +73,11 @@ public:
 	virtual bool			KeyDown(KeyCode theKey);
 	virtual bool			KeyUp(KeyCode theKey);
 
+	virtual void                    TouchEnter();
+	virtual void                    TouchLeave();
+	virtual void                    TouchDown(int id, int x, int y, int tapCount);
+	virtual void                    TouchUp(int id, int x, int y, int tapCount);
+
 	virtual void			Update();
 };
 

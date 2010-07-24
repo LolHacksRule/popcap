@@ -12,6 +12,7 @@
 #include "SharedImage.h"
 #include "Ratio.h"
 #include "SexyTimer.h"
+#include "Event.h"
 
 namespace ImageLib
 {
@@ -62,6 +63,8 @@ typedef std::map<std::string, bool> StringBoolMap;
 typedef std::map<std::string, int> StringIntMap;
 typedef std::map<std::string, double> StringDoubleMap;
 typedef std::map<std::string, StringVector> StringStringVectorMap;
+typedef std::list<Event> EventList;
+typedef std::vector<Event> EventVector;
 
 enum
 {
@@ -353,6 +356,7 @@ public:
         InputManager*                           mInputManager;
 	RegistryInterface*                      mRegistryInterface;
 
+	EventVector                             mAccuEvents;
 	std::string                             mCmdLine;
 
 #ifdef ZYLOM

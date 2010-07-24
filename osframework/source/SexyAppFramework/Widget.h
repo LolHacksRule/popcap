@@ -16,6 +16,16 @@ class WidgetManager;
 
 typedef std::vector<Color> ColorVector;
 
+struct Touch {
+	int          id;
+	unsigned int timestamp;
+	int           x;
+	int           y;
+	int           tapCount;
+	int           pressure;
+};
+typedef std::vector<Touch> TouchVector;
+
 class SEXY_EXPORT Widget : public WidgetContainer
 {
 public:
@@ -38,6 +48,7 @@ public:
 	Color                                   mFocusColor;
 	bool                                    mDrawFocusRect;
 
+	int                                     mActiveTouchId;
 	Widget*                                 mTabPrev;
 	Widget*                                 mTabNext;
 	Widget*                                 mFocus;
@@ -87,6 +98,16 @@ public:
 	virtual void			MouseUp(int x, int y, int theClickCount);
 	virtual void			MouseUp(int x, int y, int theBtnNum, int theClickCount);
 	virtual void			MouseDrag(int x, int y);
+	virtual void                    TouchEnter();
+	virtual void                    TouchLeave();
+	virtual void                    TouchDown(int id, int x, int y, int tapCount);
+	virtual void                    TouchMove(int id, int x, int y);
+	virtual void                    TouchUp(int id, int x, int y, int tapCount);
+	virtual void                    TouchCancel(int id, int x, int y);
+	virtual void                    TouchDown(const TouchVector &touches);
+	virtual void                    TouchMove(const TouchVector &touches);
+	virtual void                    TouchUp(const TouchVector &touches);
+	virtual void                    TouchCancel(const TouchVector &touches);
 	virtual void			MouseWheel(int theDelta);
 	virtual void                    UserEvent(const Event event);
 	virtual bool			IsPointVisible(int x, int y);

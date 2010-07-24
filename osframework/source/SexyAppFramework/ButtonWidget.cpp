@@ -205,6 +205,31 @@ void ButtonWidget::SetDisabled(bool isDisabled)
 		MarkDirty();
 }
 
+void ButtonWidget::TouchEnter()
+{
+	MouseEnter();
+}
+
+void ButtonWidget::TouchLeave()
+{
+	MouseLeave();
+}
+
+void ButtonWidget::TouchDown(int id, int x, int y, int tapCount)
+{
+	mButtonListener->ButtonPress(mId, tapCount);
+
+	MarkDirty();
+}
+
+void ButtonWidget::TouchUp(int id, int x, int y, int tapCount)
+{
+	if (mIsOver && mWidgetManager->mHasFocus)
+		mButtonListener->ButtonDepress(mId);
+
+	MarkDirty();
+}
+
 void ButtonWidget::MouseEnter()
 {
 	Widget::MouseEnter();

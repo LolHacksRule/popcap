@@ -70,6 +70,14 @@ void Checkbox::Draw(Graphics* g)
 	}
 }
 
+void Checkbox::TouchDown(int id, int x, int y, int tapCount)
+{
+	mChecked = !mChecked;
+	if (mListener)
+		mListener->CheckboxChecked(mId, mChecked);
+	MarkDirty();
+}
+
 void Checkbox::MouseDown(int x, int y, int theBtnNum, int theClickCount)
 {
 	Widget::MouseDown(x, y, theBtnNum, theClickCount);

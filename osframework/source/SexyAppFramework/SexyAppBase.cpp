@@ -2355,6 +2355,19 @@ void SexyAppBase::DoMainLoop()
 
 bool SexyAppBase::ProcessMessage(Event & event)
 {
+	if (event.flags & EVENT_FLAGS_INCOMPLETE)
+	{
+		if (mAccuEvents.size() && event.type == mAccuEvents[0].type)
+		{
+			mAccuEvents.push_back(event);
+		}
+		else if (event.type != EVENT_NONE)
+		{
+			mAccuEvents.push_back(event);
+		}
+		return true;
+	}
+
 	switch(event.type) {
 	case EVENT_NONE:
 		break;
@@ -2364,6 +2377,8 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_MOUSE_BUTTON_PRESS:
+		mAccuEvents.clear();
+
 		mLastUserInputTick = mLastTimerTime;
 		mMouseX = event.u.mouse.x;
 		mMouseY = event.u.mouse.y;
@@ -2378,6 +2393,8 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_MOUSE_BUTTON_RELEASE:
+		mAccuEvents.clear();
+
 		mMouseX = event.u.mouse.x;
 		mMouseY = event.u.mouse.y;
 		mWidgetManager->RemapMouse(mMouseX, mMouseY);
@@ -2391,6 +2408,8 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_KEY_DOWN:
+		mAccuEvents.clear();
+
 		mLastUserInputTick = mLastTimerTime;
 		if (event.u.key.keyCode)
 			mWidgetManager->KeyDown((KeyCode)event.u.key.keyCode);
@@ -2400,10 +2419,14 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		break;
 
 	case EVENT_KEY_UP:
+		mAccuEvents.clear();
+
 		mWidgetManager->KeyUp((KeyCode)event.u.key.keyCode);
 		break;
 
 	case EVENT_MOUSE_MOTION:
+		mAccuEvents.clear();
+
 		mLastUserInputTick = mLastTimerTime;
 
 		if (!mHasFocus)
@@ -2433,6 +2456,21 @@ bool SexyAppBase::ProcessMessage(Event & event)
 	case EVENT_EXPOSE:
 		mWidgetManager->MarkDirtyFull();
 		break;
+
+	case EVENT_TOUCH:
+		mLastUserInputTick = mLastTimerTime;
+		mAccuEvents.push_back(event);
+		if (event.u.touch.state == TOUCH_DOWN)
+			mWidgetManager->TouchDown(mAccuEvents);
+		else if (event.u.touch.state == TOUCH_MOVE)
+			mWidgetManager->TouchMove(mAccuEvents);
+		else if (event.u.touch.state == TOUCH_UP)
+			mWidgetManager->TouchUp(mAccuEvents);
+		else if (event.u.touch.state == TOUCH_CANCEL)
+			mWidgetManager->TouchCancel(mAccuEvents);
+		mAccuEvents.clear();
+		break;
+
 	default:
 		mWidgetManager->UserEvent(event);
 		break;

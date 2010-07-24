@@ -76,6 +76,42 @@ void Slider::Draw(Graphics* g)
 	//g->FillRect(0, 0, mWidth, mHeight);	
 }
 
+void Slider::TouchDown(int id, int x, int y, int tapCount)
+{
+	if (mHorizontal)
+	{
+		int aThumbX = (int) (mVal * (mWidth - mThumbImage->GetWidth()));
+
+		if ((x >= aThumbX) && (x < aThumbX + mThumbImage->GetWidth()))
+		{
+			mDragging = true;
+			mRelX = x - aThumbX;
+		}
+		else
+		{
+			// clicked on the bar, set position to mouse click
+			double pos = (double)x / mWidth;
+			SetValue(pos);
+		}
+	}
+	else
+	{
+		int aThumbY = (int) (mVal * (mHeight - mThumbImage->GetHeight()));
+
+		if ((y >= aThumbY) && (y < aThumbY + mThumbImage->GetHeight()))
+		{
+			mDragging = true;
+			mRelY = y - aThumbY;
+		}
+		else
+		{
+			// clicked on the bar, set position to mouse click
+			double pos = (double)y / mHeight;
+			SetValue(pos);
+		}
+	}
+}
+
 void Slider::MouseDown(int x, int y, int theClickCount)
 {
 	if (mHorizontal)
@@ -136,6 +172,30 @@ void Slider::MouseMove(int x, int y)
 	}
 }
 
+void Slider::TouchMove(int id, int x, int y)
+{
+	if (mDragging)
+	{
+		double anOldVal = mVal;
+
+		if (mHorizontal)
+			mVal = (x - mRelX) / (double) (mWidth - mThumbImage->GetWidth());
+		else
+			mVal = (y - mRelY) / (double) (mHeight - mThumbImage->GetHeight());
+
+		if (mVal < 0.0)
+			mVal = 0.0;
+		if (mVal > 1.0)
+			mVal = 1.0;
+
+		if (mVal != anOldVal)
+		{
+			mListener->SliderVal(mId, mVal);
+			MarkDirtyFull();
+		}
+	}
+}
+
 void Slider::MouseDrag(int x, int y)
 {
 	if (mDragging)
@@ -160,11 +220,23 @@ void Slider::MouseDrag(int x, int y)
 	}
 }
 
+void Slider::TouchUp(int id, int x, int y, int tapCount)
+{
+	mDragging = false;
+	mListener->SliderVal(mId, mVal);
+}
+
 void Slider::MouseUp(int x, int y)
 {
 	mDragging = false;
 	mWidgetManager->mApp->SetCursor(CURSOR_POINTER);
 	mListener->SliderVal(mId, mVal);
+}
+
+void Slider::TouchCancel(const TouchVector &touches)
+{
+	mDragging = false;
+	mListener->SliderVal(mId, mVal);	
 }
 
 void Slider::MouseLeave()
