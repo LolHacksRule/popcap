@@ -9,7 +9,8 @@ def AddOptions (opts):
     configs.AudiereSoundAddOptions (opts)
 
 def EnableEAGL(env):
-    env.PrependUnique (FRAMEWORKS = ['OpenGLES', 'QuartzCore', 'UIKit', 'Foundation'])
+    env.PrependUnique (FRAMEWORKS = ['OpenGLES', 'QuartzCore', 'CoreGraphics',
+                                     'UIKit', 'Foundation'])
 
 def Configure(env):
     configs.ios.Configure (env)
