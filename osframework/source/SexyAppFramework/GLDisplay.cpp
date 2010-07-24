@@ -197,7 +197,7 @@ void GLDisplay::InitGL()
 	glDisable (GL_TEXTURE_GEN_S);
 	glDisable (GL_TEXTURE_GEN_T);
 #endif
-	glClearColor (0.0, 0.0, 0.0, 0.0);
+	glClearColor (0.0, 0.0, 0.0, 1.0);
 
 	glMatrixMode (GL_PROJECTION) ;
 	glLoadIdentity ();
