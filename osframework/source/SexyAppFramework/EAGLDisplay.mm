@@ -54,7 +54,9 @@ using namespace Sexy;
 
 - (void)applicationDidFinishLaunching:(UIApplication *)anApp
 {
+#ifdef DEBUG
 	NSLog(@"applicationDidFinishLaunching");
+#endif
 	quit = FALSE;
 	if (gSexyAppBase)
 	{
@@ -70,12 +72,16 @@ using namespace Sexy;
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {
+#ifdef DEBUG
 	NSLog(@"applicationWillResignActive");
+#endif
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
+#ifdef DEBUG
 	NSLog(@"applicationDidBecomeActive");
+#endif
 	if (!timer)
 		timer = [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(1.0 / 400.0)
 							        target:self selector:@selector(updateApp:)
@@ -84,7 +90,9 @@ using namespace Sexy;
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
+#ifdef DEBUG
 	NSLog(@"applicatioWillTerminaten");
+#endif
 	quit = TRUE;
 
 	if (timer)
@@ -131,7 +139,7 @@ typedef std::map<UITouch*, int> TouchMap;
 
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
 {
-	NSLog(@"touchesBegan");
+	//NSLog(@"touchesBegan");
 	for (UITouch* touch in touches)
 	{
 		if (touchMap.find(touch) == touchMap.end())
@@ -145,7 +153,7 @@ typedef std::map<UITouch*, int> TouchMap;
 	for (UITouch *touch in touches)
 	{
 		CGPoint currentPosition = [touch locationInView:dpy->mView];
-		NSLog(@"position: %.1f %.1f", currentPosition.x, currentPosition.y);
+		//NSLog(@"position: %.1f %.1f", currentPosition.x, currentPosition.y);
 		int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
 		int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
 
@@ -167,7 +175,7 @@ typedef std::map<UITouch*, int> TouchMap;
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event
 {
-	NSLog(@"touchesMoved");
+	//NSLog(@"touchesMoved");
 
 	if (!gSexyAppBase)
 		return;
@@ -179,7 +187,7 @@ typedef std::map<UITouch*, int> TouchMap;
 	for (UITouch *touch in touches)
 	{
 		CGPoint currentPosition = [touch locationInView:dpy->mView];
-		NSLog(@"position: %.1f %.1f", currentPosition.x, currentPosition.y);
+		//NSLog(@"position: %.1f %.1f", currentPosition.x, currentPosition.y);
 		int x = currentPosition.x * dpy->mWidth / dpy->mWindowWidth;
 		int y = currentPosition.y * dpy->mHeight / dpy->mWindowHeight;
 
@@ -200,7 +208,7 @@ typedef std::map<UITouch*, int> TouchMap;
 
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event
 {
-	NSLog(@"touchesEnded");
+	//NSLog(@"touchesEnded");
 
 	if (!gSexyAppBase)
 		return;
@@ -240,7 +248,7 @@ typedef std::map<UITouch*, int> TouchMap;
 
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event
 {
-	NSLog(@"touchEnded");
+	//NSLog(@"touchCancelled");
 	if (!gSexyAppBase)
 		return;
 
@@ -298,7 +306,9 @@ EAGLDisplay::EAGLDisplay (SexyAppBase* theApp)
 		[bundle loadNibNamed:@"MainMenu" owner:[application delegate] options:nil];
 
 		path = [bundle bundlePath];
+#ifdef DEBUG
 		NSLog (@"bounde path: %@", path);
+#endif
 		chdir([path UTF8String]);
 		mApp->mChangeDirTo = std::string([path UTF8String]);
 	}
@@ -354,10 +364,10 @@ int EAGLDisplay::Init (void)
 	mWindowHeight = mDesktopHeight;
 	mWindow = [[UIWindow alloc] initWithFrame:displayRect];
 	if (!mWindow)
-	  goto fail;
+		goto fail;
 	mView = [[EAGLView alloc] initWithFrame:windowRect];
 	if (!mView)
-	  goto close_window;
+		goto close_window;
 
         if (orientation == UIInterfaceOrientationLandscapeRight)
         { 
@@ -369,14 +379,9 @@ int EAGLDisplay::Init (void)
 		// set the center point of the view to the center point of the window's content area.
 		mView.center = center;
 
-		NSLog(@"bounds %0.2f %0.2f center %0.2f %.2f",
-		      bounds.size.width, bounds.size.height,
-		      center.x, center.y);
-
 		// Rotate the view 90 degrees around its new center point. 
 		transform = CGAffineTransformRotate(transform, (M_PI / 2.0));
 		mView.transform = transform;
-		//std::swap(mWindowWidth, mWindowHeight);
         }
 
 	[(EAGLView*)mView setTouchDelegate:[[TouchDelegate alloc] init]];
@@ -392,9 +397,9 @@ int EAGLDisplay::Init (void)
 	CGRect frame;
 
 	frame = [mWindow frame];
-	NSLog(@"UIWindow: frame %.1fx%.1f", frame.size.width, frame.size.height);
+	//NSLog(@"UIWindow: frame %.1fx%.1f", frame.size.width, frame.size.height);
 	frame = [mView frame];
-	NSLog(@"UIView: frame %.1fx%.1f", frame.size.width, frame.size.height);
+	//NSLog(@"UIView: frame %.1fx%.1f", frame.size.width, frame.size.height);
 
 	mDisplayWidth = mWidth;
 	mDisplayHeight = mHeight;

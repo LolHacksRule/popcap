@@ -55,7 +55,7 @@
 - (BOOL)resizeFromLayer
 {
     // Allocate color buffer backing based on the current layer size
-    NSLog(@"resizeFromLayer(%@)", self.layer);
+    //NSLog(@"resizeFromLayer(%@)", self.layer);
 
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
     [context renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(id<EAGLDrawable>)self.layer];
