@@ -715,6 +715,9 @@ class Board :	public Widget, public ButtonListener
 		//////////////////////////////////////////////////////////////////////////
 		virtual void	MouseDrag(int x, int y);
 
+		virtual void    TouchMove(const TouchVector &touches);
+		virtual void    TouchUp(const TouchVector &touches);
+
 		//////////////////////////////////////////////////////////////////////////
 		//	Function: Pause
 		//	Parameters:
