@@ -19,8 +19,6 @@
 //	understand. All functions, variables, and concepts are explained
 //	either in this demo, or in previous ones if they've already been covered.
 //////////////////////////////////////////////////////////////////////////
-#if 0
-
 #include "GameApp.h"
 
 using namespace Sexy;
@@ -45,4 +43,3 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-#endif

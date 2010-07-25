@@ -10,5 +10,5 @@ int main(int argc, char **argv)
 	int retval = UIApplicationMain(argc, argv, nil, @"AppDelegate");
 	delete anApp;
 	
-	return 0;
+	return retval;
 }
