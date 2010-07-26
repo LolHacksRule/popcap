@@ -152,6 +152,27 @@ def AudiereSoundConfigure(env):
     audiere_sound['ENABLE'] = EnableAudiereSound
     env.AppendUnique (AUDIERESOUND = audiere_sound)
 
+def OpenALSoundAddOptions (opts):
+    from SCons.Variables.PathVariable import PathVariable
+    from SCons.Variables.BoolVariable import BoolVariable
+    if 'openal_ccflags' in opts.keys ():
+        return
+    opts.Add ('openal_ccflags', "c/c++ compiler flags for openal.", '')
+    opts.Add ('openal_ldflags', "link flags for openal", '')
+    opts.Add(BoolVariable ('static_openal', 'build openal as a static library', 'False'))
+
+def EnableOpenALSound (env):
+    if env['TARGET_OS'] == 'darwin':
+        env.AppendUnique (FRAMEWORKS = ['OpenAL'])
+    else:
+        env.AppendUnique (LIBS = ['openal']);
+
+def OpenALSoundConfigure(env):
+    env.AppendUnique (DRIVERS = ['OPENALSOUND'])
+    openal_sound = {}
+    openal_sound['ENABLE'] = EnableOpenALSound
+    env.AppendUnique (OPENALSOUND = openal_sound)
+
 def FreeTypeAddOptions (opts):
     from SCons.Variables.PathVariable import PathVariable
     from SCons.Variables.BoolVariable import BoolVariable
