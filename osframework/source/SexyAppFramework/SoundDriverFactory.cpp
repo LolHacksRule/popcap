@@ -42,6 +42,7 @@ extern SoundDriver* GetDummySoundDriver();
 extern SoundDriver* GetGstSoundDriver();
 extern SoundDriver* GetAudiereSoundDriver();
 extern SoundDriver* GetDSoundDriver();
+extern SoundDriver* GetOpenALSoundDriver();
 typedef SoundDriver* (* SoundDriverGetter)();
 SoundDriverGetter SoundDriverGetters []= {
 #ifdef SEXY_GST_SOUND_DRIVER
@@ -52,6 +53,9 @@ SoundDriverGetter SoundDriverGetters []= {
 #endif
 #ifdef SEXY_DIRECT_SOUND_DRIVER
 	GetDSoundDriver,
+#endif
+#ifdef SEXY_OPENAL_SOUND_DRIVER
+	GetOpenALSoundDriver,
 #endif
 	GetDummySoundDriver,
 	NULL

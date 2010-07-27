@@ -122,34 +122,17 @@ if 'AUDIERESOUND' in env['DRIVERS']:
 if 'OPENALSOUND' in env['DRIVERS']:
     srcs += ["OpenALSoundManager.cpp", 'OpenALSoundInstance.cpp',
              'OpenALManager.cpp']
-    ogg_srcs = 	['framing.c', 'bitwise.c']
-    ogg_srcs += ['mdct.c', 'smallft.c', 'block.c', 'envelope.c', 'window.c', 'lsp.c',
-                 'lpc.c', 'analysis.c', 'synthesis.c', 'psy.c', 'info.c',
-                 'floor1.c', 'floor0.c', 'res0.c', 'mapping0.c', 'registry.c',
-                 'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c']
-    ogg_srcs += ['vorbisfile.c']
-
-    #srcs += map(lambda f:os.path.join ('ogg', f), ogg_srcs)
-    srcs += Glob('ogg/*.c')
-
     env['OPENALSOUND']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_OPENAL_SOUND_DRIVER'])
+    configs.EnablePackage(env, 'ogg')
 
 if env['TARGET_OS'] == 'win32':
     srcs += ["DSoundManager.cpp", 'DSoundInstance.cpp',
              'BassMusicInterface.cpp', 'BassLoader.cpp']
-    ogg_srcs = 	['framing.c', 'bitwise.c']
-    ogg_srcs += ['mdct.c', 'smallft.c', 'block.c', 'envelope.c', 'window.c', 'lsp.c',
-                 'lpc.c', 'analysis.c', 'synthesis.c', 'psy.c', 'info.c',
-                 'floor1.c', 'floor0.c', 'res0.c', 'mapping0.c', 'registry.c',
-                 'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c']
-    ogg_srcs += ['vorbisfile.c']
-
-    #srcs += map(lambda f:os.path.join ('ogg', f), ogg_srcs)
-    srcs += Glob('ogg/*.c')
     env.AppendUnique(LIBS = ['winmm'])
     gameenv.AppendUnique(LIBS = ['winmm'])
     env.AppendUnique(CPPDEFINES = ['SEXY_DIRECT_SOUND_DRIVER'])
+    configs.EnablePackage(env, 'ogg')
     game.AddExtraInstallableObject(gameenv, [os.path.join(srcdir, 'bass.dll')])
 
 if 'POSIX_MODULE_LOADER' in env['LOADERS']:
@@ -209,6 +192,7 @@ if gameenv['static']:
         configs.EnablePackage(gameenv, 'audiere')
     if 'OPENALSOUND' in env['DRIVERS']:
         gameenv['OPENALSOUND']['ENABLE'](gameenv)
+        configs.EnablePackage(gameenv, 'ogg', append = False)
 
     if 'POSIXMODULELOADER' in env['LOADERS']:
         gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)
@@ -221,6 +205,7 @@ if gameenv['static']:
 
     if env['TARGET_OS'] == 'win32':
         gameenv.AppendUnique(LIBS = ['ws2_32'])
+        configs.EnablePackage(gameenv, 'ogg')
 
 env.AppendUnique(CPPDEFINES = ['BUILDING_SEXYFRAMEWORK'],
                  LIBS = ['$STDCXX_LIBS'])

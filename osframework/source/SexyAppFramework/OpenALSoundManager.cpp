@@ -15,8 +15,7 @@ using namespace Sexy;
 #define USE_OGG_LIB
 
 #ifdef USE_OGG_LIB
-#include "ogg/ivorbiscodec.h"
-#include "ogg/ivorbisfile.h"
+#include "vorbis/vorbisfile.h"
 #endif
 
 OpenALSoundManager::OpenALSoundManager()
@@ -322,7 +321,8 @@ bool OpenALSoundManager::LoadOGGSound(unsigned int theSfxID, const std::string& 
 	int aNumBytes = aLenBytes;
 	while(aNumBytes > 0)
 	{
-		long ret = ov_read(&vf, aPtr, aNumBytes, &current_section);
+		long ret = ov_read(&vf, aPtr, aNumBytes, 0, 2, 1,
+				   &current_section);
 		if (ret == 0)
 			break;
 		else if (ret < 0)
