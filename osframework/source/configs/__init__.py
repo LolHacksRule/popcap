@@ -18,6 +18,7 @@ def GetOptionsDefault(key, default_value = None):
 def AddOptions(opts):
     from SCons.Variables.BoolVariable import BoolVariable
     from SCons.Variables.ListVariable import ListVariable
+    from SCons.Variables.EnumVariable import EnumVariable
 
     if 'debug' in opts.keys ():
         return
@@ -34,8 +35,15 @@ def AddOptions(opts):
     opts.Add(BoolVariable ('strip', 'strip debug informantion from objects', True))
     opts.Add(BoolVariable ('colorize_output', 'cmake like colorize output message', True))
     opts.Add(BoolVariable ('keyboard', 'support changing focus by pressing arrow keys', True))
+    opts.Add(BoolVariable ('cheat', 'enable cheatting', False))
     opts.Add(ListVariable ('package_format', 'the format of game packages(zip, tar.gz, tar.bz2..)',
                            'none', ['zip', 'gztar', 'bztar', 'tar']))
+    opts.Add(EnumVariable ('perf_level', 'the level of performance',
+                           GetOptionsDefault('perf_level', 'high'),
+                           ['low', 'medium', 'high']))
+    opts.Add(EnumVariable ('memory_level', 'the level of available memory',
+                           GetOptionsDefault('memory_level', 'high'),
+                           ['low', 'medium', 'high']))
     opts.Add('language', 'specify the language of games', 'en_US')
     opts.Add('oem', "the name of oem", 'default')
     opts.Add('target', "the name of oem target for example(olo, canmore)", '')
