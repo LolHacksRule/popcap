@@ -140,10 +140,9 @@ env.Program('audiere_play',
 ### setup package info
 depends = []
 objects = []
-pkgdeps = []
+pkgdeps = ['ogg']
 if env['static_audiere']:
-    depends += ['vorbisfile']
-    pkgdeps += ['ogg']
+    depends += ['vorbisfile', 'vorbis', 'ogg']
 else:
     objects = audiere_lib
 configs.SetPackageInfo([sexyenv, gameenv], 'audiere',
