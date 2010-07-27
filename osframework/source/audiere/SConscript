@@ -13,102 +13,22 @@ if not 'AUDIERESOUND' in env['DRIVERS']:
 sexyenv = env
 srcdir = Dir('.').srcnode().abspath
 
-ogg_name = 'libogg'
-ogg_version = '1.1.3'
-ogg_suffix = '.tar.gz'
-ogg_tar = ogg_name + '-' + ogg_version + ogg_suffix
-ogg_dir = ogg_name + '-' + ogg_version
-
-vorbis_name = 'libvorbis'
-vorbis_version = '1.2.1rc1'
-vorbis_suffix = '.tar.bz2'
-vorbis_tar = vorbis_name + '-' + vorbis_version + vorbis_suffix
-vorbis_dir = vorbis_name + '-' + vorbis_version
-
 audiere_name = 'audiere'
 audiere_version = '1.9.4.1'
 audiere_suffix = '.tar.gz'
 audiere_tar = audiere_name + '-' + audiere_version + audiere_suffix
 audiere_dir = audiere_name + '-' + audiere_version
 
-tarballs = [ogg_tar, vorbis_tar, audiere_tar]
+tarballs = [audiere_tar]
 for tarball in tarballs:
     fpath = os.path.join (srcdir, tarball)
     if not os.path.exists(fpath):
         print fpath, "doesn't exist."
         Return ()
 
-common_env = env.Clone()
-#common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
-
-### ogg
-env = common_env.Clone()
-ogg_untar = env.Untar (os.path.join (srcdir, ogg_tar), ['*src*', '*include*'], ['*Makefile*'])
-env.SourceCode (ogg_dir, ogg_untar)
-
-headers = []
-headers += env.Command (os.path.join (ogg_dir, 'include', 'ogg',
-                                      'config_types.h'),
-                        'libogg-config_types.h',
-                        Copy ("$TARGET", "$SOURCE"))
-
-sources = map (lambda f: os.path.join(ogg_dir, 'src', f),
-              ['framing.c', 'bitwise.c'])
-#Depends(sources, headers)
-
-lib_dir = os.path.join('lib')
-header_dir = os.path.join('include', 'ogg')
-
-ogg_headers = env.Install (header_dir,
-                           map(lambda f:os.path.join(ogg_dir, 'include',
-                                                     'ogg', f),
-                               ['os_types.h', 'ogg.h', 'config_types.h']))
-
-env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include')])
-
-ogg_lib = env.ConvenienceLibrary ('ogg', sources)
-#Depends (sources, ogg_headers)
-
-ogg = env.Install (lib_dir, ogg_lib)
-
-env.Clean (ogg, [ogg_dir])
-
-### vorbis & vorbisfile
-env = common_env.Clone ()
-
-vorbis_untar = env.Untar (os.path.join (srcdir, vorbis_tar))
-env.SourceCode (vorbis_dir, vorbis_untar)
-
-sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
-              ['mdct.c', 'smallft.c', 'block.c', 'envelope.c', 'window.c', 'lsp.c',
-               'lpc.c', 'analysis.c', 'synthesis.c', 'psy.c', 'info.c',
-               'floor1.c', 'floor0.c', 'res0.c', 'mapping0.c', 'registry.c',
-               'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c'])
-
-env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include'),
-                             os.path.join (vorbis_dir, 'include')])
-
-vorbis_lib = env.ConvenienceLibrary ('vorbis', sources)
-
-sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
-              ['vorbisfile.c'])
-vorbisfile_lib = env.ConvenienceLibrary ('vorbisfile', sources)
-
-header_dir = os.path.join('include', 'vorbis')
-Mkdir(header_dir)
-
-vorbis_headers = env.Install(header_dir,
-                             map(lambda f:os.path.join(vorbis_dir,
-                                                       'include', 'vorbis', f),
-                                 ['codec.h', 'vorbisenc.h', 'vorbisfile.h']))
-vorbis = env.Install (lib_dir, vorbis_lib)
-vorbis += env.Install (lib_dir, vorbisfile_lib)
-Depends (vorbis, vorbis_headers)
-
-env.Clean (vorbis, [vorbis_dir])
-
-### audiere
-env = common_env.Clone ()
+env = env.Clone()
+#env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
+configs.EnablePackage(env, 'ogg', append = False)
 
 audiere_untar = env.Untar (os.path.join (srcdir, audiere_tar))
 env.SourceCode (audiere_dir, audiere_untar)
@@ -146,8 +66,6 @@ env.AppendUnique (CPPDEFINES = ['NO_FLAC', 'NO_DUMB', 'NO_SPEEX'])
 env.AppendUnique (CPPDEFINES = ['AUDIERE_EXPORTS'])
 env.PrependUnique (LIBPATH = ['lib'])
 env.AppendUnique (LIBS = ['vorbisfile', 'vorbis', 'ogg'])
-env.PrependUnique (CPPPATH = [os.path.join (vorbis_dir, 'include'),
-                              os.path.join (ogg_dir, 'include')])
 
 if 'win32' in env['TARGET_OS']:
     env.AppendUnique (CPPDEFINES = ['WIN32_LEAN_AND_MEAN', 'NOMINMAX',
@@ -184,7 +102,8 @@ else:
     audiere_lib = env.SharedLibrary ('audiere', sources)
 
 ### install audiere header & library
-header_dir = 'include'
+header_dir = os.path.join('$top_builddir', 'include')
+lib_dir = os.path.join('$top_builddir', 'lib')
 
 audiere = env.Install (header_dir,
                        map(lambda f:os.path.join (audiere_dir,
@@ -202,8 +121,7 @@ audiere_sdk = env.Install (header_dir,
                                                       'src', f),
                                ['audiere.h']))
 
-audiere_sdk += env.Install (lib_dir, [audiere_lib, vorbisfile_lib,
-                                      vorbis_lib, ogg_lib])
+audiere_sdk += env.Install (lib_dir, [audiere_lib])
 
 env.Alias ('audiere_sdk_install', audiere_sdk)
 env.Alias ('sdk_install', audiere_sdk)
@@ -222,12 +140,15 @@ env.Program('audiere_play',
 ### setup package info
 depends = []
 objects = []
+pkgdeps = []
 if env['static_audiere']:
-    depends += ['vorbisfile', 'vorbis', 'ogg']
+    depends += ['vorbisfile']
+    pkgdeps += ['ogg']
 else:
     objects = audiere_lib
 configs.SetPackageInfo([sexyenv, gameenv], 'audiere',
+                       DEPENDS = pkgdeps,
                        LIBS = ['audiere'] + depends,
-                       CPPPATH = [os.path.join('$top_builddir', 'audiere', 'include')],
-                       LIBPATH = [os.path.join('$top_builddir', 'audiere', 'lib')],
+                       CPPPATH = [os.path.join('$top_builddir', 'include')],
+                       LIBPATH = [os.path.join('$top_builddir', 'lib')],
                        OBJECTS = objects, TARGETS = audiere)

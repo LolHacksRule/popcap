@@ -1,0 +1,111 @@
+import os
+import game
+import configs
+
+from SCons.Defaults import *
+
+Import (['env', 'gameenv'])
+
+sexyenv = env
+srcdir = Dir('.').srcnode().abspath
+
+ogg_name = 'libogg'
+ogg_version = '1.1.3'
+ogg_suffix = '.tar.gz'
+ogg_tar = ogg_name + '-' + ogg_version + ogg_suffix
+ogg_dir = ogg_name + '-' + ogg_version
+
+vorbis_name = 'libvorbis'
+vorbis_version = '1.2.1rc1'
+vorbis_suffix = '.tar.bz2'
+vorbis_tar = vorbis_name + '-' + vorbis_version + vorbis_suffix
+vorbis_dir = vorbis_name + '-' + vorbis_version
+
+tarballs = [ogg_tar, vorbis_tar]
+for tarball in tarballs:
+    fpath = os.path.join (srcdir, tarball)
+    if not os.path.exists(fpath):
+        print fpath, "doesn't exist."
+        Return ()
+
+common_env = env.Clone()
+#common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
+
+### ogg
+env = common_env.Clone()
+ogg_untar = env.Untar (os.path.join (srcdir, ogg_tar), ['*src*', '*include*'], ['*Makefile*'])
+env.SourceCode (ogg_dir, ogg_untar)
+
+headers = []
+headers += env.Command (os.path.join (ogg_dir, 'include', 'ogg',
+                                      'config_types.h'),
+                        'libogg-config_types.h',
+                        Copy ("$TARGET", "$SOURCE"))
+
+sources = map (lambda f: os.path.join(ogg_dir, 'src', f),
+              ['framing.c', 'bitwise.c'])
+#Depends(sources, headers)
+
+lib_dir = os.path.join('$top_builddir', 'lib')
+header_dir = os.path.join('$top_builddir', 'include', 'ogg')
+
+ogg_headers = env.Install (header_dir,
+                           map(lambda f:os.path.join(ogg_dir, 'include',
+                                                     'ogg', f),
+                               ['os_types.h', 'ogg.h', 'config_types.h']))
+
+env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include')])
+
+ogg_lib = env.ConvenienceLibrary ('ogg', sources)
+#Depends (sources, ogg_headers)
+
+ogg = env.Install (lib_dir, ogg_lib)
+
+env.Clean (ogg, [ogg_dir])
+
+### vorbis & vorbisfile
+env = common_env.Clone ()
+
+vorbis_untar = env.Untar (os.path.join (srcdir, vorbis_tar))
+env.SourceCode (vorbis_dir, vorbis_untar)
+
+sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
+              ['mdct.c', 'smallft.c', 'block.c', 'envelope.c', 'window.c', 'lsp.c',
+               'lpc.c', 'analysis.c', 'synthesis.c', 'psy.c', 'info.c',
+               'floor1.c', 'floor0.c', 'res0.c', 'mapping0.c', 'registry.c',
+               'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c'])
+
+env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include'),
+                             os.path.join (vorbis_dir, 'include')])
+
+vorbis_lib = env.ConvenienceLibrary ('vorbis', sources)
+
+sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
+              ['vorbisfile.c'])
+vorbisfile_lib = env.ConvenienceLibrary ('vorbisfile', sources)
+
+header_dir = os.path.join('$top_builddir', 'include', 'vorbis')
+Mkdir(header_dir)
+
+vorbis_headers = env.Install(header_dir,
+                             map(lambda f:os.path.join(vorbis_dir,
+                                                       'include', 'vorbis', f),
+                                 ['codec.h', 'vorbisenc.h', 'vorbisfile.h']))
+vorbis = env.Install (lib_dir, vorbis_lib)
+vorbis += env.Install (lib_dir, vorbisfile_lib)
+Depends (vorbis, vorbis_headers)
+
+env.Alias('ogg_install', vorbis)
+env.Alias('sdk_install', vorbis)
+
+env.Clean (vorbis, [vorbis_dir])
+
+### setup package info
+depends = []
+objects = []
+depends += ['vorbis', 'ogg']
+configs.SetPackageInfo([sexyenv, gameenv], 'ogg',
+                       LIBS = ['vorbisfile'] + depends,
+                       CPPPATH = [os.path.join('$top_builddir', 'include')],
+                       LIBPATH = [os.path.join('$top_builddir', 'lib')],
+                       OBJECTS = objects, TARGETS = vorbis)
