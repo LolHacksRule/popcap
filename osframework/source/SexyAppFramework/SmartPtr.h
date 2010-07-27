@@ -10,15 +10,15 @@ namespace Sexy
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-class SEXY_EXPORT RefCount
+class RefCount
 {
 private:
 	mutable long mRefCount;
 
-protected: 
-	// The compiler allows a derived destructor to be called if it's not explicitly declared 
-	// even if the parent destructor is private, so I make the parent destructor protected so that 
-	// derived classes can make their destructors protected as well.  (They get an error if the 
+protected:
+	// The compiler allows a derived destructor to be called if it's not explicitly declared
+	// even if the parent destructor is private, so I make the parent destructor protected so that
+	// derived classes can make their destructors protected as well.  (They get an error if the
 	// parent destructor is private.)
 	virtual ~RefCount() {}
 
@@ -26,15 +26,24 @@ public:
 	RefCount() : mRefCount(0) {}
 
 	const RefCount* CreateRef() const
-	{ 
+	{
+#ifdef WIN32
 		InterlockedIncrement(&mRefCount);
+#else
+		mRefCount++;
+#endif
 		return this;
 	}
-	
+
 	void Release()
 	{
+#ifdef WIN32
 		if(InterlockedDecrement(&mRefCount)<=0)
 			delete this;
+#else
+		if(--mRefCount <= 0)
+			delete this;
+#endif
 	}
 
 	// You might want to assign one reference counted object to another simply to copy
@@ -43,7 +52,7 @@ public:
 	RefCount(const RefCount&) : mRefCount(0) {}
 	RefCount& operator=(const RefCount&) { return *this; }
 
-	unsigned long GetRefCount() { return mRefCount; }	
+	unsigned long GetRefCount() { return mRefCount; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,7 +69,7 @@ public:
 	ConstSmartPtr() : p(NULL) {}
 
 	// Copy constructor.  Assign and add reference to underlying object.
-	ConstSmartPtr(const T* theObject) : p((T*)(theObject?theObject->CreateRef():NULL)) {} 
+	ConstSmartPtr(const T* theObject) : p((T*)(theObject?theObject->CreateRef():NULL)) {}
 	ConstSmartPtr(const ConstSmartPtr& theCopy) : p((T*)(theCopy?theCopy.p->CreateRef():NULL)){}
 
 	// Destructor.  Remove reference to underlying object.
@@ -73,16 +82,16 @@ public:
 	operator const T*() const { return p; }
 
 	// Assignment operator.  Release old underlying object if not null.  Add reference to new object.
-	const T* operator=(const T* thePtr) 
-	{ 
+	const T* operator=(const T* thePtr)
+	{
 		if(p!=thePtr) // prevent self-assignment
 		{
-			if(p!=NULL) p->Release(); 
-			p = (T*)(thePtr?thePtr->CreateRef():NULL); 
+			if(p!=NULL) p->Release();
+			p = (T*)(thePtr?thePtr->CreateRef():NULL);
 		}
 
-		return thePtr; 
-	}	
+		return thePtr;
+	}
 
 	const ConstSmartPtr& operator=(const ConstSmartPtr& theCopy)
 	{
@@ -93,7 +102,7 @@ public:
 	// Allow comparions just like normal pointer.
 	bool operator==(const T* thePtr) const { return p==thePtr; }
 	bool operator!=(const T* thePtr) const { return p!=thePtr; }
-	bool operator<(const T *thePtr) const { return p < thePtr; } 
+	bool operator<(const T *thePtr) const { return p < thePtr; }
 
 	// Accessor to actual object
 	const T* get() const { return p; }
@@ -124,10 +133,10 @@ public:
 	}
 
 
-	T* operator->() const { return p; }
-	operator T*() const { return p; }
+	T* operator->() const { return this->p; }
+	operator T*() const { return this->p; }
 
-	T* get() const { return p; }
+	T* get() const { return this->p; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
