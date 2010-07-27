@@ -27,7 +27,7 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp", "Common.cpp",
         'DriverFactory.cpp', 'VideoDriverFactory.cpp', 'SoundDriverFactory.cpp',
         'InputInterface.cpp', 'InputDriverFactory.cpp', 'InputManager.cpp',
         'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp', 'SexyThread.cpp',
-        'SexyDebug.cpp', 'SexyI18n.cpp', 'SexyLang.cpp']
+        'SexyDebug.cpp', 'SexyI18n.cpp', 'SexyLang.cpp', 'Find.cpp']
 
 ### uniconv
 srcs += map(lambda f:os.path.join ('uniconv', f),
@@ -238,7 +238,7 @@ headers = ['FlashWidget.h', 'Font.h', 'ImageFont.h', 'SexyVector.h', 'Image.h', 
            'WidgetManager.h', 'CursorWidget.h', 'EditWidget.h', 'MusicInterface.h', 'SexyDebug.h',
            'XMLParser.h', 'Event.h', 'HTTPTransfer.h', 'NativeDisplay.h', 'SexyMatrix.h',
            'Flags.h', 'HyperlinkWidget.h', 'NativeFont.h', 'SexyThread.h', 'XMLWriter.h',
-           'SexyI18n.h', 'SexyLang.h', 'SexyTimer.h']
+           'SexyI18n.h', 'SexyLang.h', 'SexyTimer.h', 'Find.h']
 sexyapp_sdk = env.Install (header_dir, headers)
 sexyapp_sdk += env.Install (lib_dir, sexy_lib)
 env.Alias ('sexyapp_sdk_install', sexyapp_sdk)
