@@ -112,6 +112,25 @@ typedef std::string			SexyString;
 #define sexyatoi			atoi
 #define sexystrcpy			strcpy
 
+#define sexystrlen                      strlen
+#define sexyatof                        atof
+#define sexysatol                       atol
+#define sexystrtoul                     strtoul
+#define sexysscanf                      sscanf
+#define sexyisspace                     isspace
+#define sexyisdigit                     isdigit
+#define sexystrtok                      strtok
+#define sexystrchr                      strchr
+#define sexysprintf                     sprintf
+#define sexytolower                     tolower
+#define sexyfstream                     std::fstream
+#define sexygetcwd                      getcwd
+#define sexychdir                       chdir
+#define sexyfgets                       fgets
+#define sexystrtok                      strtok
+#define sexyitoa                        itoa
+#define sexytoupper                     toupper
+
 #define SexyStringToStringFast(x)	(x)
 #define SexyStringToWStringFast(x)	StringToWString(x)
 #define StringToSexyStringFast(x)	(x)
@@ -270,7 +289,18 @@ inline void			inlineRTrim(std::string &theData, const std::string& theChars = " 
     theData.resize(theData.find_last_not_of(theChars) + 1);
 }
 
+inline void			inlineRTrim(std::wstring &theData, const std::wstring& theChars = L" \t\r\n")
+{
+    theData.resize(theData.find_last_not_of(theChars) + 1);
+}
+
 inline void			inlineTrim(std::string &theData, const std::string& theChars = " \t\r\n")
+{
+	inlineRTrim(theData, theChars);
+	inlineLTrim(theData, theChars);
+}
+
+inline void			inlineTrim(std::wstring &theData, const std::wstring& theChars = L" \t\r\n")
 {
 	inlineRTrim(theData, theChars);
 	inlineLTrim(theData, theChars);
