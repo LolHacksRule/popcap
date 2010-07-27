@@ -10,7 +10,7 @@ namespace Sexy
 
 #define MTRAND_N 624
 
-class SEXY_EXPORT MTRand
+class MTRand
 {
 	unsigned long mt[MTRAND_N]; /* the array for the state vector  */
 	int mti;

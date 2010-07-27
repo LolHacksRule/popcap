@@ -12,7 +12,7 @@ namespace Sexy
 class Graphics;
 class ImageFont;
 
-class SEXY_EXPORT NativeFont : public Font
+class NativeFont : public Font
 {
 public:
         NativeFont();

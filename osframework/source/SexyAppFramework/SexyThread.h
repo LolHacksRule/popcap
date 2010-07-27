@@ -12,7 +12,7 @@
 
 namespace Sexy {
 
-class SEXY_EXPORT Thread
+class Thread
 {
  public:
     Thread();

@@ -9,7 +9,7 @@ namespace Sexy
 class Font;
 class EditListener;
 
-class SEXY_EXPORT EditWidget : public Widget
+class EditWidget : public Widget
 {
 public:
 	enum

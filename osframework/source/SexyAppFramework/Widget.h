@@ -26,7 +26,7 @@ struct Touch {
 };
 typedef std::vector<Touch> TouchVector;
 
-class SEXY_EXPORT Widget : public WidgetContainer
+class Widget : public WidgetContainer
 {
 public:
 	bool					mVisible;

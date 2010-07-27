@@ -10,7 +10,7 @@ namespace Sexy
 struct SexyRGBA {unsigned char b,g,r,a;};
 #pragma pack(pop)
 
-class SEXY_EXPORT Color
+class Color
 {
 public:
 	int mRed;
@@ -42,8 +42,8 @@ public:
 	int						operator[](int theIdx) const;	
 };
 
-SEXY_EXPORT bool operator==(const Color& theColor1, const Color& theColor2);
-SEXY_EXPORT bool operator!=(const Color& theColor1, const Color& theColor2);
+bool operator==(const Color& theColor1, const Color& theColor2);
+bool operator!=(const Color& theColor1, const Color& theColor2);
 
 }
 

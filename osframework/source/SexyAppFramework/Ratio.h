@@ -5,7 +5,7 @@
 
 namespace Sexy
 {
-	struct SEXY_EXPORT  Ratio
+	struct  Ratio
 	{
 		Ratio();
 		Ratio(int theNumerator, int theDenominator);

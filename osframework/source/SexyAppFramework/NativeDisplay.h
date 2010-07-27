@@ -20,7 +20,7 @@ class Graphics;
 class MemoryImage;
 struct InputInfo;
 
-class SEXY_EXPORT DelayedWork
+class DelayedWork
 {
 public:
 	virtual ~DelayedWork()
@@ -30,7 +30,7 @@ public:
 	virtual void Work(void) = 0;
 };
 
-class SEXY_EXPORT NativeDisplay
+class NativeDisplay
 {
  public:
 	CritSect				mCritSect;

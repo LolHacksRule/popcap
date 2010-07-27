@@ -6,7 +6,7 @@
 namespace Sexy
 {
 
-class SEXY_EXPORT DialogButton : public ButtonWidget
+class DialogButton : public ButtonWidget
 {
 public:	
 	Image*					mComponentImage;

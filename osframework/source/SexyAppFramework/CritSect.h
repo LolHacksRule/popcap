@@ -10,7 +10,7 @@ class CritSync;
 namespace Sexy
 {
 
-class SEXY_EXPORT CritSect 
+class CritSect 
 {
 private:
 #ifdef WIN32

@@ -6,7 +6,7 @@
 namespace Sexy
 {
 
-class SEXY_EXPORT DataElement 
+class DataElement 
 {
 public:	
 	bool					mIsList;
@@ -18,7 +18,7 @@ public:
 	virtual DataElement*	Duplicate() = 0;
 };
 
-class SEXY_EXPORT SingleDataElement : public DataElement
+class SingleDataElement : public DataElement
 {
 public:
 	std::string				mString;	
@@ -33,7 +33,7 @@ public:
 
 typedef std::vector<DataElement*> ElementVector;
 
-class SEXY_EXPORT ListDataElement : public DataElement
+class ListDataElement : public DataElement
 {
 public:
 	ElementVector			mElementVector;
@@ -53,7 +53,7 @@ typedef std::vector<std::string> StringVector;
 typedef std::vector<int> IntVector;
 typedef std::vector<double> DoubleVector;
 
-class SEXY_EXPORT DescParser
+class DescParser
 {
 public:
 	enum

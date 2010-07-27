@@ -15,7 +15,7 @@ class WidgetManager;
 typedef std::list<Widget*> WidgetList;
 typedef std::vector<Widget*> WidgetVector;
 
-class SEXY_EXPORT WidgetContainer
+class WidgetContainer
 {
 public:
 	WidgetList				mWidgets;

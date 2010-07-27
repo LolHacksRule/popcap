@@ -13,7 +13,7 @@ class Font;
 typedef std::vector<SexyString> SexyStringVector;
 typedef std::vector<int> IntVector;
 
-class SEXY_EXPORT TextWidget : public Widget, public ScrollListener
+class TextWidget : public Widget, public ScrollListener
 {
 public:
 	Font*				mFont;

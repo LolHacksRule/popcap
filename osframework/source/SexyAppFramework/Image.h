@@ -16,7 +16,7 @@ struct Span
 	int						mWidth;
 };
 
-enum SEXY_EXPORT AnimType
+enum AnimType
 {
 	AnimType_None,
 	AnimType_Once,
@@ -24,7 +24,7 @@ enum SEXY_EXPORT AnimType
 	AnimType_Loop
 };
 
-struct SEXY_EXPORT AnimInfo
+struct AnimInfo
 {
 	AnimType				mAnimType;
 	int						mFrameDelay; // 1/100s
@@ -69,7 +69,7 @@ enum WrapMode
 	WRAP_REPEAT
 };
 
-class SEXY_EXPORT Image
+class Image
 {
 	friend class			Sexy::SysFont;
 

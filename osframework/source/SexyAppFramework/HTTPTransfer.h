@@ -9,7 +9,7 @@
 namespace Sexy
 {
 
-class SEXY_EXPORT HTTPTransfer
+class HTTPTransfer
 {
 public:
 	enum

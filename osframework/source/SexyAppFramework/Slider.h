@@ -8,7 +8,7 @@ namespace Sexy
 
 class SliderListener;
 
-class SEXY_EXPORT Slider : public Widget
+class Slider : public Widget
 {
 public:		
 	SliderListener*			mListener;

@@ -27,7 +27,7 @@ enum
 	WIDGETFLAGS_ALLOW_FOCUS		= 32,	
 };
 
-class SEXY_EXPORT PreModalInfo
+class PreModalInfo
 {
 public:
 	Widget*					mBaseModalWidget;
@@ -62,7 +62,7 @@ struct TouchInfo {
 };
 typedef std::map<int, TouchInfo> TouchInfoMap;
 
-class SEXY_EXPORT WidgetManager : public WidgetContainer
+class WidgetManager : public WidgetContainer
 {
 public:	
 	Widget*					mDefaultTab;

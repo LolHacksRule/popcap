@@ -20,7 +20,7 @@ struct InputStatusInfo {
 	int mNumDriver;
 };
 
-class SEXY_EXPORT InputManager
+class InputManager
 {
  public:
         InputManager(SexyAppBase * theApp,

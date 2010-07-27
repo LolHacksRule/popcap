@@ -6,7 +6,7 @@
 namespace Sexy
 {
 
-SEXY_EXPORT bool Quantize8Bit(const uint32* theSrcBits, int theWidth, int theHeight, uchar* theDestColorIndices, uint32* theDestColorTable);
+bool Quantize8Bit(const uint32* theSrcBits, int theWidth, int theHeight, uchar* theDestColorIndices, uint32* theDestColorTable);
 
 }
 

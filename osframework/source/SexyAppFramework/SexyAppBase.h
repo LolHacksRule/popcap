@@ -131,7 +131,7 @@ enum
 typedef std::map<HANDLE, int> HandleToIntMap;
 #endif
 
-class SEXY_EXPORT SexyAppBase : public ButtonListener, public DialogListener
+class SexyAppBase : public ButtonListener, public DialogListener
 {
 public:
 
@@ -623,7 +623,7 @@ public:
 	virtual void                            InputStatusChanged(const InputStatusInfo *theInfo);
 };
 
-extern SEXY_EXPORT SexyAppBase* gSexyAppBase;
+extern SexyAppBase* gSexyAppBase;
 
 };
 

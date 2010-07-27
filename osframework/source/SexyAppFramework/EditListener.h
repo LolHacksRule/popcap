@@ -7,7 +7,7 @@
 namespace Sexy
 {
 
-class SEXY_EXPORT EditListener
+class EditListener
 {
 public:
 	virtual void			EditWidgetText(int theId, const SexyString& theString) {};

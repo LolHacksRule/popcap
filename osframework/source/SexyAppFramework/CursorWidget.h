@@ -9,7 +9,7 @@ namespace Sexy
 
 class Image;
 
-class SEXY_EXPORT CursorWidget : public Widget
+class CursorWidget : public Widget
 {
 public:
 	Image*					mImage;

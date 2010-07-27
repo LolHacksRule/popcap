@@ -11,7 +11,7 @@ namespace Sexy
 class SexyAppBase;
 class Image;
 
-class SEXY_EXPORT CharData
+class CharData
 {
 public:
 	Rect					mImageRect;
@@ -26,7 +26,7 @@ public:
 
 class FontData;
 
-class SEXY_EXPORT FontLayer
+class FontLayer
 {
 public:	
 	FontData*				mFontData;
@@ -58,7 +58,7 @@ typedef std::list<FontLayer> FontLayerList;
 typedef std::map<std::string, FontLayer*> FontLayerMap;
 typedef std::list<Rect> RectList;
 
-class SEXY_EXPORT FontData : public DescParser
+class FontData : public DescParser
 {
 public:
 	bool					mInitialized;
@@ -91,7 +91,7 @@ public:
 	bool					LoadLegacy(Image* theFontImage, const std::string& theFontDescFileName);
 };
 
-class SEXY_EXPORT ActiveFontLayer
+class ActiveFontLayer
 {
 public:
 	FontLayer*				mBaseFontLayer;
@@ -108,7 +108,7 @@ public:
 
 typedef std::list<ActiveFontLayer> ActiveFontLayerList;
 
-class SEXY_EXPORT RenderCommand
+class RenderCommand
 {
 public:
 	Image*					mImage;
@@ -121,7 +121,7 @@ public:
 
 typedef std::multimap<int, RenderCommand> RenderCommandMap;
 
-class SEXY_EXPORT ImageFont : public Font
+class ImageFont : public Font
 {
 public:	
 	FontData*				mFontData;

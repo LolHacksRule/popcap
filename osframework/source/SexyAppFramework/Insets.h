@@ -6,7 +6,7 @@
 namespace Sexy
 {
 
-class SEXY_EXPORT Insets
+class Insets
 {
 public:
 	int						mLeft;

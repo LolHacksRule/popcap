@@ -6,7 +6,7 @@
 namespace Sexy 
 {
 
-class SEXY_EXPORT ScrollListener 
+class ScrollListener 
 {
 public:
 	virtual void ScrollPosition(int theId, double thePosition) {};

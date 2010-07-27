@@ -4,17 +4,17 @@
 #include "Common.h"
 #include <cassert>
 
-extern SEXY_EXPORT bool gInAssert;
+extern bool gInAssert;
 
 #ifdef SEXY_TRACING_ENABLED
-SEXY_EXPORT void SexyTrace(const char *theStr);
+void SexyTrace(const char *theStr);
 #define SEXY_TRACE(theStr) SexyTrace(theStr)
 #else
 #define SEXY_TRACE(theStr)
 #endif
 
-extern SEXY_EXPORT void SexyTraceFmt(const SexyChar* fmt ...);
-extern SEXY_EXPORT void OutputDebug(const SexyChar* fmt ...);
+extern void SexyTraceFmt(const SexyChar* fmt ...);
+extern void OutputDebug(const SexyChar* fmt ...);
 
 #ifdef NDEBUG
 

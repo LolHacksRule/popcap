@@ -29,7 +29,7 @@ namespace Sexy {
 		}
 	};
 
-	class SEXY_EXPORT DriverFactory
+	class DriverFactory
 	{
 	public:
 		typedef std::multiset<Driver*, DriverCompare> Drivers;
