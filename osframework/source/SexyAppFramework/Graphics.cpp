@@ -1803,3 +1803,37 @@ int	Graphics::GetWordWrappedHeight(int theWidth, const std::wstring& theLine, in
 
 	return aHeight;
 }
+
+
+int Graphics::WStringFromString(const std::string& string, std::wstring& wstr)
+{
+        int len;
+        char* result;
+
+        len = SexyUtf8Strlen(string.c_str(), -1);
+        if (Graphics::GetPreferedEncoding() == "UTF-8" && len >= 0)
+        {
+                SexyUtf8ToWString(string, wstr);
+                return len;
+        }
+
+        len = SexyUtf8FromLocale(string.c_str(), -1, &result);
+        if (len >= 0)
+        {
+                SexyUtf8ToWString(std::string(result), wstr);
+                delete [] result;
+                return len;
+        }
+
+        return -1;
+}
+
+std::wstring Graphics::WStringFromString(const std::string& string)
+{
+        std::wstring aStr;
+
+        if (Graphics::WStringFromString(string, aStr) > 0)
+                return aStr;
+
+        return StringToWString(string);
+}

@@ -185,6 +185,11 @@ public:
 
 	static void                                     SetPreferedEncoding(const std::string &encoding);
 	static const std::string                        GetPreferedEncoding();
+
+        static  int                                     WStringFromString(const std::string& string,
+                                                                          std::wstring& result);
+        static  std::wstring                            WStringFromString(const std::string& string);
+
 };
 
 class SEXY_EXPORT GraphicsAutoState
