@@ -1,5 +1,6 @@
 #define NOMINMAX
 #include "PakInterface.h"
+#include "Find.h"
 #ifdef WIN32
 #include <windows.h>
 #include <direct.h>
@@ -12,10 +13,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <stdio.h>
 
 #define stricmp(x, y) strcasecmp(x, y)
 #define strnicmp(x, y, l) strncasecmp(x, y, l)
 #endif
+
+using namespace PakLib;
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;
@@ -27,8 +31,6 @@ enum
 	FILEFLAGS_END = 0x80
 };
 
-
-static void FixFileName(const char* theFileName, char* theUpperName);
 PakInterface* gPakInterface = new PakInterface();
 
 static PakInterfaceBase* gPakInterfaceP = 0;
@@ -114,11 +116,7 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 	aPakCollection->mMappingHandle = (PakHandle)aFileMapping;
 	aPakCollection->mDataPtr = aFileMapping;
 #endif
-	char anUpperName[1024];
-	FixFileName(theFileName.c_str(), anUpperName);
-	PakRecordMap::iterator aRecordItr =
-		mPakRecordMap.insert(PakRecordMap::value_type(std::string(anUpperName),
-							      PakRecord())).first;
+	PakRecordMap::iterator aRecordItr = mPakRecordMap.insert(PakRecordMap::value_type(StringToUpper(theFileName), PakRecord())).first;
 	PakRecord* aPakRecord = &(aRecordItr->second);
 	aPakRecord->mCollection = aPakCollection;
 	aPakRecord->mFileName = theFileName;
@@ -195,10 +193,10 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 
 static void FixFileName(const char* theFileName, char* theUpperName)
 {
-	if ((isalpha(theFileName[0] != 0)) && (theFileName[1] == ':'))
+	if ((theFileName[0] != 0) && (theFileName[1] == ':'))
 	{
-		char aDir[1024];
-		getcwd(aDir, 1024);
+		char aDir[256];
+		getcwd(aDir, 256);
 		int aLen = strlen(aDir);
 		aDir[aLen++] = '\\';
 		aDir[aLen] = 0;
@@ -257,7 +255,7 @@ PFILE* PakInterface::FOpen(const char* theFileName, const char* anAccess)
 		}
 	}
 
-	FILE* aFP = fopen(theFileName, anAccess);
+	FILE* aFP = _fopencase(theFileName, anAccess);
 	if (aFP == NULL)
 		return NULL;
 	PFILE* aPFP = new PFILE;
@@ -625,3 +623,28 @@ bool PakInterface::FindClose(PakHandle hFindFile)
 	return true;
 }
 
+FILE* _fopencase(const char *path, const char * mode)
+{
+	if (!path || !mode)
+		return 0;
+
+	FILE* fp = fopen(path, mode);
+	if (fp)
+		return fp;
+
+#ifndef WIN32
+	struct _finddata_t finddata;
+	intptr_t handle = _findfirst(path, &finddata);
+	if (handle == (intptr_t)-1)
+		return 0;
+
+	std::string aPath(path);
+	if (aPath.rfind('/') >= 0)
+		aPath = aPath.substr(0, aPath.rfind('/')) + '/' + finddata.name;
+	if (strcmp(aPath.c_str(), path) && getenv("PAKLIB_DEBUG_REDIR"))
+		printf ("fopencase: '%s' to '%s'\n", path, finddata.name);
+	fp = fopen(aPath.c_str(), mode);
+	_findclose(handle);
+#endif
+	return fp;
+}

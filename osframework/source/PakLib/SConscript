@@ -8,7 +8,7 @@ import game
 
 Import('env', 'gameenv')
 paklib_env = env.Clone()
-srcs = ['PakInterface.cpp']
+srcs = ['PakInterface.cpp', 'Find.cpp']
 if not env['static']:
     paklib_env.AppendUnique(CPPDEFINES = ['BUILDING_PAKLIB'],
                             LIBS = ['$STDCXX_LIBS'])
