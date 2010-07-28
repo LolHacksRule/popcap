@@ -43,6 +43,7 @@ typedef std::vector<Event> EventVector;
 
 struct TouchInfo {
 	unsigned int timestamp;
+	bool         down;
 	int          tapCount;
 	int          x;
 	int          y;
@@ -54,6 +55,7 @@ struct TouchInfo {
 
 	void reset()
 	{
+		down = false;
 		timestamp = 0;
 		tapCount = 0;
 		x = 0;
@@ -99,6 +101,7 @@ public:
 	
 	TouchInfoMap                            mTouchInfoMap;
 	TouchVector                             mLastTouch;
+	int                                     mActiveTouchId;
 
 	int						mWidgetFlags;
 

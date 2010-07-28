@@ -36,6 +36,8 @@ WidgetManager::WidgetManager(SexyAppBase* theApp)
 	mActualDownButtons = 0;
 	mLastMouseX = 0;
 	mLastMouseY = 0;
+	mActiveTouchId = -1;
+
 	mWidgetFlags = WIDGETFLAGS_UPDATE | WIDGETFLAGS_DRAW | WIDGETFLAGS_CLIP |
 		WIDGETFLAGS_ALLOW_MOUSE | WIDGETFLAGS_ALLOW_FOCUS;
 
@@ -891,14 +893,16 @@ bool WidgetManager::TouchDown(const EventVector &events)
 		touches[i].tapCount = info->tapCount;
 		info->x = touches[i].x;
 		info->y = touches[i].y;
+		info->down = true;
 	}
 	
+	if (mActiveTouchId < 0)
+		mActiveTouchId = touches[0].id;
 
-	int x = touches[0].x;
-	int y = touches[0].y;
-	int aLastMouseX = mLastMouseX;
-	int aLastMouseY = mLastMouseY;
+	TouchInfo *info = GetTouchInfo(mActiveTouchId);
 
+	int x = info->x;
+	int y = info->y;
 	mLastMouseX = x;
 	mLastMouseY = y;
 
@@ -946,6 +950,12 @@ bool WidgetManager::TouchMove(const EventVector &events)
 		touches[i].tapCount = info->tapCount;
 		info->x = touches[i].x;
 		info->y = touches[i].y;
+
+		if (mActiveTouchId == touches[i].id)
+		{
+			mLastMouseX = touches[i].x;
+			mLastMouseY = touches[i].y;
+		}
 	}
 
 	if (mOverWidget)
@@ -976,6 +986,29 @@ bool WidgetManager::TouchUp(const EventVector &events)
 		info->timestamp = touches[i].timestamp;
 		info->x = touches[i].x;
 		info->y = touches[i].y;
+		info->down = false;
+	}
+
+	// if the active touch is up, find another one that is still down
+	TouchInfo *info = GetTouchInfo(mActiveTouchId);
+	if (info && !info->down)
+	{
+		TouchInfoMap::iterator it;
+		int anId = mActiveTouchId;
+
+		for (it = mTouchInfoMap.begin(); it != mTouchInfoMap.end(); ++it)
+		{
+			if (it->second.down)
+			{
+				mActiveTouchId = it->first;
+				mLastMouseX = info->x;
+				mLastMouseY = info->y;
+				break;
+			}
+		}
+
+		if (anId == mActiveTouchId)
+			mActiveTouchId = -1;
 	}
 
 	if (mOverWidget)
@@ -1008,6 +1041,29 @@ bool WidgetManager::TouchCancel(const EventVector &events)
 
 		info->timestamp = touches[i].timestamp;
 		info->tapCount = 0;
+		info->down = false;
+	}
+
+	// if the active touch is up, find another one that is still down
+	TouchInfo *info = GetTouchInfo(mActiveTouchId);
+	if (info && !info->down)
+	{
+		TouchInfoMap::iterator it;
+		int anId = mActiveTouchId;
+
+	        for (it = mTouchInfoMap.begin(); it != mTouchInfoMap.end(); ++it)
+		{
+			if (it->second.down)
+			{
+				mActiveTouchId = it->first;
+				mLastMouseX = info->x;
+				mLastMouseY = info->y;
+				break;
+			}
+		}
+
+		if (anId == mActiveTouchId)
+			mActiveTouchId = -1;
 	}
 
 	if (mOverWidget)
@@ -1017,6 +1073,7 @@ bool WidgetManager::TouchCancel(const EventVector &events)
 		TouchLeave(aWidget);
 	}
 	mLastTouch = touches;
+	mActiveTouchId = -1;
 	return true;
 }
 
