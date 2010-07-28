@@ -5,6 +5,8 @@
 #include "Rect.h"
 #include "Color.h"
 
+#include <string>
+
 namespace Sexy
 {
 
@@ -21,7 +23,7 @@ public:
 
 	bool					        mDrawShadow;
 	bool					        mSimulateBold;
-	bool                                            mOutLine;
+	bool					        mOutLine;
 
 public:
 	Font();
@@ -35,7 +37,7 @@ public:
 	virtual int				GetHeight();
 	virtual int				GetLineSpacingOffset();
 	virtual int				GetLineSpacing();
-	virtual int				StringWidth(const std::string& theString, bool unicode = false);
+	virtual int				StringWidth(const std::string& theString);
 	virtual int				StringWidth(const std::wstring& theString);
 
 	virtual int				CharWidth(int theChar);

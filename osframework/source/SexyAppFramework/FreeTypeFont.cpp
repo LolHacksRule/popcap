@@ -57,18 +57,22 @@ FreeTypeFont::~FreeTypeFont()
 	mScaledFont->Unref();
 }
 
-int FreeTypeFont::StringWidth(const std::string& theString, bool unicode)
+int FreeTypeFont::StringWidth(const std::string& theString)
 {
-       if (Graphics::GetPreferedEncoding() == "UTF-8")
+	bool unicode = false;
+	if (Graphics::GetPreferedEncoding() == "UTF-8")
                unicode = true;
 	return mScaledFont->StringWidth(theString, unicode);
 }
 
 void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const std::string& theString,
-			      const Color& theColor, const Rect& theClipRect, bool unicode)
+			      const Color& theColor, const Rect& theClipRect)
 {
+	bool unicode = false;
+	if (Graphics::GetPreferedEncoding() == "UTF-8")
+               unicode = true;
 	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect,
-				unicode, mDrawShadow, mOutLine);
+				unicode, mDrawShadow);
 }
 
 int FreeTypeFont::StringWidth(const std::wstring& theString)
@@ -79,8 +83,7 @@ int FreeTypeFont::StringWidth(const std::wstring& theString)
 void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const std::wstring& theString,
 			      const Color& theColor, const Rect& theClipRect)
 {
-	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect,
-				mDrawShadow, mOutLine);
+	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect, mDrawShadow);
 }
 
 int FreeTypeFont::CharWidth(int theChar)

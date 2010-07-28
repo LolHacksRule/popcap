@@ -2,13 +2,14 @@
 #define __DESCPARSER_H__
 
 #include "Common.h"
+#include "EncodingParser.h"
 
 namespace Sexy
 {
 
-class DataElement 
+class DataElement
 {
-public:	
+public:
 	bool					mIsList;
 
 public:
@@ -21,11 +22,12 @@ public:
 class SingleDataElement : public DataElement
 {
 public:
-	std::string				mString;	
+	std::wstring				mString;
+	DataElement*			mValue;
 
 public:
 	SingleDataElement();
-	SingleDataElement(const std::string theString);
+	SingleDataElement(const std::wstring& theString);
 	virtual ~SingleDataElement();
 
 	virtual DataElement*	Duplicate();
@@ -42,18 +44,18 @@ public:
 	ListDataElement();
 	ListDataElement(const ListDataElement& theListDataElement);
 	virtual ~ListDataElement();
-	
+
 	ListDataElement&		operator=(const ListDataElement& theListDataElement);
 
 	virtual DataElement*	Duplicate();
 };
 
-typedef std::map<std::string, DataElement*> DataElementMap;
-typedef std::vector<std::string> StringVector;
+typedef std::map<std::wstring, DataElement*> DataElementMap;
+typedef std::vector<std::wstring> WStringVector;
 typedef std::vector<int> IntVector;
 typedef std::vector<double> DoubleVector;
 
-class DescParser
+class DescParser : public EncodingParser
 {
 public:
 	enum
@@ -65,35 +67,38 @@ public:
 public:
 	int						mCmdSep;
 
-	std::string				mError;
+	std::wstring				mError;
 	int						mCurrentLineNum;
-	std::string				mCurrentLine;
+	std::wstring			mCurrentLine;
 	DataElementMap			mDefineMap;
 
 public:
-	virtual bool			Error(const std::string& theError);
-	virtual DataElement*	Dereference(const std::string& theString);
-	bool					IsImmediate(const std::string& theString);
-	std::string				Unquote(const std::string& theQuotedString);
+	virtual bool			Error(const std::wstring& theError);
+	virtual DataElement*	Dereference(const std::wstring& theString);
+	bool					IsImmediate(const std::wstring& theString);
+	std::wstring				Unquote(const std::wstring& theQuotedString);
 	bool					GetValues(ListDataElement* theSource, ListDataElement* theValues);
-	std::string				DataElementToString(DataElement* theDataElement);
-	bool					DataToString(DataElement* theSource, std::string* theString);
+	std::wstring				DataElementToString(const DataElement* theDataElement, bool enclose = true);
+	bool					DataToString(DataElement* theSource, std::wstring* theString);
+	bool					DataToKeyAndValue(DataElement* theSource, std::wstring* theKey, DataElement** theValue);
 	bool					DataToInt(DataElement* theSource, int* theInt);
-	bool					DataToStringVector(DataElement* theSource, StringVector* theStringVector);
+	bool					DataToDouble(DataElement* theSource, double* theDouble);
+	bool					DataToBoolean(DataElement* theSource, bool* theBool);
+	bool					DataToStringVector(DataElement* theSource, WStringVector* theStringVector);
 	bool					DataToList(DataElement* theSource, ListDataElement* theValues);
 	bool					DataToIntVector(DataElement* theSource, IntVector* theIntVector);
 	bool					DataToDoubleVector(DataElement* theSource, DoubleVector* theDoubleVector);
-	bool					ParseToList(const std::string& theString, ListDataElement* theList, bool expectListEnd, int* theStringPos);
-	bool					ParseDescriptorLine(const std::string& theDescriptorLine);
+	bool					ParseToList(const std::wstring& theString, ListDataElement* theList, bool expectListEnd, int* theStringPos);
+	bool					ParseDescriptorLine(const std::wstring& theDescriptorLine);
 
 	// You must implement this one
 	virtual bool			HandleCommand(const ListDataElement& theParams) = 0;
-	
+
 public:
 	DescParser();
-	virtual ~DescParser();	
+	virtual ~DescParser();
 
-	bool					LoadDescriptor(const std::string& theFileName);	
+	virtual bool			LoadDescriptor(const std::string& theFileName);
 };
 
 }

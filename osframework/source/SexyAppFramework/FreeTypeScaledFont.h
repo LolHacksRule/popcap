@@ -127,6 +127,7 @@ namespace Sexy
 		FreeTypeScaledFont*		Duplicate();
 
 	private:
+		std::string                     mName;
 		FreeTypeBaseFont	      * mBaseFont;
 		FT_Matrix			mMatrix;
 		float				mSize;

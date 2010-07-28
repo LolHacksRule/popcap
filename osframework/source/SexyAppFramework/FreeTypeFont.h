@@ -31,14 +31,16 @@ namespace Sexy
 
 		virtual ~FreeTypeFont();
 
-		virtual int			StringWidth(const std::string& theString, bool unicode = false);
+		virtual int			StringWidth(const std::string& theString);
 		virtual void			DrawString(Graphics* g, int theX, int theY,
-							   const std::string& theString, const Color& theColor,
-							   const Rect& theClipRect, bool unicode = false);
+							   const std::string& theString,
+							   const Color& theColor,
+							   const Rect& theClipRect);
 
 		virtual int			StringWidth(const std::wstring& theString);
 		virtual void			DrawString(Graphics* g, int theX, int theY,
-							   const std::wstring& theString, const Color& theColor,
+							   const std::wstring& theString,
+							   const Color& theColor,
 							   const Rect& theClipRect);
 
 		virtual int			CharWidth(int theChar);

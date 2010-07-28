@@ -132,8 +132,8 @@ void  FreeTypeBaseFont::SetSize(float size, FT_Matrix* matrix)
     if (FT_IS_SCALABLE(face))
     {
 	    error = FT_Set_Char_Size (face,
-				      size * 64.0,
-				      size * 64.0,
+				      FT_F26Dot6(size * 64.0),
+				      FT_F26Dot6(size * 64.0),
 				      0, 0);
     }
     else

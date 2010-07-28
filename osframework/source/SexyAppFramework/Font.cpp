@@ -66,7 +66,7 @@ int Font::GetLineSpacing()
 	return mHeight + mLineSpacingOffset;
 }
 
-int Font::StringWidth(const std::string& theString, bool unicode)
+int Font::StringWidth(const std::string& theString)
 {
 	return 0;
 }

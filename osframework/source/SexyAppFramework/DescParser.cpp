@@ -3,6 +3,84 @@
 
 using namespace Sexy;
 
+//////////////////////////////////////////////////////////////////////////
+
+DataElement::DataElement() :
+mIsList(false)
+{
+}
+
+DataElement::~DataElement()
+{
+}
+
+SingleDataElement::SingleDataElement()
+{
+	mIsList = false;
+	mValue = NULL;
+}
+
+SingleDataElement::SingleDataElement(const std::wstring& theString) :
+	mString(theString)
+{
+	mIsList = false;
+	mValue = NULL;
+}
+
+SingleDataElement::~SingleDataElement()
+{
+	if (mValue != NULL)
+		delete mValue;
+}
+
+DataElement* SingleDataElement::Duplicate()
+{
+	SingleDataElement* aSingleDataElement = new SingleDataElement(*this);
+	if (mValue != NULL)
+		aSingleDataElement->mValue = mValue->Duplicate();
+	return aSingleDataElement;
+}
+
+ListDataElement::ListDataElement()
+{
+	mIsList = true;
+}
+
+ListDataElement::~ListDataElement()
+{
+	for (ulong i = 0; i < mElementVector.size(); i++)
+		delete mElementVector[i];
+}
+
+ListDataElement::ListDataElement(const ListDataElement& theListDataElement)
+{
+	mIsList = true;
+	for (ulong i = 0; i < theListDataElement.mElementVector.size(); i++)
+		mElementVector.push_back(theListDataElement.mElementVector[i]->Duplicate());
+}
+
+ListDataElement& ListDataElement::operator=(const ListDataElement& theListDataElement)
+{
+	ulong i;
+
+	for (i = 0; i < mElementVector.size(); i++)
+		delete mElementVector[i];
+	mElementVector.clear();
+
+	for (i = 0; i < theListDataElement.mElementVector.size(); i++)
+		mElementVector.push_back(theListDataElement.mElementVector[i]->Duplicate());
+
+	return *this;
+}
+
+DataElement* ListDataElement::Duplicate()
+{
+	ListDataElement* aListDataElement = new ListDataElement(*this);
+	return aListDataElement;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 DescParser::DescParser()
 {
 	mCmdSep = CMDSEP_SEMICOLON;
@@ -12,15 +90,16 @@ DescParser::~DescParser()
 {
 }
 
-bool DescParser::Error(const std::string& theError)
+bool DescParser::Error(const std::wstring& theError)
 {
-	mError = theError;
+	if (mError.length() == 0)
+		mError = theError;
 	return false;
 }
 
-DataElement* DescParser::Dereference(const std::string& theString)
+DataElement* DescParser::Dereference(const std::wstring& theString)
 {
-	std::string aDefineName = StringToUpper(theString);
+	std::wstring aDefineName = StringToUpper(theString);
 
 	DataElementMap::iterator anItr = mDefineMap.find(aDefineName);
 	if (anItr != mDefineMap.end())
@@ -29,33 +108,47 @@ DataElement* DescParser::Dereference(const std::string& theString)
 		return NULL;
 }
 
-bool DescParser::IsImmediate(const std::string& theString)
+bool DescParser::IsImmediate(const std::wstring& theString)
 {
-	return (((theString[0] >= '0') && (theString[0] <= '9')) || (theString[0] == '-') ||
-		(theString[0] == '+') || (theString[0] == '\'') || (theString[0] == '"'));
+	return (((theString[0] >= L'0') && (theString[0] <= L'9')) || (theString[0] == L'-') ||
+		(theString[0] == L'+') || (theString[0] == L'\'') || (theString[0] == L'"'));
 }
 
-std::string DescParser::Unquote(const std::string& theQuotedString)
+std::wstring DescParser::Unquote(const std::wstring& theQuotedString)
 {
-	if ((theQuotedString[0] == '\'') || (theQuotedString[0] == '"'))
+	if ((theQuotedString[0] == L'\'') || (theQuotedString[0] == L'"'))
 	{
-		char aQuoteChar = theQuotedString[0];
-		std::string aLiteralString;
-		bool lastWasQuote = false;
+		SexyChar aQuoteChar = theQuotedString[0];
+		std::wstring aLiteralString;
+		bool lastWasQuote = true;
+		bool lastWasSlash = false;
 
-		for (ulong i = 0; i < theQuotedString.length(); i++)
+		for (ulong i = 1; i < theQuotedString.length()-1; i++)
 		{
-			if (theQuotedString[i] == aQuoteChar)
+			if (lastWasSlash)
 			{
-				if (lastWasQuote)
-					aLiteralString += aQuoteChar;
-
-				lastWasQuote = true;
+				aLiteralString += theQuotedString[i];
+				lastWasSlash = false;
 			}
 			else
 			{
-				aLiteralString += theQuotedString[i];
-				lastWasQuote = false;
+				if (theQuotedString[i] == aQuoteChar)
+				{
+					if (lastWasQuote)
+						aLiteralString += aQuoteChar;
+
+					lastWasQuote = true;
+				}
+				else if (theQuotedString[i] == L'\\')
+				{
+					lastWasSlash = true;
+					lastWasQuote = false;
+				}
+				else
+				{
+					aLiteralString += theQuotedString[i];
+					lastWasQuote = false;
+				}
 			}
 		}
 
@@ -81,7 +174,7 @@ bool DescParser::GetValues(ListDataElement* theSource, ListDataElement* theValue
 		}
 		else
 		{
-			std::string aString = ((SingleDataElement*) theSource->mElementVector[aSourceNum])->mString;
+			std::wstring aString = ((SingleDataElement*) theSource->mElementVector[aSourceNum])->mString;
 
 			if (aString.length() > 0)
 			{
@@ -96,13 +189,13 @@ bool DescParser::GetValues(ListDataElement* theSource, ListDataElement* theValue
 				}
 				else
 				{
-					std::string aDefineName = StringToUpper(aString);
+					std::wstring aDefineName = StringToUpper(aString);
 
 					DataElementMap::iterator anItr = mDefineMap.find(aDefineName);
 
 					if (anItr == mDefineMap.end())
 					{
-						Error("Unable to Dereference \"" + aString + "\"");
+						Error(L"Unable to Dereference \"" + aString + L"\"");
 						return false;
 					}
 
@@ -117,41 +210,46 @@ bool DescParser::GetValues(ListDataElement* theSource, ListDataElement* theValue
 	return true;
 }
 
-std::string DescParser::DataElementToString(DataElement* theDataElement)
+std::wstring DescParser::DataElementToString(const DataElement* theDataElement, bool enclose)
 {
 	if (theDataElement->mIsList)
 	{
 		ListDataElement* aListDataElement = (ListDataElement*) theDataElement;
 
-		std::string aString = "(";
+		std::wstring aString = enclose ? L"(" : L"";
 
 		for (ulong i = 0; i < aListDataElement->mElementVector.size(); i++)
 		{
 			if (i != 0)
-				aString += ", ";
+				aString += enclose ? L", " : L" ";
 
 			aString += DataElementToString(aListDataElement->mElementVector[i]);
 		}
 
-		aString += ")";
+		aString += enclose ? L")" : L"";
 
 		return aString;
 	}
 	else
 	{
 		SingleDataElement* aSingleDataElement = (SingleDataElement*) theDataElement;
-		return aSingleDataElement->mString;
+		if (aSingleDataElement->mValue != NULL)
+			return aSingleDataElement->mString + L"=" + DataElementToString(aSingleDataElement->mValue);
+		else
+			return aSingleDataElement->mString;
 	}
 }
 
-bool DescParser::DataToString(DataElement* theSource, std::string* theString)
+bool DescParser::DataToString(DataElement* theSource, std::wstring* theString)
 {
-	*theString = "";
+	*theString = L"";
 
 	if (theSource->mIsList)
 		return false;
+	if (((SingleDataElement*) theSource)->mValue != NULL)
+		return false;
 
-	std::string aDefName = ((SingleDataElement*) theSource)->mString;
+	std::wstring aDefName = ((SingleDataElement*) theSource)->mString;
 
 	DataElement* aDataElement = Dereference(aDefName);
 
@@ -168,11 +266,38 @@ bool DescParser::DataToString(DataElement* theSource, std::string* theString)
 	return true;
 }
 
+bool DescParser::DataToKeyAndValue(DataElement* theSource, std::wstring* theKey, DataElement** theValue)
+{
+	*theKey = L"";
+
+	if (theSource->mIsList)
+		return false;
+	if (((SingleDataElement*) theSource)->mValue == NULL)
+		return false;
+	*theValue = ((SingleDataElement*) theSource)->mValue;
+
+	std::wstring aDefName = ((SingleDataElement*) theSource)->mString;
+
+	DataElement* aDataElement = Dereference(aDefName);
+
+	if (aDataElement != NULL)
+	{
+		if (aDataElement->mIsList)
+			return false;
+
+		*theKey = Unquote(((SingleDataElement*) aDataElement)->mString);
+	}
+	else
+		*theKey = Unquote(aDefName);
+
+	return true;
+}
+
 bool DescParser::DataToInt(DataElement* theSource, int* theInt)
 {
 	*theInt = 0;
 
-	std::string aTempString;
+	std::wstring aTempString;
 	if (!DataToString(theSource, &aTempString))
 		return false;
 
@@ -182,7 +307,48 @@ bool DescParser::DataToInt(DataElement* theSource, int* theInt)
 	return true;
 }
 
-bool DescParser::DataToStringVector(DataElement* theSource, StringVector* theStringVector)
+bool DescParser::DataToDouble(DataElement* theSource, double* theDouble)
+{
+	*theDouble = 0;
+
+	std::wstring aTempString;
+	if (!DataToString(theSource, &aTempString))
+		return false;
+
+	if (!StringToDouble(aTempString, theDouble))
+		return false;
+
+	return true;
+}
+
+bool DescParser::DataToBoolean(DataElement* theSource, bool* theBool)
+{
+	*theBool = false;
+
+	std::wstring aTempString;
+	if (!DataToString(theSource, &aTempString))
+		return false;
+
+	if ((wcscmp(aTempString.c_str(), L"false") == 0) ||
+	    (wcscmp(aTempString.c_str(), L"no") == 0) ||
+	    (wcscmp(aTempString.c_str(), L"0") == 0))
+	{
+		*theBool = false;
+		return true;
+	}
+
+	if ((wcscmp(aTempString.c_str(), L"true") == 0) ||
+	    (wcscmp(aTempString.c_str(), L"yes") == 0) ||
+	    (wcscmp(aTempString.c_str(), L"1") == 0))
+	{
+		*theBool = true;
+		return true;
+	}
+
+	return false;
+}
+
+bool DescParser::DataToStringVector(DataElement* theSource, WStringVector* theStringVector)
 {
 	theStringVector->clear();
 
@@ -198,13 +364,13 @@ bool DescParser::DataToStringVector(DataElement* theSource, StringVector* theStr
 	}
 	else
 	{
-		std::string aDefName = ((SingleDataElement*) theSource)->mString;
+		std::wstring aDefName = ((SingleDataElement*) theSource)->mString;
 
 		DataElement* aDataElement = Dereference(aDefName);
 
 		if (aDataElement == NULL)
 		{
-			Error("Unable to Dereference \"" + aDefName + "\"");
+			Error(L"Unable to Dereference \"" + aDefName + L"\"");
 			return false;
 		}
 
@@ -253,7 +419,7 @@ bool DescParser::DataToIntVector(DataElement* theSource, IntVector* theIntVector
 {
 	theIntVector->clear();
 
-	StringVector aStringVector;
+	WStringVector aStringVector;
 	if (!DataToStringVector(theSource, &aStringVector))
 		return false;
 
@@ -273,7 +439,7 @@ bool DescParser::DataToDoubleVector(DataElement* theSource, DoubleVector* theDou
 {
 	theDoubleVector->clear();
 
-	StringVector aStringVector;
+	WStringVector aStringVector;
 	if (!DataToStringVector(theSource, &aStringVector))
 		return false;
 
@@ -289,12 +455,14 @@ bool DescParser::DataToDoubleVector(DataElement* theSource, DoubleVector* theDou
 	return true;
 }
 
-bool DescParser::ParseToList(const std::string& theString, ListDataElement* theList, bool expectListEnd, int* theStringPos)
+bool DescParser::ParseToList(const std::wstring& theString, ListDataElement* theList, bool expectListEnd, int* theStringPos)
 {
 	bool inSingleQuotes = false;
 	bool inDoubleQuotes = false;
 	bool escaped = false;
+	bool wantTerminateSingleDataElement = false;
 
+	SingleDataElement* aKeySingleDataElement = NULL;
 	SingleDataElement* aCurSingleDataElement = NULL;
 
 	int aStringPos = 0;
@@ -305,65 +473,100 @@ bool DescParser::ParseToList(const std::string& theString, ListDataElement* theL
 	while (*theStringPos < (int) theString.length())
 	{
 		bool addSingleChar = false;
-		char aChar = theString[(*theStringPos)++];
+		wchar_t aChar = theString[(*theStringPos)++];
 
-		bool isSeperator = (aChar == ' ') || (aChar == '\t') || (aChar == '\n') || (aChar == ',');
+		bool isSeperator = (aChar == L' ') || (aChar == L'\t') ||
+			(aChar == L'\n') || (aChar == L',');
 
 		if (escaped)
 		{
 			addSingleChar = true;
-			escaped = false;
 		}
 		else
 		{
-			if ((aChar == '\'') && (!inDoubleQuotes))
+			if ((aChar == L'\'') && (!inDoubleQuotes))
 				inSingleQuotes = !inSingleQuotes;
-			else if ((aChar == '"') && (!inSingleQuotes))
+			else if ((aChar == L'"') && (!inSingleQuotes))
 				inDoubleQuotes = !inDoubleQuotes;
 
-			if (aChar == '\\')
+			if (aChar == L'\\')
 			{
 				escaped = true;
 			}
 			else if ((!inSingleQuotes) && (!inDoubleQuotes))
 			{
-				if (aChar == ')')
+				if (aChar == L')')
 				{
 					if (expectListEnd)
 						return true;
 					else
 					{
-						Error("Unexpected List End");
+						Error(L"Unexpected List End");
 						return false;
 					}
 				}
-				else if (aChar == '(')
+				else if (aChar == L'(')
 				{
+					if (wantTerminateSingleDataElement)
+					{
+						aCurSingleDataElement = NULL;
+						wantTerminateSingleDataElement = false;
+					}
+
 					if (aCurSingleDataElement != NULL)
 					{
-						Error("Unexpected List Start");
+						Error(L"Unexpected List Start");
 						return false;
 					}
-					else
+
+					ListDataElement* aChildList = new ListDataElement();
+
+					if (!ParseToList(theString, aChildList, true, theStringPos))
+						return false;
+
+					if (aKeySingleDataElement != NULL)
 					{
-						ListDataElement* aChildList = new ListDataElement();
-
-						if (!ParseToList(theString, aChildList, true, theStringPos))
-							return false;
-
-						theList->mElementVector.push_back(aChildList);
+						aKeySingleDataElement->mValue = aChildList;
+						aKeySingleDataElement = NULL;
 					}
+					else
+						theList->mElementVector.push_back(aChildList);
+				}
+				else if (aChar == L'=')
+				{
+					// Make it a value
+					aKeySingleDataElement = aCurSingleDataElement;
+					/*SingleDataElement* aNewSingleDataElement = new SingleDataElement();
+					aCurSingleDataElement->mValue = aNewSingleDataElement;
+					aCurSingleDataElement = aNewSingleDataElement;
+					wantTerminateSingleDataElement = false;*/
+
+					wantTerminateSingleDataElement = true;
 				}
 				else if (isSeperator)
 				{
-					if (aCurSingleDataElement != NULL)
-						aCurSingleDataElement = NULL;
+					if ((aCurSingleDataElement != NULL) && (aCurSingleDataElement->mString.length() > 0))
+						wantTerminateSingleDataElement = true;
 				}
 				else
+				{
+					if (wantTerminateSingleDataElement)
+					{
+						aCurSingleDataElement = NULL;
+						wantTerminateSingleDataElement = false;
+					}
 					addSingleChar = true;
+				}
 			}
 			else
+			{
+				if (wantTerminateSingleDataElement)
+				{
+					aCurSingleDataElement = NULL;
+					wantTerminateSingleDataElement = false;
+				}
 				addSingleChar = true;
+			}
 		}
 
 		if (addSingleChar)
@@ -371,7 +574,19 @@ bool DescParser::ParseToList(const std::string& theString, ListDataElement* theL
 			if (aCurSingleDataElement == NULL)
 			{
 				aCurSingleDataElement = new SingleDataElement();
-				theList->mElementVector.push_back(aCurSingleDataElement);
+				if (aKeySingleDataElement != NULL)
+				{
+					aKeySingleDataElement->mValue = aCurSingleDataElement;
+					aKeySingleDataElement = NULL;
+				}
+				else
+					theList->mElementVector.push_back(aCurSingleDataElement);
+			}
+
+			if (escaped)
+			{
+				aCurSingleDataElement->mString += L"\\";
+				escaped = false;
 			}
 
 			aCurSingleDataElement->mString += aChar;
@@ -380,26 +595,26 @@ bool DescParser::ParseToList(const std::string& theString, ListDataElement* theL
 
 	if (inSingleQuotes)
 	{
-		Error("Unterminated Single Quotes");
+		Error(L"Unterminated Single Quotes");
 		return false;
 	}
 
 	if (inDoubleQuotes)
 	{
-		Error("Unterminated Double Quotes");
+		Error(L"Unterminated Double Quotes");
 		return false;
 	}
 
 	if (expectListEnd)
 	{
-		Error("Unterminated List");
+		Error(L"Unterminated List");
 		return false;
 	}
 
 	return true;
 }
 
-bool DescParser::ParseDescriptorLine(const std::string& theDescriptorLine)
+bool DescParser::ParseDescriptorLine(const std::wstring& theDescriptorLine)
 {
 	ListDataElement aParams;
 	if (!ParseToList(theDescriptorLine, &aParams, false, NULL))
@@ -409,7 +624,7 @@ bool DescParser::ParseDescriptorLine(const std::string& theDescriptorLine)
 	{
 		if (aParams.mElementVector[0]->mIsList)
 		{
-			Error("Missing Command");
+			Error(L"Missing Command");
 			return false;
 		}
 
@@ -429,17 +644,14 @@ bool DescParser::LoadDescriptor(const std::string& theFileName)
 	//Apparently VC6 doesn't have a clear() function for basic_strings
 	//mError.clear();
 	mError.erase();
-	//mError.erase(mError.begin());
+	mCurrentLine = L"";
 
-	PFILE *aStream = p_fopen(theFileName.c_str(),"r");
-	if (aStream==NULL)
-		return false;
+	if (!EncodingParser::OpenFile(theFileName))
+		return Error(L"Unable to open file: " + StringToWString(theFileName));
 
-	char aBuffChar = 0;
-
-	while (!p_feof(aStream))
+	while (!EndOfFile())
 	{
-		int aChar;
+		wchar_t aChar;
 
 		bool skipLine = false;
 		bool atLineStart = true;
@@ -450,71 +662,68 @@ bool DescParser::LoadDescriptor(const std::string& theFileName)
 
 		for (;;)
 		{
-			if (aBuffChar != 0)
-			{
-				aChar = aBuffChar;
-				aBuffChar = 0;
-			}
-			else
-			{
-				aChar = p_fgetc(aStream);
-				if (aChar==EOF)
-					break;
-			}
+			EncodingParser::GetCharReturnType aResult = GetChar(&aChar);
+			if (aResult == END_OF_FILE)
+				break;
 
-			if (aChar != '\r')
+			if (aResult == INVALID_CHARACTER)
+				return Error(L"Invalid Character");
+			if (aResult != SUCCESSFUL)
+				return Error(L"Internal Error");
+
+			if (aChar != L'\r')
 			{
-				if (aChar == '\n')
+				if (aChar == L'\n')
 					aLineCount++;
 
-				if (((aChar == ' ') || (aChar == '\t')) && (atLineStart))
+				if (((aChar == L' ') || (aChar == L'\t')) && (atLineStart))
 					isIndented = true;
 
-				if ((!atLineStart) || ((aChar != ' ') && (aChar != '\t') && (aChar != '\n')))
+				if ((!atLineStart) || ((aChar != L' ') && (aChar != L'\t') && (aChar != L'\n')))
 				{
 					if (atLineStart)
 					{
 						if ((mCmdSep & CMDSEP_NO_INDENT) && (!isIndented) && (mCurrentLine.size() > 0))
 						{
 							// Start a new non-indented line
-							aBuffChar = aChar;
+							PutChar(aChar);
 							break;
 						}
 
-						if (aChar == '#')
+						if (aChar == L'#')
 							skipLine = true;
 
 						atLineStart = false;
 					}
 
-					if (aChar == '\n')
+					if (aChar == L'\n')
 					{
 						isIndented = false;
 						atLineStart = true;
 					}
 
-					if ((aChar == '\n') && (skipLine))
+					if ((aChar == L'\n') && (skipLine))
 					{
 						skipLine = false;
 					}
 					else if (!skipLine)
 					{
-						if (aChar == '\\' && (inSingleQuotes || inDoubleQuotes) && !escaped)
+						if (aChar == L'\\' && (inSingleQuotes || inDoubleQuotes) && !escaped)
 							escaped = true;
 						else
 						{
-							if ((aChar == '\'') && (!inDoubleQuotes) && (!escaped))
+							if ((aChar == L'\'') && (!inDoubleQuotes) && (!escaped))
 								inSingleQuotes = !inSingleQuotes;
 
-							if ((aChar == '"') && (!inSingleQuotes) && (!escaped))
+							if ((aChar == L'"') && (!inSingleQuotes) && (!escaped))
 								inDoubleQuotes = !inDoubleQuotes;
 
-							if ((aChar == ';') && (mCmdSep & CMDSEP_SEMICOLON) && (!inSingleQuotes) && (!inDoubleQuotes))
+							if ((aChar == L';') && (mCmdSep & CMDSEP_SEMICOLON) && (!inSingleQuotes) && (!inDoubleQuotes))
 								break;
 
 							if(escaped) // stay escaped for when this is actually parsed
 							{
-								mCurrentLine += '\\';
+								mCurrentLine += L'\\';
 								escaped = false;
 							}
 
@@ -547,6 +756,6 @@ bool DescParser::LoadDescriptor(const std::string& theFileName)
 	mCurrentLine.erase();
 	mCurrentLineNum = 0;
 
-	p_fclose(aStream);
+	CloseFile();
 	return !hasErrors;
 }

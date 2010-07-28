@@ -7,6 +7,8 @@
 #include "Image.h"
 #include "TriVertex.h"
 
+#include <string>
+
 namespace Sexy
 {
 
@@ -55,13 +57,13 @@ typedef std::list<GraphicsState> GraphicsStateList;
 
 class Graphics : public GraphicsState
 {
-public:	
+public:
 	enum
 	{
 		DRAWMODE_NORMAL,
 		DRAWMODE_ADDITIVE
 	};
-	
+
 	Edge*					mPFActiveEdgeList;
 	int						mPFNumActiveEdges;
 	static const Point*		mPFPoints;
@@ -69,10 +71,10 @@ public:
 
 	GraphicsStateList		mStateStack;
 
-protected:	
+protected:
 	static int				PFCompareInd(const void* u, const void* v);
 	static int				PFCompareActive(const void* u, const void* v);
-	void					PFDelete(int i); 
+	void					PFDelete(int i);
 	void					PFInsert(int i, int y);
 
 	void					DrawImageTransformHelper(Image* theImage, const Transform &theTransform, const Rect &theSrcRect, float x, float y, bool useFloat);
@@ -80,22 +82,22 @@ protected:
 public:
 	Graphics(const Graphics& theGraphics);
 	Graphics(Image* theDestImage = NULL);
-	virtual ~Graphics();	
+	virtual ~Graphics();
 
 	void					PushState();
 	void					PopState();
 
 	Graphics*				Create();
-	
+
 	void					SetFont(Font* theFont);
 	Font*					GetFont();
 
 	void					SetColor(const Color& theColor);
 	const Color&			GetColor();
-	
+
 	void					SetDrawMode(int theDrawMode);
 	int						GetDrawMode();
-	
+
 	void					SetColorizeImages(bool colorizeImages);
 	bool					GetColorizeImages();
 
@@ -107,11 +109,11 @@ public:
 
 	void					FillRect(int theX, int theY, int theWidth, int theHeight);
 	void					FillRect(const Rect& theRect);
-	void					DrawRect(int theX, int theY, int theWidth, int theHeight);	
+	void					DrawRect(int theX, int theY, int theWidth, int theHeight);
 	void					DrawRect(const Rect& theRect);
-	void					ClearRect(int theX, int theY, int theWidth, int theHeight);	
+	void					ClearRect(int theX, int theY, int theWidth, int theHeight);
 	void					ClearRect(const Rect& theRect);
-	void					DrawString(const std::string& theString, int theX, int theY, bool unicode = false);
+	void					DrawString(const std::string& theString, int theX, int theY);
 	void					DrawString(const std::wstring& theString, int theX, int theY);
 
 private:
@@ -165,16 +167,16 @@ public:
 	// In progress: Only affects DrawImage
 	void					SetScale(float theScaleX, float theScaleY, float theOrigX, float theOrigY);
 
-	int						StringWidth(const std::string& theString, bool unicode = false);
+	int						StringWidth(const std::string& theString);
 	int						StringWidth(const std::wstring& theString);
 	void					DrawImageBox(const Rect& theDest, Image* theComponentImage);
 	void					DrawImageBox(const Rect& theSrc, const Rect& theDest, Image* theComponentImage);
 
-	int						WriteString(const std::string& theString, int theX, int theY, int theWidth = -1, int theJustification = 0, bool drawString = true, int theOffset = 0, int theLength = -1, int theOldColor = -1, bool unicode = false);
+	int						WriteString(const std::string& theString, int theX, int theY, int theWidth = -1, int theJustification = 0, bool drawString = true, int theOffset = 0, int theLength = -1, int theOldColor = -1);
 	int						WriteString(const std::wstring& theString, int theX, int theY, int theWidth = -1, int theJustification = 0, bool drawString = true, int theOffset = 0, int theLength = -1, int theOldColor = -1);
 	int						WriteWordWrapped(const Rect& theRect, const std::string& theLine, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL, int theMaxChars = -1, int* theLastWidth = NULL);
 	int						WriteWordWrapped(const Rect& theRect, const std::wstring& theLine, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL, int theMaxChars = -1, int* theLastWidth = NULL);
-	int						DrawStringColor(const std::string& theString, int theX, int theY, int theOldColor = -1, bool unicode = false); //works like DrawString but can have color tags like ^ff0000^.
+	int						DrawStringColor(const std::string& theString, int theX, int theY, int theOldColor = -1); //works like DrawString but can have color tags like ^ff0000^.
 	int						DrawStringColor(const std::wstring& theString, int theX, int theY, int theOldColor = -1); //works like DrawString but can have color tags like ^ff0000^.
 	int						DrawStringWordWrapped(const std::string& theLine, int theX, int theY, int theWrapWidth = 10000000, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL); //works like DrawString but also word wraps
 	int						DrawStringWordWrapped(const std::wstring& theLine, int theX, int theY, int theWrapWidth = 10000000, int theLineSpacing = -1, int theJustification = -1, int *theMaxWidth = NULL); //works like DrawString but also word wraps
@@ -186,9 +188,14 @@ public:
 	static void                                     SetPreferedEncoding(const std::string &encoding);
 	static const std::string                        GetPreferedEncoding();
 
-        static  int                                     WStringFromString(const std::string& string,
-                                                                          std::wstring& result);
-        static  std::wstring                            WStringFromString(const std::string& string);
+	static  int                                     WStringFromString(const std::string& string,
+									  std::wstring& result);
+
+	static  std::wstring                            WStringFromString(const std::string& string);
+
+ private:
+	void					        DrawSString(const std::string& theString,
+								    int theX, int theY);
 
 };
 
@@ -198,7 +205,7 @@ public:
 	Graphics*				mG;
 
 public:
-	
+
 	GraphicsAutoState(Graphics* theG) : mG(theG)
 	{
 		mG->PushState();

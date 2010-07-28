@@ -11,14 +11,15 @@ namespace Sexy
 class SexyAppBase;
 class Image;
 
+typedef std::map<int, int> SexyCharToIntMap;
 class CharData
 {
 public:
 	Rect					mImageRect;
 	Point					mOffset;
-	int					mKerningOffsets[256];
-	int						mWidth;
-	int						mOrder;
+	SexyCharToIntMap			mKerningOffsets;
+	short					mWidth;
+	short					mOrder;
 
 public:
 	CharData();
@@ -26,16 +27,21 @@ public:
 
 class FontData;
 
+typedef std::map<int, CharData> CharDataMap;
 class FontLayer
 {
-public:	
+public:
+	typedef std::vector<std::string> StringVector;
+	typedef std::map<std::wstring, std::wstring> ExInfoMap;
+public:
 	FontData*				mFontData;
-	StringVector			mRequiredTags;
-	StringVector			mExcludedTags;	
-	CharData				mCharData[256];	
+	ExInfoMap				mExtendedInfo;
+	WStringVector			mRequiredTags;
+	WStringVector			mExcludedTags;
+	CharDataMap				mCharDataMap;
 	Color					mColorMult;
 	Color					mColorAdd;
-	SharedImageRef			mImage;	
+	SharedImageRef			mImage;
 	int						mDrawMode;
 	Point					mOffset;
 	int						mSpacing;
@@ -44,34 +50,42 @@ public:
 	int						mPointSize;
 	int						mAscent;
 	int						mAscentPadding; // How much space is above the avg uppercase char
-	int						mHeight;		// 	
-	int						mDefaultHeight; // Max height of font character image rects	
+	int						mHeight;		//
+	int						mDefaultHeight; // Max height of font character image rects
 	int						mLineSpacingOffset; // This plus height should get added between lines
 	int						mBaseOrder;
 
 public:
 	FontLayer(FontData* theFontData);
 	FontLayer(const FontLayer& theFontLayer);
+
+	CharData*				SetCharData(int theChar);
+	CharData*				GetCharData(int theChar);
+
+	bool					isGlyph(int theChar);
 };
 
 typedef std::list<FontLayer> FontLayerList;
-typedef std::map<std::string, FontLayer*> FontLayerMap;
+typedef std::map<std::wstring, FontLayer*> FontLayerMap;
 typedef std::list<Rect> RectList;
+typedef std::vector<int> IntVector;
+
+typedef std::map<int, int> SexyCharToSexyCharMap;
 
 class FontData : public DescParser
 {
 public:
 	bool					mInitialized;
 	int						mRefCount;
-	SexyAppBase*			mApp;		
+	SexyAppBase*			mApp;
 
 	int						mDefaultPointSize;
-	uchar					mCharMap[256];	
+	SexyCharToSexyCharMap		mCharMap;
 	FontLayerList			mFontLayerList;
 	FontLayerMap			mFontLayerMap;
 
 	std::string				mSourceFile;
-	std::string				mFontErrorHeader;	
+	std::string				mFontErrorHeader;
 
 public:
 	virtual bool			Error(const std::string& theError);
@@ -91,6 +105,7 @@ public:
 	bool					LoadLegacy(Image* theFontImage, const std::string& theFontDescFileName);
 };
 
+typedef std::map<int, Rect> SexyCharToRectMap;
 class ActiveFontLayer
 {
 public:
@@ -98,7 +113,7 @@ public:
 
 	Image*					mScaledImage;
 	bool					mOwnsImage;
-	Rect					mScaledCharImageRects[256];
+	SexyCharToRectMap			mScaledCharImageRects;
 
 public:
 	ActiveFontLayer();
@@ -123,10 +138,12 @@ typedef std::multimap<int, RenderCommand> RenderCommandMap;
 
 class ImageFont : public Font
 {
-public:	
+public:
+	typedef std::vector<std::string> StringVector;
+public:
 	FontData*				mFontData;
 	int						mPointSize;
-	StringVector			mTagVector;
+	WStringVector			mTagVector;
 
 	bool					mActiveListValid;
 	ActiveFontLayerList		mActiveLayerList;
@@ -135,8 +152,14 @@ public:
 
 public:
 	virtual void			GenerateActiveFontLayers();
-	virtual void			DrawStringEx(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect* theClipRect, RectList* theDrawnAreas, int* theWidth);
-
+	virtual void			DrawStringEx(Graphics* g, int theX, int theY,
+						     const std::string& theString,
+						     const Color& theColor, const Rect* theClipRect,
+						     RectList* theDrawnAreas, int* theWidth);
+	virtual void			DrawStringEx(Graphics* g, int theX, int theY,
+						     const std::wstring& theString,
+						     const Color& theColor, const Rect* theClipRect,
+						     RectList* theDrawnAreas, int* theWidth);
 public:
 	ImageFont(SexyAppBase* theSexyApp, const std::string& theFontDescFileName);
 	ImageFont(Image *theFontImage); // for constructing your own image font without a file descriptor
@@ -146,11 +169,20 @@ public:
 	// Deprecated
 	ImageFont(Image* theFontImage, const std::string& theFontDescFileName);
 	//ImageFont(const ImageFont& theImageFont, Image* theImage);
-	
-	virtual int				CharWidth(int theChar);
-	virtual int				CharWidthKern(int theChar, int thePrevChar);
-	virtual int				StringWidth(const SexyString& theString, bool unicode = false);
-	virtual void			DrawString(Graphics* g, int theX, int theY, const SexyString& theString, const Color& theColor, const Rect& theClipRect, bool unicode = false);
+
+	virtual int			CharWidth(int theChar);
+	virtual int			CharWidthKern(int theChar, int thePrevChar);
+	virtual int			StringWidth(const std::string& theString);
+	virtual void			DrawString(Graphics* g, int theX, int theY,
+						   const std::string& theString,
+						   const Color& theColor,
+						   const Rect& theClipRect);
+
+	virtual int			StringWidth(const std::wstring& theString);
+	virtual void			DrawString(Graphics* g, int theX, int theY,
+						   const std::wstring& theString,
+						   const Color& theColor,
+						   const Rect& theClipRect);
 
 	virtual Font*			Duplicate();
 
@@ -158,12 +190,17 @@ public:
 	virtual int				GetPointSize();
 	virtual void			SetScale(double theScale);
 	virtual int				GetDefaultPointSize();
-	virtual bool			AddTag(const std::string& theTagName);	
+	virtual bool			AddTag(const std::wstring& theTagName);
+	virtual bool			RemoveTag(const std::wstring& theTagName);
+	virtual bool			HasTag(const std::wstring& theTagName);
+	virtual bool			AddTag(const std::string& theTagName);
 	virtual bool			RemoveTag(const std::string& theTagName);
 	virtual bool			HasTag(const std::string& theTagName);
-	virtual std::string		GetDefine(const std::string& theName);
+	virtual std::wstring		GetDefine(const std::wstring& theName);
 
 	virtual void			Prepare();
+
+	int                             GetMappedChar(int theChar);
 };
 
 }

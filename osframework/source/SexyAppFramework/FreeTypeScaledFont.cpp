@@ -37,12 +37,14 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 	mRefCnt = 1;
 	mApp = theApp;
 	mSize = thePointSize;
+	mName = StrFormat("%s-%d", theFace.c_str(), thePointSize);
 	mBaseFont = aFontMap->CreateBaseFont(theFace.c_str(), 0);
 	if (!mBaseFont)
 		mBaseFont = aFontMap->CreateBaseFont(0, 0);
 	mHeight = 0;
 	mAscent = 0;
 	mDescent = 0;
+	mLineSpacingOffset = 0;
 
 	mMatrix.xx = 1 << 16;
 	mMatrix.yx = 0;
@@ -74,7 +76,7 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 		mAscent	 = int(mFace->ascender * mSize / scale);
 		mDescent = int(-mFace->descender * mSize / scale);
 		mHeight	 = int(mFace->height * mSize / scale);
-		mLineSpacingOffset = mHeight - mAscent - mDescent;
+		mLineSpacingOffset = 0;
 	}
 	UnlockFace();
 }
@@ -218,7 +220,8 @@ int FreeTypeScaledFont::StringWidth(const std::string& theString, bool unicode)
 	}
 
 	UnlockFace();
-	return max_x - min_x;
+
+	return (int)floor(x + 0.5);
 }
 
 int FreeTypeScaledFont::StringWidth(const std::wstring& theString)
@@ -283,7 +286,8 @@ int FreeTypeScaledFont::StringWidth(const std::wstring& theString)
 	}
 
 	UnlockFace();
-	return max_x - min_x;
+
+	return (int)floor(x + 0.5);
 }
 
 int FreeTypeScaledFont::Utf8FromString(const std::string& string,
@@ -434,7 +438,17 @@ void FreeTypeScaledFont::DrawGlyph(Graphics* g, int theX, int theY, GlyphVector 
 				g->SetColor(aShadowColor);
 				if (drawOutline)
 					g->DrawImage(entry->mImage,
+						     (int)floor(x + entry->mXOffSet - 1),
+						     (int)floor(y + entry->mYOffSet - 1),
+						     Rect(entry->mArea->x, entry->mArea->y,
+							  entry->mWidth, entry->mHeight));
+				g->DrawImage(entry->mImage,
 					     (int)floor(x + entry->mXOffSet - 1),
+					     (int)floor(y + entry->mYOffSet + 1),
+					     Rect(entry->mArea->x, entry->mArea->y,
+						  entry->mWidth, entry->mHeight));
+				g->DrawImage(entry->mImage,
+					     (int)floor(x + entry->mXOffSet + 1),
 					     (int)floor(y + entry->mYOffSet - 1),
 					     Rect(entry->mArea->x, entry->mArea->y,
 						  entry->mWidth, entry->mHeight));
@@ -960,16 +974,16 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphAreaInArea(int width, int height
 
 static MemoryImage* CreateMemoryImage(SexyAppBase* app, int size)
 {
-       MemoryImage *image = new MemoryImage(app);
+	MemoryImage *image = new MemoryImage(app);
 
-       image->Create(size, size);
-       image->Palletize();
-       if (!image->mColorTable)
-               return image;
+	image->Create(size, size);
+	image->Palletize();
+	if (!image->mColorTable)
+		return image;
 
-       for (size_t i = 0; i < 256; i++)
-               image->mColorTable[i] = (i << 24) | 0xffffff;
-       return image;
+	for (size_t i = 0; i < 256; i++)
+		image->mColorTable[i] = (i << 24) | 0xffffff;
+	return image;
 }
 
 FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_UInt index, Image** image)
@@ -987,7 +1001,10 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 		if (area)
 		{
 			if (!mImages[i])
+			{
 				mImages[i] = CreateMemoryImage(mApp, 1 << mImageSizeOrder[i]);
+				mImages[i]->mFilePath = mName;
+			}
 			*image = mImages[i];
 			return area;
 		}
@@ -999,7 +1016,10 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 		if (area)
 		{
 			if (!mImages[i])
+			{
 				mImages[i] = CreateMemoryImage(mApp, 1 << mImageSizeOrder[i]);
+				mImages[i]->mFilePath = mName;
+			}
 			*image = mImages[i];
 			return area;
 		}
