@@ -472,6 +472,10 @@ namespace Sexy
 
 			if (len < 0)
 				return false;
+
+			str.reserve(len);
+			str.resize(len);
+
 			for (int i = 0; i < len; i++)
 				str[i] = utf16[i];
 
@@ -487,6 +491,10 @@ namespace Sexy
 
 			if (len < 0)
 				return false;
+
+			str.reserve(len);
+			str.resize(len);
+
 			for (int i = 0; i < len; i++)
 				str[i] = ucs4[i];
 
