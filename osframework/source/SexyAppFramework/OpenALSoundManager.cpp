@@ -27,6 +27,7 @@ OpenALSoundManager::OpenALSoundManager()
 
 	for (i = 0; i < MAX_SOURCE_SOUNDS; i++)
 	{
+		mHasSourceSounds[i] = false;
 		mSourceSounds[i] = NULL;
 		mBaseVolumes[i] = 1;
 		mBasePans[i] = 0;
@@ -109,7 +110,7 @@ bool OpenALSoundManager::LoadWAVSound(unsigned int theSfxID, const std::string& 
 
 	char aChunkType[5];
 	aChunkType[4] = '\0';
-	ulong aChunkSize;
+	ulong aChunkSize = 0;
 
 	p_fread(aChunkType, 1, 4, fp);
 	if (!strcmp(aChunkType, "RIFF") == 0)
