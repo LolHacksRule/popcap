@@ -490,7 +490,7 @@ namespace Sexy
 			for (int i = 0; i < len; i++)
 				str[i] = ucs4[i];
 
-			delete ucs4;
+			delete [] ucs4;
 		}
 
 		return true;
