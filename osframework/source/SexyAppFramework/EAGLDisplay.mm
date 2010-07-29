@@ -100,10 +100,7 @@ using namespace Sexy;
 	timer = nil;
 
 	if (gSexyAppBase)
-	{
 		gSexyAppBase->Terminate();
-		delete gSexyAppBase;
-	}
 }
 - (void)updateApp:(id)sender
 {
