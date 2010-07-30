@@ -166,7 +166,8 @@ bool InputManager::PopEvent (Event &event)
 			{
 				mX = x;
 				mY = y;
-				if (event.flags & EVENT_FLAGS_AXIS_RANGE)
+				if ((event.flags & EVENT_FLAGS_AXIS_RANGE) &&
+				    event.u.mouse.maxx && event.u.mouse.maxy)
 				{
 					mX = x * mWidth / event.u.mouse.maxx;
 					mY = x * mHeight / event.u.mouse.maxy;
