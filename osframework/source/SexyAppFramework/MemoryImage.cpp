@@ -1120,25 +1120,29 @@ void MemoryImage::PurgeBits()
 {
 	mPurgeBits = true;
 
-	if (mApp->Is3DAccelerated())
-	{
-		// Due to potential D3D threading issues we have to defer the texture creation
-		//  and therefore the actual purging
-		if (mD3DData == NULL)
-			return;
-	}
-	else
-	{
-		if ((mBits == NULL) && (mColorIndices == NULL))
-			return;
 
-		GetNativeAlphaData(gSexyAppBase->mDDInterface);
+	// Due to potential D3D threading issues we have to defer the texture creation
+	//  and therefore the actual purging
+	if (mNativeData == NULL)
+	{
+		printf("Sexy: Try to purge bits from MemoryImage %p(%s) which "
+		       "doesn't have a texture attached\n",
+		       this, mFilePath.c_str());
+		return;
 	}
+
+
+#if 0
+	if ((mBits == NULL) && (mColorIndices == NULL))
+		return;
+
+	GetNativeAlphaData(gSexyAppBase->mDDInterface);
+#endif
 
 	delete [] mBits;
 	mBits = NULL;
 
-	if (mD3DData != NULL)
+	if (mNativeData != NULL)
 	{
 		delete [] mColorIndices;
 		mColorIndices = NULL;
