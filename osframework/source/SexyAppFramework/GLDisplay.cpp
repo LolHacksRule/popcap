@@ -346,6 +346,11 @@ int GLDisplay::GetTextureTarget()
 	return GL_TEXTURE_2D;
 }
 
+bool GLDisplay::CreateImageData(MemoryImage* theImage)
+{
+	return GLImage::EnsureSrcTexture(this, theImage) != 0;
+}
+
 void GLDisplay::RemoveImageData(MemoryImage* theImage)
 {
 	GLImage::RemoveImageData(theImage);

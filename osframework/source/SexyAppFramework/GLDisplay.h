@@ -100,6 +100,7 @@ public:
 	virtual bool                            Reinit();
 	virtual void				Cleanup();
 
+	virtual bool				CreateImageData(MemoryImage* theImage);
 	virtual void				RemoveImageData(MemoryImage* theImage);
 
 	virtual void				SwapBuffers();
