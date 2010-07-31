@@ -332,7 +332,22 @@ typedef std::map<UITouch*, int> TouchMap;
 }
 
 /* Terminates the editing session */
-- (BOOL)textFieldShouldReturn:(UITextField*)textField {
+- (BOOL)textFieldShouldReturn:(UITextField*)textField
+{
+	InputManager *mgr = gSexyAppBase->mInputManager;
+	Event evt;
+
+	evt.id = 0;
+	evt.subid = 0;
+	evt.flags = 0;
+	evt.type = EVENT_KEY_DOWN;
+	evt.flags |= EVENT_FLAGS_KEY_CODE;
+	evt.u.key.keyCode = KEYCODE_RETURN;
+	mgr->PushEvent(evt);
+
+	evt.type = EVENT_KEY_UP;
+	mgr->PushEvent(evt);
+
 	[textField resignFirstResponder];
 	return YES;
 }
