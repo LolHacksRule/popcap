@@ -1677,10 +1677,12 @@ MemoryImage* SexyAppBase::CreateCursorFromAndMask(unsigned char * data, unsigned
 	MemoryImage* anImage;
 
 	DBG_ASSERT ((width % 8 == 0) && (height % 8 == 0));
-	anImage = (MemoryImage*)CreateImage (width, height);
+	anImage = new MemoryImage(this);
+	anImage->Create (width, height);
 
 	bits = anImage->GetBits();
-	if (!bits) {
+	if (!bits)
+	{
 		delete anImage;
 		return NULL;
 	}
@@ -3130,8 +3132,8 @@ Sexy::Image* SexyAppBase::GetImage(const std::string& theFileName, bool commitBi
 
 	MemoryImage* anImage = new MemoryImage(this);
 	anImage->Create(aLoadedImage->GetWidth(), aLoadedImage->GetHeight());
-	anImage->GetBits();
-	anImage->SetBits(aLoadedImage->GetBits(), aLoadedImage->GetWidth(), aLoadedImage->GetHeight(), commitBits);
+	anImage->SetBits(aLoadedImage->GetBits(), aLoadedImage->GetWidth(),
+			 aLoadedImage->GetHeight(), commitBits);
 	anImage->mFilePath = theFileName;
 	delete aLoadedImage;
 	return anImage;
@@ -3342,7 +3344,9 @@ Image* SexyAppBase::CreateColorizedImage(Image* theImage, const Color& theColor)
 
 Image* SexyAppBase::CopyImage(Image* theImage, const Rect& theRect)
 {
-	Image* anImage = mDDInterface->CreateImage(this, theRect.mWidth, theRect.mHeight);
+	MemoryImage* anImage=  new MemoryImage(this);
+
+	anImage->Create(theRect.mWidth, theRect.mHeight);
 
 	Graphics g(anImage);
 	g.DrawImage(theImage, -theRect.mX, -theRect.mY);
