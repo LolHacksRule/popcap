@@ -40,19 +40,17 @@ public:
         virtual bool                            HasEvent();
         virtual bool                            GetEvent(struct Event &event);
 
+	virtual bool                            ShowKeyBoard(Widget* theWidget);
+	virtual void                            HideKeyBoard();
+
 public:
 	UIWindow*                               mWindow;
 	UIView*                                 mView;
+	UITextField*                            mTextField;
+	bool                                    mKeyboardVisible;
 	EAGLContext*                            mContext;
         int                                     mEAGLMajor;
         int                                     mEAGLMinor;
-
-	std::map<int, int>                      mKeyMap;
-
-private:
-	void                                    InitKeyMap();
-	int                                     KeyCodeFromNSKeyCode(int NSKeyCode);
-
 };
 
 }

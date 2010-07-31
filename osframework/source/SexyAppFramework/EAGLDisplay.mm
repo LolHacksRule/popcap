@@ -494,7 +494,7 @@ void EAGLDisplay::Cleanup ()
 	mTextField = NULL;
 }
 
-bool EAGLDisplay::ShowKeyBoard()
+bool EAGLDisplay::ShowKeyBoard(Widget* theWidget)
 {
 	if (!mTextField)
 		return false;

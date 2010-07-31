@@ -18,6 +18,7 @@ class Image;
 class SexyAppBase;
 class Graphics;
 class MemoryImage;
+class Widget;
 struct InputInfo;
 
 class DelayedWork
@@ -114,6 +115,9 @@ class NativeDisplay
         virtual bool                                HasEvent();
         virtual bool                                GetEvent(struct Event & event);
 	virtual bool                                GetInputInfo(InputInfo &anInfo);
+
+	virtual bool                                ShowKeyboard(Widget* theWidget);
+	virtual void                                HideKeyboard();
 
  public:
 	void                                        FlushWork(void);

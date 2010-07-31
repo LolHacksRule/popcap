@@ -130,6 +130,15 @@ bool NativeDisplay::GetInputInfo(InputInfo &anInfo)
 	return false;
 }
 
+bool NativeDisplay::ShowKeyboard(Widget* theWidget)
+{
+	return false;
+}
+
+void NativeDisplay::HideKeyboard()
+{
+}
+
 bool NativeDisplay::UpdateCursor(int theCursorX, int theCursorY)
 {
 	return false;
