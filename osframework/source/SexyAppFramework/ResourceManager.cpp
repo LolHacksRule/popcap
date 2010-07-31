@@ -784,10 +784,9 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 	aDDImage->mNumRows = theRes->mRows;
 	aDDImage->mNumCols = theRes->mCols;
 
-#if 0
-	if (aDDImage->mPurgeBits)
-		aDDImage->PurgeBits();
-#endif
+	if (aDDImage->mPurgeBits && mApp->mDDInterface &&
+	    mApp->mDDInterface->CanReinit())
+		mApp->mDDInterface->EnsureImageData(aDDImage, true);
 
 	ResourceLoadedHook(theRes);
 	return true;
