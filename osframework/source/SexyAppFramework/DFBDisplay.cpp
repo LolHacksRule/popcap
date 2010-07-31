@@ -731,6 +731,16 @@ bool DFBInterface::GetEvent(struct Event &event)
 	return true;
 }
 
+bool DFBInterface::CreateImageData(MemoryImage *theImage)
+{
+	return DFBImage::EnsureSrcSurface(this, theImage) != 0;
+}
+
+void DFBInterface::RemoveImageData(MemoryImage *theImage)
+{
+	DFBImage::RemoveImageData(theImage);
+}
+
 namespace Sexy {
 class DelayedReleaseSurfaceWork: public DelayedWork
 {

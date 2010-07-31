@@ -68,6 +68,9 @@ public:
 	virtual bool				HasEvent();
 	virtual bool				GetEvent(struct Event &event);
 
+	virtual bool                            CreateImageData(MemoryImage *theImage);
+	virtual void                            RemoveImageData(MemoryImage *theImage);
+
 	bool                                    IsMainThread(void);
 	void                                    DelayedReleaseSurface(IDirectFBSurface* surface);
 
