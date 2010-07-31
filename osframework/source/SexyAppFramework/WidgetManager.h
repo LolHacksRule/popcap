@@ -165,6 +165,9 @@ public:
 	bool					IsMiddleButtonDown();
 	bool					IsRightButtonDown();
 
+	bool                                    ShowKeyboard(Widget* theWidget);
+	void                                    HideKeyboard();
+
 private:
 	TouchInfo*                              GetTouchInfo(int id);
 };

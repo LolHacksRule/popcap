@@ -1071,6 +1071,7 @@ bool WidgetManager::TouchCancel(const EventVector &events)
 		Widget *aWidget = mOverWidget;
 		aWidget->TouchCancel(touches);
 		TouchLeave(aWidget);
+		mOverWidget = 0;
 	}
 	mLastTouch = touches;
 	mActiveTouchId = -1;
@@ -1099,4 +1100,13 @@ void WidgetManager::TouchLeave(Widget *theWidget)
 	theWidget->mIsOver = false;
 
 	theWidget->MouseLeave();
+}
+
+bool WidgetManager::ShowKeyboard(Widget *theWidget)
+{
+	return true;
+}
+
+void WidgetManager::HideKeyboard()
+{
 }
