@@ -12,17 +12,16 @@
 #include "VideoDriverFactory.h"
 
 #include <cstdio>
+#include <ctype.h>
 
 using namespace Sexy;
 
 @interface AppDelegate : NSObject <UIApplicationDelegate>
 {
 	BOOL quit;
-	EAGLDisplay* dpy;
 	NSTimer *timer;
 }
 
-- (id)initWithDisplay:(EAGLDisplay *)aDpy;
 - (void)updateApp:(id)sender;
 @end
 
@@ -33,19 +32,6 @@ using namespace Sexy;
 	self = [super init];
 	if (self)
 	{
-		dpy = 0;
-		timer = 0;
-		quit = FALSE;
-	}
-	return (self);
-}
-
-- (id)initWithDisplay:(EAGLDisplay *)aDpy
-{
-	self = [super init];
-	if (self)
-	{
-		dpy = aDpy;
 		timer = 0;
 		quit = FALSE;
 	}
@@ -114,6 +100,7 @@ using namespace Sexy;
 		exit(0);
 	}
 }
+
 @end
 
 typedef std::map<UITouch*, int> TouchMap;
@@ -157,6 +144,8 @@ typedef std::map<UITouch*, int> TouchMap;
 		Event evt;
 		evt.type = EVENT_TOUCH;
 		evt.flags = 0;
+		evt.id = 0;
+		evt.subid = 0;
 		if (i++ != [touches count] - 1)
 			evt.flags |= EVENT_FLAGS_INCOMPLETE;
 		evt.u.touch.id = touchMap[touch];
@@ -191,6 +180,8 @@ typedef std::map<UITouch*, int> TouchMap;
 		Event evt;
 		evt.type = EVENT_TOUCH;
 		evt.flags = 0;
+		evt.id = 0;
+		evt.subid = 0;
 		if (i++ != [touches count] - 1)
 			evt.flags |= EVENT_FLAGS_INCOMPLETE;
 		evt.u.touch.id = touchMap[touch];
@@ -224,6 +215,8 @@ typedef std::map<UITouch*, int> TouchMap;
 		Event evt;
 		evt.type = EVENT_TOUCH;
 		evt.flags = 0;
+		evt.id = 0;
+		evt.subid = 0;
 		if (i++ != [touches count] - 1)
 			evt.flags |= EVENT_FLAGS_INCOMPLETE;
 		evt.u.touch.id = touchMap[touch];
@@ -263,6 +256,8 @@ typedef std::map<UITouch*, int> TouchMap;
 		Event evt;
 		evt.type = EVENT_TOUCH;
 		evt.flags = 0;
+		evt.id = 0;
+		evt.subid = 0;
 		if (i++ != [touches count] - 1)
 			evt.flags |= EVENT_FLAGS_INCOMPLETE;
 		evt.u.touch.id = touchMap[touch];
@@ -283,44 +278,76 @@ typedef std::map<UITouch*, int> TouchMap;
 }
 @end
 
+@interface TextFieldDelegate: NSObject<UITextFieldDelegate>
+{
+}
+@end
+
+@implementation TextFieldDelegate
+/* UITextFieldDelegate method.  Invoked when user types something. */
+- (BOOL)textField:(UITextField *)_textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+{
+	if (!gSexyAppBase)
+		return NO;
+
+	InputManager *mgr = gSexyAppBase->mInputManager;
+	Event evt;
+
+	evt.id = 0;
+	evt.subid = 0;
+	evt.flags = 0;
+	if ([string length] == 0)
+	{
+		evt.type = EVENT_KEY_DOWN;
+		evt.flags |= EVENT_FLAGS_KEY_CODE;
+		evt.u.key.keyCode = KEYCODE_DELETE;
+		mgr->PushEvent(evt);
+
+		evt.type = EVENT_KEY_UP;
+		mgr->PushEvent(evt);
+	}
+	else
+	{
+		NSUInteger i;
+		for (i = 0; i < [string length]; i++)
+		{
+			unichar c = [string characterAtIndex: i];
+			
+			if (c >= 127)
+				continue;
+
+			evt.type = EVENT_KEY_DOWN;
+			evt.flags |= EVENT_FLAGS_KEY_CODE;
+			evt.u.key.keyCode = toupper(c);
+			if (isprint(c))
+			{
+				evt.flags |= EVENT_FLAGS_KEY_CHAR;
+				evt.u.key.keyChar = c;
+			}
+			mgr->PushEvent(evt);
+		}
+	}
+
+	return NO;
+}
+
+/* Terminates the editing session */
+- (BOOL)textFieldShouldReturn:(UITextField*)textField {
+	[textField resignFirstResponder];
+	return YES;
+}
+@end
+
 EAGLDisplay::EAGLDisplay (SexyAppBase* theApp)
 	: GLDisplay (theApp)
 {
-	static bool first = false;
-
-	if (!first)
-	{
-		NSString* path;
-
-		first = true;
-
-		[[NSAutoreleasePool alloc] init];
-
-		UIApplication* application = [UIApplication sharedApplication];
-		[application setDelegate:[[[AppDelegate alloc] initWithDisplay:this] autorelease]];
-
-		NSBundle* bundle = [NSBundle mainBundle];
-		[bundle loadNibNamed:@"MainMenu" owner:[application delegate] options:nil];
-
-		path = [bundle bundlePath];
-#ifdef DEBUG
-		NSLog (@"bounde path: %@", path);
-#endif
-		chdir([path UTF8String]);
-		mApp->mChangeDirTo = std::string([path UTF8String]);
-	}
 	mView = NULL;
+	mTextField = NULL;
 	mWindow = NULL;
 	mContext = NULL;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
 	mScreenImage = 0;
-
-	InitKeyMap ();
-}
-
-void EAGLDisplay::InitKeyMap ()
-{
 }
 
 EAGLDisplay::~EAGLDisplay ()
@@ -391,6 +418,24 @@ int EAGLDisplay::Init (void)
 	[mView setUserInteractionEnabled:YES];
 	[mView setMultipleTouchEnabled:YES];
 
+	mTextField = [[[UITextField alloc] initWithFrame: CGRectZero] autorelease];
+	mTextField.delegate = [[TextFieldDelegate alloc] init];
+	/* placeholder so there is something to delete! */
+	mTextField.text = @" ";	
+	
+	/* set UITextInputTrait properties, mostly to defaults */
+	mTextField.autocapitalizationType = UITextAutocapitalizationTypeNone;
+	mTextField.autocorrectionType = UITextAutocorrectionTypeNo;
+	mTextField.enablesReturnKeyAutomatically = NO;
+	mTextField.keyboardAppearance = UIKeyboardAppearanceDefault;
+	mTextField.keyboardType = UIKeyboardTypeDefault;
+	mTextField.returnKeyType = UIReturnKeyDefault;
+	mTextField.secureTextEntry = NO;	
+	
+	mTextField.hidden = YES;
+	[mView addSubview: mTextField];
+	mKeyboardVisible = false;
+
 	CGRect frame;
 
 	frame = [mWindow frame];
@@ -445,6 +490,30 @@ void EAGLDisplay::Cleanup ()
 		[mWindow release];
 		mWindow = NULL;
 	}
+
+	mTextField = NULL;
+}
+
+bool EAGLDisplay::ShowKeyBoard()
+{
+	if (!mTextField)
+		return false;
+
+	if (mKeyboardVisible)
+		return true;
+
+	[mTextField becomeFirstResponder];
+	mKeyboardVisible = true;
+	return true;
+}
+
+void EAGLDisplay::HideKeyBoard()
+{
+	if (!mKeyboardVisible)
+		return;
+
+	[mTextField resignFirstResponder];
+	mKeyboardVisible = false;
 }
 
 void EAGLDisplay::RemapMouse(int& theX, int& theY)
