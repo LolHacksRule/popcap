@@ -3,6 +3,10 @@
 
 #include <map>
 
+#ifdef SEXY_IOS
+#include <AudioToolbox/AudioToolbox.h>
+#endif
+
 #ifdef __APPLE__
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
@@ -34,6 +38,13 @@ namespace Sexy {
 
 		ALCcontext* mContext;
 		ALCdevice* mDevice;
+
+#ifdef SEXY_IOS
+		void haltOpenALSession();
+		void resumeOpenALSession();
+		static void interruptionListenerCallback (void *inUserData,
+							  UInt32 interruptionState);
+#endif
 	};
 }
 #endif

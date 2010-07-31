@@ -1,4 +1,6 @@
 #include "OpenALManager.h"
+#include "SexyAppBase.h"
+#include "InputManager.h"
 
 using namespace Sexy;
 
@@ -36,6 +38,7 @@ bool OpenALManager::initialize()
 	if (mInitialized)
 		return true;
 
+
 	mDevice = alcOpenDevice(NULL);
 	if (!mDevice)
 		return false;
@@ -56,6 +59,16 @@ bool OpenALManager::initialize()
 
 		mSources.insert(ALSources::value_type(id, false));
 	}
+
+#ifdef SEXY_IOS
+	UInt32 category = kAudioSessionCategory_AmbientSound;
+
+	OSStatus result = AudioSessionInitialize(NULL, NULL,
+						 interruptionListenerCallback, this);
+	result = AudioSessionSetProperty(kAudioSessionProperty_AudioCategory,
+					 sizeof(category), &category);
+	AudioSessionSetActive(true);
+#endif
 
 	mInitialized = true;
 	return true;
@@ -89,3 +102,57 @@ void OpenALManager::freeSource(int id)
 		return;
 	it->second = false;
 }
+
+#ifdef SEXY_IOS
+void OpenALManager::haltOpenALSession()
+{
+	Event evt;
+
+	evt.type = EVENT_ACTIVE;
+	evt.flags = 0;
+	evt.u.active.active = 0;
+	if (gSexyAppBase)
+		gSexyAppBase->mInputManager->PushEvent(evt);
+
+	AudioSessionSetActive(false);
+ 
+	alcMakeContextCurrent(0);
+	alcSuspendContext(mContext);
+}
+
+void OpenALManager::resumeOpenALSession()
+{
+	Event evt;
+
+	evt.type = EVENT_ACTIVE;
+	evt.flags = 0;
+	evt.u.active.active = 1;
+	if (gSexyAppBase)
+		gSexyAppBase->mInputManager->PushEvent(evt);
+
+	UInt32 category = kAudioSessionCategory_AmbientSound;
+	AudioSessionSetProperty(kAudioSessionProperty_AudioCategory,
+				sizeof (category), &category );
+ 
+	AudioSessionSetActive(true);
+ 
+	alcMakeContextCurrent(mContext);
+	alcProcessContext(mContext);
+}
+
+void OpenALManager::interruptionListenerCallback (void *inUserData, UInt32 interruptionState)
+{
+ 
+        // you could do this with a cast below, but I will keep it here to make it clearer
+	OpenALManager *mgr = (OpenALManager *) inUserData;
+ 
+	if (interruptionState == kAudioSessionBeginInterruption)
+	{
+		mgr->haltOpenALSession();
+	}
+	else if (interruptionState == kAudioSessionEndInterruption)
+	{
+		mgr->resumeOpenALSession();
+	}
+}
+#endif
