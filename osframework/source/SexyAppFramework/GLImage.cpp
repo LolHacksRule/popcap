@@ -583,7 +583,6 @@ bool GLTexture::CheckCreateTextures (MemoryImage *theImage)
 	    theImage->mBitsChangedCount != mBitsChangedCount ||
 	    theImage->mFlags != mImageFlags)
 	{
-		theImage->GetBits();
 		CreateTextures (theImage);
 		return true;
 	}
@@ -2061,8 +2060,6 @@ void GLImage::FillScanLinesWithCoverage(Span* theSpans, int theSpanCount, const 
 
 void GLImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits)
 {
-	if (theBits && !mBits)
-		MemoryImage::GetBits();
 	MemoryImage::SetBits(theBits, theWidth, theHeight, commitBits);
 }
 
