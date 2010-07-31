@@ -1013,12 +1013,14 @@ bool WidgetManager::TouchUp(const EventVector &events)
 			mActiveTouchId = -1;
 	}
 
-	if (mOverWidget)
-	{
-		Widget *aWidget = mOverWidget;
-
+	Widget *aWidget = mOverWidget;
+	if (aWidget)
 		aWidget->TouchUp(touches);
+
+	if (mActiveTouchId < 0 && aWidget)
+	{
 		TouchLeave(aWidget);
+		mOverWidget = 0;
 	}
 
 	mLastTouch = touches;
@@ -1075,8 +1077,18 @@ bool WidgetManager::TouchCancel(const EventVector &events)
 		TouchLeave(aWidget);
 		mOverWidget = 0;
 	}
+
+	Widget *aWidget = mOverWidget;
+	if (aWidget)
+		aWidget->TouchUp(touches);
+
+	if (mActiveTouchId < 0 && aWidget)
+	{
+		TouchLeave(aWidget);
+		mOverWidget = 0;
+	}
+
 	mLastTouch = touches;
-	mActiveTouchId = -1;
 	return true;
 }
 
