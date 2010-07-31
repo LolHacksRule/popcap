@@ -197,6 +197,8 @@ void EditWidget::GotFocus()
 		ShowCaret(anApp->mHWnd);
 #endif
 	}
+	if (mWidgetManager)
+		mWidgetManager->ShowKeyboard(this);
 
 	mShowingCursor = true;
 	mBlinkAcc = 0;
@@ -214,6 +216,8 @@ void EditWidget::LostFocus()
 		DestroyCaret();
 #endif
 	}
+	if (mWidgetManager)
+		mWidgetManager->HideKeyboard();
 
 	mShowingCursor = false;
 	MarkDirty();
