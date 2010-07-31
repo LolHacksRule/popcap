@@ -1126,9 +1126,12 @@ bool WidgetManager::TouchDown(int id, int x, int y, int tapCount)
 
 bool WidgetManager::ShowKeyboard(Widget *theWidget)
 {
+	if (mApp->mDDInterface->ShowKeyboard(theWidget))
+	    return true;
 	return true;
 }
 
 void WidgetManager::HideKeyboard()
 {
+	mApp->mDDInterface->HideKeyboard();
 }
