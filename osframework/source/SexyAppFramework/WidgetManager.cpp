@@ -1113,7 +1113,7 @@ void WidgetManager::TouchLeave(Widget *theWidget)
 {
 	theWidget->mIsOver = false;
 
-	theWidget->MouseLeave();
+	theWidget->TouchLeave();
 }
 
 bool WidgetManager::TouchDown(int id, int x, int y, int tapCount)
@@ -1128,10 +1128,7 @@ bool WidgetManager::TouchDown(int id, int x, int y, int tapCount)
 	int aWidgetY;
 	Widget* aWidget = GetWidgetAt(x, y, &aWidgetX, &aWidgetY);
 	if (aWidget != NULL)
-	{
 		SetFocus(aWidget);
-		aWidget->mIsDown = true;
-	}
 
 	return true;
 }
