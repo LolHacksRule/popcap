@@ -155,6 +155,7 @@ public:
 	bool					KeyChar(SexyChar theChar);
 	bool					KeyDown(KeyCode key);
 	bool					KeyUp(KeyCode key);
+	bool                                    TouchDown(int id, int x, int y, int tapCount);
 	bool                                    TouchDown(const EventVector &events);
 	bool                                    TouchMove(const EventVector &events);
 	bool                                    TouchUp(const EventVector &events);

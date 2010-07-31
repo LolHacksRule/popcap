@@ -916,6 +916,8 @@ bool WidgetManager::TouchDown(const EventVector &events)
 		if (aWidget != NULL)
 			TouchEnter(aWidget);
 	}
+
+	TouchDown(mActiveTouchId, x, y, info->tapCount);
 	if (aWidget)
 	{
 		aWidget->TouchDown(touches);
@@ -1100,6 +1102,26 @@ void WidgetManager::TouchLeave(Widget *theWidget)
 	theWidget->mIsOver = false;
 
 	theWidget->MouseLeave();
+}
+
+bool WidgetManager::TouchDown(int id, int x, int y, int tapCount)
+{
+	if ((mPopupCommandWidget != NULL) && (!mPopupCommandWidget->Contains(x, y)))
+		RemovePopupCommandWidget();
+
+	if (mOverWidget && mOverWidget->mHasFocus)
+		return true;
+
+	int aWidgetX;
+	int aWidgetY;
+	Widget* aWidget = GetWidgetAt(x, y, &aWidgetX, &aWidgetY);
+	if (aWidget != NULL)
+	{
+		SetFocus(aWidget);
+		aWidget->mIsDown = true;
+	}
+
+	return true;
 }
 
 bool WidgetManager::ShowKeyboard(Widget *theWidget)
