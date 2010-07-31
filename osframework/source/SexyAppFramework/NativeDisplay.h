@@ -106,9 +106,17 @@ class NativeDisplay
         virtual bool                                DrawCursor(Graphics* g);
 
         virtual bool                                EnableCursor(bool enable);
-	virtual bool				    SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);
+	virtual bool				    SetCursorImage(Image* theImage,
+								   int theHotX = 0,
+								   int theHotY = 0);
 	virtual void				    SetCursorPos(int theCursorX, int theCursorY);
 
+
+ public:
+	virtual void                                EnsureImageData(MemoryImage* theMemoryImage,
+								    bool thePurgeBits = false,
+								    bool theForce = false);
+	virtual bool                                CreateImageData(MemoryImage* theMemoryImage);
 	virtual void                                RemoveImageData(MemoryImage * theMemoryImage);
 
  public:

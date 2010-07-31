@@ -149,8 +149,60 @@ bool NativeDisplay::DrawCursor(Sexy::Graphics* g)
 	return false;
 }
 
+bool NativeDisplay::CreateImageData(MemoryImage * theMemoryImage)
+{
+	return false;
+}
+
 void NativeDisplay::RemoveImageData(MemoryImage * theMemoryImage)
 {
+}
+
+class DelayedCreateImageDataWork: public DelayedWork
+{
+public:
+	DelayedCreateImageDataWork(NativeDisplay *theDisplay,
+				   MemoryImage *theMemoryImage,
+				   bool thePurgeBits) :
+		mImage(theMemoryImage),
+		mDisplay(theDisplay),
+		mPurgeBits(thePurgeBits)
+	{
+        }
+
+public:
+	virtual void Work()
+	{
+		if (mDisplay->CreateImageData(mImage) && mPurgeBits)
+			mImage->PurgeBits();
+	}
+
+private:
+	MemoryImage* mImage;
+	NativeDisplay* mDisplay;
+	bool mPurgeBits;
+};
+
+void NativeDisplay::EnsureImageData(MemoryImage *theMemoryImage,
+				    bool         thePurgeBits,
+				    bool         theForce)
+{
+	if (!theMemoryImage)
+		return;
+
+	if (!theForce && !CanReinit())
+		thePurgeBits = false;
+
+	if (mMainThread != Thread::Self())
+	{
+		PushWork(new DelayedCreateImageDataWork(this, theMemoryImage,
+							thePurgeBits));
+	}
+	else
+	{
+		if (CreateImageData(theMemoryImage) && thePurgeBits)
+			theMemoryImage->PurgeBits();
+	}
 }
 
 bool NativeDisplay::CanFullscreen()
