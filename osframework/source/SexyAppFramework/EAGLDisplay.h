@@ -40,8 +40,8 @@ public:
         virtual bool                            HasEvent();
         virtual bool                            GetEvent(struct Event &event);
 
-	virtual bool                            ShowKeyBoard(Widget* theWidget);
-	virtual void                            HideKeyBoard();
+	virtual bool                            ShowKeyboard(Widget* theWidget);
+	virtual void                            HideKeyboard();
 
 public:
 	UIWindow*                               mWindow;

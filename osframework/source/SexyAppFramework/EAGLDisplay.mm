@@ -300,7 +300,7 @@ typedef std::map<UITouch*, int> TouchMap;
 	{
 		evt.type = EVENT_KEY_DOWN;
 		evt.flags |= EVENT_FLAGS_KEY_CODE;
-		evt.u.key.keyCode = KEYCODE_DELETE;
+		evt.u.key.keyCode = KEYCODE_BACK;
 		mgr->PushEvent(evt);
 
 		evt.type = EVENT_KEY_UP;
@@ -494,7 +494,7 @@ void EAGLDisplay::Cleanup ()
 	mTextField = NULL;
 }
 
-bool EAGLDisplay::ShowKeyBoard(Widget* theWidget)
+bool EAGLDisplay::ShowKeyboard(Widget* theWidget)
 {
 	if (!mTextField)
 		return false;
@@ -507,7 +507,7 @@ bool EAGLDisplay::ShowKeyBoard(Widget* theWidget)
 	return true;
 }
 
-void EAGLDisplay::HideKeyBoard()
+void EAGLDisplay::HideKeyboard()
 {
 	if (!mKeyboardVisible)
 		return;
