@@ -13,7 +13,7 @@
 
 using namespace Sexy;
 
-DFBInterface::DFBInterface(SexyAppBase* theApp)
+DFBDisplay::DFBDisplay(SexyAppBase* theApp)
 {
 	mApp = theApp;
 	mDFB = NULL;
@@ -42,7 +42,7 @@ DFBInterface::DFBInterface(SexyAppBase* theApp)
 	mDFBCursorImage = NULL;
 }
 
-DFBInterface::~DFBInterface()
+DFBDisplay::~DFBDisplay()
 {
 	Cleanup();
 
@@ -50,12 +50,12 @@ DFBInterface::~DFBInterface()
 		mDFB->Release(mDFB);
 }
 
-Image* DFBInterface::GetScreenImage()
+Image* DFBDisplay::GetScreenImage()
 {
 	return mScreenImage;
 }
 
-int DFBInterface::Init(void)
+int DFBDisplay::Init(void)
 {
 	Cleanup();
 
@@ -209,38 +209,33 @@ int DFBInterface::Init(void)
 	return 0;
 }
 
-void DFBInterface::SetVideoOnlyDraw(bool videoOnlyDraw)
+void DFBDisplay::SetVideoOnlyDraw(bool videoOnlyDraw)
 {
 	mVideoOnlyDraw = videoOnlyDraw;
 }
 
-void DFBInterface::RemapMouse(int& theX, int& theY)
+void DFBDisplay::RemapMouse(int& theX, int& theY)
 {
 }
 
-ulong DFBInterface::GetColorRef(ulong theRGB)
+ulong DFBDisplay::GetColorRef(ulong theRGB)
 {
 	return theRGB;
 }
 
-void DFBInterface::AddImage(Image* theImage)
+void DFBDisplay::AddImage(Image* theImage)
 {
 	mImageSet.insert((DFBImage*)theImage);
 }
 
-void DFBInterface::RemoveImage(Image* theImage)
+void DFBDisplay::RemoveImage(Image* theImage)
 {
 	DFBImageSet::iterator anItr = mImageSet.find((DFBImage*)theImage);
 	if (anItr != mImageSet.end())
 		mImageSet.erase(anItr);
 }
 
-void DFBInterface::RemoveImageData(MemoryImage* theImage) // for 3d texture cleanup
-{
-	DFBImage::RemoveImageData(theImage);
-}
-
-void DFBInterface::Cleanup()
+void DFBDisplay::Cleanup()
 {
 	FlushWork();
 	mInitialized = false;
@@ -282,7 +277,7 @@ void DFBInterface::Cleanup()
 	mSoftCursor = false;
 }
 
-bool DFBInterface::Redraw(Rect* theClipRect)
+bool DFBDisplay::Redraw(Rect* theClipRect)
 {
 	if (!mInitialized)
 		return false;
@@ -294,7 +289,7 @@ bool DFBInterface::Redraw(Rect* theClipRect)
 	return true;
 }
 
-bool DFBInterface::EnableCursor(bool enable)
+bool DFBDisplay::EnableCursor(bool enable)
 {
 	mCursorEnabled = enable;
 	if (mWindow)
@@ -314,7 +309,7 @@ bool DFBInterface::EnableCursor(bool enable)
 	return false;
 }
 
-bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
+bool DFBDisplay::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 {
 	if (mDFBCursorImage)
 		mDFBCursorImage->Release(mDFBCursorImage);
@@ -337,7 +332,7 @@ bool DFBInterface::SetCursorImage(Image* theImage, int theHotX, int theHotY)
 	return true;
 }
 
-void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
+void DFBDisplay::SetCursorPos(int theCursorX, int theCursorY)
 {
 	if (mCursorX == theCursorX && mCursorY == theCursorY)
 		return;
@@ -358,7 +353,7 @@ void DFBInterface::SetCursorPos(int theCursorX, int theCursorY)
 	}
 }
 
-bool DFBInterface::UpdateCursor(int theCursorX, int theCursorY)
+bool DFBDisplay::UpdateCursor(int theCursorX, int theCursorY)
 {
 	SetCursorPos (theCursorX, theCursorY);
 	if (mSoftCursor && mCursorImage &&
@@ -367,7 +362,7 @@ bool DFBInterface::UpdateCursor(int theCursorX, int theCursorY)
 	return false;
 }
 
-bool DFBInterface::DrawCursor(Graphics* g)
+bool DFBDisplay::DrawCursor(Graphics* g)
 {
 	if (!mCursorImage)
 		return false;
@@ -382,7 +377,7 @@ bool DFBInterface::DrawCursor(Graphics* g)
 	return true;
 }
 
-IDirectFBSurface* DFBInterface::CreateDFBSurface(int width, int height)
+IDirectFBSurface* DFBDisplay::CreateDFBSurface(int width, int height)
 {
 	IDirectFBSurface * aSurface;
 
@@ -410,7 +405,7 @@ IDirectFBSurface* DFBInterface::CreateDFBSurface(int width, int height)
 	return aSurface;
 }
 
-Image* DFBInterface::CreateImage(SexyAppBase * theApp,
+Image* DFBDisplay::CreateImage(SexyAppBase * theApp,
 				 int width, int height)
 {
 	IDirectFBSurface * aSurface;
@@ -445,7 +440,7 @@ Image* DFBInterface::CreateImage(SexyAppBase * theApp,
 	return aDFBImage;
 }
 
-bool DFBInterface::HasEvent()
+bool DFBDisplay::HasEvent()
 {
 	if (!mBuffer)
 		return false;
@@ -453,7 +448,7 @@ bool DFBInterface::HasEvent()
 	return	mBuffer->HasEvent(mBuffer) == DFB_OK;
 }
 
-bool DFBInterface::GetEvent(struct Event &event)
+bool DFBDisplay::GetEvent(struct Event &event)
 {
 	if (!HasEvent())
 		return false;
@@ -731,12 +726,12 @@ bool DFBInterface::GetEvent(struct Event &event)
 	return true;
 }
 
-bool DFBInterface::CreateImageData(MemoryImage *theImage)
+bool DFBDisplay::CreateImageData(MemoryImage *theImage)
 {
 	return DFBImage::EnsureSrcSurface(this, theImage) != 0;
 }
 
-void DFBInterface::RemoveImageData(MemoryImage *theImage)
+void DFBDisplay::RemoveImageData(MemoryImage *theImage)
 {
 	DFBImage::RemoveImageData(theImage);
 }
@@ -758,7 +753,7 @@ private:
 };
 }
 
-void DFBInterface::DelayedReleaseSurface(IDirectFBSurface* surface)
+void DFBDisplay::DelayedReleaseSurface(IDirectFBSurface* surface)
 {
 	if (mMainThread != Thread::Self())
 		PushWork(new DelayedReleaseSurfaceWork(surface));
@@ -766,7 +761,7 @@ void DFBInterface::DelayedReleaseSurface(IDirectFBSurface* surface)
 		surface->Release(surface);
 }
 
-bool DFBInterface::IsMainThread(void)
+bool DFBDisplay::IsMainThread(void)
 {
 	return mMainThread == Thread::Self();
 }
@@ -774,13 +769,13 @@ bool DFBInterface::IsMainThread(void)
 class DFBVideoDriver: public VideoDriver {
 public:
 	DFBVideoDriver ()
-	 : VideoDriver("DFBInterface", 0)
+	 : VideoDriver("DFBDisplay", 0)
 	{
 	}
 
 	NativeDisplay* Create (SexyAppBase * theApp)
 	{
-		return new DFBInterface (theApp);
+		return new DFBDisplay (theApp);
 	}
 };
 

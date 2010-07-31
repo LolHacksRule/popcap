@@ -7,7 +7,7 @@
 namespace Sexy
 {
 
-class DFBInterface;
+class DFBDisplay;
 class DFBFont;
 class DFBImageData;
 
@@ -20,7 +20,7 @@ protected:
 	void				DeleteAllNonSurfaceData();
 
 public:
-	DFBInterface*			mInterface;
+	DFBDisplay*			mInterface;
 	IDirectFBSurface*		mSurface;
 	DFBSurfaceCapabilities		mCaps;
 	bool				mSurfaceSet;
@@ -62,8 +62,8 @@ public:
 
 public:
 	DFBImage();
-	DFBImage(IDirectFBSurface * theSurface, DFBInterface* theInterface);
-	DFBImage(DFBInterface* theInterface);
+	DFBImage(IDirectFBSurface * theSurface, DFBDisplay* theInterface);
+	DFBImage(DFBDisplay* theInterface);
 	virtual ~DFBImage();
 
 	void				DeleteSurface();
@@ -100,7 +100,7 @@ public:
 
  public:
 	IDirectFBSurface*		EnsureSurface();
-	static IDirectFBSurface*        EnsureSrcSurface(DFBInterface* interface, Image* theImage);
+	static IDirectFBSurface*        EnsureSrcSurface(DFBDisplay* interface, Image* theImage);
 	static void                     RemoveImageData(MemoryImage* theImage);
 
 };

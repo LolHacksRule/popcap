@@ -19,7 +19,7 @@ class MemoryImage;
 
 typedef std::set<DFBImage*> DFBImageSet;
 
-class DFBInterface : public NativeDisplay
+class DFBDisplay : public NativeDisplay
 {
 	friend class DFBImage;
 	friend class DFBImageData;
@@ -48,8 +48,8 @@ public:
 	void					Cleanup();
 
 public:
-	DFBInterface(SexyAppBase* theApp);
-	virtual ~DFBInterface();
+	DFBDisplay(SexyAppBase* theApp);
+	virtual ~DFBDisplay();
 
 	Image*					GetScreenImage();
 	int					Init();

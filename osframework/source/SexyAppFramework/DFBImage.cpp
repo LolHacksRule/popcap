@@ -1,7 +1,7 @@
 #include <math.h>
 
 #include "DFBImage.h"
-#include "DFBInterface.h"
+#include "DFBDisplay.h"
 #include "Rect.h"
 #include "Graphics.h"
 #include "SexyAppBase.h"
@@ -26,13 +26,13 @@ public:
 	int			  mWidth;
 	int			  mHeight;
 	int			  mBitsChangedCount;
-	DFBInterface*             mInterface;
+	DFBDisplay*             mInterface;
 	IDirectFBSurface*         mSurface;
 	DFBSurfaceCapabilities	  mCaps;
 	MemoryImage*              mImage;
 
 public:
-	DFBImageData(DFBInterface* theInterface, MemoryImage* theImage);
+	DFBImageData(DFBDisplay* theInterface, MemoryImage* theImage);
 	~DFBImageData();
 
 	void SyncData();
@@ -88,7 +88,7 @@ unmultiply_pixel (uint pixel)
 	return  (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
 }
 
-DFBImageData::DFBImageData(DFBInterface* theInterface, MemoryImage* theImage)
+DFBImageData::DFBImageData(DFBDisplay* theInterface, MemoryImage* theImage)
 {
 	mBitsChangedCount = -1;
 	mWidth = theImage->mWidth;
@@ -140,7 +140,7 @@ void DFBImageData::SyncData()
 	mBitsChangedCount = mImage->mBitsChangedCount;
 }
 
-IDirectFBSurface* DFBImage::EnsureSrcSurface(DFBInterface* interface, Image* theImage)
+IDirectFBSurface* DFBImage::EnsureSrcSurface(DFBDisplay* interface, Image* theImage)
 {
 	DFBImage * srcImage = dynamic_cast<DFBImage*>(theImage);
 
@@ -156,7 +156,7 @@ IDirectFBSurface* DFBImage::EnsureSrcSurface(DFBInterface* interface, Image* the
 	return aData->mSurface;
 }
 
-DFBImage::DFBImage(DFBInterface* theInterface) :
+DFBImage::DFBImage(DFBDisplay* theInterface) :
 	MemoryImage(theInterface->mApp),
 	mInterface(theInterface),
 	mSurface(0)
@@ -165,7 +165,7 @@ DFBImage::DFBImage(DFBInterface* theInterface) :
 }
 
 DFBImage::DFBImage(IDirectFBSurface * theSurface,
-		   DFBInterface* theInterface) :
+		   DFBDisplay* theInterface) :
 	MemoryImage(theInterface->mApp),
 	mInterface(theInterface),
 	mSurface(theSurface)
@@ -176,7 +176,7 @@ DFBImage::DFBImage(IDirectFBSurface * theSurface,
 DFBImage::DFBImage() :
 	MemoryImage(gSexyAppBase)
 {
-	mInterface = dynamic_cast<DFBInterface *>(gSexyAppBase->mDDInterface);
+	mInterface = dynamic_cast<DFBDisplay *>(gSexyAppBase->mDDInterface);
 	Init();
 }
 
