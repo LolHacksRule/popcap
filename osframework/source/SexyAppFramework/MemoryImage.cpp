@@ -1214,7 +1214,7 @@ void MemoryImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool com
 		delete [] mColorTable;
 		mColorTable = NULL;
 
-		if (theWidth != mWidth || theHeight != mHeight)
+		if (!mBits || theWidth != mWidth || theHeight != mHeight)
 		{
 			delete [] mBits;
 			mBits = new uint32[theWidth*theHeight + 1];
