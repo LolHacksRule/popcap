@@ -696,14 +696,14 @@ void Widget::TouchMove(const TouchVector &touches)
 {
 	size_t i;
 	for (i = 0; i < touches.size(); i++)
-		if (touches[0].id == mActiveTouchId)
+		if (touches[i].id == mActiveTouchId)
 			break;
 	if (i == touches.size())
 		return;
 
 	Point pos = GetAbsPos();
-	int x = touches[0].x - pos.mX;
-	int y = touches[0].y - pos.mY;
+	int x = touches[i].x - pos.mX;
+	int y = touches[i].y - pos.mY;
 	TouchMove(touches[i].id, x, y);
 }
 
@@ -711,14 +711,14 @@ void Widget::TouchUp(const TouchVector &touches)
 {
 	size_t i;
 	for (i = 0; i < touches.size(); i++)
-		if (touches[0].id == mActiveTouchId)
+		if (touches[i].id == mActiveTouchId)
 			break;
 	if (i == touches.size())
 		return;
 
 	Point pos = GetAbsPos();
-	int x = touches[0].x - pos.mX;
-	int y = touches[0].y - pos.mY;
+	int x = touches[i].x - pos.mX;
+	int y = touches[i].y - pos.mY;
 	TouchUp(touches[i].id, x, y, touches[i].tapCount);
 	mActiveTouchId = -1;
 
@@ -728,14 +728,14 @@ void Widget::TouchCancel(const TouchVector &touches)
 {
 	size_t i;
 	for (i = 0; i < touches.size(); i++)
-		if (touches[0].id == mActiveTouchId)
+		if (touches[i].id == mActiveTouchId)
 			break;
 	if (i == touches.size())
-		i = 0;
+		return;
 
 	Point pos = GetAbsPos();
-	int x = touches[0].x - pos.mX;
-	int y = touches[0].y - pos.mY;
+	int x = touches[i].x - pos.mX;
+	int y = touches[i].y - pos.mY;
 	TouchCancel(touches[i].id, x, y);
 	mActiveTouchId = -1;
 }
