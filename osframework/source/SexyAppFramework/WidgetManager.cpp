@@ -887,7 +887,7 @@ bool WidgetManager::TouchDown(const EventVector &events)
 		touches[i].pressure = events[i].u.touch.pressure;
 		if (touches[i].timestamp - info->timestamp >= 300)
 		{
-			info->tapCount = 0;
+			info->tapCount = 1;
 			info->timestamp = touches[i].timestamp;
 		}
 		touches[i].tapCount = info->tapCount;
@@ -946,8 +946,12 @@ bool WidgetManager::TouchMove(const EventVector &events)
 		touches[i].pressure = events[i].u.touch.pressure;
 		if (touches[i].timestamp - info->timestamp >= 300)
 		{
-			info->tapCount = 0;
+			info->tapCount = 1;
 			info->timestamp = touches[i].timestamp;
+		}
+		else
+		{
+			info->tapCount++;
 		}
 		touches[i].tapCount = info->tapCount;
 		info->x = touches[i].x;
@@ -983,7 +987,7 @@ bool WidgetManager::TouchUp(const EventVector &events)
 		touches[i].x = events[i].u.touch.x;
 		touches[i].y = events[i].u.touch.y;
 		touches[i].pressure = events[i].u.touch.pressure;
-		touches[i].tapCount = ++info->tapCount;
+		touches[i].tapCount = info->tapCount;
 
 		info->timestamp = touches[i].timestamp;
 		info->x = touches[i].x;
