@@ -10,11 +10,11 @@ def AddOptions (opts):
     configs.FreeTypeAddOptions (opts)
 
     from SCons.Variables import PathVariable, EnumVariable
-    opts.Add(EnumVariable('iosplatform', 'the target of iPhoneOS', 'iPhoneOS', allowed_values = ['iPhoneOS', 'iPhoneSimulator']))
-    opts.Add(PathVariable('devroot', 'the path to IOS Developer', '/Developer/Platforms/${iosplatform}.platform/Developer'))
-    opts.Add(('sdkver', 'the IOS SDK version', '3.1.3'))
-    opts.Add(PathVariable('sdkroot', 'the path to IOS SDK', '$devroot/SDKs/${iosplatform}${sdkver}.sdk'))
-    opts.Add(EnumVariable('arch', 'target architecture', 'default', allowed_values = ['default', 'i386', 'armv6', 'armv7']))
+    opts.Add(EnumVariable('ios_platform', 'the target of iPhoneOS', 'iPhoneOS', allowed_values = ['iPhoneOS', 'iPhoneSimulator']))
+    opts.Add(PathVariable('ios_devroot', 'the path to IOS Developer', '/Developer/Platforms/${ios_platform}.platform/Developer'))
+    opts.Add(('ios_sdkver', 'the IOS SDK version', '3.1.3'))
+    opts.Add(PathVariable('ios_sdkroot', 'the path to IOS SDK', '$ios_devroot/SDKs/${ios_platform}${ios_sdkver}.sdk'))
+    opts.Add(EnumVariable('ios_arch', 'target architecture', 'default', allowed_values = ['default', 'i386', 'armv6', 'armv7']))
 
 def Configure (env):
     configs.Configure (env)
@@ -27,23 +27,24 @@ def Configure (env):
     env['RANLIB'] = os.path.join (tcdir, 'ranlib')
     env['LD'] = os.path.join (tcdir, 'ld')
 
-    if env['arch'] == 'default':
-        if env['iosplatform'] == 'iPhoneOS':
-            env['arch'] = 'armv6'
+    if env['ios_arch'] == 'default':
+        if env['ios_platform'] == 'iPhoneOS':
+            env['ios_arch'] = 'armv6'
         else:
-            env['arch'] = 'i386'
+            env['ios_arch'] = 'i386'
 
-    if env['iosplatform'] == 'iPhoneSimulator':
-        env.AppendUnique(CCFLAGS = ['-miphoneos-version-min=3.0'],
-                         LINKFLAGS = ['-miphoneos-version-min=3.0'],
+    if env['ios_platform'] == 'iPhoneSimulator':
+        env.AppendUnique(CCFLAGS = ['-miphoneos-version-min=3.0', '-fobjc-abi-version=2',
+				    '-fobjc-legacy-dispatch'],
+                         LINKFLAGS = ['-miphoneos-version-min=3.0', '-fobjc-abi-version=2'],
                          CPPDEFINES = [('__IPHONE_OS_VERSION_MIN_REQUIRED', 30000)])
     
-    env.AppendUnique(CPPPATH = [os.path.join('$sdkroot', 'usr', 'lib', 'gcc', 'arm-apple-darwin9', '4.2.1', 'include'),
-                                os.path.join('$sdkroot', 'usr', 'include'), os.path.join('$devroot', 'usr', 'include')],
-                     LIBPATH = [os.path.join('$sdkroot', 'usr', 'lib'), os.path.join('$devroot', 'usr', 'lib')],
-                     CCFLAGS = [('-arch', '$arch'), ('-isysroot', '$sdkroot')],
-                     LINKFLAGS = [('-arch', '$arch'), ('--sysroot', '$sdkroot')],
-		     FRAMEWORKPATH = [os.path.join('$sdkroot', 'System', 'Library', 'Frameworks')])
+    env.AppendUnique(CPPPATH = [os.path.join('$ios_sdkroot', 'usr', 'lib', 'gcc', 'arm-apple-darwin9', '4.2.1', 'include'),
+                                os.path.join('$ios_sdkroot', 'usr', 'include'), os.path.join('$ios_devroot', 'usr', 'include')],
+                     LIBPATH = [os.path.join('$ios_sdkroot', 'usr', 'lib'), os.path.join('$ios_devroot', 'usr', 'lib')],
+                     CCFLAGS = [('-arch', '$ios_arch'), ('-isysroot', '$ios_sdkroot')],
+                     LINKFLAGS = [('-arch', '$ios_arch'), ('--sysroot', '$ios_sdkroot')],
+		     FRAMEWORKPATH = [os.path.join('$ios_sdkroot', 'System', 'Library', 'Frameworks')])
     env['TARGET_OS'] = 'darwin'
     env.AppendUnique (CPPDEFINES = ['SEXY_DARWIN', 'SEXY_IOS'],
                       CCFLAGS = ['-pthread'],
