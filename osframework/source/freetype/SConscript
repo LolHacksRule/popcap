@@ -164,8 +164,18 @@ env.Clean (freetype, [freetype_dir])
 env.Clean (freetype, ['include', 'lib'])
 
 ### setup package info
+linkflags = []
+libs = ['freetype']
+if static_freetype:
+    objects = []
+    if env['TARGET_OS'] == 'darwin':
+        linkflags += [freetype_lib[0].abspath]
+        libs = []
+else:
+    objects = freetype_lib
 configs.SetPackageInfo([env, gameenv], 'freetype',
-                       LIBS = ['freetype'],
+                       LIBS = libs,
                        CPPPATH = [os.path.join(Dir('.').abspath, 'include', 'freetype2')],
                        LIBPATH = [os.path.join(Dir('.').abspath, 'lib')],
-                       OBJECTS = freetype_lib, TARGETS = freetype)
+                       LINKFLAGS = linkflags,
+                       OBJECTS = objects, TARGETS = freetype)
