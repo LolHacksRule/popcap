@@ -18,7 +18,7 @@ def AddOptions (opts):
 
 def Configure (env):
     configs.Configure (env)
-    tcdir = os.path.join('$devroot', 'usr', 'bin') 
+    tcdir = os.path.join('$ios_devroot', 'usr', 'bin') 
     env['CC'] = os.path.join (tcdir, 'gcc')
     env['CXX'] = os.path.join (tcdir, 'g++')
     env['LINK'] = os.path.join (tcdir, 'g++')
@@ -39,7 +39,7 @@ def Configure (env):
                          LINKFLAGS = ['-miphoneos-version-min=3.0', '-fobjc-abi-version=2'],
                          CPPDEFINES = [('__IPHONE_OS_VERSION_MIN_REQUIRED', 30000)])
     
-    env.AppendUnique(CPPPATH = [os.path.join('$ios_sdkroot', 'usr', 'lib', 'gcc', 'arm-apple-darwin9', '4.2.1', 'include'),
+    env.PrependUnique(CPPPATH = [os.path.join('$ios_sdkroot', 'usr', 'lib', 'gcc', 'arm-apple-darwin9', '4.2.1', 'include'),
                                 os.path.join('$ios_sdkroot', 'usr', 'include'), os.path.join('$ios_devroot', 'usr', 'include')],
                      LIBPATH = [os.path.join('$ios_sdkroot', 'usr', 'lib'), os.path.join('$ios_devroot', 'usr', 'lib')],
                      CCFLAGS = [('-arch', '$ios_arch'), ('-isysroot', '$ios_sdkroot')],
