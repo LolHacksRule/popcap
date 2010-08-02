@@ -138,16 +138,14 @@ def EnableAudiereSound (env):
             env.AppendUnique (LIBS = ['asound'])
         elif 'darwin' in env['config']:
             env.AppendUnique (CPPDEFINES = ['HAVE_CORE_AUDIO'],
-                              LINKFLAGS = [('-framework', 'CoreAudio'),
-                                           ('-framework', 'Cocoa'),
+                              FRAMEWORKS = ['CoreAudio',
                                            ('-framework', 'AudioUnit'),
                                            ('-framework', 'AudioToolbox')])
         elif 'ios' in env['config']:
             env.AppendUnique (CPPDEFINES = ['HAVE_CORE_AUDIO'],
-                              LINKFLAGS = [('-framework', 'CoreAudio'),
-                                           ('-framework', 'Foundation'),
-                                           ('-framework', 'AudioUnit'),
-                                           ('-framework', 'AudioToolbox')])
+                              FRAMEWORKS = ['CoreAudio',
+                                           'Foundation',
+                                           'AudioToolbox'])
         elif 'win32' in env['config'] or 'mingw' in env['config']:
             pass
     else:

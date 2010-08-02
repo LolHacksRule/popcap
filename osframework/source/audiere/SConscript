@@ -83,11 +83,12 @@ elif 'linux' in env['TARGET_OS']:
     srcs += ['midi_null.cpp', 'cd_null.cpp',
              'timer_posix.cpp', 'threads_posix.cpp']
 elif 'darwin' in env['TARGET_OS']:
+    if 'SEXY_IOS' in env['CPPDEFINES']:
+        frameworks = ['CoreAudio', 'AudioToolbox']
+    else:
+        frameworks = ['CoreAudio', 'AudioToolbox', 'AudioUnit']
     env.AppendUnique (CPPDEFINES = ['HAVE_CORE_AUDIO'],
-                      LINKFLAGS = [('-framework', 'CoreAudio'),
-                                   ('-framework', 'Cocoa'),
-                                   ('-framework', 'AudioUnit'),
-                                   ('-framework', 'AudioToolbox')])
+                      FRAMEWORKS = frameworks)
     srcs += ['device_coreaudio.cpp', 'midi_null.cpp', 'cd_null.cpp',
              'timer_posix.cpp', 'threads_posix.cpp']
 else:
