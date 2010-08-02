@@ -24,6 +24,7 @@
 #include <wctype.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <wchar.h>
 
 #ifdef WIN32
 #ifndef NOMINMAX
@@ -38,6 +39,7 @@
 #else
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 typedef unsigned char  BYTE;
 typedef unsigned int DWORD;
