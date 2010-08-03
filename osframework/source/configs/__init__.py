@@ -73,6 +73,8 @@ def Configure(env):
         env.Replace (PKGCONFIG = 'pkg-config')
     if env['debug']:
         env.AppendUnique(CPPDEFINES = ['SEXY_DEBUG'])
+    env.AppendUnique(CPPDEFINES = ['SEXY_MEMORY_' + env['memory_level'].upper(),
+                                   'SEXY_PERF_' + env['perf_level'].upper()])
     SetupColorizeOutput(env)
     FreeTypeConfigure(env)
     fontforgeConfigure(env)
@@ -191,6 +193,9 @@ def FreeTypeAddOptions (opts):
     opts.Add ('freetype_ldflags', "link flags for freetype", '')
 
 def EnableFreeType (env):
+    if 'freetype' in env['BUILD_PACKAGES']:
+        EnablePackage(env, 'freetype')
+        return
     env.AppendUnique (LIBS = ['freetype']);
     env.AppendUnique (CCFLAGS = env['freetype_ccflags'].split(','),
                       LINKFLAGS = env['freetype_ldflags'].split(','))
