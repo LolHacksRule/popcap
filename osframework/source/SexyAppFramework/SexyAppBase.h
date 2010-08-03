@@ -613,6 +613,7 @@ public:
 	virtual void				DoMainLoop();
 	virtual bool				UpdateAppStep(bool* updated);
 	virtual bool				UpdateApp();
+	virtual void                            InitVideoDriver();
 	int					InitDDInterface();
 	void					ClearUpdateBacklog(bool relaxForASecond = false);
 	bool					IsScreenSaver();

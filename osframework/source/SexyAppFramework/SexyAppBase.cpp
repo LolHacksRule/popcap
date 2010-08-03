@@ -170,7 +170,7 @@ SexyAppBase::SexyAppBase()
 	mWidth = 640;
 	mHeight = 480;
 	mFullscreenBits = 16;
-	mIsWindowed = true;
+	mIsWindowed = false;
 	mIsPhysWindowed = true;
 	mFullScreenWindow = false;
 	mPreferredX = -1;
@@ -275,8 +275,8 @@ SexyAppBase::SexyAppBase()
 	mWaitForVSync = false;
 	mSoftVSyncWait = false;
 	mUserChanged3DSetting = false;
-	mAutoEnable3D = false;
-	mIs3D = false;
+	mAutoEnable3D = true;
+	mIs3D = true;
 	mTest3D = false;
 	mMinVidMemory3D = 6;
 	mRecommendedVidMemory3D = 14;
@@ -1737,6 +1737,11 @@ void SexyAppBase::InitVideoDriver()
 		DoExit (1);
 	}
 	mDDInterface->mApp = this;
+
+	if (mIs3D && !Is3DAccelerationSupported())
+		mIs3D = false;
+	if (mIsWindowed && !mDDInterface->CanWindowed())
+		mIsWindowed = false;
 }
 
 void SexyAppBase::MakeWindow()
@@ -1920,7 +1925,7 @@ void SexyAppBase::StartCursorThread()
 
 void SexyAppBase::SwitchScreenMode(bool wantWindowed, bool is3d, bool force)
 {
-	if (mForceFullscreen)
+	if (mForceFullscreen || (mDDInterface && !mDDInterface->CanWindowed()))
 		wantWindowed = false;
 
 	// Set 3d acceleration preference
@@ -3737,6 +3742,8 @@ void SexyAppBase::DemoSyncRefreshRate()
 void SexyAppBase::Set3DAcclerated(bool is3D, bool reinit)
 {
 	mIs3D = is3D;
+	if (mIs3D && !Is3DAccelerationSupported())
+		mIs3D = false;
 
 	if (reinit)
 		SwitchScreenMode();
