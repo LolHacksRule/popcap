@@ -161,10 +161,13 @@ std::string Sexy::GetAppDataFolder()
 
 		CFBundleRef mainBundle = CFBundleGetMainBundle();
 		CFStringRef identifier = CFBundleGetIdentifier(mainBundle);
-		const char * appId = CFStringGetCStringPtr(identifier,
-							   CFStringGetFastestEncoding(identifier));
-		if (appId)
-			Sexy::gAppDataFolder += std::string(path) + "/" + std::string(appId);
+		if (identifier)
+		{
+			const char * appId = CFStringGetCStringPtr(identifier,
+								   CFStringGetFastestEncoding(identifier));
+			if (appId)
+				Sexy::gAppDataFolder += std::string(path) + "/" + std::string(appId);
+		}
 	}
 #endif
 #endif
