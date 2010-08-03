@@ -11,6 +11,7 @@
 #include "NativeDisplay.h"
 #include "SharedImage.h"
 #include "Ratio.h"
+#include "SexyThread.h"
 #include "SexyTimer.h"
 #include "Event.h"
 
@@ -279,6 +280,7 @@ public:
 	bool					mShowFPS;
 	int						mShowFPSMode;
 	int						mScreenBltTime;
+	Sexy::Thread                            mLoadingThread;
 	bool					mAutoStartLoadingThread;
 	bool					mLoadingThreadStarted;
 	bool					mLoadingThreadCompleted;

@@ -644,8 +644,11 @@ std::string SexyAppBase::GetProductVersion(const std::string& thePath)
 
 void SexyAppBase::WaitForLoadingThread()
 {
-	while ((mLoadingThreadStarted) && (!mLoadingThreadCompleted))
-		Sleep(20);
+        if ((mLoadingThreadStarted) && (!mLoadingThreadCompleted))
+	{
+		mLoadingThread.Join();
+		mLoadingThreadStarted = false;
+	}
 }
 
 void SexyAppBase::SetCursorImage(int theCursorNum, Image* theImage)
@@ -1040,6 +1043,9 @@ bool SexyAppBase::DoUpdateFrames()
 			mLoaded = true;
 			mYieldMainThread = false;
 			LoadingThreadCompleted();
+
+			mLoadingThread.Join();
+			mLoadingThreadStarted = false;
 		}
 
 		// Hrrm not sure why we check (mUpdateCount != mLastDemoUpdateCnt) here
@@ -1058,6 +1064,9 @@ bool SexyAppBase::DoUpdateFrames()
 			mLoaded = true;
 			mYieldMainThread = false;
 			LoadingThreadCompleted();
+
+			mLoadingThread.Join();
+			mLoadingThreadStarted = false;
 		}
 
 		UpdateFrames();
@@ -1901,14 +1910,7 @@ void SexyAppBase::StartLoadingThread()
 	{
 		mYieldMainThread = true;
 		mLoadingThreadStarted = true;
-#ifdef WIN32
-		_beginthread(LoadingThreadProcStub, 0, this);
-#else
-		pthread_t thread;
-		pthread_create(&thread, NULL,
-			       (void *(*)(void*))LoadingThreadProcStub,
-			       this);
-#endif
+		mLoadingThread = Thread::Create(LoadingThreadProcStub, this);
 	}
 }
 void SexyAppBase::CursorThreadProc()
