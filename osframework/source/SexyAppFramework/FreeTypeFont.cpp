@@ -32,7 +32,10 @@ FreeTypeFont::FreeTypeFont(SexyAppBase* theApp, const std::string& theFace, int 
 void FreeTypeFont::Init(SexyAppBase* theApp, const std::string& theFace, int thePointSize,
 			bool bold, bool italics, bool underline)
 {
-	mScaledFont = new FreeTypeScaledFont(theApp, theFace, thePointSize, bold, italics, underline);
+	FreeTypeFontMap* aFontMap = FreeTypeFontMap::GetFreeTypeFontMap();
+
+	mScaledFont = aFontMap->CreateScaledFont(theApp, theFace, thePointSize,
+						 bold, italics, underline);
 	mSupportUnicode = true;
 	mHeight = mScaledFont->mHeight;
 	mAscent = mScaledFont->mAscent;
@@ -54,7 +57,9 @@ FreeTypeFont::FreeTypeFont(const FreeTypeFont& theFont)
 
 FreeTypeFont::~FreeTypeFont()
 {
-	mScaledFont->Unref();
+	FreeTypeFontMap* aFontMap = FreeTypeFontMap::GetFreeTypeFontMap();
+
+	aFontMap->FreeScaledFont(mScaledFont);
 }
 
 int FreeTypeFont::StringWidth(const std::string& theString)

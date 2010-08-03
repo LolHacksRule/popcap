@@ -1,5 +1,7 @@
+#include "SexyAppBase.h"
 #include "FreeTypeFontMap.h"
 #include "FreeTypeBaseFont.h"
+#include "FreeTypeScaledFont.h"
 
 using namespace Sexy;
 
@@ -85,6 +87,63 @@ void FreeTypeFontMap::RemoveBaseFont(FreeTypeBaseFont* font)
 			return;
 		}
 	}
+}
+
+FreeTypeScaledFont* FreeTypeFontMap::CreateScaledFont(SexyAppBase* theApp,
+						      const std::string& theFace,
+						      int thePointSize,
+						      bool bold,
+						      bool italics,
+						      bool underline)
+{
+	FreeTypeScaledFont* result = 0;
+	ScaledFontKey key(theApp, theFace, thePointSize, bold, italics, underline);
+
+	AutoCrit anAutoCrit(mScaledFontCritSect);
+
+	ScaledFontMap::iterator it = mScaledFontMap.find(key);
+	if (it != mScaledFontMap.end())
+	{
+		result = it->second;
+		result->Ref();
+		return result;
+	}
+
+	result = new FreeTypeScaledFont(theApp, theFace, thePointSize, bold,
+					italics, underline);
+
+	mScaledFontMap.insert(ScaledFontMap::value_type(key, result));
+	return result;
+}
+
+void FreeTypeFontMap::FreeScaledFont(FreeTypeScaledFont *theFont)
+{
+	if (!theFont)
+		return;
+
+	AutoCrit anAutoCrit(mScaledFontCritSect);
+
+	ScaledFontMap::iterator it;
+	for (it = mScaledFontMap.begin(); it != mScaledFontMap.end(); ++it)
+	{
+		if (it->second == theFont)
+		{
+			if (!theFont->Unref())
+				mScaledFontMap.erase(it);
+			return;
+		}
+	}
+
+	theFont->Unref();
+}
+
+FreeTypeScaledFont* FreeTypeFontMap::CreateScaledFont(const std::string& theFace,
+						      int thePointSize,
+						      bool bold,
+						      bool italics,
+						      bool underline)
+{
+	return CreateScaledFont(gSexyAppBase, theFace, bold, italics, underline);
 }
 
 void FreeTypeFontMap::ReserveFace(FreeTypeBaseFont* font)

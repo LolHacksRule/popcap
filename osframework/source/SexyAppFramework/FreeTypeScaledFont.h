@@ -188,7 +188,7 @@ namespace Sexy
 
 	public:
 		void				Ref();
-		void				Unref();
+		bool				Unref();
 	};
 
 }

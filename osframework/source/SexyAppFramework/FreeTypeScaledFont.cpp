@@ -576,17 +576,19 @@ void FreeTypeScaledFont::Ref()
 	mRefCnt++;
 }
 
-void FreeTypeScaledFont::Unref()
+bool FreeTypeScaledFont::Unref()
 {
 	{
 		AutoCrit anAutoCrit(mRefCritSect);
 
 		if (--mRefCnt)
-			return;
+			return true;
 	}
 
 	delete this;
+	return false;
 }
+
 void FreeTypeScaledFont::LockFace()
 {
 	if (mBaseFont)
