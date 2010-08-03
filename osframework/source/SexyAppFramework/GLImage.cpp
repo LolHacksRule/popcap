@@ -77,7 +77,7 @@ public:
 	bool			  mRectangleTexture;
 	GLenum			  mTarget;
 
-	GLDisplay*		  mInterface;
+	GLDisplay*		  mDpy;
 	int			  mImageFlags;
 	Image*			  mImage;
 
@@ -307,7 +307,7 @@ GLTexture::GLTexture (GLDisplay *theInterface, Image* theImage)
 	mTexBlockHeight = 64;
 	mRectangleTexture = false;
 	mTarget = 0;
-	mInterface = theInterface;
+	mDpy = theInterface;
 	mImageFlags = 0;
 	mImage = theImage;
 }
@@ -353,10 +353,10 @@ static void SetBlendFunc(int theDrawMode, bool premultiply = false)
 void GLTexture::ReleaseTextures ()
 {
 	assert (mTexMemSize == mImage->mTexMemSize);
-	mInterface->FreeTexMemSpace(mTexMemSize);
+	mDpy->FreeTexMemSpace(mTexMemSize);
 
 	for(size_t i = 0; i < mTextures.size(); i++)
-		mInterface->DelayedDeleteTexture(mTextures[i].mTexture);
+		mDpy->DelayedDeleteTexture(mTextures[i].mTexture);
 
 	mTextures.clear();
 	mTexMemSize = 0;
@@ -375,14 +375,14 @@ void GLTexture::CreateTextureDimensions (MemoryImage* theImage)
 	bool usePOT = true;
 	bool miniSubDiv = (theImage->mFlags & IMAGE_FLAGS_MINI_SUBDIV) != 0;
 
-	mTarget = mInterface->GetTextureTarget();
-	mInterface->CalulateBestTexDimensions (mTexBlockWidth, mTexBlockHeight, miniSubDiv, usePOT);
+	mTarget = mDpy->GetTextureTarget();
+	mDpy->CalulateBestTexDimensions (mTexBlockWidth, mTexBlockHeight, miniSubDiv, usePOT);
 
 	// Calculate right boundary block sizes
 	int aRightWidth = aWidth % mTexBlockWidth;
 	int aRightHeight = mTexBlockHeight;
 	if (aRightWidth > 0)
-		mInterface->CalulateBestTexDimensions (aRightWidth, aRightHeight, true, usePOT);
+		mDpy->CalulateBestTexDimensions (aRightWidth, aRightHeight, true, usePOT);
 	else
 		aRightWidth = mTexBlockWidth;
 
@@ -390,14 +390,14 @@ void GLTexture::CreateTextureDimensions (MemoryImage* theImage)
 	int aBottomWidth = mTexBlockWidth;
 	int aBottomHeight = aHeight % mTexBlockHeight;
 	if (aBottomHeight > 0)
-		mInterface->CalulateBestTexDimensions (aBottomWidth, aBottomHeight, true, usePOT);
+		mDpy->CalulateBestTexDimensions (aBottomWidth, aBottomHeight, true, usePOT);
 	else
 		aBottomHeight = mTexBlockHeight;
 
 	// Calculate corner block size
 	int aCornerWidth = aRightWidth;
 	int aCornerHeight = aBottomHeight;
-	mInterface->CalulateBestTexDimensions (aCornerWidth, aCornerHeight, true, usePOT);
+	mDpy->CalulateBestTexDimensions (aCornerWidth, aCornerHeight, true, usePOT);
 
 	// Allocate texture array
 	mTexVecWidth = (aWidth + mTexBlockWidth - 1) / mTexBlockWidth;
@@ -542,7 +542,7 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 		GLTextureBlock &aBlock = mTextures[i];
 		aTextMemSize += aBlock.mWidth * aBlock.mHeight * aFormatSize;
 	}
-	if (!mInterface->EnsureTexMemSpace(aTextMemSize))
+	if (!mDpy->EnsureTexMemSpace(aTextMemSize))
 		printf ("No enough texture memory!\n");
 
 	i = 0;
@@ -553,7 +553,7 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 			GLTextureBlock &aBlock = mTextures[i];
 			if (createTextures)
 			{
-				aBlock.mTexture = CreateTexture (mInterface, theImage, 0, x, y,
+				aBlock.mTexture = CreateTexture (mDpy, theImage, 0, x, y,
 								 aBlock.mWidth, aBlock.mHeight);
 				if (aBlock.mTexture == 0) // create texture failure
 					continue;
@@ -562,13 +562,13 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 			}
 			else
 			{
-				aBlock.mTexture = CreateTexture (mInterface, theImage, aBlock.mTexture, x, y,
+				aBlock.mTexture = CreateTexture (mDpy, theImage, aBlock.mTexture, x, y,
 								 aBlock.mWidth, aBlock.mHeight);
 			}
 		}
 	}
 	if (createTextures)
-		mInterface->AllocTexMemSpace(mTexMemSize);
+		mDpy->AllocTexMemSpace(mTexMemSize);
 	theImage->mTexMemSize = mTexMemSize;
 
 	mWidth = theImage->mWidth;
@@ -1302,7 +1302,7 @@ GLTexture* GLImage::EnsureSrcTexture(GLDisplay* theInterface, Image* theImage)
 
 GLImage::GLImage(GLDisplay* theInterface) :
 	MemoryImage(theInterface->mApp),
-	mInterface(theInterface),
+	mDpy(theInterface),
 	mDirty(0)
 {
 	mTexture = 0;
@@ -1312,7 +1312,7 @@ GLImage::GLImage(GLDisplay* theInterface) :
 GLImage::GLImage() :
 	MemoryImage(gSexyAppBase)
 {
-	mInterface = dynamic_cast<GLDisplay *>(gSexyAppBase->mDDInterface);
+	mDpy = dynamic_cast<GLDisplay *>(gSexyAppBase->mDDInterface);
 	mTexture = 0;
 	Init();
 }
@@ -1375,7 +1375,7 @@ void GLImage::DeleteSurface()
 
 void GLImage::ReAttach(NativeDisplay *theNative)
 {
-	mInterface = (GLDisplay*)theNative;
+	mDpy = (GLDisplay*)theNative;
 }
 
 void GLImage::ReInit()
@@ -1439,7 +1439,7 @@ void GLImage::RehupFirstPixelTrans()
 bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Rect *theClipRect,
 			 const Color &theColor, int theDrawMode, int tx, int ty, bool convex)
 {
-	if (mInterface->GetScreenImage () != this)
+	if (mDpy->GetScreenImage () != this)
 		return false;
 
 	SexyRGBA aColor = theColor.ToRGBA();
@@ -1490,7 +1490,7 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 
 void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage () != this)
+	if (mDpy->GetScreenImage () != this)
 	{
 		MemoryImage::FillRect (theRect, theColor, theDrawMode);
 		return;
@@ -1553,7 +1553,7 @@ void GLImage::AdditiveDrawLine(double theStartX, double theStartY, double theEnd
 void GLImage::DrawLine(double theStartX, double theStartY, double theEndX, double theEndY,
 		       const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage () != this)
+	if (mDpy->GetScreenImage () != this)
 	{
 		MemoryImage::DrawLine (theStartX, theStartY, theEndX, theEndY, theColor, theDrawMode);
 		return;
@@ -1616,7 +1616,7 @@ void GLImage::AdditiveDrawLineAA(double theStartX, double theStartY,
 void GLImage::DrawLineAA(double theStartX, double theStartY, double theEndX, double theEndY,
 			 const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage () != this)
+	if (mDpy->GetScreenImage () != this)
 	{
 		MemoryImage::DrawLineAA (theStartX, theStartY, theEndX, theEndY, theColor, theDrawMode);
 		return;
@@ -1691,7 +1691,7 @@ uint32* GLImage::GetBits()
 	if (!bits)
 		return 0;
 
-	if (mInterface->GetScreenImage() == this)
+	if (mDpy->GetScreenImage() == this)
 	{
 		//glReadPixels ()?
 		TRACE_THIS ();
@@ -1706,7 +1706,7 @@ void GLImage::Clear()
 
 void GLImage::ClearRect(const Rect& theRect)
 {
-	if (mInterface->GetScreenImage () != this)
+	if (mDpy->GetScreenImage () != this)
 	{
 		MemoryImage::ClearRect (theRect);
 		return;
@@ -1795,7 +1795,7 @@ void GLImage::AdditiveBltMirror(Image* theImage, int theX, int theY,
 void GLImage::Bltf(Image* theImage, float theX, float theY, const Rect& theSrcRect,
 		   const Color& theColor, int theDrawMode)
 {
-	GLTexture *aTexture = EnsureSrcTexture(mInterface, theImage);
+	GLTexture *aTexture = EnsureSrcTexture(mDpy, theImage);
 	if (!aTexture)
 		return;
 
@@ -1807,7 +1807,7 @@ void GLImage::Bltf(Image* theImage, float theX, float theY, const Rect& theSrcRe
 void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect,
 		  const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mDpy->GetScreenImage() != this)
 	{
 		MemoryImage::Blt(theImage, theX, theY, theSrcRect, theColor, theDrawMode);
 		return;
@@ -1823,7 +1823,7 @@ void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect,
 		return;
 	}
 
-	GLTexture *aTexture = EnsureSrcTexture(mInterface, theImage);
+	GLTexture *aTexture = EnsureSrcTexture(mDpy, theImage);
 	if (!aTexture)
 		return;
 
@@ -1835,7 +1835,7 @@ void GLImage::Blt(Image* theImage, int theX, int theY, const Rect& theSrcRect,
 void GLImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcRect,
 			const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mDpy->GetScreenImage() != this)
 	{
 		MemoryImage::BltMirror(theImage, theX, theY, theSrcRect, theColor, theDrawMode);
 		return;
@@ -1853,7 +1853,7 @@ void GLImage::BltMirror(Image* theImage, int theX, int theY, const Rect& theSrcR
 void GLImage::BltF(Image* theImage, float theX, float theY, const Rect& theSrcRect, const Rect &theClipRect,
 		   const Color& theColor, int theDrawMode)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mDpy->GetScreenImage() != this)
 	{
 		MemoryImage::BltF (theImage, theX, theY, theSrcRect, theClipRect, theColor, theDrawMode);
 		return;
@@ -1895,7 +1895,7 @@ void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Co
 			      const SexyMatrix3 &theTransform, bool linear,
 			      float theX, float theY, bool center)
 {
-	GLTexture *aTexture = EnsureSrcTexture(mInterface, theImage);
+	GLTexture *aTexture = EnsureSrcTexture(mDpy, theImage);
 	if (!aTexture)
 		return;
 
@@ -1936,7 +1936,7 @@ void GLImage::BltTransformed (Image* theImage, const Rect* theClipRect, const Co
 void GLImage::BltRotated (Image* theImage, float theX, float theY, const Rect &theSrcRect, const Rect& theClipRect,
 			  const Color& theColor, int theDrawMode, double theRot, float theRotCenterX, float theRotCenterY)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mDpy->GetScreenImage() != this)
 	{
 		MemoryImage::BltRotated (theImage, theX, theY, theSrcRect, theClipRect, theColor, theDrawMode,
 					 theRot, theRotCenterX, theRotCenterY);
@@ -1955,7 +1955,7 @@ void GLImage::BltRotated (Image* theImage, float theX, float theY, const Rect &t
 void GLImage::StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect, const Rect& theClipRect,
 			 const Color& theColor, int theDrawMode, bool fastStretch)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mDpy->GetScreenImage() != this)
 	{
 		MemoryImage::StretchBlt (theImage, theDestRect, theSrcRect, theClipRect,
 					 theColor, theDrawMode, fastStretch);
@@ -1985,7 +1985,7 @@ void GLImage::StretchBlt(Image* theImage, const Rect& theDestRect, const Rect& t
 void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const Rect& theSrcRect,
 			       const Rect& theClipRect, const Color& theColor, int theDrawMode, bool fastStretch)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mDpy->GetScreenImage() != this)
 	{
 		MemoryImage::StretchBltMirror (theImage, theDestRect, theSrcRect, theClipRect,
 					       theColor, theDrawMode, fastStretch);
@@ -2015,7 +2015,7 @@ void GLImage::StretchBltMirror(Image* theImage, const Rect& theDestRect, const R
 void GLImage::BltMatrix(Image* theImage, float x, float y, const SexyMatrix3 &theMatrix, const Rect& theClipRect,
 			const Color& theColor, int theDrawMode, const Rect &theSrcRect, bool blend)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mDpy->GetScreenImage() != this)
 	{
 		MemoryImage::BltMatrix (theImage, x, y, theMatrix, theClipRect, theColor,
 					theDrawMode, theSrcRect, blend);
@@ -2029,14 +2029,14 @@ void GLImage::BltTrianglesTex(Image *theImage, const TriVertex theVertices[][3],
 			      const Rect& theClipRect, const Color &theColor, int theDrawMode,
 			      float tx, float ty, bool blend)
 {
-	if (mInterface->GetScreenImage() != this)
+	if (mDpy->GetScreenImage() != this)
 	{
 		MemoryImage::BltTrianglesTex (theImage, theVertices, theNumTriangles, theClipRect, theColor,
 					      theDrawMode, tx, ty, blend);
 		return;
 	}
 
-	GLTexture *aTexture = EnsureSrcTexture(mInterface, theImage);
+	GLTexture *aTexture = EnsureSrcTexture(mDpy, theImage);
 	if (!aTexture)
 		return;
 
@@ -2065,14 +2065,14 @@ void GLImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitB
 
 void GLImage::Flip(enum FlipFlags flags)
 {
-	if (mInterface->mScreenImage)
-		mInterface->SwapBuffers();
+	if (mDpy->mScreenImage)
+		mDpy->SwapBuffers();
 }
 
 GLTexture* GLImage::EnsureTexture()
 {
 	if (!mTexture)
-		mTexture = new GLTexture(mInterface, this);
+		mTexture = new GLTexture(mDpy, this);
 
 	mTexture->CheckCreateTextures (this);
 	mDrawnTime = Sexy::GetTickCount();
@@ -2106,13 +2106,13 @@ void GLImage::PopTransform()
 
 bool GLImage::Is3D()
 {
-	return mInterface->GetScreenImage() == this &&
-		mInterface->Is3DAccelerated();
+	return mDpy->GetScreenImage() == this &&
+		mDpy->Is3DAccelerated();
 }
 
 int GLImage::GetTextureTarget()
 {
-	return mInterface->GetTextureTarget();
+	return mDpy->GetTextureTarget();
 }
 
 void GLImage::RemoveImageData(MemoryImage* theImage)

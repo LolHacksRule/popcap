@@ -18,7 +18,7 @@ protected:
 	void				DeleteAllNonSurfaceData();
 
 public:
-	GLDisplay*			mInterface;
+	GLDisplay*			mDpy;
 	GLTexture*			mTexture;
 
 public:
