@@ -64,7 +64,7 @@ namespace Sexy
 
 		struct ScaledFontKey {
 			SexyAppBase* mApp;
-			const std::string& mFace;
+			const std::string mFace;
 			int mPointSize;
 			bool mBold;
 			bool mItalics;
@@ -78,6 +78,12 @@ namespace Sexy
 				      bool underline = false)
 			: mApp(theApp), mFace(theFace), mPointSize(thePointSize),
 			  mBold(bold), mItalics(italics), mUnderline(underline)
+			{
+			}
+
+			ScaledFontKey(const ScaledFontKey &other)
+			: mApp(other.mApp), mFace(other.mFace), mPointSize(other.mPointSize),
+			  mBold(other.mBold), mItalics(other.mItalics), mUnderline(other.mUnderline)
 			{
 			}
 
