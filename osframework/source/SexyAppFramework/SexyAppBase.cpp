@@ -1708,49 +1708,58 @@ MemoryImage* SexyAppBase::CreateCursorFromAndMask(unsigned char * data, unsigned
 	return anImage;
 }
 
+void SexyAppBase::InitVideoDriver()
+{
+#ifdef _WIN32_WCE
+	std::string driver("auto");
+#else
+	char* video_driver = getenv ("SEXY_VIDEO_DRIVER");
+	std::string driver(video_driver ? video_driver : "auto");
+#endif
+	VideoDriver* aVideoDriver = dynamic_cast<VideoDriver*>
+		(VideoDriverFactory::GetVideoDriverFactory ()->Find (driver));
+	if (aVideoDriver == NULL && driver != "auto")
+	{
+		std::cout<<"Video driver \'"<<driver<<"\'"<<" doesn't available."<<std::endl;
+		aVideoDriver = dynamic_cast<VideoDriver*>
+			(VideoDriverFactory::GetVideoDriverFactory ()->Find ());
+	}
+	if (!aVideoDriver)
+	{
+		std::cout<<"Video driver doesn't available."<<std::endl;
+		DoExit (1);
+	}
+	DBG_ASSERT (aVideoDriver != NULL);
+	mDDInterface = aVideoDriver->Create(this);
+	if (!mDDInterface)
+	{
+		std::cout<<"Couldn't initialize video driver."<<std::endl;
+		DoExit (1);
+	}
+	mDDInterface->mApp = this;
+}
+
 void SexyAppBase::MakeWindow()
 {
+	bool fullInit = true;
 	mWidgetManager->mImage = NULL;
 	if (mDDInterface)
 	{
-		DeleteExtraImageData();
+		if (mDDInterface->CanReinit())
+			fullInit = false;
+		else
+			DeleteExtraImageData();
 	}
 	else
 	{
-
-#ifdef _WIN32_WCE
-		std::string driver("auto");
-#else
-		char* video_driver = getenv ("SEXY_VIDEO_DRIVER");
-		std::string driver(video_driver ? video_driver : "auto");
-#endif
-		VideoDriver* aVideoDriver = dynamic_cast<VideoDriver*>
-			(VideoDriverFactory::GetVideoDriverFactory ()->Find (driver));
-		if (aVideoDriver == NULL && driver != "auto")
-		{
-			std::cout<<"Video driver \'"<<driver<<"\'"<<" doesn't available."<<std::endl;
-			aVideoDriver = dynamic_cast<VideoDriver*>
-				(VideoDriverFactory::GetVideoDriverFactory ()->Find ());
-		}
-		if (!aVideoDriver)
-		{
-			std::cout<<"Video driver doesn't available."<<std::endl;
-			DoExit (1);
-		}
-		DBG_ASSERT (aVideoDriver != NULL);
-		mDDInterface = aVideoDriver->Create(this);
-		if (!mDDInterface)
-		{
-			std::cout<<"Couldn't initialize video driver."<<std::endl;
-			DoExit (1);
-		}
-		mDDInterface->mApp = this;
+		InitVideoDriver();
 	}
 	InitDDInterface();
 	mWidgetManager->mImage =
 		dynamic_cast<MemoryImage*>(mDDInterface->GetScreenImage());
 
-	ReInitImages();
+	if (fullInit)
+		ReInitImages();
 
 	mMouseX = 0;
 	mMouseY = 0;
@@ -3047,7 +3056,7 @@ void SexyAppBase::Init()
 	mWidgetManager->Resize(Rect(0, 0, mWidth, mHeight), Rect(0, 0, mWidth, mHeight));
 	MakeWindow();
 
-	if (mSoundManager == NULL)
+	if (mSoundManager == NULL && 0)
 	{
 #ifdef _WIN32_WCE
 		char* sound_driver = NULL;
