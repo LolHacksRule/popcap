@@ -49,6 +49,9 @@ public:
 	bool                                    mDrawFocusRect;
 
 	int                                     mActiveTouchId;
+	Touch                                   mLastTouch;
+	bool                                    mTouchHover;
+
 	Widget*                                 mTabPrev;
 	Widget*                                 mTabNext;
 	Widget*                                 mFocus;
@@ -104,6 +107,7 @@ public:
 	virtual void                    TouchMove(int id, int x, int y);
 	virtual void                    TouchUp(int id, int x, int y, int tapCount);
 	virtual void                    TouchCancel(int id, int x, int y);
+	virtual void                    TouchHover(int id, int x, int y, int tapCount);
 	virtual void                    TouchDown(const TouchVector &touches);
 	virtual void                    TouchMove(const TouchVector &touches);
 	virtual void                    TouchUp(const TouchVector &touches);

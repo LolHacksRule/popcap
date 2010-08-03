@@ -324,6 +324,17 @@ void Widget::LostFocus()
 void Widget::Update()
 {
 	WidgetContainer::Update();
+
+	if (mActiveTouchId < 0 || mTouchHover)
+		return;
+
+	DWORD now = Sexy::GetTickCount();
+	if (now - mLastTouch.timestamp < 500)
+		return;
+
+	TouchHover(mLastTouch.id, mLastTouch.x, mLastTouch.y,
+		   mLastTouch.tapCount);
+	mTouchHover = true;
 }
 
 void Widget::UpdateF(float theFrac)
@@ -667,6 +678,10 @@ void Widget::TouchDown(int id, int x, int y, int tapCount)
 {
 }
 
+void Widget::TouchHover(int id, int x, int y, int tapCount)
+{
+}
+
 void Widget::TouchMove(int id, int x, int y)
 {
 }
@@ -689,6 +704,8 @@ void Widget::TouchDown(const TouchVector &touches)
 	Point pos = GetAbsPos();
 	int x = touches[0].x - pos.mX;
 	int y = touches[0].y - pos.mY;
+	mLastTouch = touches[0];
+	mTouchHover = false;
 	TouchDown(touches[0].id, x, y, touches[0].tapCount);
 }
 
