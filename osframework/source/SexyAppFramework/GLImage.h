@@ -108,6 +108,7 @@ public:
 						       const SexyMatrix3 &theTransform, bool linearfilter,
 						       float theX = 0, float theY = 0, bool center = false);
 
+	virtual bool                     Is3D();
 	virtual bool                     HasTransform();
 	virtual void                     PushTransform(const SexyMatrix3 &theTransform, bool concatenate = true);
 	virtual void			 PopTransform();

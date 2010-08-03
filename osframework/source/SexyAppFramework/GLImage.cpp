@@ -2104,6 +2104,12 @@ void GLImage::PopTransform()
 		mTransformStack.pop_back();
 }
 
+bool GLImage::Is3D()
+{
+	return mInterface->GetScreenImage() == this &&
+		mInterface->Is3DAccelerated();
+}
+
 int GLImage::GetTextureTarget()
 {
 	return mInterface->GetTextureTarget();
