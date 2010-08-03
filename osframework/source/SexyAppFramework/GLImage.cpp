@@ -2080,6 +2080,11 @@ GLTexture* GLImage::EnsureTexture()
 	return mTexture;
 }
 
+bool GLImage::HasTransform()
+{
+	return !mTransformStack.empty();
+}
+
 void GLImage::PushTransform(const SexyMatrix3 &theTransform, bool concatenate)
 {
 	if (mTransformStack.empty() || !concatenate)
