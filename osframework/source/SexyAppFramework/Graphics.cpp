@@ -885,8 +885,7 @@ void Graphics::DrawImageMatrix(Image* theImage, const SexyMatrix3 &theMatrix, co
 
 void Graphics::DrawImageTransformHelper(Image* theImage, const Transform &theTransform, const Rect &theSrcRect, float x, float y, bool useFloat)
 {
-	bool is3D;
-	is3D = false;
+	bool is3D = mIs3D;
 	if (theTransform.mComplex || (is3D && useFloat))
 	{
 		DrawImageMatrix(theImage,theTransform.GetMatrix(),theSrcRect,x,y);
