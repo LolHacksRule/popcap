@@ -199,7 +199,7 @@ Image* GetPNGImage(const std::string& theFileName)
        &interlace_type, NULL, NULL);
 
 //	int aNumBytes = png_get_rowbytes(png_ptr, info_ptr) * height / 4;
-	unsigned int* aBits = new unsigned int[width*height];
+	unsigned int* aBits = new unsigned int[width * height + 1];
 	unsigned int* anAddr = aBits;
 	for (int i = 0; i < height; i++)
 	{
@@ -277,7 +277,7 @@ Image* GetTGAImage(const std::string& theFileName)
 
 	anImage->mWidth = anImageWidth;
 	anImage->mHeight = anImageHeight;
-	anImage->mBits = new unsigned int[anImageWidth*anImageHeight];
+	anImage->mBits = new unsigned int[anImageWidth * anImageHeight + 1];
 
 	p_fread(anImage->mBits, 4, anImage->mWidth*anImage->mHeight, aTGAFile);
 
@@ -650,7 +650,7 @@ Image* GetGIFImage(const std::string& theFileName)
 		pass=0;
 		top_stack=pixel_stack;
 
-		unsigned int* aBits = new unsigned int[width*height];
+		unsigned int* aBits = new unsigned int[width * height + 1];
 
 		register unsigned char *c = NULL;
 
@@ -1237,7 +1237,7 @@ Image* GetJPEGImage(const std::string& theFileName)
 	unsigned char** buffer = (*cinfo.mem->alloc_sarray)
 		((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-	unsigned int* aBits = new unsigned int[cinfo.output_width*cinfo.output_height];
+	unsigned int* aBits = new unsigned int[cinfo.output_width * cinfo.output_height + 1];
 	unsigned int* q = aBits;
 
 	if (cinfo.output_components==1)
@@ -1351,7 +1351,7 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 	Image *anImage = new Image;
 	anImage->mWidth = aMaxWidth;
 	anImage->mHeight = aMaxHeight;
-	anImage->mBits = new unsigned int[aMaxWidth * aMaxHeight];
+	anImage->mBits = new unsigned int[aMaxWidth * aMaxHeight + 1];
 	memset(anImage->mBits,0,aMaxWidth * aMaxHeight*4);
 
 	int aColorModel = jas_image_clrspc(aJasImage);
@@ -1591,7 +1591,7 @@ Image* GetJPEG2000Image(const std::string& theFileName)
 
 		(*fJ2K_GetResolutionDimensions)(aJ2KImage, 0, &aWidth, &aHeight);
 		
-		unsigned int* aBuffer = new unsigned int[aWidth*aHeight];
+		unsigned int* aBuffer = new unsigned int[aWidth*aHeight + 1];
 		if (aBuffer == NULL)
 		{
 			(*fJ2K_Close)(aJ2KImage);
