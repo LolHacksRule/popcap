@@ -28,6 +28,7 @@ public:
 	virtual bool                            CanReinit();
 	virtual bool                            Reinit();
 	virtual void			        Cleanup();
+	virtual bool                            CanWindowed();
 
         virtual void                            SwapBuffers();
 

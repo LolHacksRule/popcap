@@ -215,6 +215,11 @@ void GLXDisplay::Cleanup ()
 	mDpy = NULL;
 }
 
+bool GLXDisplay::CanWindowed(void)
+{
+	return true;
+}
+
 bool GLXDisplay::CanReinit(void)
 {
 	return mInitialized;
