@@ -1233,6 +1233,46 @@ void MemoryImage::SetBits(uint32* theBits, int theWidth, int theHeight, bool com
 	}
 }
 
+bool MemoryImage::TakeBits(uint32* theBits, int theWidth, int theHeight, bool commitBits)
+{
+	if (theBits != mBits || theWidth != mWidth || theHeight != mHeight)
+	{
+		delete [] mColorIndices;
+		mColorIndices = NULL;
+
+		delete [] mColorTable;
+		mColorTable = NULL;
+
+		if (theBits && (theWidth != mWidth || theHeight != mHeight))
+		{
+			delete [] mBits;
+			mBits = theBits;
+			theWidth = mWidth;
+			theHeight = mHeight;
+		}
+		if (!mBits || theWidth != mWidth || theHeight != mHeight)
+		{
+			delete [] mBits;
+			mBits = new uint32[theWidth*theHeight + 1];
+			mWidth = theWidth;
+			mHeight = theHeight;
+		}
+		if (theBits && theBits != mBits)
+			memcpy(mBits, theBits, mWidth*mHeight*sizeof(uint32));
+		else if (!theBits)
+			memset(mBits, 0, mWidth*mHeight*sizeof(uint32));
+		mBits[mWidth*mHeight] = MEMORYCHECK_ID;
+
+		BitsChanged();
+		if (commitBits)
+			CommitBits();
+
+		return theBits == mBits;
+	}
+
+	return false;
+}
+
 void MemoryImage::Create(int theWidth, int theHeight)
 {
 	delete [] mBits;

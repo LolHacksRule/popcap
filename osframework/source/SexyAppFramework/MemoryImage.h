@@ -95,6 +95,7 @@ public:
 
 	virtual void			Clear();
 	virtual void			SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBits = true);
+	virtual bool			TakeBits(uint32* theBits, int theWidth, int theHeight, bool commitBits = true);
 	virtual void			Create(int theWidth, int theHeight);
 	virtual uint32*			GetBits();
 

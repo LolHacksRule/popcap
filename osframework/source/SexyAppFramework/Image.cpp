@@ -227,6 +227,12 @@ void Image::SetBits(uint32* theBits, int theWidth, int theHeight, bool commitBit
 {
 }
 
+bool Image::TakeBits(uint32* theBits, int theWidth, int theHeight, bool commitBits)
+{
+	SetBits(theBits, theWidth, theHeight, commitBits);
+	return false;
+}
+
 uint32* Image::GetBits()
 {
 	return 0;
