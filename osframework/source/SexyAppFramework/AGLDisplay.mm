@@ -174,6 +174,11 @@ AGLDisplay::~AGLDisplay ()
 	Cleanup();
 }
 
+bool AGLDisplay::CanWindowed()
+{
+	return true;
+}
+
 int AGLDisplay::Init (void)
 {
 	Cleanup();
@@ -221,7 +226,12 @@ int AGLDisplay::Init (void)
 	}
 	else
 	{
-		mWindow = 0;
+		mWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, mDesktopWidth, mDesktopHeight)
+						      styleMask:0
+							backing:NSBackingStoreBuffered
+							  defer:FALSE];
+		if (!mWindow)
+			goto fail;
 	}
 
 	index = 0;
@@ -254,11 +264,17 @@ int AGLDisplay::Init (void)
 	{
 		CGCaptureAllDisplays ();
 		mScreenCapture = true;
+
 		[mContext setFullScreen];
 		view = 0;
+
+		NSRect frame = NSMakeRect(0, 0, mDesktopWidth, mDesktopHeight);
+		[mWindow setFrame:frame display:YES];
+
 		mWindowWidth = mDesktopWidth;
 		mWindowHeight = mDesktopHeight;
 		[NSCursor hide];
+		CGDisplayHideCursor(display);
 	}
 	else
 	{
@@ -328,9 +344,6 @@ void AGLDisplay::Cleanup ()
 		delete mScreenImage;
 	mScreenImage = NULL;
 
-	if (mScreenCapture)
-		CGReleaseAllDisplays ();
-
 	if (mWindow)
 	{
 		[mWindow setIsVisible:FALSE];
@@ -346,7 +359,6 @@ void AGLDisplay::Cleanup ()
 	if (mCGLContext)
 	{
 		CGLSetCurrentContext (NULL);
-		CGLClearDrawable (mCGLContext);
 		CGLDestroyContext (mCGLContext);
 		mCGLContext = NULL;
 	}
@@ -356,6 +368,15 @@ void AGLDisplay::Cleanup ()
 		[mWindow setReleasedWhenClosed:TRUE];
 		[mWindow release];
 		mWindow = NULL;
+	}
+
+	if (mScreenCapture)
+	{
+		CGDirectDisplayID display;
+
+		display = CGMainDisplayID ();
+		CGDisplayShowCursor (display);
+		CGReleaseAllDisplays ();
 	}
 }
 
@@ -425,6 +446,7 @@ bool AGLDisplay::GetEvent(struct Event &event)
 		case NSKeyUp:
 			if ([nsevent modifierFlags] & NSCommandKeyMask)
                                 [NSApp sendEvent:nsevent];
+
 			keycode = [nsevent keyCode];
 			chars = [nsevent charactersIgnoringModifiers];
 			event.type = EVENT_KEY_UP;
@@ -441,7 +463,11 @@ bool AGLDisplay::GetEvent(struct Event &event)
                         event.u.mouse.x = int([nsevent locationInWindow].x);
                         event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
 			RemapMouse (event.u.mouse.x, event.u.mouse.y);
-                        [NSApp sendEvent:nsevent];
+			if (event.u.mouse.y < 0)
+			{
+				event.type = EVENT_NONE;
+				[NSApp sendEvent:nsevent];
+			}
 			break;
 
 		case NSLeftMouseUp:
@@ -451,7 +477,11 @@ bool AGLDisplay::GetEvent(struct Event &event)
                         event.u.mouse.x = int([nsevent locationInWindow].x);
                         event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
 			RemapMouse (event.u.mouse.x, event.u.mouse.y);
-                        [NSApp sendEvent:nsevent];
+			if (event.u.mouse.y < 0)
+			{
+				event.type = EVENT_NONE;
+				[NSApp sendEvent:nsevent];
+			}
 			break;
 
                 case NSRightMouseDown:
@@ -461,7 +491,11 @@ bool AGLDisplay::GetEvent(struct Event &event)
                         event.u.mouse.x = int([nsevent locationInWindow].x);
 			event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
 			RemapMouse (event.u.mouse.x, event.u.mouse.y);
-			[NSApp sendEvent:nsevent];
+			if (event.u.mouse.y < 0)
+			{
+				event.type = EVENT_NONE;
+				[NSApp sendEvent:nsevent];
+			}
 			break;
 
 		case NSRightMouseUp:
@@ -471,7 +505,11 @@ bool AGLDisplay::GetEvent(struct Event &event)
                         event.u.mouse.x = int([nsevent locationInWindow].x);
                         event.u.mouse.y = mWindowHeight - int([nsevent locationInWindow].y);
                         RemapMouse (event.u.mouse.x, event.u.mouse.y);
-			[NSApp sendEvent:nsevent];
+			if (event.u.mouse.y < 0)
+			{
+				event.type = EVENT_NONE;
+				[NSApp sendEvent:nsevent];
+			}
                         break;
 
 		case NSMouseMoved:
@@ -495,7 +533,8 @@ bool AGLDisplay::GetEvent(struct Event &event)
                         }
 
 			RemapMouse (event.u.mouse.x, event.u.mouse.y);
-			[NSApp sendEvent:nsevent];
+			if (!mCursorHide)
+				[NSApp sendEvent:nsevent];
 			break;
 
 		case NSScrollWheel:

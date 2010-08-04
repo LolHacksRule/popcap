@@ -26,6 +26,7 @@ public:
 
 	virtual int			        Init();
 	virtual void			        Cleanup();
+	virtual bool                            CanWindowed();
 
         virtual void                            SwapBuffers();
 
