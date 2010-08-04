@@ -32,6 +32,7 @@ Widget::Widget()
 	mTabNext = NULL;
 	mFocus = 0;
 	mActiveTouchId = -1;
+	mTouchHover = false;
 }
 
 Widget::~Widget()
@@ -696,7 +697,7 @@ void Widget::TouchCancel(int id, int x, int y)
 
 void Widget::TouchDown(const TouchVector &touches)
 {
-	if (mActiveTouchId > 0)
+	if (mActiveTouchId >= 0)
 		return;
 
 	mActiveTouchId = touches[0].id;
@@ -721,6 +722,7 @@ void Widget::TouchMove(const TouchVector &touches)
 	Point pos = GetAbsPos();
 	int x = touches[i].x - pos.mX;
 	int y = touches[i].y - pos.mY;
+	mLastTouch = touches[0];
 	TouchMove(touches[i].id, x, y);
 }
 
