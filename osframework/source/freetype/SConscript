@@ -168,9 +168,6 @@ linkflags = []
 libs = ['freetype']
 if static_freetype:
     objects = []
-    if env['TARGET_OS'] == 'darwin':
-        linkflags += [freetype_lib[0].abspath]
-        libs = []
 else:
     objects = freetype_lib
 configs.SetPackageInfo([env, gameenv], 'freetype',
