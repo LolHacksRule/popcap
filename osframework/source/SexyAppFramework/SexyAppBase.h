@@ -242,6 +242,7 @@ public:
 	int						mUpdateAppState;
 	int						mUpdateAppDepth;
 	double					mUpdateMultiplier;
+	bool                                    mAllowSleep;
 	bool					mPaused;
 	int						mFastForwardToUpdateNum;
 	bool					mFastForwardToMarker;

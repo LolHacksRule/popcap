@@ -190,6 +190,7 @@ SexyAppBase::SexyAppBase()
 	mUpdateAppDepth = 0;
 	mPendingUpdatesAcc = 0.0;
 	mUpdateFTimeAcc = 0.0;
+	mAllowSleep = true;
 	mHasPendingDraw = true;
 	mIsDrawing = false;
 	mLastDrawWasEmpty = false;
@@ -2569,7 +2570,7 @@ bool SexyAppBase::UpdateAppStep(bool* updated)
 		else
 		{
 			int anOldUpdateCnt = mUpdateCount;
-			Process();
+			Process(mAllowSleep);
 			if (updated != NULL)
 				*updated = mUpdateCount != anOldUpdateCnt;
 		}
