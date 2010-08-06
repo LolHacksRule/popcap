@@ -1,0 +1,83 @@
+import os
+import game
+import configs
+
+from SCons.Defaults import *
+
+Import (['env', 'gameenv'])
+
+sexyenv = env
+srcdir = Dir('.').srcnode().abspath
+
+zlib_name = 'zlib'
+zlib_version = '1.2.5'
+zlib_suffix = '.tar.bz2'
+zlib_tar = zlib_name + '-' + zlib_version + zlib_suffix
+zlib_dir = zlib_name + '-' + zlib_version
+
+tarballs = [zlib_tar]
+for tarball in tarballs:
+    fpath = os.path.join (srcdir, tarball)
+    if not os.path.exists(fpath):
+        print fpath, "doesn't exist."
+        Return ()
+
+common_env = env.Clone()
+#common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
+
+### zlib
+env = common_env.Clone()
+zlib_untar = env.Untar (os.path.join (srcdir, zlib_tar))
+env.SourceCode (zlib_dir, zlib_untar)
+
+headers = []
+sources = map (lambda f: os.path.join(zlib_dir, f),
+              ['adler32.c', 'compress.c', 'crc32.c', 'deflate.c',
+              'gzclose.c', 'gzlib.c', 'gzread.c', 'gzwrite.c', 'infback.c',
+              'inffast.c', 'inflate.c', 'inftrees.c', 'trees.c', 'uncompr.c', 'zutil.c'
+])
+#Depends(sources, headers)
+
+lib_dir = os.path.join('$top_builddir', 'lib')
+header_dir = os.path.join('$top_builddir', 'include', 'zlib')
+
+zlib_headers = env.Install (header_dir,
+                           map(lambda f:os.path.join(zlib_dir, f),
+                               ['zconf.h', 'zlib.h']))
+
+env.PrependUnique(CPPDEFINES = ['STDC'],
+                  CPPPATH = [zlib_dir])
+
+if env['TARGET_OS'] != 'win32':
+    env.AppendUnique(CPPDEFINES = ['Z_HAVE_UNISTD_H'])
+
+zlib_lib = env.ConvenienceLibrary ('zlib', sources)
+#Depends (sources, zlib_headers)
+
+zlib = env.Install (lib_dir, zlib_lib)
+
+env.Clean (zlib, [zlib_dir])
+
+#sdk
+zlib_headers = env.Install (os.path.join('$sdkdir', 'include'),
+                            map(lambda f:os.path.join(zlib_dir, f),
+                                ['zconf.h', 'zlib.h']))
+zlib = env.Install (lib_dir, zlib_lib)
+
+env.Alias('zlib_install', zlib)
+env.Alias('sdk_install', zlib)
+
+### setup package info
+depends = []
+objects = []
+cppdefines = []
+
+if env['TARGET_OS'] != 'win32':
+    cppdefines += ['Z_HAVE_UNISTD_H']
+
+configs.SetPackageInfo([sexyenv, gameenv], 'zlib',
+                       LIBS = ['z'] + depends,
+                       CPPDEFINES = cppdefines,
+                       CPPPATH = [os.path.join('$top_builddir', 'include')],
+                       LIBPATH = [os.path.join('$top_builddir', 'lib')],
+                       OBJECTS = objects, TARGETS = zlib)

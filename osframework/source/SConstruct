@@ -113,7 +113,8 @@ gameenv['extras_objs'] = []
 gameenv.AppendUnique(LIBS = ['$STDCXX_LIBS'])
 Export (['env', 'gameenv', 'sexyenv'])
 
-sconscripts = [os.path.join ('PakLib', 'SConscript')]
+sconscripts = [os.path.join ('zlib', 'SConscript')]
+sconscripts += [os.path.join ('PakLib', 'SConscript')]
 sconscripts += [os.path.join ('ImageLib', 'SConscript')]
 sconscripts += [os.path.join ('ogg', 'SConscript')]
 sconscripts += [os.path.join ('audiere', 'SConscript')]
