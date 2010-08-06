@@ -53,6 +53,9 @@ def Configure (env):
                       CXXFLAGS = ['-g', '-Wall'],
                       LINKFLAGS = ['-g', '-fno-unit-at-a-time'],
                       LIBS = ['m'])
+    if env['optimize']:
+        env.AppendUnique(CCFLAGS = ['-O$optimize_level'])
+
     configs.PosixModuleLoaderConfigure (env)
     configs.FreeTypeConfigure (env)
 
