@@ -5,6 +5,7 @@
 import os
 import sys
 import game
+import configs
 
 Import('env', 'gameenv')
 srcs = """./png/png.c
@@ -88,6 +89,8 @@ srcs += ['ImageLib.cpp']
 imagelib_env = env.Clone()
 imagelib_env.AppendUnique(LIBPATH = [os.path.join('$top_builddir', 'PakLib')],
                           LIBS = ['PakLib'])
+configs.EnablePackage(imagelib_env, 'zlib')
+
 if env['static']:
     env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_IMAGELIB'])
     gameenv.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_IMAGELIB'])
