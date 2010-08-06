@@ -173,6 +173,8 @@ env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
 if env['TARGET_OS'] == 'win32':
     env.AppendUnique(LIBS = ['ws2_32'])
 
+configs.EnablePackage([env, gameenv], 'zlib')
+
 if gameenv['static']:
     if 'DIRECTFB' in env['DRIVERS']:
         gameenv['DIRECTFB']['ENABLE'](gameenv)
