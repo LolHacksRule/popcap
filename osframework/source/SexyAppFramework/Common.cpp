@@ -132,8 +132,13 @@ std::string Sexy::GetResourcesFolder()
 				std::string path = std::string(cAppPath) + "/" + std::string(cResourcePath) + "/";;
 				gResourceFolder = path;
 			}
+
+
 			CFRelease(resourcePath);
 			CFRelease(resourceURL);
+
+			CFRelease(appPath);
+			CFRelease(appURL);
 		}
 	}
 #endif
@@ -149,7 +154,27 @@ void Sexy::SetResourcesFolder(const std::string & theFolder)
 std::string Sexy::GetAppDataFolder()
 {
 #ifdef __APPLE__
-#ifndef SEXY_IOS
+#ifdef SEXY_IOS
+	if (!Sexy::gAppDataFolder.length())
+	{
+		CFBundleRef mainBoundle = CFBundleGetMainBundle();
+		if (mainBoundle)
+		{
+			CFURLRef appURL = CFBundleCopyBundleURL(mainBoundle);
+			CFStringRef appPath = CFURLCopyFileSystemPath(appURL,
+								      kCFURLPOSIXPathStyle);
+			const char * cAppPath = CFStringGetCStringPtr(appPath,
+								      CFStringGetFastestEncoding(appPath));
+
+			std::string path = std::string(cAppPath) + "/../Library/";
+
+			Sexy::gAppDataFolder = path;
+
+			CFRelease(appPath);
+			CFRelease(appURL);
+		}
+	}
+#else
 	if (!Sexy::gAppDataFolder.length())
 	{
 		OSErr   error;
