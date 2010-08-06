@@ -192,12 +192,12 @@ File* NativeFileSystem::open(const wchar_t* theFileName,
 		return new NativeFile(fp);
 
 	if (theFileName[0] == '/' || theFileName[1] == '\\')
-		return false;
+		return 0;
 
 #ifdef WIN32
 	if (strlen(theFileName) >= 2 && isalpha(theFileName[0]) &&
 	    theFileName[1] == ':')
-		return false;
+		return 0;
 #endif
 
 	for (i = 0; i < mLocations.size(); i++)
