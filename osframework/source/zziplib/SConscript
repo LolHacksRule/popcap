@@ -27,7 +27,7 @@ common_env = env.Clone()
 
 ### zziplib
 env = common_env.Clone()
-zziplib_untar = env.Untar (os.path.join (srcdir, zziplib_tar))
+zziplib_untar = env.Untar (os.path.join (srcdir, zziplib_tar), [], ['*_config.h'])
 env.SourceCode (zziplib_dir, zziplib_untar)
 
 headers = []
@@ -50,7 +50,7 @@ headers += env.Install (header_dir,
                         map(lambda f:os.path.join(zziplib_dir, 'zzip', f),
                            ["zzip.h" ]))
 
-if False:
+if True:
     env.Command(os.path.join(zziplib_dir, 'zzip', '_config.h'),
                 '_config.h',
                 Copy('$TARGET', '$SOURCE'))

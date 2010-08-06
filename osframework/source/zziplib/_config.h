@@ -12,8 +12,10 @@
 /* #undef HAVE_ALIGNED_ACCESS_REQUIRED */
 
 /* Define to 1 if you have the <byteswap.h> header file. */
+#ifdef __linux__
 #ifndef ZZIP_HAVE_BYTESWAP_H 
 #define ZZIP_HAVE_BYTESWAP_H  1 
+#endif
 #endif
 
 /* Define to 1 if you have the <direct.h> header file. */
@@ -26,22 +28,30 @@
 #endif
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
+#ifndef WIN32
 #ifndef ZZIP_HAVE_DLFCN_H 
 #define ZZIP_HAVE_DLFCN_H  1 
 #endif
+#endif
 
 /* Define to 1 if you have the <fnmatch.h> header file. */
+#ifndef WIN32
 #ifndef ZZIP_HAVE_FNMATCH_H 
 #define ZZIP_HAVE_FNMATCH_H  1 
 #endif
+#endif
 
 /* Define to 1 if you have the <inttypes.h> header file. */
+#ifndef WIN32
 #ifndef ZZIP_HAVE_INTTYPES_H 
 #define ZZIP_HAVE_INTTYPES_H  1 
 #endif
+#endif
 
 /* Define to 1 if you have the <io.h> header file. */
-/* #undef HAVE_IO_H */
+#ifdef WIN32
+#define HAVE_IO_H
+#endif
 
 /* Define to 1 if you have the <memory.h> header file. */
 #ifndef ZZIP_HAVE_MEMORY_H 
@@ -52,8 +62,10 @@
 /* #undef HAVE_NDIR_H */
 
 /* Define to 1 if you have the <stdint.h> header file. */
+#ifndef WIN32
 #ifndef ZZIP_HAVE_STDINT_H 
 #define ZZIP_HAVE_STDINT_H  1 
+#endif
 #endif
 
 /* Define to 1 if you have the <stdlib.h> header file. */
@@ -77,8 +89,10 @@
 #endif
 
 /* Define to 1 if you have the `strndup' function. */
+#ifndef WIN32
 #ifndef ZZIP_HAVE_STRNDUP 
 #define ZZIP_HAVE_STRNDUP  1 
+#endif
 #endif
 
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
@@ -89,8 +103,10 @@
 /* #undef HAVE_SYS_INT_TYPES_H */
 
 /* Define to 1 if you have the <sys/mman.h> header file. */
+#ifndef WIN32
 #ifndef ZZIP_HAVE_SYS_MMAN_H 
 #define ZZIP_HAVE_SYS_MMAN_H  1 
+#endif
 #endif
 
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
@@ -98,8 +114,10 @@
 /* #undef HAVE_SYS_NDIR_H */
 
 /* Define to 1 if you have the <sys/param.h> header file. */
+#ifndef WIN32
 #ifndef ZZIP_HAVE_SYS_PARAM_H 
 #define ZZIP_HAVE_SYS_PARAM_H  1 
+#endif
 #endif
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
@@ -113,18 +131,22 @@
 #endif
 
 /* Define to 1 if you have the <unistd.h> header file. */
+#ifndef WIN32
 #ifndef ZZIP_HAVE_UNISTD_H 
 #define ZZIP_HAVE_UNISTD_H  1 
 #endif
+#endif
 
 /* Define to 1 if you have the <winbase.h> header file. */
-/* #undef HAVE_WINBASE_H */
+#ifdef WIN32
+#define HAVE_WINBASE_H
 
 /* Define to 1 if you have the <windows.h> header file. */
-/* #undef HAVE_WINDOWS_H */
+#define HAVE_WINDOWS_H
 
 /* Define to 1 if you have the <winnt.h> header file. */
-/* #undef HAVE_WINNT_H */
+#define HAVE_WINNT_H
+#endif
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #ifndef ZZIP_HAVE_ZLIB_H 
