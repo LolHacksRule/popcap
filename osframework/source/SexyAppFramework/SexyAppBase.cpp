@@ -3035,7 +3035,7 @@ void SexyAppBase::Init()
 	if (!ChangeDirHook(mChangeDirTo.c_str()))
 		chdir(mChangeDirTo.c_str());
 
-        gPakInterface->AddPakFile("main.pak");
+        //gPakInterface->AddPakFile("main.pak");
 
 	mRandSeed = GetTickCount();
 	SRand(mRandSeed);
