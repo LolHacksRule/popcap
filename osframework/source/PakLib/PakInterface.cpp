@@ -126,5 +126,9 @@ bool p_addResource(const char *location,
 		   const char *type,
 		   int         priority)
 {
-	return false;
+	FileSystemManager *manager = FileSystemManager::getManager();
+
+	return manager->addResource(std::string(location),
+				    std::string(type),
+				    priority);
 }
