@@ -1243,7 +1243,7 @@ bool MemoryImage::TakeBits(uint32* theBits, int theWidth, int theHeight, bool co
 		delete [] mColorTable;
 		mColorTable = NULL;
 
-		if (theBits && (theWidth != mWidth || theHeight != mHeight))
+		if (theBits && (!mBits || theWidth != mWidth || theHeight != mHeight))
 		{
 			delete [] mBits;
 			mBits = theBits;
