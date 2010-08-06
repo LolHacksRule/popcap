@@ -1,5 +1,6 @@
 #include "FileSystem.h"
 #include "NativeFileSystem.h"
+#include "ZipFileSystem.h"
 
 using namespace PakLib;
 
@@ -7,7 +8,12 @@ FileSystemManager::FileSystemManager()
 {
 	mInitialized = true;
 
+	// native/posix file system
 	mFileSystems.push_back(new NativeFileSystem());
+
+	// zip file system
+	mFileSystems.push_back(new ZipFileSystem());
+	mFileSystems.back()->addResource("main.pak", "zip");
 }
 
 FileSystemManager::~FileSystemManager()

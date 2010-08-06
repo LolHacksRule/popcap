@@ -5,11 +5,16 @@
 import os
 import sys
 import game
+import configs
 
 Import('env', 'gameenv')
 paklib_env = env.Clone()
 srcs = ['PakInterface.cpp', 'Find.cpp', 'FileSystem.cpp',
-        'NativeFileSystem.cpp']
+        'NativeFileSystem.cpp', 'ZipFileSystem.cpp',
+        'CritSect.cpp']
+
+configs.EnablePackage(paklib_env, 'zziplib')
+
 if not env['static']:
     paklib_env.AppendUnique(CPPDEFINES = ['BUILDING_PAKLIB'],
                             LIBS = ['$STDCXX_LIBS'])
