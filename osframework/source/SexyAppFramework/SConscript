@@ -42,7 +42,7 @@ srcs += map(lambda f:os.path.join ('uniconv', f),
              'uniconv.c', 'charsetalias.c', 'unicode.c', 'converter.c',
              'tableconverter.c', 'utfconverter.c'])
 srcs += Glob(os.path.join ('uniconv', '*-table.c'))
-env.AppendUnique(CPPPATH = ['uniconv'])
+env.AppendUnique(CPPPATH = ['#', 'uniconv'])
 
 srcs += ['RegistryInterface.cpp', 'RegistryInterfaceFactory.cpp',
          'XMLWriter.cpp']
@@ -173,7 +173,7 @@ env.PrependUnique(CPPPATH = ['#ImageLib', '#PakLib',
 if env['TARGET_OS'] == 'win32':
     env.AppendUnique(LIBS = ['ws2_32'])
 
-configs.EnablePackage([env, gameenv], 'zlib')
+configs.EnablePackages([env, gameenv], ['zziplib', 'zlib'])
 
 if gameenv['static']:
     if 'DIRECTFB' in env['DRIVERS']:
@@ -208,7 +208,8 @@ if gameenv['static']:
         gameenv['FREETYPEFONT']['ENABLE'](gameenv)
         configs.EnablePackage(gameenv, 'freetype')
 
-    gameenv.PrependUnique(LIBS = ['ImageLib', 'PakLib'])
+    gameenv.PrependUnique(LIBS = ['ImageLib', 'PakLib'],
+                          CPPPATH = ['#'])
 
     if env['TARGET_OS'] == 'win32':
         gameenv.AppendUnique(LIBS = ['ws2_32'])
