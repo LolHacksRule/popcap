@@ -1,0 +1,92 @@
+import os
+import game
+import configs
+
+from SCons.Defaults import *
+
+Import (['env', 'gameenv'])
+
+sexyenv = env
+srcdir = Dir('.').srcnode().abspath
+
+zziplib_name = 'zziplib'
+zziplib_version = '0.13.59'
+zziplib_suffix = '.tar.bz2'
+zziplib_tar = zziplib_name + '-' + zziplib_version + zziplib_suffix
+zziplib_dir = zziplib_name + '-' + zziplib_version
+
+tarballs = [zziplib_tar]
+for tarball in tarballs:
+    fpath = os.path.join (srcdir, tarball)
+    if not os.path.exists(fpath):
+        print fpath, "doesn't exist."
+        Return ()
+
+common_env = env.Clone()
+#common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
+
+### zziplib
+env = common_env.Clone()
+zziplib_untar = env.Untar (os.path.join (srcdir, zziplib_tar))
+env.SourceCode (zziplib_dir, zziplib_untar)
+
+headers = []
+sources = map (lambda f: os.path.join(zziplib_dir, 'zzip', f),
+              ["zip.c", "file.c", "dir.c", "stat.c", "info.c",
+               "err.c", "plugin.c", "write.c", "fetch.c" ])
+#Depends(sources, headers)
+
+lib_dir = os.path.join('$top_builddir', 'lib')
+header_dir = os.path.join('$top_builddir', 'include')
+
+headers = env.Install (os.path.join(header_dir, 'zzip'),
+                       map(lambda f:os.path.join(zziplib_dir, 'zzip', f),
+                           ["stdint.h", "file.h", "plugin.h",
+                            "lib.h", "zzip.h", "zzip32.h",
+                            "write.h", "fetch.h", "format.h",
+                            "info.h", "autoconf.h", "types.h",
+                            "conf.h", "_config.h", "_msvc.h" ]))
+headers += env.Install (header_dir,
+                        map(lambda f:os.path.join(zziplib_dir, 'zzip', f),
+                           ["zzip.h" ]))
+
+if False:
+    env.Command(os.path.join(zziplib_dir, 'zzip', '_config.h'),
+                '_config.h',
+                Copy('$TARGET', '$SOURCE'))
+
+env.PrependUnique(CPPPATH = [os.path.join (zziplib_dir)])
+
+configs.EnablePackage(env, 'zlib')
+
+zziplib_lib = env.ConvenienceLibrary ('zzip-0', sources)
+#Depends (sources, zziplib_headers)
+
+zziplib = env.Install (lib_dir, zziplib_lib)
+
+env.Clean (zziplib, [zziplib_dir])
+
+#sdk
+sdk = env.Install (os.path.join('$sdkdir', 'zzip'),
+                   map(lambda f:os.path.join(zziplib_dir, 'zzip', f),
+                       ["stdint.h", "file.h", "plugin.h",
+                        "lib.h", "zzip.h", "zzip32.h",
+                        "write.h", "fetch.h", "format.h",
+                        "info.h", "autoconf.h", "types.h",
+                        "conf.h", "_config.h", "_msvc.h"]))
+sdk += env.Install ('$sdkdir',
+                    map(lambda f:os.path.join(zziplib_dir, 'zzip', f),
+                        ["zzip.h" ]))
+sdk += env.Install (os.path.join("$sdkdir", 'lib'), zziplib_lib)
+
+env.Alias('zziplib_install', zziplib)
+env.Alias('sdk_install', sdk)
+
+### setup package info
+depends = ['z']
+objects = []
+configs.SetPackageInfo([sexyenv, gameenv], 'zziplib',
+                       LIBS = ['zzip-0'],
+                       CPPPATH = [os.path.join('$top_builddir', 'include')],
+                       LIBPATH = [os.path.join('$top_builddir', 'lib')],
+                       OBJECTS = objects, TARGETS = zziplib)
