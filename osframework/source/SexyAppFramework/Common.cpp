@@ -157,16 +157,26 @@ std::string Sexy::GetAppDataFolder()
 #ifdef SEXY_IOS
 	if (!Sexy::gAppDataFolder.length())
 	{
-		CFBundleRef mainBoundle = CFBundleGetMainBundle();
-		if (mainBoundle)
+		CFBundleRef mainBundle = CFBundleGetMainBundle();
+		if (mainBundle)
 		{
-			CFURLRef appURL = CFBundleCopyBundleURL(mainBoundle);
+			CFURLRef appURL = CFBundleCopyBundleURL(mainBundle);
 			CFStringRef appPath = CFURLCopyFileSystemPath(appURL,
 								      kCFURLPOSIXPathStyle);
 			const char * cAppPath = CFStringGetCStringPtr(appPath,
 								      CFStringGetFastestEncoding(appPath));
 
 			std::string path = std::string(cAppPath) + "/../Library/";
+
+			CFStringRef identifier = CFBundleGetIdentifier(mainBundle);
+			if (identifier)
+			{
+				const char * appId = CFStringGetCStringPtr(identifier,
+									   CFStringGetFastestEncoding(identifier));
+				path += std::string(appId)  + "/";
+
+				CFRelease(identifier);
+			}
 
 			Sexy::gAppDataFolder = path;
 
