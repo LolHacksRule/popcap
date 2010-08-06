@@ -1,0 +1,93 @@
+import os
+import game
+import configs
+
+from SCons.Defaults import *
+
+Import (['env', 'gameenv'])
+
+sexyenv = env
+srcdir = Dir('.').srcnode().abspath
+
+libzip_name = 'libzip'
+libzip_version = '0.9.3'
+libzip_suffix = '.tar.bz2'
+libzip_tar = libzip_name + '-' + libzip_version + libzip_suffix
+libzip_dir = libzip_name + '-' + libzip_version
+
+tarballs = [libzip_tar]
+for tarball in tarballs:
+    fpath = os.path.join (srcdir, tarball)
+    if not os.path.exists(fpath):
+        print fpath, "doesn't exist."
+        Return ()
+
+common_env = env.Clone()
+#common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
+
+### libzip
+env = common_env.Clone()
+libzip_untar = env.Untar (os.path.join (srcdir, libzip_tar))
+env.SourceCode (libzip_dir, libzip_untar)
+
+headers = []
+sources = map (lambda f: os.path.join(libzip_dir, 'lib', f),
+              ['zip_entry_free.c', 'zip_file_error_get.c',
+               'zip_get_name.c', 'zip_set_archive_flag.c', 'zip_stat_init.c',
+               'Makefile', 'zip_entry_new.c', 'zip_file_get_offset.c',
+               'zip_get_num_files.c', 'zip_set_file_comment.c', 'zip_strerror.c',
+               'Makefile.am', 'zip_error.c', 'zip_filerange_crc.c', 'zip.h',
+               'zip_set_name.c', 'zip_unchange_all.c', 'Makefile.in',
+               'zip_error_clear.c', 'zip_file_strerror.c', 'zipint.h',
+                'zip_source_buffer.c', 'zip_unchange_archive.c',
+               'make_zip_err_str.sh', 'zip_error_get.c', 'zip_fopen.c',
+               'zip_memdup.c', 'zip_source_file.c', 'zip_unchange.c', 'mkstemp.c',
+               'zip_error_get_sys_type.c', 'zip_fopen_index.c', 'zip_name_locate.c',
+               'zip_source_filep.c', 'zip_unchange_data.c', 'zip_add.c',
+               'zip_error_strerror.c', 'zip_fread.c', 'zip_new.c',
+               'zip_source_free.c', 'zip_add_dir.c', 'zip_error_to_str.c',
+               'zip_free.c', 'zip_open.c', 'zip_source_function.c', 'zip_close.c',
+               'zip_err_str.c', 'zip_get_archive_comment.c', 'zip_rename.c',
+               'zip_source_zip.c', 'zip_delete.c', 'zip_fclose.c',
+               'zip_get_archive_flag.c', 'zip_replace.c', 'zip_stat.c',
+               'zip_dirent.c', 'zip_file_error_clear.c', 'zip_get_file_comment.c',
+               'zip_set_archive_comment.c', 'zip_stat_index.c'
+])
+#Depends(sources, headers)
+
+lib_dir = os.path.join('$top_builddir', 'lib')
+header_dir = os.path.join('$top_builddir', 'include')
+
+libzip_headers = env.Install (header_dir,
+                           map(lambda f:os.path.join(libzip_dir, 'lib', f),
+                               ['zip.h']))
+
+env.Command(os.path.join(libzip_dir, 'lib', 'config.h'),
+            'config.h',
+            Copy('$TARGET', '$SOURCE'))
+env.PrependUnique(CPPPATH = [os.path.join (libzip_dir, 'include')])
+
+libzip_lib = env.ConvenienceLibrary ('zip', sources)
+#Depends (sources, libzip_headers)
+
+libzip = env.Install (lib_dir, libzip_lib)
+
+env.Clean (libzip, [libzip_dir])
+
+#sdk
+libzip_headers = env.Install (os.path.join('$sdkdir', 'include'),
+                              map(lambda f:os.path.join(libzip_dir, 'lib', f),
+                                  ['zip.h']))
+libzip = env.Install (lib_dir, libzip_lib)
+
+env.Alias('libzip_install', libzip)
+env.Alias('sdk_install', libzip)
+
+### setup package info
+depends = ['z']
+objects = []
+configs.SetPackageInfo([sexyenv, gameenv], 'libzip',
+                       LIBS = ['zip'] + depends,
+                       CPPPATH = [os.path.join('$top_builddir', 'include')],
+                       LIBPATH = [os.path.join('$top_builddir', 'lib')],
+                       OBJECTS = objects, TARGETS = libzip)
