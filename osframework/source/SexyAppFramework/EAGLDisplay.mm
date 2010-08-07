@@ -66,6 +66,13 @@ using namespace Sexy;
 
 		gSexyAppBase->mInputManager->PushEvent(evt);
 	}
+
+	if (timer)
+		[timer invalidate];
+
+	timer = [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(1.0 / 10.0)
+						 target:self selector:@selector(updateApp:)
+					       userInfo:nil repeats:TRUE];
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
@@ -73,10 +80,12 @@ using namespace Sexy;
 #ifdef DEBUG
 	NSLog(@"applicationDidBecomeActive");
 #endif
-	if (!timer)
-		timer = [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(1.0 / 400.0)
-							        target:self selector:@selector(updateApp:)
-						                userInfo:nil repeats:TRUE];
+	if (timer)
+		[timer invalidate];
+
+	timer = [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(1.0 / 400.0)
+						 target:self selector:@selector(updateApp:)
+					       userInfo:nil repeats:TRUE];
 
 	if (gSexyAppBase)
 	{
