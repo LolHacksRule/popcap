@@ -18,7 +18,7 @@ using namespace Sexy;
 #define HAVE_FMOD 0
 
 #ifdef USE_OGG_LIB
-#include "vorbis/ivorbisfile.h"
+#include "vorbis/vorbisfile.h"
 #endif
 
 #define SOUND_FLAGS (DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME |  DSBCAPS_STATIC | DSBCAPS_LOCSOFTWARE | DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLFREQUENCY)
