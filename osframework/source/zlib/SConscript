@@ -62,7 +62,7 @@ env.Clean (zlib, [zlib_dir])
 zlib_headers = env.Install (os.path.join('$sdkdir', 'include'),
                             map(lambda f:os.path.join(zlib_dir, f),
                                 ['zconf.h', 'zlib.h']))
-zlib = env.Install (lib_dir, zlib_lib)
+zlib = env.Install (os.path.join('$sdkdir', 'lib'), zlib_lib)
 
 env.Alias('zlib_install', zlib)
 env.Alias('sdk_install', zlib)
