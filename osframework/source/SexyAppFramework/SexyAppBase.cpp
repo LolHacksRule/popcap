@@ -2513,6 +2513,29 @@ bool SexyAppBase::ProcessMessage(Event & event)
 		mAccuEvents.clear();
 		break;
 
+	case EVENT_MINIMIZED:
+	{
+		bool isMinimized = event.u.minimized.minimized;
+
+		if (!mShutdown && isMinimized != mMinimized)
+		{
+			mMinimized = isMinimized;
+
+			// We don't want any sounds (or music) playing while its minimized
+			if (mMinimized)
+			{
+				Mute(true);
+			}
+			else
+			{
+				Unmute(true);
+				mWidgetManager->MarkAllDirty();
+			}
+		}
+
+		RehupFocus();
+		break;
+	}
 	default:
 		mWidgetManager->UserEvent(event);
 		break;
@@ -3036,6 +3059,8 @@ void SexyAppBase::Init()
 		chdir(mChangeDirTo.c_str());
 
         //gPakInterface->AddPakFile("main.pak");
+	p_addResource("main.pak", "zip");
+	p_addResource("main.pak", "poppak");
 
 	mRandSeed = GetTickCount();
 	SRand(mRandSeed);
