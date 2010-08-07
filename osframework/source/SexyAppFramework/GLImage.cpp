@@ -104,6 +104,14 @@ public:
 };
 }
 
+static inline uint
+argb_to_abgr(uint pixel)
+{
+	return (pixel	& 0xff00ff00) |
+		((pixel & 0x00ff0000) >> 16) |
+		((pixel & 0x000000ff) << 16);
+}
+
 static inline int
 multiply_alpha (int alpha, int color)
 {
@@ -144,6 +152,23 @@ multiply_pixel (uint pixel)
 }
 
 static inline uint
+multiply_pixel_rev (uint pixel)
+{
+	if (!pixel)
+		return 0;
+
+	unsigned int  alpha = pixel >> 24;
+	unsigned int  red   = (pixel >> 16) & 0xff;
+	unsigned int  green = (pixel >>  8) & 0xff;
+	unsigned int  blue  = (pixel >>  0) & 0xff;
+
+	red   = multiply_alpha (alpha, red);
+	green = multiply_alpha (alpha, green);
+	blue  = multiply_alpha (alpha, blue);
+	return  (alpha << 24) | (blue << 16) | (green << 8) | (red << 0);
+}
+
+static inline uint
 multiply_pixel_notrans (uint pixel)
 {
 	unsigned int  alpha = pixel >> 24;
@@ -158,6 +183,20 @@ multiply_pixel_notrans (uint pixel)
 }
 
 static inline uint
+multiply_pixel_notrans_rev (uint pixel)
+{
+	unsigned int  alpha = pixel >> 24;
+	unsigned int  red   = (pixel >> 16) & 0xff;
+	unsigned int  green = (pixel >>  8) & 0xff;
+	unsigned int  blue  = (pixel >>  0) & 0xff;
+
+	red   = multiply_alpha (alpha, red);
+	green = multiply_alpha (alpha, green);
+	blue  = multiply_alpha (alpha, blue);
+	return  (alpha << 24) | (blue << 16) | (green << 8) | (red << 0);
+}
+
+static inline uint
 multiply_pixel_noalpha (uint pixel)
 {
 	unsigned int  alpha = pixel >> 24;
@@ -168,9 +207,25 @@ multiply_pixel_noalpha (uint pixel)
 }
 
 static inline uint
+multiply_pixel_noalpha_rev (uint pixel)
+{
+	unsigned int  alpha = pixel >> 24;
+
+	if (!alpha)
+		return 0;
+	return argb_to_abgr(pixel);
+}
+
+static inline uint
 multiply_pixel_notrans_noalpha (uint pixel)
 {
 	return pixel;
+}
+
+static inline uint
+multiply_pixel_notrans_noalpha_rev (uint pixel)
+{
+	return argb_to_abgr(pixel);
 }
 
 static inline SexyRGBA
@@ -185,17 +240,10 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 			     GLuint old, int x, int y, int width, int height)
 {
 	typedef uint (* PixMulProc)(uint);
-	PixMulProc pixmul = multiply_pixel;
+	PixMulProc pixmul;
 
 	GLuint texture;
 	int w, h;
-
-	if (!theImage->mHasTrans && !theImage->mHasAlpha)
-		pixmul = multiply_pixel_notrans_noalpha;
-	else if (!theImage->mHasTrans && theImage->mHasAlpha)
-		pixmul = multiply_pixel_notrans;
-	else if (theImage->mHasTrans && !theImage->mHasAlpha)
-		pixmul = multiply_pixel_noalpha;
 
 	/* Use the texture width and height expanded to powers of 2 */
 	w = RoundToPOT (width);
@@ -256,6 +304,19 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 		format = GL_RGBA;
 	}
 
+	static PixMulProc pixelMulTab[2][2][2] =
+	{
+		{
+			{ multiply_pixel_notrans_noalpha_rev, multiply_pixel_notrans_noalpha },
+			{ multiply_pixel_notrans_rev, multiply_pixel_notrans }
+		},
+		{
+			{multiply_pixel_noalpha_rev, multiply_pixel_noalpha},
+			{multiply_pixel_rev, multiply_pixel}
+		}
+	};
+	pixmul = pixelMulTab[theImage->mHasTrans][theImage->mHasAlpha][format == GL_BGRA];
+
 	int imageWidth = theImage->GetWidth();
 	int bpp = compressed ? 1 : sizeof(uint32);
 	uchar* copy = new uchar[w * h * bpp + (compressed ? 256 * sizeof(uint32) : 0)];
@@ -268,16 +329,7 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 		uchar * src = indices + y * imageWidth + x;
 
 		for (i = 0; i < 256; i++)
-		{
-			uint32 pixel = pixmul (tab[i]);
-			if (format == GL_RGBA)
-				pmtab[i] =
-					(pixel	& 0xff00ff00) |
-					((pixel & 0x00ff0000) >> 16) |
-					((pixel & 0x000000ff) << 16);
-			else
-				pmtab[i] = pixel;
-		}
+			pmtab[i] =  pixmul (tab[i]);
 
 		if (compressed)
 		{
@@ -331,22 +383,8 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 		{
 			int j;
 
-			if (format == GL_RGBA)
-			{
-				for (j = 0; j < aWidth; j++)
-				{
-					uint32 pixel = pixmul (src[j]);
-					dst[j] =
-						(pixel	& 0xff00ff00) |
-						((pixel & 0x00ff0000) >> 16) |
-						((pixel & 0x000000ff) << 16);
-				}
-			}
-			else
-			{
-				for (j = 0; j < aWidth; j++)
-					dst[j] = pixmul (src[j]);
-			}
+			for (j = 0; j < aWidth; j++)
+				dst[j] = pixmul (src[j]);
 
 			for (j = aWidth; j < w; j++)
 				dst[j] = dst[aWidth - 1];
