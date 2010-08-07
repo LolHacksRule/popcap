@@ -1834,6 +1834,7 @@ void SexyAppBase::Evict3DImageData(DWORD theMemSize)
 	{
 		MemoryImage* aMemoryImage = *anItr;
 		if (mDDInterface && aMemoryImage->mTexMemSize &&
+		    (aMemoryImage->mBits || aMemoryImage->mColorIndices) &&
 		    mLastDrawnTime - aMemoryImage->mDrawnTime > 10000)
 		{
 			if (aMemoryImage->mTexMemSize < theMemSize)
@@ -1854,7 +1855,8 @@ void SexyAppBase::Evict3DImageData(DWORD theMemSize)
 	while (anItr != mMemoryImageSet.end() && theMemSize)
 	{
 		MemoryImage* aMemoryImage = *anItr;
-		if (mDDInterface && aMemoryImage->mTexMemSize)
+		if (mDDInterface && aMemoryImage->mTexMemSize &&
+		    (aMemoryImage->mBits || aMemoryImage->mColorIndices))
 		{
 			if (aMemoryImage->mTexMemSize < theMemSize)
 				theMemSize -= aMemoryImage->mTexMemSize;
