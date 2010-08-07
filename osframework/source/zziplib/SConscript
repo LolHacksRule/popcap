@@ -67,14 +67,14 @@ zziplib = env.Install (lib_dir, zziplib_lib)
 env.Clean (zziplib, [zziplib_dir])
 
 #sdk
-sdk = env.Install (os.path.join('$sdkdir', 'zzip'),
+sdk = env.Install (os.path.join('$sdkdir', 'include', 'zzip'),
                    map(lambda f:os.path.join(zziplib_dir, 'zzip', f),
                        ["stdint.h", "file.h", "plugin.h",
                         "lib.h", "zzip.h", "zzip32.h",
                         "write.h", "fetch.h", "format.h",
                         "info.h", "autoconf.h", "types.h",
                         "conf.h", "_config.h", "_msvc.h"]))
-sdk += env.Install ('$sdkdir',
+sdk += env.Install (os.path.join('$sdkdir', 'include'),
                     map(lambda f:os.path.join(zziplib_dir, 'zzip', f),
                         ["zzip.h" ]))
 sdk += env.Install (os.path.join("$sdkdir", 'lib'), zziplib_lib)
