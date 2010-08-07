@@ -86,6 +86,7 @@ public:
 	GLint					mGLMajor;
 	GLint					mGLMinor;
 	GLboolean				mTexBGRA;
+	GLboolean                               mTexPalette8RGBA;
 
 public:
 	GLDisplay(SexyAppBase* theApp);

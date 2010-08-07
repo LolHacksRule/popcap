@@ -81,6 +81,8 @@ int GLDisplay::Init(void)
 	mMaxTextureWidth = 4096;
 	mMaxTextureHeight = 4096;
 	mTextureNPOT = GL_FALSE;
+	mTexBGRA = GL_FALSE;
+	mTexPalette8RGBA = GL_FALSE;
 	mIs3D = mApp->mIs3D;
 
 	return 0;
@@ -101,6 +103,7 @@ void GLDisplay::Cleanup()
 	mGLMajor = 1;
 	mGLMinor = 1;
 	mTexBGRA = GL_FALSE;
+	mTexPalette8RGBA = GL_FALSE;
 
 	mCursorHotX = 0;
 	mCursorHotY = 0;
@@ -175,6 +178,10 @@ void GLDisplay::InitGL()
 			mTexBGRA = GL_TRUE;
 		else
 			mTexBGRA = GL_FALSE;
+		if (strstr (mGLExtensions, "GL_OES_compressed_paletted_texture"))
+			mTexPalette8RGBA = GL_TRUE;
+		else
+			mTexPalette8RGBA = GL_FALSE;
 	}
 
 
