@@ -18,7 +18,7 @@ using namespace Sexy;
 
 @interface AppDelegate : NSObject <UIApplicationDelegate>
 {
-	BOOL quit;
+	BOOL firstTime;
 	NSTimer *timer;
 }
 
@@ -31,11 +31,8 @@ using namespace Sexy;
 {
 	self = [super init];
 	if (self)
-	{
-		timer = 0;
-		quit = FALSE;
-	}
-	return (self);
+		firstTime = TRUE;
+	return self;
 }
 
 - (void)applicationDidFinishLaunching:(UIApplication *)anApp
@@ -43,17 +40,12 @@ using namespace Sexy;
 #ifdef DEBUG
 	NSLog(@"applicationDidFinishLaunching");
 #endif
-	quit = FALSE;
 	if (gSexyAppBase)
 	{
+		gSexyAppBase->mAllowSleep = false;
 		gSexyAppBase->Init();
 		gSexyAppBase->Startup();
 	}
-}
-
-- (BOOL)isQuit
-{
-	return quit;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
@@ -61,6 +53,19 @@ using namespace Sexy;
 #ifdef DEBUG
 	NSLog(@"applicationWillResignActive");
 #endif
+
+	if (gSexyAppBase)
+	{
+		Event evt;
+
+		evt.type = EVENT_MINIMIZED;
+		evt.flags = 0;
+		evt.id = 0;
+		evt.subid = 0;
+		evt.u.minimized.minimized = true;
+
+		gSexyAppBase->mInputManager->PushEvent(evt);
+	}
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
@@ -72,6 +77,26 @@ using namespace Sexy;
 		timer = [NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(1.0 / 400.0)
 							        target:self selector:@selector(updateApp:)
 						                userInfo:nil repeats:TRUE];
+
+	if (gSexyAppBase)
+	{
+		if (firstTime)
+		{
+			firstTime = FALSE;
+		}
+		else
+		{
+			Event evt;
+
+			evt.type = EVENT_MINIMIZED;
+			evt.flags = 0;
+			evt.id = 0;
+			evt.subid = 0;
+			evt.u.minimized.minimized = false;
+
+			gSexyAppBase->mInputManager->PushEvent(evt);
+		}
+	}
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
@@ -79,8 +104,6 @@ using namespace Sexy;
 #ifdef DEBUG
 	NSLog(@"applicatioWillTerminaten");
 #endif
-	quit = TRUE;
-
 	if (timer)
 		[timer invalidate];
 	timer = nil;
@@ -468,7 +491,8 @@ int EAGLDisplay::Init (void)
 	mScreenImage = static_cast<GLImage*>(CreateImage(mApp, mWidth, mHeight));
 	InitGL ();
 	mTexBGRA = GL_FALSE;
-	
+	mMaxTexMemSpace = 20 * 1024 * 1024;
+
 	mScreenImage->mFlags = IMAGE_FLAGS_DOUBLE_BUFFER;
 
 	mInitCount++;
@@ -558,12 +582,6 @@ bool EAGLDisplay::GetEvent(struct Event &event)
 	UIEvent* nsevent;
 	UIApplication* app = [UIApplication sharedApplication];
 	AppDelegate* delegate = [app delegate];
-
-	if ([delegate isQuit])
-	{
-		event.type = EVENT_QUIT;
-		mApp->mInputManager->PushEvent (event);
-	}
 
 	event.type = EVENT_NONE;
 	if (event.type == EVENT_NONE)
