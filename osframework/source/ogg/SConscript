@@ -32,14 +32,15 @@ sdk = []
 
 common_env = env.Clone()
 #common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
+shared = False
 
 ### ogg
-env = common_env.Clone()
-ogg_untar = env.Untar (os.path.join (srcdir, ogg_tar), ['*src*', '*include*'], ['*Makefile*'])
-env.SourceCode (ogg_dir, ogg_untar)
+ogg_env = common_env.Clone()
+ogg_untar = ogg_env.Untar (os.path.join (srcdir, ogg_tar), [], ['*Makefile*'])
+ogg_env.SourceCode (ogg_dir, ogg_untar)
 
 headers = []
-headers += env.Command (os.path.join (ogg_dir, 'include', 'ogg',
+headers += ogg_env.Command (os.path.join (ogg_dir, 'include', 'ogg',
                                       'config_types.h'),
                         'libogg-config_types.h',
                         Copy ("$TARGET", "$SOURCE"))
@@ -51,61 +52,94 @@ sources = map (lambda f: os.path.join(ogg_dir, 'src', f),
 lib_dir = os.path.join('$top_builddir', 'lib')
 header_dir = os.path.join('$top_builddir', 'include', 'ogg')
 
-ogg = env.Install (header_dir,
+ogg = ogg_env.Install (header_dir,
                    map(lambda f:os.path.join(ogg_dir, 'include',
                                              'ogg', f),
                        ['os_types.h', 'ogg.h', 'config_types.h']))
 
-sdk += env.Install (os.path.join('$sdkdir', 'include', 'ogg'),
+sdk += ogg_env.Install (os.path.join('$sdkdir', 'include', 'ogg'),
                     map(lambda f:os.path.join(ogg_dir, 'include',
                                               'ogg', f),
                         ['os_types.h', 'ogg.h', 'config_types.h']))
 
-env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include')])
+ogg_env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include')])
 
-ogg_lib = env.ConvenienceLibrary ('ogg', sources)
+def AddExportDef(ogg_env, sources, def_path):
+    if 'gcc' in ogg_env['CC']:
+    	sources += [def_path]
+    elif 'cl' in ogg_env['CC']:
+        ogg_env.AppendUnique(LINKFLAGS = ['/DEF:' + def_path])
+
+if not shared:
+    ogg_lib = ogg_env.ConvenienceLibrary ('ogg', sources)
+else:
+    AddExportDef (ogg_env, sources,
+                  os.path.join(Dir('.').abspath,
+                               ogg_dir, 'win32', 'ogg.def'))
+    ogg_lib = ogg_env.SharedLibrary ('ogg', sources)
 #Depends (sources, ogg_headers)
 
-ogg += env.Install (lib_dir, ogg_lib)
-sdk += env.Install (os.path.join('$sdkdir', 'lib'), ogg_lib)
+ogg += ogg_env.Install (lib_dir, ogg_lib)
+sdk += ogg_env.Install (os.path.join('$sdkdir', 'lib'), ogg_lib)
 
-env.Clean (ogg, [ogg_dir])
+ogg_env.Clean (ogg, [ogg_dir])
 
 ### vorbis & vorbisfile
-env = common_env.Clone ()
+vorbis_env = common_env.Clone ()
 
-vorbis_untar = env.Untar (os.path.join (srcdir, vorbis_tar))
-env.SourceCode (vorbis_dir, vorbis_untar)
+vorbis_untar = vorbis_env.Untar (os.path.join (srcdir, vorbis_tar))
+vorbis_env.SourceCode (vorbis_dir, vorbis_untar)
 
 sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
               ['mdct.c', 'smallft.c', 'block.c', 'envelope.c', 'window.c', 'lsp.c',
                'lpc.c', 'analysis.c', 'synthesis.c', 'psy.c', 'info.c',
                'floor1.c', 'floor0.c', 'res0.c', 'mapping0.c', 'registry.c',
-               'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c'])
+               'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c', 'vorbisenc.c'])
 
-env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include'),
-                             os.path.join (vorbis_dir, 'include')])
+vorbis_env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include'),
+                             os.path.join (vorbis_dir, 'include')],
+                  LIBPATH = [lib_dir],
+                  LIBS = ['ogg'])
 
-vorbis_lib = env.ConvenienceLibrary ('vorbis', sources)
+if not shared:
+    vorbis_lib = vorbis_env.ConvenienceLibrary ('vorbis', sources)
+else:
+    AddExportDef (vorbis_env, sources,
+                  os.path.join(Dir('.').abspath,
+                               vorbis_dir, 'win32', 'vorbis.def'))
+    vorbis_lib = vorbis_env.SharedLibrary ('vorbis', sources)
+vorbis = vorbis_env.Install (lib_dir, vorbis_lib)
 
-sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
-              ['vorbisfile.c'])
-vorbisfile_lib = env.ConvenienceLibrary ('vorbisfile', sources)
+vorbisfile_env = common_env.Clone ()
+vorbisfile_srcs = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
+                       ['vorbisfile.c'])
+vorbisfile_env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include'),
+                                        os.path.join (vorbis_dir, 'include')],
+                             LIBPATH = [lib_dir],
+                             LIBS = ['vorbis', 'ogg'])
+if not shared:
+    vorbisfile_lib = vorbisfile_env.ConvenienceLibrary ('vorbisfile', vorbisfile_srcs)
+else:
+    AddExportDef (vorbisfile_env, vorbisfile_srcs,
+                  os.path.join(Dir('.').abspath,
+                               vorbis_dir, 'win32', 'vorbisfile.def'))
+    vorbisfile_lib = vorbisfile_env.SharedLibrary ('vorbisfile', vorbisfile_srcs)
+vorbis += vorbisfile_env.Install (lib_dir, vorbisfile_lib)
 
 header_dir = os.path.join('$top_builddir', 'include', 'vorbis')
 
-vorbis = env.Install(header_dir,
+vorbis += env.Install(header_dir,
                      map(lambda f:os.path.join(vorbis_dir,
                                                'include', 'vorbis', f),
                          ['codec.h', 'vorbisenc.h', 'vorbisfile.h']))
-vorbis += env.Install (lib_dir, vorbisfile_lib)
 
 sdk += env.Install(os.path.join('$sdkdir', 'include', 'vorbis'),
                    map(lambda f:os.path.join(vorbis_dir,
                                              'include', 'vorbis', f),
                        ['codec.h', 'vorbisenc.h', 'vorbisfile.h']))
 
-sdk += env.Install (os.path.join('$sdkdir', 'lib'), vorbis_lib)
+sdk += env.Install (os.path.join('$sdkdir', 'lib'),
+                    vorbisfile_lib + vorbis_lib)
 
 env.Alias('ogg_install', ogg + vorbis)
 env.Alias('sdk_install', ogg + vorbis + sdk)
@@ -114,11 +148,12 @@ env.Alias('ogg_sdk_install', ogg + vorbis + sdk)
 env.Clean (vorbis, [vorbis_dir])
 
 ### setup package info
-depends = []
 objects = []
-depends += ['vorbis', 'ogg']
-configs.SetPackageInfo([sexyenv, gameenv], 'ogg',
-                       LIBS = ['vorbisfile'] + depends,
+depends = ['vorbisfile', 'vorbis', 'ogg']
+if not shared:
+    objects += ogg_lib + vorbis_lib + vorbisfile_lib
+configs.SetPackageInfo([env, gameenv], 'ogg',
+                       LIBS = depends,
                        CPPPATH = [os.path.join('$top_builddir', 'include')],
                        LIBPATH = [os.path.join('$top_builddir', 'lib')],
-                       OBJECTS = objects, TARGETS = vorbis)
+                       OBJECTS = objects, TARGETS = ogg + vorbis + sdk)
