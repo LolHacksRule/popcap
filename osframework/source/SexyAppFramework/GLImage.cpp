@@ -111,32 +111,66 @@ multiply_alpha (int alpha, int color)
     return ((temp + (temp >> 8)) >> 8);
 }
 
-static inline uint
-multiply_pixel (uint pixel)
-{
-	if (!pixel)
-		return 0;
-
-	unsigned char  alpha = pixel >> 24;
-	unsigned char  red   = (pixel >> 16) & 0xff;
-	unsigned char  green = (pixel >>  8) & 0xff;
-	unsigned char  blue  = (pixel >>  0) & 0xff;
-
-	if (alpha != 0xff)
-	{
-		red   = multiply_alpha (alpha, red);
-		green = multiply_alpha (alpha, green);
-		blue  = multiply_alpha (alpha, blue);
-	}
-	return	(alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
-}
-
 static inline void
 multiply_rgba(SexyRGBA &rgba)
 {
        rgba.r = multiply_alpha(rgba.r, rgba.a);
        rgba.g = multiply_alpha(rgba.g, rgba.a);
        rgba.b = multiply_alpha(rgba.b, rgba.a);
+}
+
+static inline unsigned int
+multiply_alpha (unsigned int alpha, unsigned int color)
+{
+	unsigned int temp = (alpha * color) + 0x80;
+	return ((temp + (temp >> 8)) >> 8);
+}
+
+static inline uint
+multiply_pixel (uint pixel)
+{
+	if (!pixel)
+		return 0;
+
+	unsigned int  alpha = pixel >> 24;
+	unsigned int  red   = (pixel >> 16) & 0xff;
+	unsigned int  green = (pixel >>  8) & 0xff;
+	unsigned int  blue  = (pixel >>  0) & 0xff;
+
+	red   = multiply_alpha (alpha, red);
+	green = multiply_alpha (alpha, green);
+	blue  = multiply_alpha (alpha, blue);
+	return  (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+}
+
+static inline uint
+multiply_pixel_notrans (uint pixel)
+{
+	unsigned int  alpha = pixel >> 24;
+	unsigned int  red   = (pixel >> 16) & 0xff;
+	unsigned int  green = (pixel >>  8) & 0xff;
+	unsigned int  blue  = (pixel >>  0) & 0xff;
+
+	red   = multiply_alpha (alpha, red);
+	green = multiply_alpha (alpha, green);
+	blue  = multiply_alpha (alpha, blue);
+	return  (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+}
+
+static inline uint
+multiply_pixel_noalpha (uint pixel)
+{
+	unsigned int  alpha = pixel >> 24;
+
+	if (!alpha)
+		return 0;
+	return pixel;
+}
+
+static inline uint
+multiply_pixel_notrans_noalpha (uint pixel)
+{
+	return pixel;
 }
 
 static inline SexyRGBA
@@ -150,8 +184,18 @@ ColorToMultipliedRGBA(Color theColor)
 static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 			     GLuint old, int x, int y, int width, int height)
 {
+	typedef uint (* PixMulProc)(uint);
+	PixMulProc pixmul = multiply_pixel;
+
 	GLuint texture;
 	int w, h;
+
+	if (!theImage->mHasTrans && !theImage->mHasAlpha)
+		pixmul = multiply_pixel_notrans_noalpha;
+	else if (!theImage->mHasTrans && theImage->mHasAlpha)
+		pixmul = multiply_pixel_notrans;
+	else if (theImage->mHasTrans && !theImage->mHasAlpha)
+		pixmul = multiply_pixel_noalpha;
 
 	/* Use the texture width and height expanded to powers of 2 */
 	w = RoundToPOT (width);
@@ -166,7 +210,7 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 		glGenTextures (1, &texture);
 		if (texture == 0)
 		{
-			printf ("Generating a texture failed.");
+			printf ("GLImage: Generating a texture failed.");
 			return 0;
 		}
 	}
@@ -181,116 +225,111 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 	uint32* bits = theImage->mBits;
 	uint32* tab = theImage->mColorTable;
 	uchar*	indices = theImage->mColorIndices;
-	uint32* copy = new uint32[w * h];
-	if (copy) {
-		int i;
+	int aWidth = std::min (w, (theImage->GetWidth() - x));
+	int aHeight = std::min (h, (theImage->GetHeight() - y));
 
-		int aWidth = std::min (w, (theImage->GetWidth() - x));
-		int aHeight = std::min (h, (theImage->GetHeight() - y));
-#if 0
-		int aWidthExtra = w > aWidth ? w - aWidth : 0;
-		int aHeightExtra = h > aHeight ? h - aHeight : 0;
-#endif
-		GLenum format, intlformat;
+	GLenum format, intlformat;
 
-		if (theInterface->mTexBGRA == GL_TRUE)
-		{
+	if (theInterface->mTexBGRA == GL_TRUE)
+	{
 #if !defined(SEXY_OPENGLES)
-			intlformat = GL_RGBA;
+		intlformat = GL_RGBA;
 #else
-			intlformat = GL_BGRA;
+		intlformat = GL_BGRA;
 #endif
-			format = GL_BGRA;
-		}
-		else
-		{
-			intlformat = GL_RGBA;
-			format = GL_RGBA;
-		}
-		int imageWidth = theImage->GetWidth();
-		uint32 * dst = copy;
+		format = GL_BGRA;
+	}
+	else
+	{
+		intlformat = GL_RGBA;
+		format = GL_RGBA;
+	}
 
-		if (indices)
-		{
-			uint32 pmtab[256];
-			uchar * src = indices + y * imageWidth + x;
+	int imageWidth = theImage->GetWidth();
+	uint32* copy = new uint32[w * h];
+	uint32 * dst = copy;
+	int i;
 
-			for (i = 0; i < 256; i++)
+	if (indices)
+	{
+		uint32 pmtab[256];
+		uchar * src = indices + y * imageWidth + x;
+
+		for (i = 0; i < 256; i++)
+		{
+			uint32 pixel = pixmul (tab[i]);
+			if (format == GL_RGBA)
+				pmtab[i] =
+					(pixel	& 0xff00ff00) |
+					((pixel & 0x00ff0000) >> 16) |
+					((pixel & 0x000000ff) << 16);
+			else
+				pmtab[i] = pixel;
+		}
+
+		for (i = 0; i < aHeight; i++)
+		{
+			int j;
+
+			for (j = 0; j < aWidth; j++)
+				dst[j] = pmtab[src[j]];
+
+			for (j = aWidth; j < w; j++)
+				dst[j] = dst[aWidth - 1];
+
+			dst += w;
+			src += imageWidth;
+		}
+	}
+	else if (bits)
+	{
+		uint32 * src = bits + y * imageWidth + x;
+
+		for (i = 0; i < aHeight; i++)
+		{
+			int j;
+
+			if (format == GL_RGBA)
 			{
-				uint32 pixel = multiply_pixel (tab[i]);
-				if (format == GL_RGBA)
-					pmtab[i] =
+				for (j = 0; j < aWidth; j++)
+				{
+					uint32 pixel = pixmul (src[j]);
+					dst[j] =
 						(pixel	& 0xff00ff00) |
 						((pixel & 0x00ff0000) >> 16) |
 						((pixel & 0x000000ff) << 16);
-				else
-					pmtab[i] = pixel;
+				}
 			}
-
-			for (i = 0; i < aHeight; i++)
+			else
 			{
-				int j;
-
 				for (j = 0; j < aWidth; j++)
-					dst[j] = pmtab[src[j]];
-
-				for (j = aWidth; j < w; j++)
-					dst[j] = dst[aWidth - 1];
-
-				dst += w;
-				src += imageWidth;
+					dst[j] = pixmul (src[j]);
 			}
+
+			for (j = aWidth; j < w; j++)
+				dst[j] = dst[aWidth - 1];
+
+			dst += w;
+			src += imageWidth;
 		}
-		else if (bits)
-		{
-			uint32 * src = bits + y * imageWidth + x;
-
-			for (i = 0; i < aHeight; i++)
-			{
-				int j;
-
-				if (format == GL_RGBA)
-				{
-					for (j = 0; j < aWidth; j++)
-					{
-						uint32 pixel = multiply_pixel (src[j]);
-						dst[j] =
-							(pixel	& 0xff00ff00) |
-							((pixel & 0x00ff0000) >> 16) |
-							((pixel & 0x000000ff) << 16);
-					}
-				}
-				else
-				{
-					for (j = 0; j < aWidth; j++)
-						dst[j] = multiply_pixel (src[j]);
-				}
-
-				for (j = aWidth; j < w; j++)
-					dst[j] = dst[aWidth - 1];
-
-				dst += w;
-				src += imageWidth;
-			}
-		}
-		else
-		{
-			memset(copy, 0, w * h * sizeof(uint32));
-			i = h;
-		}
-		for (; i < h; i++, dst += w)
-			memcpy (dst, copy + w * (aHeight - 1), w * 4);
-
-		glTexImage2D (target,
-			      0,
-			      intlformat,
-			      w, h,
-			      0,
-			      format,
-			      GL_UNSIGNED_BYTE,
-			      copy);
-		delete [] copy;
 	}
+	else
+	{
+		memset(copy, 0, w * h * sizeof(uint32));
+		i = h;
+	}
+	for (; i < h; i++, dst += w)
+		memcpy (dst, copy + w * (aHeight - 1), w * 4);
+
+	glTexImage2D (target,
+		      0,
+		      intlformat,
+		      w, h,
+		      0,
+		      format,
+		      GL_UNSIGNED_BYTE,
+		      copy);
+	delete [] copy;
 
 	return old ? old : texture;
 }
@@ -543,7 +582,7 @@ void GLTexture::CreateTextures(MemoryImage* theImage)
 		aTextMemSize += aBlock.mWidth * aBlock.mHeight * aFormatSize;
 	}
 	if (!mDpy->EnsureTexMemSpace(aTextMemSize))
-		printf ("No enough texture memory!\n");
+		printf ("GLImage: No enough texture memory!\n");
 
 	i = 0;
 	for (y = 0; y < aHeight; y += mTexBlockHeight)
