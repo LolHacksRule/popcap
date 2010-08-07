@@ -97,7 +97,8 @@ sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
                'codebook.c', 'sharedbook.c', 'lookup.c', 'bitrate.c', 'vorbisenc.c'])
 
 vorbis_env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include'),
-                             os.path.join (vorbis_dir, 'include')],
+                                    os.path.join (vorbis_dir, 'include'),
+                                    os.path.join (vorbis_dir, 'lib')],
                   LIBPATH = [lib_dir],
                   LIBS = ['ogg'])
 
@@ -114,7 +115,8 @@ vorbisfile_env = common_env.Clone ()
 vorbisfile_srcs = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
                        ['vorbisfile.c'])
 vorbisfile_env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include'),
-                                        os.path.join (vorbis_dir, 'include')],
+                                        os.path.join (vorbis_dir, 'include'),
+                                        os.path.join (vorbis_dir, 'lib')],
                              LIBPATH = [lib_dir],
                              LIBS = ['vorbis', 'ogg'])
 if not shared:
