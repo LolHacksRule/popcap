@@ -28,6 +28,8 @@ for tarball in tarballs:
         print fpath, "doesn't exist."
         Return ()
 
+sdk = []
+
 common_env = env.Clone()
 #common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
 
@@ -49,17 +51,23 @@ sources = map (lambda f: os.path.join(ogg_dir, 'src', f),
 lib_dir = os.path.join('$top_builddir', 'lib')
 header_dir = os.path.join('$top_builddir', 'include', 'ogg')
 
-ogg_headers = env.Install (header_dir,
-                           map(lambda f:os.path.join(ogg_dir, 'include',
-                                                     'ogg', f),
-                               ['os_types.h', 'ogg.h', 'config_types.h']))
+ogg = env.Install (header_dir,
+                   map(lambda f:os.path.join(ogg_dir, 'include',
+                                             'ogg', f),
+                       ['os_types.h', 'ogg.h', 'config_types.h']))
+
+sdk += env.Install (os.path.join('$sdkdir', 'include', 'ogg'),
+                    map(lambda f:os.path.join(ogg_dir, 'include',
+                                              'ogg', f),
+                        ['os_types.h', 'ogg.h', 'config_types.h']))
 
 env.PrependUnique(CPPPATH = [os.path.join (ogg_dir, 'include')])
 
 ogg_lib = env.ConvenienceLibrary ('ogg', sources)
 #Depends (sources, ogg_headers)
 
-ogg = env.Install (lib_dir, ogg_lib)
+ogg += env.Install (lib_dir, ogg_lib)
+sdk += env.Install (os.path.join('$sdkdir', 'lib'), ogg_lib)
 
 env.Clean (ogg, [ogg_dir])
 
@@ -85,18 +93,23 @@ sources = map (lambda f: os.path.join(vorbis_dir, 'lib', f),
 vorbisfile_lib = env.ConvenienceLibrary ('vorbisfile', sources)
 
 header_dir = os.path.join('$top_builddir', 'include', 'vorbis')
-Mkdir(header_dir)
 
-vorbis_headers = env.Install(header_dir,
-                             map(lambda f:os.path.join(vorbis_dir,
-                                                       'include', 'vorbis', f),
-                                 ['codec.h', 'vorbisenc.h', 'vorbisfile.h']))
-vorbis = env.Install (lib_dir, vorbis_lib)
+vorbis = env.Install(header_dir,
+                     map(lambda f:os.path.join(vorbis_dir,
+                                               'include', 'vorbis', f),
+                         ['codec.h', 'vorbisenc.h', 'vorbisfile.h']))
 vorbis += env.Install (lib_dir, vorbisfile_lib)
-Depends (vorbis, vorbis_headers)
 
-env.Alias('ogg_install', vorbis)
-env.Alias('sdk_install', vorbis)
+sdk += env.Install(os.path.join('$sdkdir', 'include', 'vorbis'),
+                   map(lambda f:os.path.join(vorbis_dir,
+                                             'include', 'vorbis', f),
+                       ['codec.h', 'vorbisenc.h', 'vorbisfile.h']))
+
+sdk += env.Install (os.path.join('$sdkdir', 'lib'), vorbis_lib)
+
+env.Alias('ogg_install', ogg + vorbis)
+env.Alias('sdk_install', ogg + vorbis + sdk)
+env.Alias('ogg_sdk_install', ogg + vorbis + sdk)
 
 env.Clean (vorbis, [vorbis_dir])
 
