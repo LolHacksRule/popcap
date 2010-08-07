@@ -24,6 +24,7 @@ enum EventType {
 	EVENT_ACC                    = 14,
 	EVENT_ANGLE                  = 15,
 	EVENT_TOUCH                  = 16,
+	EVENT_MINIMIZED              = 17,
 	EVENT_USER		     = 65535
 };
 
@@ -87,26 +88,31 @@ struct TouchEvent {
 	int pressure;
 };
 
+struct MinimizedEvent {
+	int minimized;
+};
+
 struct UserEvent {
 	int	       reserved[7];
 };
 
 struct Event {
-	enum EventType		     type;
-	unsigned int		     flags;
-	int			     id;
-	int                          subid;
-	unsigned int                 timestamp;
+	enum EventType		      type;
+	unsigned int		      flags;
+	int			      id;
+	int                           subid;
+	unsigned int                  timestamp;
 	union {
-		struct MouseEvent    mouse;
-		struct KeyEvent	     key;
-		struct ActiveEvent   active;
-		struct DeviceEvent   device;
-		struct UserEvent     user;
-		struct AccEvent      acc;
-		struct AngleEvent    angle;
-		struct TouchEvent    touch;
-	}			     u;
+		struct MouseEvent     mouse;
+		struct KeyEvent	      key;
+		struct ActiveEvent    active;
+		struct DeviceEvent    device;
+		struct UserEvent      user;
+		struct AccEvent       acc;
+		struct AngleEvent     angle;
+		struct TouchEvent     touch;
+		struct MinimizedEvent minimized;
+	}			      u;
 };
 
 #ifdef __cplusplus
