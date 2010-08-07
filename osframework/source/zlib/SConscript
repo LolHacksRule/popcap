@@ -51,7 +51,7 @@ env.PrependUnique(CPPDEFINES = ['STDC'],
 if env['TARGET_OS'] != 'win32':
     env.AppendUnique(CPPDEFINES = ['Z_HAVE_UNISTD_H'])
 
-zlib_lib = env.ConvenienceLibrary ('zlib', sources)
+zlib_lib = env.ConvenienceLibrary ('z', sources)
 #Depends (sources, zlib_headers)
 
 zlib = env.Install (lib_dir, zlib_lib)
