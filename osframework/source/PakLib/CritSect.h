@@ -1,7 +1,9 @@
 #ifndef _H_PAK_LIB_CritSect
 #define _H_PAK_LIB_CritSect
 
-#ifndef WIN32
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <pthread.h>
 #endif
 

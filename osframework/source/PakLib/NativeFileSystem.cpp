@@ -2,6 +2,8 @@
 #include "Find.h"
 
 #ifdef WIN32
+#include <io.h>
+
 #define access _access
 #ifndef R_OK
 #define R_OK 4
@@ -187,7 +189,7 @@ File* NativeFileSystem::open(const wchar_t* theFileName,
         delete [] aAccess;
 	return result;
 #else
-	FILE *fp = _fwopen(theFileName, theAccess);
+	FILE *fp = _wfopen(theFileName, theAccess);
 	if (fp)
 		return new NativeFile(fp);
 
@@ -195,21 +197,21 @@ File* NativeFileSystem::open(const wchar_t* theFileName,
 		return 0;
 
 #ifdef WIN32
-	if (strlen(theFileName) >= 2 && isalpha(theFileName[0]) &&
+	if (wcslen(theFileName) >= 2 && isalpha(theFileName[0]) &&
 	    theFileName[1] == ':')
 		return 0;
 #endif
 
-	for (i = 0; i < mLocations.size(); i++)
+	for (size_t i = 0; i < mLocations.size(); i++)
 	{
-		wchar_t *loation = p_mbstowcs(mLocations[i]);
+		wchar_t *location = p_mbstowcs(mLocations[i].c_str());
 		if (!location)
 			continue;
 
-		std::wstring path = std::wstring(location) + "/" + std::wstring(theFileName);
+		std::wstring path = std::wstring(location) + L"/" + std::wstring(theFileName);
 		delete [] location;
 
-		FILE *fp = _fwopen(path.c_str(), theAccess);
+		FILE *fp = _wfopen(path.c_str(), theAccess);
 		if (fp)
 			return new NativeFile(fp);
 	}
