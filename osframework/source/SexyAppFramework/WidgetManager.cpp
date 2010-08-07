@@ -453,10 +453,10 @@ bool WidgetManager::DrawScreen()
 	Graphics aScrG(dynamic_cast<Image*>(mImage));
 	mCurG = &aScrG;
 
-	Image* aImage = dynamic_cast<Image*>(mImage);
+	Image* anImage = dynamic_cast<Image*>(mImage);
 	bool surfaceLocked = false;
-	//if (aImage != NULL)
-	//surfaceLocked = aImage->LockSurface();
+	//if (anImage != NULL)
+	//surfaceLocked = anImage->LockSurface();
 
 	NativeDisplay * aInterface = mApp->mDDInterface;
 	int aCursorX = mLastMouseX;
@@ -472,6 +472,9 @@ bool WidgetManager::DrawScreen()
 	aVisibleRect.mY = -mMouseDestRect.mY;
 	aVisibleRect.mWidth = mWidth;
 	aVisibleRect.mHeight = mHeight;
+
+	// clear it
+	anImage->ClearRect(aVisibleRect);
 
 	Graphics g(aScrG);
 	g.ClipRect(aVisibleRect);
@@ -511,8 +514,8 @@ bool WidgetManager::DrawScreen()
 	    aInterface->DrawCursor (&g))
 		drewStuff = true;
 
-	//if (aImage != NULL && surfaceLocked)
-	//aImage->UnlockSurface();
+	//if (anImage != NULL && surfaceLocked)
+	//anImage->UnlockSurface();
 
 	mCurG = NULL;
 
