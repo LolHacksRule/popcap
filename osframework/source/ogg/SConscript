@@ -152,7 +152,7 @@ env.Clean (vorbis, [vorbis_dir])
 ### setup package info
 objects = []
 depends = ['vorbisfile', 'vorbis', 'ogg']
-if not shared:
+if shared:
     objects += ogg_lib + vorbis_lib + vorbisfile_lib
 configs.SetPackageInfo([env, gameenv], 'ogg',
                        LIBS = depends,
