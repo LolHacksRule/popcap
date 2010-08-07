@@ -230,6 +230,17 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 
 	GLenum format, intlformat;
 
+	bool compressed = false;
+
+#ifdef GL_PALETTE8_RGBA8_OES
+	if (theInterface->mTexPalette8RGBA && indices)
+	{
+		compressed = true;
+		intlformat = GL_PALETTE8_RGBA8_OES;
+		format = GL_RGBA;		
+	}
+	else
+#endif
 	if (theInterface->mTexBGRA == GL_TRUE)
 	{
 #if !defined(SEXY_OPENGLES)
@@ -246,13 +257,14 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 	}
 
 	int imageWidth = theImage->GetWidth();
-	uint32* copy = new uint32[w * h];
-	uint32 * dst = copy;
+	int bpp = compressed ? 1 : sizeof(uint32);
+	uchar* copy = new uchar[w * h * bpp + (compressed ? 256 * sizeof(uint32) : 0)];
 	int i;
 
 	if (indices)
 	{
-		uint32 pmtab[256];
+		uint32 localpmtab[256];
+		uint32 *pmtab = compressed ? (uint32*)copy : localpmtab;
 		uchar * src = indices + y * imageWidth + x;
 
 		for (i = 0; i < 256; i++)
@@ -267,23 +279,53 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 				pmtab[i] = pixel;
 		}
 
-		for (i = 0; i < aHeight; i++)
+		if (compressed)
 		{
-			int j;
+			uchar *dst = copy + 256 * sizeof(uint32);
 
-			for (j = 0; j < aWidth; j++)
-				dst[j] = pmtab[src[j]];
+			for (i = 0; i < aHeight; i++)
+			{
+				int j;
 
-			for (j = aWidth; j < w; j++)
-				dst[j] = dst[aWidth - 1];
+				for (j = 0; j < aWidth; j++)
+					dst[j] = src[j];
 
-			dst += w;
-			src += imageWidth;
+				for (j = aWidth; j < w; j++)
+					dst[j] = dst[aWidth - 1];
+
+				dst += w;
+				src += imageWidth;
+			}
+
+			for (; i < h; i++, dst += w)
+				memcpy (dst, copy + w * (aHeight - 1) * bpp, w * bpp);	
+		}
+		else
+		{
+			uint32 *dst = (uint32*)copy;
+
+			for (i = 0; i < aHeight; i++)
+			{
+				int j;
+
+				for (j = 0; j < aWidth; j++)
+					dst[j] = pmtab[src[j]];
+
+				for (j = aWidth; j < w; j++)
+					dst[j] = dst[aWidth - 1];
+
+				dst += w;
+				src += imageWidth;
+			}
+
+			for (; i < h; i++, dst += w)
+				memcpy (dst, copy + w * (aHeight - 1) * bpp, w * bpp);
 		}
 	}
 	else if (bits)
 	{
 		uint32 * src = bits + y * imageWidth + x;
+		uint32 * dst = (uint32*)copy;
 
 		for (i = 0; i < aHeight; i++)
 		{
@@ -312,23 +354,38 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 			dst += w;
 			src += imageWidth;
 		}
+
+		for (; i < h; i++, dst += w)
+			memcpy (dst, copy + w * (aHeight - 1) * bpp, w * bpp);
 	}
 	else
 	{
-		memset(copy, 0, w * h * sizeof(uint32));
-		i = h;
+		memset(copy, 0, w * h * bpp);
 	}
-	for (; i < h; i++, dst += w)
-		memcpy (dst, copy + w * (aHeight - 1), w * 4);
 
-	glTexImage2D (target,
-		      0,
-		      intlformat,
-		      w, h,
-		      0,
-		      format,
-		      GL_UNSIGNED_BYTE,
-		      copy);
+	while (glGetError())
+		;
+
+	if (compressed)
+		glCompressedTexImage2D (target,
+					0,
+					intlformat,
+					w, h,
+					0,
+					w * h + 256 * sizeof(uint32),
+					copy);
+	else
+		glTexImage2D (target,
+			      0,
+			      intlformat,
+			      w, h,
+			      0,
+			      format,
+			      GL_UNSIGNED_BYTE,
+			      copy);
+	if (glGetError() != 0)
+		printf("GLImage: failed to upload texture(%s).\n", theImage->mFilePath.c_str());
+
 	delete [] copy;
 
 	return old ? old : texture;
