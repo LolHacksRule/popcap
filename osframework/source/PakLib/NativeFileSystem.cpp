@@ -228,10 +228,7 @@ FileSystem* NativeFileSystemDriver::Create(const std::string &location,
 					   const std::string &type,
 					   int                priority)
 {
-	if (type != "directory" || location.empty())
-		return 0;
-
-	if (location == ".")
+	if (type != "native" || location.empty())
 		return 0;
 
 	if (access(location.c_str(), R_OK) != 0)

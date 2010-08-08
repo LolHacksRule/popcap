@@ -11,6 +11,7 @@ FileSystemManager::FileSystemManager() :
 
 	// native/posix file system
 	mFactory.AddDriver(new NativeFileSystemDriver());
+	addResource(".", "native", 0);
 
 	// zip file system
 	mFactory.AddDriver(new ZipFileSystemDriver());
@@ -67,10 +68,12 @@ File* FileSystemManager::open(const char* theFileName,
 		fp = (*it)->open(theFileName, theAccess);
 		if (fp)
 		{
+#if 0
 			printf("PakLib: file %s successfully opened(driver: %s device: %s).\n",
 			       theFileName,
 			       (*it)->getDriver()->GetName().c_str(),
 			       (*it)->getLocation().c_str());
+#endif
 			return fp;
 		}
 	}
