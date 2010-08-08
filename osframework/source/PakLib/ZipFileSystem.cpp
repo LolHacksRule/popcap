@@ -93,35 +93,20 @@ private:
 	size_t mSize;
 };
 
-ZipFileSystem::ZipFileSystem()
+ZipFileSystem::ZipFileSystem(FileSystemDriver  * driver,
+			     const std::string & location,
+			     int                  priority,
+			     ZZIP_DIR*            dir)
+	: FileSystem(driver, location, priority), mZZipDir(dir)
 {
-	mName = "zip";
 }
 
 ZipFileSystem::~ZipFileSystem()
 {
-	AutoCrit autoCrit(mCritSect);
+	ZipFileSystemDriver* driver = (ZipFileSystemDriver*)mDriver;
+	AutoCrit autoCrit(driver->mCritSect);
 
-	for (size_t i = 0; i < mLocations.size(); i++)
-		zzip_dir_close(mLocations[i]);
-	mLocations.clear();
-}
-
-bool ZipFileSystem::addResource(const std::string &location,
-				const std::string &type,
-				int priority)
-{
-	if (type != "zip" || location.empty())
-		return false;
-
-	AutoCrit autoCrit(mCritSect);
-	zzip_error_t zzipError;
-	ZZIP_DIR *dir = zzip_dir_open(location.c_str(), &zzipError);
-	if (!dir)
-		return false;
-
-	mLocations.push_back(dir);
-	return true;
+	zzip_dir_close(mZZipDir);
 }
 
 static char * p_wcstombs(const wchar_t * theString)
@@ -164,22 +149,18 @@ File* ZipFileSystem::open(const char* theFileName,
 		return 0;
 #endif
 
-	for (size_t i = 0; i < mLocations.size(); i++)
+	ZZIP_FILE* zzipFile =
+		zzip_file_open(mZZipDir,
+			       theFileName,
+			       ZZIP_ONLYZIP | ZZIP_CASELESS);
+	if (zzipFile)
 	{
-		ZZIP_FILE* zzipFile =
-			zzip_file_open(mLocations[i],
-				       theFileName,
-				       ZZIP_ONLYZIP | ZZIP_CASELESS);
-		if (zzipFile)
-		{
+		// Get uncompressed size too
+		ZZIP_STAT zstat;
 
-			// Get uncompressed size too
-			ZZIP_STAT zstat;
-
-			zzip_dir_stat(mLocations[i], theFileName,
-				      &zstat, ZZIP_CASEINSENSITIVE);
-			return new ZipFile(zzipFile, zstat.st_size);
-		}
+		zzip_dir_stat(mZZipDir, theFileName,
+			      &zstat, ZZIP_CASEINSENSITIVE);
+		return new ZipFile(zzipFile, zstat.st_size);
 	}
 
 	return 0;
@@ -214,4 +195,26 @@ bool ZipFileSystem::findNext(PakHandle hFindFile,
 bool ZipFileSystem::findClose(PakHandle hFindFile)
 {
 	return true;
+}
+
+ZipFileSystemDriver::ZipFileSystemDriver(int priority)
+	: FileSystemDriver("zip", priority)
+{
+}
+
+FileSystem* ZipFileSystemDriver::Create(const std::string &location,
+				 const std::string &type,
+				 int                priority)
+{
+	if (type != "zip" || location.empty())
+		return false;
+
+	AutoCrit autoCrit(mCritSect);
+
+	zzip_error_t zzipError;
+	ZZIP_DIR *dir = zzip_dir_open(location.c_str(), &zzipError);
+	if (!dir)
+		return false;
+
+	return new ZipFileSystem(this, location, priority, dir);
 }

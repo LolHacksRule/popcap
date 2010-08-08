@@ -74,29 +74,15 @@ private:
 	FILE *mFp;
 };
 
-NativeFileSystem::NativeFileSystem()
+NativeFileSystem::NativeFileSystem(FileSystemDriver  *driver,
+				   const std::string &location,
+				   int                priority)
+	: FileSystem(driver, location, priority)
 {
-	mName = "native";
 }
 
 NativeFileSystem::~NativeFileSystem()
 {
-}
-
-bool NativeFileSystem::addResource(const std::string &location,
-				   const std::string &type,
-				   int priority)
-{
-	if (type != "directory" || location.empty())
-		return false;
-
-	if (location == ".")
-		return true;
-
-	if (access(location.c_str(), R_OK) != 0)
-		return false;
-	mLocations.push_back(location);
-	return true;
 }
 
 static FILE* _fopencase(const char *path, const char * mode)
@@ -118,7 +104,7 @@ static FILE* _fopencase(const char *path, const char * mode)
 	if (aPath.rfind('/') >= 0)
 		aPath = aPath.substr(0, aPath.rfind('/')) + '/' + finddata.name;
 	if (strcmp(aPath.c_str(), path) && getenv("PAKLIB_DEBUG_REDIR"))
-		printf ("fopencase: '%s' to '%s'\n", path, finddata.name);
+		printf ("PakLib: fopencase: '%s' to '%s'\n", path, finddata.name);
 	fp = fopen(aPath.c_str(), mode);
 	_findclose(handle);
 #endif
@@ -136,6 +122,7 @@ static char * p_wcstombs(const wchar_t * theString)
         return aString;
 }
 
+#if 0
 static wchar_t * p_mbstowcs(const char * theString)
 {
         wchar_t * aString;
@@ -146,6 +133,7 @@ static wchar_t * p_mbstowcs(const char * theString)
 
         return aString;
 }
+#endif
 
 File* NativeFileSystem::open(const char* theFileName,
 			     const char* theAccess)
@@ -163,13 +151,10 @@ File* NativeFileSystem::open(const char* theFileName,
 		return false;
 #endif
 
-	for (size_t i = 0; i < mLocations.size(); i++)
-	{
-		std::string path = mLocations[i] + "/" + std::string(theFileName);
-		FILE *fp = _fopencase(path.c_str(), theAccess);
-		if (fp)
-			return new NativeFile(fp);
-	}
+	std::string path = mLocation + "/" + std::string(theFileName);
+	fp = _fopencase(path.c_str(), theAccess);
+	if (fp)
+		return new NativeFile(fp);
 
 	return 0;
 }
@@ -202,19 +187,16 @@ File* NativeFileSystem::open(const wchar_t* theFileName,
 		return 0;
 #endif
 
-	for (size_t i = 0; i < mLocations.size(); i++)
-	{
-		wchar_t *location = p_mbstowcs(mLocations[i].c_str());
-		if (!location)
-			continue;
+	wchar_t *location = p_mbstowcs(mLocation.c_str());
+	if (!location)
+		continue;
 
-		std::wstring path = std::wstring(location) + L"/" + std::wstring(theFileName);
-		delete [] location;
+	std::wstring path = std::wstring(location) + L"/" + std::wstring(theFileName);
+	delete [] location;
 
-		FILE *fp = _wfopen(path.c_str(), theAccess);
-		if (fp)
-			return new NativeFile(fp);
-	}
+	FILE *fp = _wfopen(path.c_str(), theAccess);
+	if (fp)
+		return new NativeFile(fp);
 #endif
 
 	return result;
@@ -235,4 +217,25 @@ bool NativeFileSystem::findNext(PakHandle hFindFile,
 bool NativeFileSystem::findClose(PakHandle hFindFile)
 {
 	return true;
+}
+
+NativeFileSystemDriver::NativeFileSystemDriver(int priority)
+	: FileSystemDriver("native", priority)
+{
+}
+
+FileSystem* NativeFileSystemDriver::Create(const std::string &location,
+					   const std::string &type,
+					   int                priority)
+{
+	if (type != "directory" || location.empty())
+		return 0;
+
+	if (location == ".")
+		return 0;
+
+	if (access(location.c_str(), R_OK) != 0)
+		return 0;
+
+	return new NativeFileSystem(this, location, priority);
 }

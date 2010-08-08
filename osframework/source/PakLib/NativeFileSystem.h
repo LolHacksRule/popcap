@@ -1,21 +1,23 @@
-#ifndef  __NATIVE_FILE_SYSTEM__
+#ifndef __NATIVE_FILE_SYSTEM__
 #define __NATIVE_FILE_SYSTEM__
 
 #include "FileSystem.h"
+#include "FileSystemDriverFactory.h"
 
 namespace PakLib {
 
 	class NativeFileSystem: public FileSystem
 	{
 	public:
-		NativeFileSystem();
+		NativeFileSystem(FileSystemDriver   *driver,
+				 const std::string  &location,
+				 int                 priority);
 		virtual ~NativeFileSystem();
 
-	public:
-		virtual bool                    addResource(const std::string &location,
-							    const std::string &type,
-							    int priority = 0);
+	 private:
+		NativeFileSystem(const NativeFileSystem &other);
 
+	public:
 		virtual File*			open(const char* theFileName,
 						     const char* theAccess);
 		virtual File*			open(const wchar_t* theFileName,
@@ -28,7 +30,17 @@ namespace PakLib {
 		virtual bool			findClose(PakHandle hFindFile);
 
 	 public:
-		std::vector<std::string>        mLocations;
+		std::string                     mLocation;
+	};
+
+	class NativeFileSystemDriver: public FileSystemDriver
+	{
+	public:
+	        NativeFileSystemDriver(int priority = 0);
+
+		virtual FileSystem* Create (const std::string &location,
+					    const std::string &type,
+					    int                priority);
 	};
 }
 

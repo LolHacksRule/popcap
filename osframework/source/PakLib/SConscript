@@ -10,8 +10,9 @@ import configs
 Import('env', 'gameenv')
 paklib_env = env.Clone()
 srcs = ['PakInterface.cpp', 'Find.cpp', 'FileSystem.cpp',
-        'NativeFileSystem.cpp', 'ZipFileSystem.cpp',
-        'CritSect.cpp']
+        'NativeFileSystem.cpp', 'ZipFileSystem.cpp', 'CritSect.cpp',
+        'DriverFactory.cpp', 'FileSystemDriverFactory.cpp',
+        'FileSystemManager.cpp']
 
 configs.EnablePackage(paklib_env, 'zziplib')
 
