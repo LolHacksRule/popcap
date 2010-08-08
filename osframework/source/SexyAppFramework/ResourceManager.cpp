@@ -787,6 +787,8 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 	if (aDDImage->mPurgeBits && mApp->mDDInterface &&
 	    mApp->mDDInterface->CanReinit())
 		mApp->mDDInterface->EnsureImageData(aDDImage, true);
+	else if (mApp->mDDInterface &&  mApp->mDDInterface->CanReinit())
+		aDDImage->mFlags |= IMAGE_FLAGS_AUTO_PURGE;
 
 	ResourceLoadedHook(theRes);
 	return true;
