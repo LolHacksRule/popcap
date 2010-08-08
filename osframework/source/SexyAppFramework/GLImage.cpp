@@ -302,7 +302,7 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 	{
 		compressed = true;
 		intlformat = GL_PALETTE8_RGBA8_OES;
-		format = GL_RGBA;		
+		format = GL_RGBA;
 	}
 	else
 #endif
@@ -394,7 +394,7 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 			}
 
 			for (; i < h; i++, dst += w)
-				memcpy (dst, copy + w * (aHeight - 1) * bpp, w * bpp);	
+				memcpy (dst, copy + w * (aHeight - 1) * bpp, w * bpp);
 		}
 		else
 		{
