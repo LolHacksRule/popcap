@@ -239,6 +239,22 @@ ColorToMultipliedRGBA(Color theColor)
 static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 			     GLuint old, int x, int y, int width, int height)
 {
+#ifdef WIN32
+	typedef void (WINAPI *PFNGLCOMPRESSEDTEXIMAGE2DPROC) (GLenum target,
+							      GLint level,
+							      GLenum internalformat,
+							      GLsizei width,
+							      GLsizei height,
+							      GLint border,
+							      GLsizei imageSize,
+							      const GLvoid *data);
+	static PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
+
+	if (!glCompressedTexImage2D)
+		glCompressedTexImage2D  = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)
+			wglGetProcAddress("glCompressedTexImage2D");
+#endif
+
 	typedef uint (* PixMulProc)(uint);
 	PixMulProc pixmul;
 
