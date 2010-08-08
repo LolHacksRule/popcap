@@ -122,7 +122,7 @@ static char * p_wcstombs(const wchar_t * theString)
         return aString;
 }
 
-#if 0
+#ifdef WIN32
 static wchar_t * p_mbstowcs(const char * theString)
 {
         wchar_t * aString;
@@ -189,12 +189,12 @@ File* NativeFileSystem::open(const wchar_t* theFileName,
 
 	wchar_t *location = p_mbstowcs(mLocation.c_str());
 	if (!location)
-		continue;
+		return 0;
 
 	std::wstring path = std::wstring(location) + L"/" + std::wstring(theFileName);
 	delete [] location;
 
-	FILE *fp = _wfopen(path.c_str(), theAccess);
+	fp = _wfopen(path.c_str(), theAccess);
 	if (fp)
 		return new NativeFile(fp);
 #endif
