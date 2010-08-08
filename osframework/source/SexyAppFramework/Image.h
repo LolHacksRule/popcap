@@ -60,7 +60,8 @@ enum ImageFlags {
 	IMAGE_FLAGS_FLIP_AS_COPY  = 1 << 1,
 	IMAGE_FLAGS_MINI_SUBDIV	  = 1 << 2,
 	IMAGE_FLAGS_A4R4G4B4	  = 1 << 3,
-	IMAGE_FLAGS_A8R8G8B8	  = 1 << 4
+	IMAGE_FLAGS_A8R8G8B8	  = 1 << 4,
+	IMAGE_FLAGS_AUTO_PURGE    = 1 << 5
 };
 
 enum WrapMode
