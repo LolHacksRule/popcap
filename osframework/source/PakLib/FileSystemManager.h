@@ -33,6 +33,7 @@ namespace PakLib {
 
 	private:
 
+		void                            addDefaultLocations();
 
 		struct FileSystemCompare
 		{
@@ -45,6 +46,7 @@ namespace PakLib {
 		typedef std::multiset<FileSystem*, FileSystemCompare> FileSystemList;
 
 		bool                            mInitialized;
+		bool                            mLoaded;
 		FileSystemDriverFactory         mFactory;
 		FileSystemList                  mFileSystems;
 	};

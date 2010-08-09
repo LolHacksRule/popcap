@@ -8,13 +8,25 @@ FileSystemManager::FileSystemManager() :
 	FileSystem(0, "", 0)
 {
 	mInitialized = true;
+	mLoaded = false;
 
-	// native/posix file system
+	// Native/posix file system
 	mFactory.AddDriver(new NativeFileSystemDriver());
-	addResource(".", "native", 0);
 
 	// zip file system
 	mFactory.AddDriver(new ZipFileSystemDriver());
+}
+
+void FileSystemManager::addDefaultLocations()
+{
+	if (mLoaded)
+		return;
+
+	mLoaded = true;
+	// native/posix file system
+	addResource(".", "native", 0);
+
+	// zip file system
 	addResource("main.pak", "zip", 10);
 }
 
@@ -40,6 +52,8 @@ bool FileSystemManager::addResource(const std::string &location,
 	if (!mInitialized)
 		return false;
 
+	addDefaultLocations();
+
 	FileSystemDriver* driver = (FileSystemDriver*)mFactory.Find(type);
 	if (!driver)
 		return false;
@@ -57,6 +71,8 @@ File* FileSystemManager::open(const char* theFileName,
 {
 	if (!mInitialized)
 		return false;
+
+	addDefaultLocations();
 
 	if (!theFileName || !theAccess)
 		return 0;
@@ -86,6 +102,8 @@ File* FileSystemManager::open(const wchar_t* theFileName,
 	if (!mInitialized)
 		return false;
 
+	addDefaultLocations();
+
 	if (!theFileName || !theAccess)
 		return 0;
 
@@ -103,9 +121,11 @@ File* FileSystemManager::open(const wchar_t* theFileName,
 PakHandle FileSystemManager::findFirst(PakFileNamePtr lpFileName,
 				       PakFindDataPtr lpFindFileData)
 {
-
 	if (!mInitialized)
 		return false;
+
+	addDefaultLocations();
+
 	return 0;
 }
 
