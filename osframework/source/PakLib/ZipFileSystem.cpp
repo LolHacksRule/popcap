@@ -180,21 +180,9 @@ File* ZipFileSystem::open(const wchar_t* theFileName,
 	return result;
 }
 
-PakHandle ZipFileSystem::findFirst(PakFileNamePtr lpFileName,
-				   PakFindDataPtr lpFindFileData)
+Dir* ZipFileSystem::openDir(const char *thePath)
 {
 	return 0;
-}
-
-bool ZipFileSystem::findNext(PakHandle hFindFile,
-			     PakFindDataPtr lpFindFileData)
-{
-	return false;
-}
-
-bool ZipFileSystem::findClose(PakHandle hFindFile)
-{
-	return true;
 }
 
 ZipFileSystemDriver::ZipFileSystemDriver(int priority)

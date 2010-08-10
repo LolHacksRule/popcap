@@ -202,21 +202,9 @@ File* NativeFileSystem::open(const wchar_t* theFileName,
 	return result;
 }
 
-PakHandle NativeFileSystem::findFirst(PakFileNamePtr lpFileName,
-				      PakFindDataPtr lpFindFileData)
+Dir* NativeFileSystem::openDir(const char *thePath)
 {
 	return 0;
-}
-
-bool NativeFileSystem::findNext(PakHandle hFindFile,
-				PakFindDataPtr lpFindFileData)
-{
-	return false;
-}
-
-bool NativeFileSystem::findClose(PakHandle hFindFile)
-{
-	return true;
 }
 
 NativeFileSystemDriver::NativeFileSystemDriver(int priority)

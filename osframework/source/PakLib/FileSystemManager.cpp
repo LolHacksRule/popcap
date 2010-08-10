@@ -118,8 +118,7 @@ File* FileSystemManager::open(const wchar_t* theFileName,
 	return 0;
 }
 
-PakHandle FileSystemManager::findFirst(PakFileNamePtr lpFileName,
-				       PakFindDataPtr lpFindFileData)
+Dir* FileSystemManager::openDir(const char *theDir)
 {
 	if (!mInitialized)
 		return false;
@@ -127,15 +126,4 @@ PakHandle FileSystemManager::findFirst(PakFileNamePtr lpFileName,
 	addDefaultLocations();
 
 	return 0;
-}
-
-bool FileSystemManager::findNext(PakHandle hFindFile,
-				 PakFindDataPtr lpFindFileData)
-{
-	return false;
-}
-
-bool FileSystemManager::findClose(PakHandle hFindFile)
-{
-	return true;
 }

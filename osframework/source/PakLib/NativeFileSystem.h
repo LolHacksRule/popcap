@@ -22,12 +22,7 @@ namespace PakLib {
 						     const char* theAccess);
 		virtual File*			open(const wchar_t* theFileName,
 						     const wchar_t* theAccess);
-
-		virtual PakHandle		findFirst(PakFileNamePtr lpFileName,
-							  PakFindDataPtr lpFindFileData);
-		virtual bool			findNext(PakHandle hFindFile,
-							 PakFindDataPtr lpFindFileData);
-		virtual bool			findClose(PakHandle hFindFile);
+		virtual Dir*                    openDir(const char *theDir);
 
 	 public:
 		std::string                     mLocation;
