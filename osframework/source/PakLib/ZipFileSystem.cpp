@@ -88,6 +88,11 @@ public:
 		return (size_t)tell() == mSize;
 	}
 
+	void close()
+	{
+		delete this;
+	}
+
 private:
 	ZZIP_FILE *mFp;
 	size_t mSize;

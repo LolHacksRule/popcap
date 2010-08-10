@@ -28,7 +28,11 @@ namespace PakLib {
 	class File
 	{
 	public:
+		File() {}
 		virtual ~File() {}
+
+	private:
+		File(const File &other);
 
 	public:
 		virtual int			seek(long theOffset, int theOrigin) = 0;
@@ -40,6 +44,7 @@ namespace PakLib {
 		virtual char*			gets(char* thePtr, int theSize) = 0;
 		virtual wchar_t*		gets(wchar_t* thePtr, int theSize) = 0;
 		virtual int			eof() = 0;
+		virtual void                    close() = 0;
 	};
 
 	enum FileType

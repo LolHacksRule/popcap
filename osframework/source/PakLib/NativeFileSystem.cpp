@@ -70,6 +70,11 @@ public:
 		return feof(mFp);
 	}
 
+	void close()
+	{
+		delete this;
+	}
+
 private:
 	FILE *mFp;
 };
