@@ -21,7 +21,7 @@ int p_fclose(PFILE* theFile)
 {
 	File* f = (File*)theFile;
 
-	delete f;
+	f->close();
 	return 0;
 }
 
