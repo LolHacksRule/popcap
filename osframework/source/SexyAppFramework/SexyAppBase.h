@@ -205,6 +205,7 @@ public:
 	std::string				mProductVersion;
 	Image*					mCursorImages[NUM_CURSORS];
         Point                                   mCursorHots[NUM_CURSORS];
+	bool                                    mCursorEnabled;
 #ifdef WIN32
 	HCURSOR					mOverrideCursor;
 #endif

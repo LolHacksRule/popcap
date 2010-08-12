@@ -289,6 +289,7 @@ SexyAppBase::SexyAppBase()
 
 	int i;
 
+	mCursorEnabled = true;
 	for (i = 0; i < NUM_CURSORS; i++)
 		mCursorImages[i] = NULL;
 
@@ -1990,7 +1991,7 @@ void SexyAppBase::EnforceCursor()
 		if (mDDInterface->SetCursorImage(NULL))
 			mCustomCursorDirty = true;
 	}
-	else
+	else if (mCursorEnabled)
 	{
 		if ((mCursorImages[mCursorNum] == NULL) ||
                     ((!mCustomCursorsEnabled) && (mCursorNum != CURSOR_CUSTOM)))
@@ -2035,6 +2036,10 @@ void SexyAppBase::EnforceCursor()
 			mDDInterface->EnableCursor(true);
 			wantSysCursor = false;
 		}
+	}
+	else
+	{
+		mDDInterface->EnableCursor(false);
 	}
 
 	if (wantSysCursor != mSysCursor)
