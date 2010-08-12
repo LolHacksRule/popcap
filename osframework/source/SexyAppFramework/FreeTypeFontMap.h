@@ -89,7 +89,7 @@ namespace Sexy
 
 			bool operator < (const ScaledFontKey &rhs) const
 			{
-				if (mApp < rhs.mApp && rhs.mFace && mPointSize < rhs.mPointSize &&
+				if (mApp < rhs.mApp && mFace < rhs.mFace && mPointSize < rhs.mPointSize &&
 				    mBold < rhs.mBold && mUnderline < rhs.mUnderline)
 					return true;
 				return false;
