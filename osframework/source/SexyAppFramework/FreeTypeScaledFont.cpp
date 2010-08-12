@@ -790,8 +790,16 @@ FreeTypeGlyphEntry* FreeTypeScaledFont::LookupGlyph(FT_UInt index, bool render)
 	GlyphMap::iterator it;
 
 	it = mGlyphMap.find(index);
-	if (it != mGlyphMap.end() && (!render || (render && it->second.mImage)))
-		return &it->second;
+	if (it != mGlyphMap.end())
+	{
+		if (!render)
+			return &it->second;
+
+		if (it->second.mImage ||
+		    (!it->second.mMetrics.width &&
+		     !it->second.mMetrics.height))
+			return &it->second;
+	}
 
 	return LoadGlyph(index, render);
 }
