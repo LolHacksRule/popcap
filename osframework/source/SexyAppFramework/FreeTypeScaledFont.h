@@ -148,6 +148,9 @@ namespace Sexy
 		// Glyph info cache
 		GlyphMap			mGlyphMap;
 
+		typedef std::map<unsigned int, FT_Int> GlyphIndexMap;
+		GlyphIndexMap                   mGlyphIndexMap;
+
 		// Glyph Image cache
 		MemoryImage*			mImages[MAX_CACHED_IMAGES];
 		int				mImageSizeOrder[MAX_CACHED_IMAGES];
@@ -159,6 +162,7 @@ namespace Sexy
 		FreeTypeGlyphEntry*		LoadGlyph(FT_UInt index, bool render = false);
 		FreeTypeGlyphEntry*		LookupGlyph(FT_UInt index, bool render = false);
 		FreeTypeExtents*		LookupGlyphMetrics(FT_UInt index);
+		FT_Int                          LookupGlyphIndex(unsigned int c);
 
 		// Glyph cached area
 		FreeTypeGlyphArea*		FindGlyphAreaInArea(int width, int height, FT_UInt index,

@@ -341,7 +341,7 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 			if (unichar == '\n' || unichar == '\r')
 				continue;
 
-			int index = FT_Get_Char_Index (face, unichar);
+			int index = LookupGlyphIndex (unichar);
 			FreeTypeGlyphEntry* entry = LookupGlyph(index, render);
 
 			if (!entry)
@@ -362,7 +362,7 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 			if (string[i] == '\n' || string[i] == '\r')
 				continue;
 
-			int index = FT_Get_Char_Index (face, string[i]);
+			int index = LookupGlyphIndex (string[i]);
 			FreeTypeGlyphEntry* entry = LookupGlyph(index, render);
 
 			if (!entry)
@@ -391,7 +391,7 @@ void FreeTypeScaledFont::GlyphsFromString(const std::wstring& string, GlyphVecto
 		if (string[i] == L'\n' || string[i] == L'\r')
 			continue;
 
-		int index = FT_Get_Char_Index (face, string[i]);
+		int index = LookupGlyphIndex (string[i]);
 		FreeTypeGlyphEntry* entry = LookupGlyph(index, render);
 
 		if (!entry)
@@ -550,7 +550,7 @@ int FreeTypeScaledFont::CharWidth(int theChar)
 	}
 
 	int width = 0;
-	int index = FT_Get_Char_Index (mFace, theChar);
+	int index = LookupGlyphIndex (theChar);
 	FreeTypeExtents* metrics = LookupGlyphMetrics(index);
 	if (metrics)
 		width = int(metrics->x_advance);
@@ -804,6 +804,17 @@ FreeTypeGlyphEntry* FreeTypeScaledFont::LookupGlyph(FT_UInt index, bool render)
 	return LoadGlyph(index, render);
 }
 
+FT_Int FreeTypeScaledFont::LookupGlyphIndex(unsigned int c)
+{
+	GlyphIndexMap::iterator it;
+
+	it = mGlyphIndexMap.find(c);
+	if (it != mGlyphIndexMap.end())
+		return it->second;
+
+	return FT_Get_Char_Index(mFace, c);
+}
+
 void FreeTypeScaledFont::RemoveGlyphImage(FT_UInt index)
 {
 	GlyphMap::iterator it;
@@ -822,11 +833,11 @@ void FreeTypeScaledFont::RemoveGlyphImage(FT_UInt index)
 
 void FreeTypeScaledFont::ShrinkGlyphCache(void)
 {
-	GlyphMap::iterator it;
-
 	size_t size = mGlyphMap.size();
 	while (size-- > 1024)
 	{
+		GlyphMap::iterator it;
+
 		it = mGlyphMap.begin();
 		if (it == mGlyphMap.end())
 			break;
@@ -836,6 +847,17 @@ void FreeTypeScaledFont::ShrinkGlyphCache(void)
 			it->second.mArea->state = FREETYPE_GLYPH_AREA_EMPTY;
 		}
 		mGlyphMap.erase(it);
+	}
+
+	size = mGlyphIndexMap.size();
+	while (size-- > 1024)
+	{
+		GlyphIndexMap::iterator it;
+
+		it = mGlyphIndexMap.begin();
+		if (it == mGlyphIndexMap.end())
+			break;
+		mGlyphIndexMap.erase(it);
 	}
 }
 
