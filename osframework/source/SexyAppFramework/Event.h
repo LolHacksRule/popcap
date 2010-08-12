@@ -65,6 +65,9 @@ struct DeviceEvent {
 struct AccEvent {
 	int	       keyCode;
 	unsigned int   acc;
+	float          x;
+	float          y;
+	float          z;
 };
 
 struct AngleEvent {
