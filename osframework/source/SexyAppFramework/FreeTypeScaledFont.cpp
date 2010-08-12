@@ -175,7 +175,7 @@ int FreeTypeScaledFont::StringWidth(const std::string& theString, bool unicode)
 	int min_x = 0, max_x = 0;
 	int min_y = 0, max_y = 0;
 
-	GlyphVector glyphs;
+	GlyphVector glyphs(theString.length());
 	GlyphsFromString(theString, glyphs, false, unicode);
 	for (unsigned int i = 0; i < glyphs.size(); i++)
 	{
@@ -241,7 +241,7 @@ int FreeTypeScaledFont::StringWidth(const std::wstring& theString)
 	int min_x = 0, max_x = 0;
 	int min_y = 0, max_y = 0;
 
-	GlyphVector glyphs;
+	GlyphVector glyphs(theString.length());
 	GlyphsFromString(theString, glyphs, false);
 	for (unsigned int i = 0; i < glyphs.size(); i++)
 	{
@@ -320,7 +320,8 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, GlyphVector
 {
 	std::string utf8;
 
-	glyphs.clear();
+	glyphs.reserve(string.length());
+	glyphs.resize(0);
 
 	FT_Face face = mFace;
 	int len = Utf8FromString(string, unicode, utf8);
@@ -507,7 +508,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const std::
 		return;
 	}
 
-	GlyphVector glyphs;
+	GlyphVector glyphs(theString.length());
 
 	GlyphsFromString(theString, glyphs, true, unicode);
 	DrawGlyph(g, theX, theY, glyphs, theColor, theClipRect, drawShadow, drawOutline);
@@ -529,7 +530,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const std::
 		return;
 	}
 
-	GlyphVector glyphs;
+	GlyphVector glyphs(theString.length());
 
 	GlyphsFromString(theString, glyphs, true);
 	DrawGlyph(g, theX, theY, glyphs, theColor, theClipRect, drawShadow, drawOutline);
