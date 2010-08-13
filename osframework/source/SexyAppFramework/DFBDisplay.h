@@ -43,7 +43,6 @@ public:
 	ulong					GetColorRef(ulong theRGB);
 	void					AddImage(Image* theImage);
 	void					RemoveImage(Image* theImage);
-	void					RemoveImageData(MemoryImage* theImage); // for 3d texture cleanup
 
 	void					Cleanup();
 

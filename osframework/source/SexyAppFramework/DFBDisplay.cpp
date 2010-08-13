@@ -1,4 +1,4 @@
-#include "DFBInterface.h"
+#include "DFBDisplay.h"
 #include "DFBImage.h"
 #include "SexyAppBase.h"
 #include "AutoCrit.h"
