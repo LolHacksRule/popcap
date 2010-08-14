@@ -2,6 +2,7 @@
 #define __TEXT_LAYOUT_H__
 
 #include "Graphics.h"
+#include "Font.h"
 
 namespace Sexy {
 
@@ -34,6 +35,7 @@ namespace Sexy {
 		bool          mDirty;
 		Font         *mFont;
 		std::wstring  mText;
+		GlyphVector   mGlyphs;
 		Rect          mRect;
 		int           mWidth;
 		int           mHeight;

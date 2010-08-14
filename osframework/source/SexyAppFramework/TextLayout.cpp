@@ -71,9 +71,19 @@ void TextLayout::SetRect(const Rect &rect)
 
 void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 {
-	g->SetFont(mFont);
-	g->SetColor(color);
-	g->DrawString(mText, x, y);
+	if (!mFont)
+		return;
+
+	if (1)
+	{
+		g->SetFont(mFont);
+		g->SetColor(color);
+		g->DrawString(mText, x, y);
+	}
+	else
+	{
+		mFont->DrawGlyphs(g, x, y, mGlyphs, color, g->mClipRect);
+	}
 }
 
 void TextLayout::SetLineSpacing(int linespacing)
@@ -127,9 +137,13 @@ void TextLayout::Update()
 	{
 		mWidth = mFont->StringWidth(mText);
 		mHeight = mFont->GetLineSpacing();
+
+		mGlyphs.clear();
+		mFont->StringToGlyphs(mText, mGlyphs);
 	}
 	else
 	{
+		mGlyphs.clear();
 		mWidth = 0;
 		mHeight = 0;
 	}
