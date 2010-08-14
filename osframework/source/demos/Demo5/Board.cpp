@@ -45,6 +45,8 @@ Board::Board(GameApp* theApp)
 
 
 	mButton = NULL;
+	mTextButton = NULL;
+	mUseTextLayout = true;
 
 	// Set up our parallaxing layers
 	for (int i = 0; i < 3; i++)
@@ -80,7 +82,29 @@ Board::Board(GameApp* theApp)
 	// such things in your program. Review the comments at the top of this
 	// file about memory leak detection:
 	int* aLeakedInteger = new int;
-	
+
+
+	for (size_t i = 0; i < 150; i++)
+	{
+		static const char *texts[] = {
+			"Set the Y coordinate of the background layer so that it's",
+			"base is at the bottom of the screen. Because the Board hasn't",
+			"been resized or added to the manager yet, it's own mHeight and",
+			"mWidth are at the default of 0, 0. But not to worry, we set the",
+			"overall game's width/height in GameApp's constructor, so we",
+			"can just use those variables instead:",
+			"yes",
+			"no",
+			"ok",
+			"cancel"
+		};
+
+		mTexts.push_back(texts[mRand.Next(10UL)]);
+		mTextLayouts.push_back(TextLayout());
+		mTextLayouts[i].SetText(mTexts[i]);
+		mTextLayouts[i].SetFont(FONT_DEFAULT);
+		mPos.push_back(Point(0, 0));
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -88,6 +112,7 @@ Board::Board(GameApp* theApp)
 Board::~Board()
 {
 	delete mButton;
+	delete mTextButton;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -107,6 +132,13 @@ void Board::Update()
 
 	Widget::Update();
 
+	for (size_t i = 0; i < mPos.size(); i++)
+	{
+		int x = mRand.Next((unsigned long)mWidth);
+		int y = mRand.Next((unsigned long)mHeight);
+
+		mPos[i] = Point(x, y);
+	}
 	
 	MarkDirty();
 
@@ -233,6 +265,24 @@ void Board::Draw(Graphics* g)
 		g->TranslateF(-mLayer[i].mX, -mLayer[i].mY);
 	}
 
+
+	for (size_t i = 0; i < mTexts.size(); i++)
+	{
+		int x = mPos[i].mX;
+		int y = mPos[i].mY;
+
+		if (mUseTextLayout)
+		{
+			mTextLayouts[i].Draw(g, x, y, Color::White);
+		}
+		else
+		{
+			g->SetFont(FONT_DEFAULT);
+			g->SetColor(Color::White);
+			g->DrawString(mTexts[i], x, y);
+		}
+	}
+
 	// And you mark the end of a profiling section with
 	// SEXY_PER_END, passing in the same string you passed to
 	// SEXY_PERF_BEGIN.
@@ -268,7 +318,30 @@ void Board::AddedToManager(WidgetManager* theWidgetManager)
 	mButton->mDoFinger = true;
 	mButton->Resize(56, 5, IMAGE_BUTTON_NORMAL->GetWidth(), IMAGE_BUTTON_NORMAL->GetHeight());
 
-	theWidgetManager->AddWidget(mButton);
+	theWidgetManager->AddWidget(mButton);	// go back and review.
+
+	mTextButton = new ButtonWidget(Board::TEXT_BUTTON_ID, this);
+	mTextButton->SetFont(FONT_DEFAULT);
+	mTextButton->mLabel = _S("Disable TextLayout!");
+
+	// This time, let's use some images for our button.
+	// mOverImage is the image to use when the mouse cursor is over the button.
+	// mDownImage is the image to use when a mouse button is held down on it
+	// mTextButtonImage is the default image to use
+	// If we wanted to, we could specify a disabled image as well.
+#if 0
+	mTextButton->mOverImage = IMAGE_BUTTON_OVER;
+	mTextButton->mDownImage = IMAGE_BUTTON_DOWN;
+	mTextButton->mButtonImage = IMAGE_BUTTON_NORMAL;
+	mTextButton->mDoFinger = true;
+#endif
+	mTextButton->Resize(256, 5,
+			    IMAGE_BUTTON_NORMAL->GetWidth() * 2,
+			    IMAGE_BUTTON_NORMAL->GetHeight());
+
+	theWidgetManager->AddWidget(mTextButton);
+
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -281,6 +354,7 @@ void Board::RemovedFromManager(WidgetManager* theWidgetManager)
 
 	// We should now also remove any widgets we are responsible for. 
 	theWidgetManager->RemoveWidget(mButton);
+	theWidgetManager->RemoveWidget(mTextButton);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -304,5 +378,10 @@ void Board::ButtonDepress(int theId)
 		DemoDialog* dlg = new DemoDialog("Header", "Hello! I am a dialog box.");
 		dlg->Resize(50, 50, 300, 400);
 		mApp->AddDialog(DemoDialog::DIALOG_ID, dlg);
+	}
+	else if (theId == Board::TEXT_BUTTON_ID)
+	{
+		mUseTextLayout = !mUseTextLayout;
+		mTextButton->mLabel = mUseTextLayout ? "Disabe TextLayout!" : "Enable TextLayout!";
 	}
 }

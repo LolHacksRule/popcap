@@ -35,8 +35,8 @@
 #include "SexyAppFramework/EditListener.h"
 #include "SexyAppFramework/CheckboxListener.h"
 #include "SexyAppFramework/ListListener.h"
-
-
+#include "SexyAppFramework/TextLayout.h"
+#include "SexyAppFramework/MTRand.h"
 
 // We place all our classes inside the "Sexy" namespace to avoid name collisions
 // with other libraries that might be added.
@@ -60,6 +60,9 @@ struct ParallaxLayer
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
+typedef std::vector<TextLayout> TextLayoutVector;
+typedef std::vector<std::string> StringVector;
+
 class Board :	public Widget, public ButtonListener
 {
 
@@ -67,17 +70,24 @@ class Board :	public Widget, public ButtonListener
 
 		GameApp*			mApp;
 		ButtonWidget*		mButton;
+		ButtonWidget*           mTextButton;
 
 		// And in this demo, we're going to do some parallax scrolling whenever
 		// the arrow keys are pressed.
 		struct ParallaxLayer	mLayer[3];		
+		TextLayoutVector        mTextLayouts;
+		StringVector            mTexts;
+		bool                    mUseTextLayout;
+		std::vector<Point>      mPos;
+		MTRand                  mRand;
 
 	public:
 
 		// And let's finally use some enums for our widgets
 		enum
 		{
-			OPTIONS_BUTTON_ID
+			OPTIONS_BUTTON_ID,
+			TEXT_BUTTON_ID
 		};
 
 		//////////////////////////////////////////////////////////////////////////
