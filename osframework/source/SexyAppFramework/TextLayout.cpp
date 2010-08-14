@@ -1,4 +1,5 @@
 #include "TextLayout.h"
+#include "Font.h"
 
 using namespace Sexy;
 
@@ -11,6 +12,7 @@ TextLayout::TextLayout()
 	mJustification = -1;
 	mWrap = false;
 	mRich = false;
+	mDirty = true;
 	mRect = Rect(0, 0, 0, 0);
 }
 
@@ -20,12 +22,12 @@ TextLayout::~TextLayout()
 
 void TextLayout::SetText(const std::string &text, bool rich)
 {
-	SetText(WStringFromString(text), rich);
+	SetText(Graphics::WStringFromString(text), rich);
 }
 
 void TextLayout::SetText(const std::wstring &text, bool rich)
 {
-	if (mText == text && mRich = rich)
+	if (mText == text && mRich == rich)
 		return;
 
 	mText = text;
@@ -69,6 +71,9 @@ void TextLayout::SetRect(const Rect &rect)
 
 void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 {
+	g->SetFont(mFont);
+	g->SetColor(color);
+	g->DrawString(mText, x, y);
 }
 
 void TextLayout::SetLineSpacing(int linespacing)
@@ -115,10 +120,13 @@ bool TextLayout::GetWrap()
 
 void TextLayout::Update()
 {
+	if (!mDirty)
+		return;
+
 	if (mFont)
 	{
-		mWidth = 0;
-		mHeight = 0;
+		mWidth = mFont->StringWidth(mText);
+		mHeight = mFont->GetLineSpacing();
 	}
 	else
 	{

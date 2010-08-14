@@ -3,7 +3,7 @@
 
 #include "Graphics.h"
 
-namspace Sexy {
+namespace Sexy {
 
 	class TextLayout {
 
@@ -14,8 +14,8 @@ namspace Sexy {
 	public:
 		void SetText(const std::string &text, bool rich = false);
 		void SetText(const std::wstring &text, bool rich = false);
-		void GetWidth();
-		void GetHeight();
+		int GetWidth();
+		int GetHeight();
 		void SetFont(Font *font);
 		Font* GetFont();
 		void SetRect(const Rect &rect);
