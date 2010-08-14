@@ -24,6 +24,36 @@ class Glyph
 	int   mHeight;
 	int   mAdvanceX;
 	int   mAdvanceY;
+
+	int   mReserved[4];
+	void* mNativeData[4];
+
+ public:
+	Glyph()
+	{
+		mX = 0;
+		mY = 0;
+		mIndex = 0;
+		mWidth = 0;
+		mHeight = 0;
+		mAdvanceX = 0;
+		mAdvanceY = 0;
+		memset (mReserved, 0, sizeof(mReserved));
+		memset (mNativeData, 0, sizeof(mNativeData));
+	}
+
+	Glyph(const Glyph &other)
+	{
+		mX = other.mX;
+		mY = other.mY;
+		mIndex = other.mIndex;
+		mWidth = other.mWidth;
+		mHeight = other.mHeight;
+		mAdvanceX = other.mAdvanceX;
+		mAdvanceY = other.mAdvanceY;
+		memcpy (mReserved, other.mReserved, sizeof(mReserved));
+		memcpy (mNativeData, other.mNativeData, sizeof(mNativeData));
+	}
 };
 typedef std::vector<Glyph> GlyphVector;
 
