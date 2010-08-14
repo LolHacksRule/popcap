@@ -69,6 +69,7 @@ namespace Sexy
 			bool mBold;
 			bool mItalics;
 			bool mUnderline;
+			unsigned int mHashCode;
 
 			ScaledFontKey(SexyAppBase* theApp,
 				      const std::string& theFace,
@@ -79,21 +80,40 @@ namespace Sexy
 			: mApp(theApp), mFace(theFace), mPointSize(thePointSize),
 			  mBold(bold), mItalics(italics), mUnderline(underline)
 			{
+				Hash();
 			}
 
 			ScaledFontKey(const ScaledFontKey &other)
 			: mApp(other.mApp), mFace(other.mFace), mPointSize(other.mPointSize),
-			  mBold(other.mBold), mItalics(other.mItalics), mUnderline(other.mUnderline)
+			  mBold(other.mBold), mItalics(other.mItalics), mUnderline(other.mUnderline),
+			  mHashCode(other.mHashCode)
 			{
 			}
 
-			bool operator < (const ScaledFontKey &rhs) const
-			{
-				if (mApp < rhs.mApp && mFace < rhs.mFace && mPointSize < rhs.mPointSize &&
-				    mBold < rhs.mBold && mUnderline < rhs.mUnderline)
-					return true;
-				return false;
-			}
+                        unsigned int Hash()
+                        {
+                                size_t h = (size_t)(mApp);
+
+                                for (size_t i = 0; i < mFace.length(); i++)
+                                        h = 31 * h + mFace[i];
+
+                                h ^= mPointSize * 1171;
+                                if (mBold)
+                                        h ^= 1237;
+                                if (mItalics)
+                                        h ^= 4177;
+                                if (mBold)
+                                        h ^= 6247;
+                                if (mUnderline)
+                                        h ^= 9371;
+
+                                return h;
+                        }
+
+                        bool operator < (const ScaledFontKey &rhs) const
+                        {
+                                return mHashCode < rhs.mHashCode;
+                        }
 
 			bool operator == (const ScaledFontKey &rhs) const
 			{
