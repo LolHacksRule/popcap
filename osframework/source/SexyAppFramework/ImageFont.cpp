@@ -1932,6 +1932,299 @@ void ImageFont::DrawStringEx(Graphics* g, int theX, int theY, const std::wstring
 	g->SetColorizeImages(colorizeImages);
 }
 
+bool ImageFont::StringToGlyphs(const std::wstring& theString, GlyphVector& theGlyphs)
+{
+	int aWidth = 0;
+	int aPrevChar = 0;
+	float x = 0;
+	float y = 0;
+
+	Prepare();
+	for(size_t i = 0; i < theString.length(); i++)
+	{
+		int aChar = theString[i];
+
+		theGlyphs.push_back(Glyph());
+		Glyph &glyph = theGlyphs.back();
+
+		aChar = glyph.mIndex = GetMappedChar(aChar);
+
+		int aMaxXPos = 0;
+		double aPointSize = mPointSize * mScale;
+		int aCharMaxWidth = 0;
+		int aCharMaxHeight = 0;
+		int aSpacing = 0;
+
+		ActiveFontLayerList::iterator anItr = mActiveLayerList.begin();
+		while (anItr != mActiveLayerList.end())
+		{
+			ActiveFontLayer* anActiveFontLayer = &*anItr;
+
+			int aLayerXPos = 0;
+			int aLayerPointSize = anActiveFontLayer->mBaseFontLayer->mPointSize;
+			int aCharWidth = 0;
+			int aCharHeight = 0;
+
+			if (aLayerPointSize == 0)
+			{
+				aCharWidth = int(anActiveFontLayer->mBaseFontLayer->GetCharData
+						 (aChar)->mWidth * mScale);
+
+				if (aPrevChar != 0)
+				{
+					aSpacing = anActiveFontLayer->mBaseFontLayer->mSpacing;
+					CharData* aPrevCharData = anActiveFontLayer->mBaseFontLayer->
+						GetCharData(aPrevChar);
+					SexyCharToIntMap::iterator aKernItr =
+						aPrevCharData->mKerningOffsets.find(aChar);
+
+					if (aKernItr != aPrevCharData->mKerningOffsets.end())
+						aSpacing += aKernItr->second * mScale;
+				}
+				else
+				{
+					aSpacing = 0;
+				}
+			}
+			else
+			{
+				aCharWidth = int(anActiveFontLayer->mBaseFontLayer->GetCharData
+						 (aChar)->mWidth * aPointSize / aLayerPointSize);
+
+				if (aPrevChar != 0)
+				{
+
+					aSpacing = anActiveFontLayer->mBaseFontLayer->mSpacing;
+					CharData* aPrevCharData = anActiveFontLayer->mBaseFontLayer->
+						GetCharData(aPrevChar);
+					SexyCharToIntMap::iterator aKernItr =
+						aPrevCharData->mKerningOffsets.find(aChar);
+
+					if (aKernItr != aPrevCharData->mKerningOffsets.end())
+						aSpacing += aKernItr->second * aPointSize / aLayerPointSize;
+				}
+				else
+				{
+					aSpacing = 0;
+				}
+			}
+
+			aLayerXPos += aCharWidth + aSpacing;
+
+			if (aLayerXPos > aMaxXPos)
+				aMaxXPos = aLayerXPos;
+
+			int awidth = anActiveFontLayer->mScaledCharImageRects[aChar].mWidth;
+			int aHeight = anActiveFontLayer->mScaledCharImageRects[aChar].mHeight;
+			if (aWidth > aCharMaxWidth)
+				aCharMaxWidth = aWidth;
+			if (aHeight > aCharMaxHeight)
+				aCharMaxHeight = aHeight;
+
+			++anItr;
+		}
+
+		glyph.mX = x;
+		glyph.mWidth = aCharMaxWidth;
+		glyph.mHeight = aCharMaxHeight;
+		glyph.mAdvanceX = aMaxXPos;
+		glyph.mAdvanceY = 0;
+
+		x += glyph.mAdvanceX;
+		y += glyph.mAdvanceY;
+
+		aPrevChar = aChar;
+	}
+
+	return true;
+}
+
+static Color ColorMulAdd(const Color &c1, const Color &c2, const Color &c3)
+{
+	Color aColor;
+
+	aColor.mRed = std::min((c1.mRed * c2.mRed / 255) + c3.mRed, 255);
+	aColor.mGreen =  std::min((c1.mGreen * c2.mGreen / 255) + c3.mGreen, 255);
+	aColor.mBlue = std::min((c1.mBlue * c2.mBlue / 255) + c3.mBlue, 255);
+	aColor.mAlpha = std::min((c1.mAlpha * c2.mAlpha / 255) + c3.mAlpha, 255);
+
+	return aColor;
+}
+
+void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyphs,
+			   const Color& theColor, const Rect& theClipRect)
+{
+	AutoCrit anAutoCrit(gRenderCritSec);
+
+	int aPoolIdx;
+
+	for (aPoolIdx = 0; aPoolIdx < 256; aPoolIdx++)
+	{
+		gRenderHead[aPoolIdx] = NULL;
+		gRenderTail[aPoolIdx] = NULL;
+	}
+
+	Prepare();
+
+	bool colorizeImages = g->GetColorizeImages();
+	g->SetColorizeImages(true);
+
+	int aCurXPos = theX;
+	int aCurPoolIdx = 0;
+
+	for (size_t aCharNum = 0; aCharNum < theGlyphs.size(); aCharNum++)
+	{
+		int aChar = theGlyphs[aCharNum].mIndex;
+
+		int aNextChar = 0;
+		if (aCharNum < theGlyphs.size() - 1)
+			aNextChar = theGlyphs[aCharNum + 1].mIndex;
+
+		int aMaxXPos = aCurXPos;
+
+		ActiveFontLayerList::iterator anItr = mActiveLayerList.begin();
+		while (anItr != mActiveLayerList.end())
+		{
+			ActiveFontLayer* anActiveFontLayer = &*anItr;
+			CharData* aCharData = anActiveFontLayer->mBaseFontLayer->GetCharData(aChar);
+
+			int aLayerXPos = aCurXPos;
+
+			int anImageX;
+			int anImageY;
+			int aCharWidth;
+			int aSpacing;
+
+			int aLayerPointSize = anActiveFontLayer->mBaseFontLayer->mPointSize;
+
+			double aScale = mScale;
+			if (aLayerPointSize != 0)
+				aScale *= mPointSize / aLayerPointSize;
+
+			if (aScale == 1.0)
+			{
+				anImageX = aLayerXPos + anActiveFontLayer->mBaseFontLayer->mOffset.mX + \
+					aCharData->mOffset.mX;
+				anImageY = theY - (anActiveFontLayer->mBaseFontLayer->mAscent - \
+						   anActiveFontLayer->mBaseFontLayer->mOffset.mY - \
+						   aCharData->mOffset.mY);
+				aCharWidth = aCharData->mWidth;
+
+				if (aNextChar != 0)
+				{
+					aSpacing = anActiveFontLayer->mBaseFontLayer->mSpacing;
+					SexyCharToIntMap::iterator aKernItr =
+						aCharData->mKerningOffsets.find(aNextChar);
+					if (aKernItr != aCharData->mKerningOffsets.end())
+						aSpacing += aKernItr->second;
+				}
+				else
+				{
+					aSpacing = 0;
+				}
+			}
+			else
+			{
+				anImageX = aLayerXPos + \
+					(int)((anActiveFontLayer->mBaseFontLayer->mOffset.mX + \
+					       aCharData->mOffset.mX) * aScale);
+				anImageY = theY - (int) ((anActiveFontLayer->mBaseFontLayer->mAscent - \
+							  anActiveFontLayer->mBaseFontLayer->mOffset.mY - \
+							  aCharData->mOffset.mY) * aScale);
+				aCharWidth = (aCharData->mWidth * aScale);
+
+				if (aNextChar != 0)
+				{
+					aSpacing = anActiveFontLayer->mBaseFontLayer->mSpacing;
+					SexyCharToIntMap::iterator aKernItr =
+						aCharData->mKerningOffsets.find(aNextChar);
+					if (aKernItr != aCharData->mKerningOffsets.end())
+						aSpacing += (int) (aKernItr->second * aScale);
+				}
+				else
+				{
+					aSpacing = 0;
+				}
+			}
+
+			Color aColor = ColorMulAdd(theColor,
+						   anActiveFontLayer->mBaseFontLayer->mColorMult,
+						   anActiveFontLayer->mBaseFontLayer->mColorAdd);
+
+			int anOrder = anActiveFontLayer->mBaseFontLayer->mBaseOrder + \
+				anActiveFontLayer->mBaseFontLayer->GetCharData(aChar)->mOrder;
+
+			if (aCurPoolIdx >= POOL_SIZE)
+				break;
+
+			RenderCommand* aRenderCommand = &gRenderCommandPool[aCurPoolIdx++];
+
+			aRenderCommand->mImage = anActiveFontLayer->mScaledImage;
+			aRenderCommand->mColor = aColor;
+			aRenderCommand->mDest[0] = anImageX;
+			aRenderCommand->mDest[1] = anImageY;
+			aRenderCommand->mSrc[0] = anActiveFontLayer->mScaledCharImageRects[aChar].mX;
+			aRenderCommand->mSrc[1] = anActiveFontLayer->mScaledCharImageRects[aChar].mY;
+			aRenderCommand->mSrc[2] = anActiveFontLayer->mScaledCharImageRects[aChar].mWidth;
+			aRenderCommand->mSrc[3] = anActiveFontLayer->mScaledCharImageRects[aChar].mHeight;
+			aRenderCommand->mMode = anActiveFontLayer->mBaseFontLayer->mDrawMode;
+			aRenderCommand->mNext = NULL;
+
+			int anOrderIdx = std::min(std::max(anOrder + 128, 0), 255);
+
+			if (gRenderTail[anOrderIdx] == NULL)
+			{
+				gRenderTail[anOrderIdx] = aRenderCommand;
+				gRenderHead[anOrderIdx] = aRenderCommand;
+			}
+			else
+			{
+				gRenderTail[anOrderIdx]->mNext = aRenderCommand;
+				gRenderTail[anOrderIdx] = aRenderCommand;
+			}
+
+
+			aLayerXPos += aCharWidth + aSpacing;
+
+			if (aLayerXPos > aMaxXPos)
+				aMaxXPos = aLayerXPos;
+
+			++anItr;
+		}
+
+		aCurXPos = aMaxXPos;
+	}
+
+	Color anOrigColor = g->GetColor();
+
+	for (aPoolIdx = 0; aPoolIdx < 256; aPoolIdx++)
+	{
+		RenderCommand* aRenderCommand = gRenderHead[aPoolIdx];
+
+		while (aRenderCommand != NULL)
+		{
+			int anOldDrawMode = g->GetDrawMode();
+			if (aRenderCommand->mMode != -1)
+				g->SetDrawMode(aRenderCommand->mMode);
+			g->SetColor(Color(aRenderCommand->mColor));
+			if (aRenderCommand->mImage != NULL)
+				g->DrawImage(aRenderCommand->mImage,
+					     aRenderCommand->mDest[0],
+					     aRenderCommand->mDest[1],
+					     Rect(aRenderCommand->mSrc[0],
+						  aRenderCommand->mSrc[1],
+						  aRenderCommand->mSrc[2],
+						  aRenderCommand->mSrc[3]));
+			g->SetDrawMode(anOldDrawMode);
+
+			aRenderCommand = aRenderCommand->mNext;
+		}
+	}
+
+	g->SetColor(anOrigColor);
+	g->SetColorizeImages(colorizeImages);
+}
+
 void ImageFont::DrawString(Graphics* g, int theX, int theY, const std::string& theString, const Color& theColor, const Rect& theClipRect)
 {
 	DrawStringEx(g, theX, theY, theString, theColor, &theClipRect, NULL, NULL);
