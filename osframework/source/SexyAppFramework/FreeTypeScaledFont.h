@@ -124,6 +124,14 @@ namespace Sexy
 		int				CharWidth(int theChar);
 		int				CharWidthKern(int theChar, int thePrevChar);
 
+		bool                            StringToGlyphs(const std::wstring &theString,
+							       GlyphVector &theGlyphs);
+		void                            DrawGlyphs(Graphics *g, int theX, int theY,
+							   GlyphVector& theGlyphs, const Color &theColor,
+							   const Rect& theClipRect,
+							   bool drawShadow = false,
+							   bool drawOutline = false);
+
 		FreeTypeScaledFont*		Duplicate();
 
 	private:

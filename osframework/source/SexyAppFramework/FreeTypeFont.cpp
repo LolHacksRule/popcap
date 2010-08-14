@@ -91,6 +91,19 @@ void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const std::wstrin
 	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect, mDrawShadow);
 }
 
+bool FreeTypeFont::StringToGlyphs(const std::wstring &theString,
+				  GlyphVector &theGlyphs)
+{
+	return mScaledFont->StringToGlyphs(theString, theGlyphs);
+}
+
+void FreeTypeFont::DrawGlyphs(Graphics *g, int theX, int theY,
+			      GlyphVector& theGlyphs, const Color &theColor,
+			      const Rect& theClipRect)
+{
+	mScaledFont->DrawGlyphs(g, theX, theY, theGlyphs, theColor, theClipRect, mDrawShadow);
+}
+
 int FreeTypeFont::CharWidth(int theChar)
 {
 	return mScaledFont->CharWidth(theChar);

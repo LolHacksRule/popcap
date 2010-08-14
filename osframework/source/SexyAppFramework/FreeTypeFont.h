@@ -45,6 +45,11 @@ namespace Sexy
 
 		virtual int			CharWidth(int theChar);
 		virtual int			CharWidthKern(int theChar, int thePrevChar);
+		virtual bool                    StringToGlyphs(const std::wstring &theString,
+							       GlyphVector &theGlyphs);
+		virtual void                    DrawGlyphs(Graphics *g, int theX, int theY,
+							   GlyphVector& theGlyphs, const Color &theColor,
+							   const Rect& theClipRect);
 
 		virtual Font*			Duplicate();
 

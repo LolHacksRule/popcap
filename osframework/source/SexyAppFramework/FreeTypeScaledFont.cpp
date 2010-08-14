@@ -494,6 +494,132 @@ void FreeTypeScaledFont::DrawGlyph(Graphics* g, int theX, int theY, FreeTypeGlyp
 #endif
 }
 
+bool FreeTypeScaledFont::StringToGlyphs(const std::wstring &theString,
+					GlyphVector &theGlyphs)
+{
+	if (!mBaseFont)
+		return false;
+
+	LockFace();
+	if (!mFace)
+	{
+		UnlockFace();
+		return false;
+	}
+
+	FT_Face face = mFace;
+	float x = 0;
+	float y = 0;
+	for (size_t i = 0; i < theString.length(); i++)
+	{
+		if (theString[i] == L'\n' || theString[i] == L'\r')
+			continue;
+
+		int index = LookupGlyphIndex (theString[i]);
+		FreeTypeGlyphEntry* entry = LookupGlyph(index, false);
+
+		if (!entry)
+			continue;
+
+		theGlyphs.push_back(Glyph());
+
+		Glyph &glyph = theGlyphs.back();
+		glyph.mIndex = index;
+		glyph.mX = x;
+		glyph.mY = y;
+		glyph.mWidth = entry->mWidth;
+		glyph.mHeight = entry->mHeight;
+		glyph.mAdvanceX = entry->mMetrics.x_advance;
+		glyph.mAdvanceY = entry->mMetrics.y_advance;
+
+		x += entry->mMetrics.x_advance;
+		y += entry->mMetrics.y_advance;
+	}
+
+	UnlockFace();
+
+	return true;
+}
+
+void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
+				    GlyphVector& theGlyphs, const Color &theColor,
+				    const Rect& theClipRect,
+				    bool drawShadow, bool drawOutline)
+{
+	if (!mBaseFont)
+		return;
+
+	LockFace();
+	if (!mFace)
+	{
+		UnlockFace();
+		return;
+	}
+
+	Color aFontColor = theColor;
+	Color aShadowColor(0, 0, 0);
+	uint32 hsl = mApp->RGBToHSL(theColor.GetRed(), theColor.GetGreen(),
+				    theColor.GetBlue());
+	if (((hsl >> 16) & 0xff) < 127)
+	    aShadowColor = Color(255, 255, 255);
+
+	bool colorizeImages = g->GetColorizeImages();
+	g->SetColorizeImages(true);
+
+	Color anOrigColor = g->GetColor();
+	g->SetColor(theColor);
+
+	for (size_t i = 0; i < theGlyphs.size(); i++)
+	{
+		FreeTypeGlyphEntry* entry = LookupGlyph(theGlyphs[i].mIndex, true);
+
+		if (!entry)
+			continue;
+
+		float x = theX + theGlyphs[i].mX;
+		float y = theY + theGlyphs[i].mY;
+		if (entry->mImage)
+		{
+			if (drawShadow || drawOutline)
+			{
+				g->SetColor(aShadowColor);
+				if (drawOutline)
+					g->DrawImage(entry->mImage,
+						     (int)floor(x + entry->mXOffSet - 1),
+						     (int)floor(y + entry->mYOffSet - 1),
+						     Rect(entry->mArea->x, entry->mArea->y,
+							  entry->mWidth, entry->mHeight));
+				g->DrawImage(entry->mImage,
+					     (int)floor(x + entry->mXOffSet - 1),
+					     (int)floor(y + entry->mYOffSet + 1),
+					     Rect(entry->mArea->x, entry->mArea->y,
+						  entry->mWidth, entry->mHeight));
+				g->DrawImage(entry->mImage,
+					     (int)floor(x + entry->mXOffSet + 1),
+					     (int)floor(y + entry->mYOffSet - 1),
+					     Rect(entry->mArea->x, entry->mArea->y,
+						  entry->mWidth, entry->mHeight));
+				g->DrawImage(entry->mImage,
+					     (int)floor(x + entry->mXOffSet + 1),
+					     (int)floor(y + entry->mYOffSet + 1),
+					     Rect(entry->mArea->x, entry->mArea->y,
+						  entry->mWidth, entry->mHeight));
+				g->SetColor(aFontColor);
+			}
+			g->DrawImage(entry->mImage,
+				     (int)floor(x + entry->mXOffSet),
+				     (int)floor(y + entry->mYOffSet),
+				     Rect(entry->mArea->x, entry->mArea->y,
+					  entry->mWidth, entry->mHeight));
+		}
+	}
+
+	g->SetColor(anOrigColor);
+	g->SetColorizeImages(colorizeImages);
+
+	UnlockFace();
+}
+
 void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const std::string& theString,
 				    const Color& theColor, const Rect& theClipRect,
 				    bool unicode, bool drawShadow, bool drawOutline)
