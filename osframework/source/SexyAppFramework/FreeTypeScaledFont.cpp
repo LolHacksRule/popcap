@@ -569,15 +569,17 @@ void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
 	Color anOrigColor = g->GetColor();
 	g->SetColor(theColor);
 
-	for (size_t i = 0; i < theGlyphs.size(); i++)
+	size_t theGlyphSize = theGlyphs.size();
+	for (size_t i = 0; i < theGlyphSize; i++)
 	{
-		FreeTypeGlyphEntry* entry = LookupGlyph(theGlyphs[i].mIndex, true);
+		Glyph& aGlyph = theGlyphs[i];
+		FreeTypeGlyphEntry* entry = LookupGlyph(aGlyph.mIndex, true);
 
 		if (!entry)
 			continue;
 
-		float x = theX + theGlyphs[i].mX;
-		float y = theY + theGlyphs[i].mY;
+		float x = theX + aGlyph.mX;
+		float y = theY + aGlyph.mY;
 		if (entry->mImage)
 		{
 			if (drawShadow || drawOutline)
