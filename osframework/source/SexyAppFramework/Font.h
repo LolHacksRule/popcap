@@ -6,11 +6,26 @@
 #include "Color.h"
 
 #include <string>
+#include <vector>
 
 namespace Sexy
 {
 
 class Graphics;
+class Glyph
+{
+ public:
+	float mX;
+	float mY;
+
+	int   mIndex;
+
+	int   mWidth;
+	int   mHeight;
+	int   mAdvanceX;
+	int   mAdvanceY;
+};
+typedef std::vector<Glyph> GlyphVector;
 
 class Font
 {
@@ -45,6 +60,12 @@ public:
 
 	virtual void			DrawString(Graphics* g, int theX, int theY, const std::string& theString, const Color& theColor, const Rect& theClipRect, bool unicode = false);
 	virtual void			DrawString(Graphics* g, int theX, int theY, const std::wstring& theString, const Color& theColor, const Rect& theClipRect);
+
+	virtual  bool                            StringToGlyphs(const std::wstring &theString,
+								GlyphVector &theGlyphs);
+	virtual  void                            DrawGlyphs(Graphics *g, int theX, int theY,
+							    GlyphVector& theGlyphs, const Color &theColor,
+							    const Rect& theClipRect);
 
 	virtual Font*			Duplicate() = 0;
 };

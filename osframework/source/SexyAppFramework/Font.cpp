@@ -96,3 +96,13 @@ void Font::DrawString(Graphics* g, int theX, int theY, const std::wstring& theSt
 		      const Color& theColor, const Rect& theClipRect)
 {
 }
+
+bool Font::StringToGlyphs(const std::wstring& theString, GlyphVector& theGlyphs)
+{
+	return false;
+}
+
+void Font::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyphs,
+		      const Color& theColor, const Rect& theClipRect)
+{
+}
