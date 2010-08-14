@@ -121,7 +121,7 @@ public:
 	virtual ~ActiveFontLayer();
 };
 
-typedef std::list<ActiveFontLayer> ActiveFontLayerList;
+typedef std::vector<ActiveFontLayer> ActiveFontLayerList;
 
 class RenderCommand
 {

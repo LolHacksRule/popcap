@@ -2037,7 +2037,7 @@ bool ImageFont::StringToGlyphs(const std::wstring& theString, GlyphVector& theGl
 	return true;
 }
 
-static Color ColorMulAdd(const Color &c1, const Color &c2, const Color &c3)
+static inline Color ColorMulAdd(const Color &c1, const Color &c2, const Color &c3)
 {
 	Color aColor;
 
@@ -2067,16 +2067,26 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyp
 	bool colorizeImages = g->GetColorizeImages();
 	g->SetColorizeImages(true);
 
+	size_t theGlyphSize = theGlyphs.size();
+	size_t aActiveLayerListSize = mActiveLayerList.size();
+
+	std::vector<Color> aColors(aActiveLayerListSize);
+	for (size_t i = 0; i < mActiveLayerList.size(); i++)
+		aColors[i] = ColorMulAdd(theColor,
+					 mActiveLayerList[i].mBaseFontLayer->mColorMult,
+					 mActiveLayerList[i].mBaseFontLayer->mColorAdd);
+
 	int aCurPoolIdx = 0;
-	for (size_t aCharNum = 0; aCharNum < theGlyphs.size(); aCharNum++)
+
+	for (size_t aCharNum = 0; aCharNum < theGlyphSize; aCharNum++)
 	{
 		int aChar = theGlyphs[aCharNum].mIndex;
 
-		ActiveFontLayerList::iterator anItr = mActiveLayerList.begin();
-		while (anItr != mActiveLayerList.end())
+		for (size_t i = 0; i < aActiveLayerListSize; i++)
 		{
-			ActiveFontLayer* anActiveFontLayer = &*anItr;
-			CharData* aCharData = anActiveFontLayer->mBaseFontLayer->GetCharData(aChar);
+			ActiveFontLayer* anActiveFontLayer = &mActiveLayerList[i];
+			FontLayer* aBaseFontLayer = anActiveFontLayer->mBaseFontLayer;
+			CharData* aCharData = aBaseFontLayer->GetCharData(aChar);
 
 			int aLayerXPos = theX + theGlyphs[aCharNum].mX;
 			int aLayerYPos = theY + theGlyphs[aCharNum].mY;
@@ -2084,7 +2094,7 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyp
 			int anImageX;
 			int anImageY;
 
-			int aLayerPointSize = anActiveFontLayer->mBaseFontLayer->mPointSize;
+			int aLayerPointSize = aBaseFontLayer->mPointSize;
 
 			double aScale = mScale;
 			if (aLayerPointSize != 0)
@@ -2093,32 +2103,27 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyp
 			if (aScale == 1.0)
 			{
 				anImageX = aLayerXPos + \
-					anActiveFontLayer->mBaseFontLayer->mOffset.mX + \
+					aBaseFontLayer->mOffset.mX + \
 					aCharData->mOffset.mX;
 				anImageY = aLayerYPos - \
-					(anActiveFontLayer->mBaseFontLayer->mAscent - \
-					 anActiveFontLayer->mBaseFontLayer->mOffset.mY - \
+					(aBaseFontLayer->mAscent - \
+					 aBaseFontLayer->mOffset.mY - \
 					 aCharData->mOffset.mY);
 			}
 			else
 			{
 				anImageX =
 					aLayerXPos +			\
-					(int)((anActiveFontLayer->mBaseFontLayer->mOffset.mX + \
+					(int)((aBaseFontLayer->mOffset.mX + \
 					       aCharData->mOffset.mX) * aScale);
 				anImageY =
 					aLayerYPos - \
-					(int)((anActiveFontLayer->mBaseFontLayer->mAscent - \
-					       anActiveFontLayer->mBaseFontLayer->mOffset.mY - \
+					(int)((aBaseFontLayer->mAscent - \
+					       aBaseFontLayer->mOffset.mY - \
 					       aCharData->mOffset.mY) * aScale);
 			}
 
-			Color aColor = ColorMulAdd(theColor,
-						   anActiveFontLayer->mBaseFontLayer->mColorMult,
-						   anActiveFontLayer->mBaseFontLayer->mColorAdd);
-
-			int anOrder =
-				anActiveFontLayer->mBaseFontLayer->mBaseOrder + aCharData->mOrder;
+			int anOrder = aBaseFontLayer->mBaseOrder + aCharData->mOrder;
 
 			if (aCurPoolIdx >= POOL_SIZE)
 				break;
@@ -2126,14 +2131,14 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyp
 			RenderCommand* aRenderCommand = &gRenderCommandPool[aCurPoolIdx++];
 
 			aRenderCommand->mImage = anActiveFontLayer->mScaledImage;
-			aRenderCommand->mColor = aColor;
+			aRenderCommand->mColor = aColors[i];
 			aRenderCommand->mDest[0] = anImageX;
 			aRenderCommand->mDest[1] = anImageY;
 			aRenderCommand->mSrc[0] = anActiveFontLayer->mScaledCharImageRects[aChar].mX;
 			aRenderCommand->mSrc[1] = anActiveFontLayer->mScaledCharImageRects[aChar].mY;
 			aRenderCommand->mSrc[2] = anActiveFontLayer->mScaledCharImageRects[aChar].mWidth;
 			aRenderCommand->mSrc[3] = anActiveFontLayer->mScaledCharImageRects[aChar].mHeight;
-			aRenderCommand->mMode = anActiveFontLayer->mBaseFontLayer->mDrawMode;
+			aRenderCommand->mMode = aBaseFontLayer->mDrawMode;
 			aRenderCommand->mNext = NULL;
 
 			int anOrderIdx = std::min(std::max(anOrder + 128, 0), 255);
@@ -2148,9 +2153,6 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyp
 				gRenderTail[anOrderIdx]->mNext = aRenderCommand;
 				gRenderTail[anOrderIdx] = aRenderCommand;
 			}
-
-
-			++anItr;
 		}
 	}
 
