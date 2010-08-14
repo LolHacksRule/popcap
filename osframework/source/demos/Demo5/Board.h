@@ -71,15 +71,20 @@ class Board :	public Widget, public ButtonListener
 		GameApp*			mApp;
 		ButtonWidget*		mButton;
 		ButtonWidget*           mTextButton;
+		ButtonWidget*           mTestButton;
 
 		// And in this demo, we're going to do some parallax scrolling whenever
 		// the arrow keys are pressed.
-		struct ParallaxLayer	mLayer[3];		
+		struct ParallaxLayer	mLayer[3];
 		TextLayoutVector        mTextLayouts;
 		StringVector            mTexts;
 		bool                    mUseTextLayout;
 		std::vector<Point>      mPos;
 		MTRand                  mRand;
+
+		TextLayout              mText;
+
+		int                     mMode;
 
 	public:
 
@@ -87,7 +92,8 @@ class Board :	public Widget, public ButtonListener
 		enum
 		{
 			OPTIONS_BUTTON_ID,
-			TEXT_BUTTON_ID
+			TEXT_BUTTON_ID,
+			TEST_BUTTON_ID
 		};
 
 		//////////////////////////////////////////////////////////////////////////
@@ -100,6 +106,8 @@ class Board :	public Widget, public ButtonListener
 		Board(GameApp* theApp);
 
 		virtual ~Board();		
+
+		void ResetMode();
 
 		//////////////////////////////////////////////////////////////////////////
 		//	Function: KeyDown

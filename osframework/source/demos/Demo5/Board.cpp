@@ -83,28 +83,13 @@ Board::Board(GameApp* theApp)
 	// file about memory leak detection:
 	int* aLeakedInteger = new int;
 
-
-	for (size_t i = 0; i < 150; i++)
-	{
-		static const char *texts[] = {
-			"Set the Y coordinate of the background layer so that it's",
-			"base is at the bottom of the screen. Because the Board hasn't",
-			"been resized or added to the manager yet, it's own mHeight and",
-			"mWidth are at the default of 0, 0. But not to worry, we set the",
-			"overall game's width/height in GameApp's constructor, so we",
-			"can just use those variables instead:",
-			"yes",
-			"no",
-			"ok",
-			"cancel"
-		};
-
-		mTexts.push_back(texts[mRand.Next(10UL)]);
-		mTextLayouts.push_back(TextLayout());
-		mTextLayouts[i].SetText(mTexts[i]);
-		mTextLayouts[i].SetFont(FONT_DEFAULT);
-		mPos.push_back(Point(0, 0));
-	}
+	mMode = 0;
+	mText.SetText("// We will ON PURPOSE leak memory as an example of how to track\n"
+		      "// such things in your program. Review the comments at the top of this\n"
+		      "// file about memory leak detection:");
+	mText.SetFont(FONT_DEFAULT);
+	mText.SetRect(Rect(0, 0, 200, 200));
+	mText.SetWrap(true);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -113,6 +98,7 @@ Board::~Board()
 {
 	delete mButton;
 	delete mTextButton;
+	delete mTestButton;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -139,7 +125,7 @@ void Board::Update()
 
 		mPos[i] = Point(x, y);
 	}
-	
+
 	MarkDirty();
 
 	// And you mark the end of a profiling section with
@@ -151,7 +137,55 @@ void Board::Update()
 }
 
 
+void Board::ResetMode()
+{
+	mTexts.clear();
+	mTextLayouts.clear();
+	mPos.clear();
 
+	if (mMode == 0)
+		return;
+
+	for (size_t i = 0; i < 100; i++)
+	{
+		if (mMode == 1)
+		{
+			static const char *texts[] = {
+				"Set the Y coordinate of the background layer so that it's",
+				"base is at the bottom of the screen. Because the Board hasn't",
+				"been resized or added to the manager yet, it's own mHeight and",
+				"mWidth are at the default of 0, 0. But not to worry, we set the",
+				"overall game's width/height in GameApp's constructor, so we",
+				"can just use those variables instead:",
+				"yes",
+				"no",
+				"ok",
+				"cancel"
+			};
+
+			mTexts.push_back(texts[mRand.Next(10UL)]);
+			mTextLayouts.push_back(TextLayout());
+			mTextLayouts[i].SetText(mTexts[i]);
+			mTextLayouts[i].SetFont(FONT_DEFAULT);
+			mTextLayouts[i].SetRect(Rect(0, 0, 0, 0));
+			mTextLayouts[i].SetWrap(false);
+		}
+		else
+		{
+			const char text[] =
+				"// We will ON PURPOSE leak memory as an example of how to track"
+				"// such things in your program. Review the comments at the top of this"
+				"// file about memory leak detection:";
+			mTexts.push_back(text);
+			mTextLayouts.push_back(TextLayout());
+			mTextLayouts[i].SetText(text);
+			mTextLayouts[i].SetFont(FONT_DEFAULT);
+			mTextLayouts[i].SetRect(Rect(0, 0, 200, 200));
+			mTextLayouts[i].SetWrap(true);
+		}
+		mPos.push_back(Point(0, 0));
+	}
+}
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 bool Board::KeyDown(KeyCode theKey)
@@ -265,7 +299,6 @@ void Board::Draw(Graphics* g)
 		g->TranslateF(-mLayer[i].mX, -mLayer[i].mY);
 	}
 
-
 	for (size_t i = 0; i < mTexts.size(); i++)
 	{
 		int x = mPos[i].mX;
@@ -279,9 +312,15 @@ void Board::Draw(Graphics* g)
 		{
 			g->SetFont(FONT_DEFAULT);
 			g->SetColor(Color::White);
-			g->DrawString(mTexts[i], x, y);
+			if (mMode == 1)
+				g->DrawString(mTexts[i], x, y);
+			else
+				g->WriteWordWrapped(Rect(x, y, 200, 200),
+						    mTexts[i]);
 		}
 	}
+
+	mText.Draw(g, 200, 200, Color(255, 0, 0));
 
 	// And you mark the end of a profiling section with
 	// SEXY_PER_END, passing in the same string you passed to
@@ -329,19 +368,26 @@ void Board::AddedToManager(WidgetManager* theWidgetManager)
 	// mDownImage is the image to use when a mouse button is held down on it
 	// mTextButtonImage is the default image to use
 	// If we wanted to, we could specify a disabled image as well.
-#if 0
-	mTextButton->mOverImage = IMAGE_BUTTON_OVER;
-	mTextButton->mDownImage = IMAGE_BUTTON_DOWN;
-	mTextButton->mButtonImage = IMAGE_BUTTON_NORMAL;
-	mTextButton->mDoFinger = true;
-#endif
-	mTextButton->Resize(256, 5,
-			    IMAGE_BUTTON_NORMAL->GetWidth() * 2,
+	mTextButton->Resize(56 + IMAGE_BUTTON_NORMAL->GetWidth() + 20, 5,
+			    IMAGE_BUTTON_NORMAL->GetWidth() * 3 / 2,
 			    IMAGE_BUTTON_NORMAL->GetHeight());
 
 	theWidgetManager->AddWidget(mTextButton);
 
+	mTestButton = new ButtonWidget(Board::TEST_BUTTON_ID, this);
+	mTestButton->SetFont(FONT_DEFAULT);
+	mTestButton->mLabel = _S("Disable test!");
 
+	// This time, let's use some images for our button.
+	// mOverImage is the image to use when the mouse cursor is over the button.
+	// mDownImage is the image to use when a mouse button is held down on it
+	// mTestButtonImage is the default image to use
+	// If we wanted to, we could specify a disabled image as well.
+	mTestButton->Resize(320, 5,
+			    IMAGE_BUTTON_NORMAL->GetWidth() * 2,
+			    IMAGE_BUTTON_NORMAL->GetHeight());
+
+	theWidgetManager->AddWidget(mTestButton);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -355,6 +401,7 @@ void Board::RemovedFromManager(WidgetManager* theWidgetManager)
 	// We should now also remove any widgets we are responsible for. 
 	theWidgetManager->RemoveWidget(mButton);
 	theWidgetManager->RemoveWidget(mTextButton);
+	theWidgetManager->RemoveWidget(mTestButton);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -383,5 +430,25 @@ void Board::ButtonDepress(int theId)
 	{
 		mUseTextLayout = !mUseTextLayout;
 		mTextButton->mLabel = mUseTextLayout ? "Disabe TextLayout!" : "Enable TextLayout!";
+	}
+	else if (theId == Board::TEST_BUTTON_ID)
+	{
+		mMode++;
+		if (mMode > 2)
+			mMode = 0;
+
+		switch (mMode)
+		{
+		case 0:
+			mTestButton->mLabel = "Disabe test";
+			break;
+		case 1:
+			mTestButton->mLabel = "Test DrawString";
+			break;
+		case 2:
+			mTestButton->mLabel = "Test WriteWordWrapped";
+			break;
+		}
+		ResetMode();
 	}
 }
