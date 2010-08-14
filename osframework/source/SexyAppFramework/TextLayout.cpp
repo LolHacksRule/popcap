@@ -73,8 +73,9 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 {
 	if (!mFont)
 		return;
+	Update();
 
-	if (1)
+	if (0)
 	{
 		g->SetFont(mFont);
 		g->SetColor(color);
