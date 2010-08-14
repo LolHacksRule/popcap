@@ -2,6 +2,7 @@
 #define __BUTTONWIDGET_H__
 
 #include "Widget.h"
+#include "TextLayout.h"
 
 namespace Sexy
 {
@@ -32,6 +33,8 @@ public:
 	SexyString				mLabel;
 	int						mLabelJustify;
 	Font*					mFont;
+	TextLayout                              mLabelLayout;
+	SexyString                              mLastLabel;
 	Image*					mButtonImage;
 	Image*					mOverImage;
 	Image*					mDownImage;	

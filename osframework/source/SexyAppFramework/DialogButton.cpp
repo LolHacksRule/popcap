@@ -83,10 +83,13 @@ void DialogButton::Draw(Graphics* g)
 		else
 			g->SetColor(mColors[COLOR_LABEL]);
 
-		int aFontX = (mWidth - mFont->StringWidth(mLabel))/2;
+		//int aFontX = (mWidth - mFont->StringWidth(mLabel))/2;
+		int aFontX = (mWidth - mLabelLayout.GetWidth())/2;
 		int aFontY = (mHeight + mFont->GetAscent() - mFont->GetAscentPadding() - mFont->GetAscent()/6 - 1)/2;
 
-		g->DrawString(mLabel, aFontX + mTextOffsetX, aFontY + mTextOffsetY);
+		//g->DrawString(mLabel, aFontX + mTextOffsetX, aFontY + mTextOffsetY);
+		mLabelLayout.Draw(g, aFontX + mTextOffsetX, aFontY + mTextOffsetY,
+				  g->GetColor());
 	}
 
 	if (doTranslate)

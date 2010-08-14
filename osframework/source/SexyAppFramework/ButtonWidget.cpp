@@ -47,6 +47,7 @@ void ButtonWidget::SetFont(Font* theFont)
 {
 	delete mFont;
 	mFont = theFont->Duplicate();
+	mLabelLayout.SetFont(mFont);
 }
 
 bool ButtonWidget::IsButtonDown()
@@ -85,9 +86,9 @@ void ButtonWidget::Draw(Graphics* g)
 	if (mFont != NULL)
 	{
 		if (mLabelJustify == BUTTON_LABEL_CENTER)
-			aFontX = (mWidth - mFont->StringWidth(mLabel))/2;
+			aFontX = (mWidth - mLabelLayout.GetWidth())/2;
 		else if (mLabelJustify == BUTTON_LABEL_RIGHT)
-			aFontX = mWidth - mFont->StringWidth(mLabel);
+			aFontX = mWidth - mLabelLayout.GetWidth();
 		aFontY = (mHeight + mFont->GetAscent() - mFont->GetAscent()/6 - 1)/2;
 
 		//aFontX = (mWidth - mFont->StringWidth(mLabel))/2;
@@ -126,7 +127,9 @@ void ButtonWidget::Draw(Graphics* g)
 			else
 				g->SetColor(mColors[COLOR_LABEL]);
 
-			g->DrawString(mLabel, aFontX+1, aFontY+1);
+			//g->DrawString(mLabel, aFontX+1, aFontY+1);
+			mLabelLayout.Draw(g, aFontX + 1, aFontY + 1,
+					  g->GetColor());
 		}
 		else
 		{
@@ -150,7 +153,9 @@ void ButtonWidget::Draw(Graphics* g)
 			else
 				g->SetColor(mColors[COLOR_LABEL]);
 
-			g->DrawString(mLabel, aFontX, aFontY);
+			//g->DrawString(mLabel, aFontX, aFontY);
+			mLabelLayout.Draw(g, aFontX, aFontY,
+					  g->GetColor());
 		}
 	}
 	else
@@ -180,7 +185,9 @@ void ButtonWidget::Draw(Graphics* g)
 				g->SetColor(mColors[COLOR_LABEL_HILITE]);
 			else
 				g->SetColor(mColors[COLOR_LABEL]);
-			g->DrawString(mLabel, aFontX, aFontY);
+			//g->DrawString(mLabel, aFontX, aFontY);
+			mLabelLayout.Draw(g, aFontX, aFontY,
+					  g->GetColor());
 		}
 		else
 		{
@@ -192,7 +199,9 @@ void ButtonWidget::Draw(Graphics* g)
 				DrawButtonImage(g, mButtonImage, mNormalRect, 1, 1);
 
 			g->SetColor(mColors[COLOR_LABEL_HILITE]);
-			g->DrawString(mLabel, aFontX+1, aFontY+1);
+			//g->DrawString(mLabel, aFontX+1, aFontY+1);
+			mLabelLayout.Draw(g, aFontX + 1, aFontY + 1,
+					  g->GetColor());
 		}
 	}
 }
@@ -314,6 +323,12 @@ bool ButtonWidget::KeyUp(KeyCode theKey)
 void ButtonWidget::Update()
 {
 	Widget::Update();
+
+	if (mLastLabel != mLabel)
+	{
+		mLastLabel = mLabel;
+		mLabelLayout.SetText(mLabel);
+	}
 
 	if (mIsDown && mIsOver)
 		mButtonListener->ButtonDownTick(mId);
