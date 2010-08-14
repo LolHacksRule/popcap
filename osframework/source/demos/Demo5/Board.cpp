@@ -13,6 +13,7 @@
 #include "SexyAppFramework/WidgetManager.h"
 #include "SexyAppFramework/ImageFont.h"
 #include "SexyAppFramework/Image.h"
+#include "SexyAppFramework/SexyAppBase.h"
 
 // Our example dialog box
 #include "DemoDialog.h"
@@ -146,7 +147,7 @@ void Board::ResetMode()
 	if (mMode == 0)
 		return;
 
-	for (size_t i = 0; i < 100; i++)
+	for (size_t i = 0; i < 25; i++)
 	{
 		if (mMode == 1)
 		{
@@ -321,6 +322,16 @@ void Board::Draw(Graphics* g)
 	}
 
 	mText.Draw(g, 200, 200, Color(255, 0, 0));
+
+	PerformanceStats& stats = mApp->mPerformanceStats;
+	std::wstring str;
+
+	str = StrFormat(L"TheoreticalFPS: %.2f\nFPS: %.2f\nDirtyRate: %d\n",
+			stats.mTheoreticalFPS, stats.mFPS, stats.mDirtyRate);
+
+	g->SetFont(FONT_DEFAULT);
+	g->SetColor(Color(255, 0, 0));
+	g->WriteWordWrapped(Rect(56, 50, 200, 200), str);
 
 	// And you mark the end of a profiling section with
 	// SEXY_PER_END, passing in the same string you passed to
