@@ -71,7 +71,7 @@ namespace Sexy
 	const unsigned int DEFAULT_CACHE_ORDER = 7;
 	const unsigned int MAX_CACHE_LEVEL = 64;
 	typedef std::map<FT_UInt, FreeTypeGlyphEntry> GlyphMap;
-	typedef std::vector<FreeTypeGlyph>  GlyphVector;
+	typedef std::vector<FreeTypeGlyph>  FreeTypeGlyphVector;
 
 	class FreeTypeScaledFont
 	{
@@ -97,7 +97,7 @@ namespace Sexy
 
 	public:
 		void				DrawGlyph(Graphics* g, int theX, int theY,
-							  GlyphVector glyphs,
+							  FreeTypeGlyphVector glyphs,
 							  const Color& theColor,
 							  const Rect& theClipRect,
 							  bool drawShadow = false,
@@ -182,12 +182,12 @@ namespace Sexy
 							       std::string& utf8);
 
 		void				GlyphsFromString(const std::string& string,
-								 GlyphVector& glyphs,
+								 FreeTypeGlyphVector& glyphs,
 								 bool render = false,
 								 bool unicode = false);
 
 		void				GlyphsFromString(const std::wstring& string,
-								 GlyphVector& glyphs,
+								 FreeTypeGlyphVector& glyphs,
 								 bool render = false);
 
 	public:
