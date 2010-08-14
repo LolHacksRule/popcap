@@ -1939,6 +1939,8 @@ bool ImageFont::StringToGlyphs(const std::wstring& theString, GlyphVector& theGl
 	float y = 0;
 
 	Prepare();
+
+	size_t anActiveLayerListSize = mActiveLayerList.size();
 	for(size_t i = 0; i < theString.length(); i++)
 	{
 		int aChar = theString[i];
@@ -1954,25 +1956,26 @@ bool ImageFont::StringToGlyphs(const std::wstring& theString, GlyphVector& theGl
 		int aCharMaxHeight = 0;
 		int aSpacing = 0;
 
-		ActiveFontLayerList::iterator anItr = mActiveLayerList.begin();
-		while (anItr != mActiveLayerList.end())
+		for (size_t j = 0; j < anActiveLayerListSize; j++)
 		{
-			ActiveFontLayer* anActiveFontLayer = &*anItr;
+			ActiveFontLayer* anActiveFontLayer = &mActiveLayerList[j];
+			FontLayer* aBaseFontLayer = anActiveFontLayer->mBaseFontLayer;
+			CharData* aCharData = aBaseFontLayer->GetCharData(aChar);
+			CharData* aPrevCharData = 0;
 
 			int aLayerXPos = 0;
-			int aLayerPointSize = anActiveFontLayer->mBaseFontLayer->mPointSize;
+			int aLayerPointSize = aBaseFontLayer->mPointSize;
 			int aCharWidth = 0;
 
+			if (aPrevChar)
+				aPrevCharData = aBaseFontLayer->GetCharData(aPrevChar);
 			if (aLayerPointSize == 0)
 			{
-				aCharWidth = int(anActiveFontLayer->mBaseFontLayer->GetCharData
-						 (aChar)->mWidth * mScale);
+				aCharWidth = int(aCharData->mWidth * mScale);
 
 				if (aPrevChar != 0)
 				{
-					aSpacing = anActiveFontLayer->mBaseFontLayer->mSpacing;
-					CharData* aPrevCharData = anActiveFontLayer->mBaseFontLayer->
-						GetCharData(aPrevChar);
+					aSpacing = aBaseFontLayer->mSpacing;
 					SexyCharToIntMap::iterator aKernItr =
 						aPrevCharData->mKerningOffsets.find(aChar);
 
@@ -1986,15 +1989,12 @@ bool ImageFont::StringToGlyphs(const std::wstring& theString, GlyphVector& theGl
 			}
 			else
 			{
-				aCharWidth = int(anActiveFontLayer->mBaseFontLayer->GetCharData
-						 (aChar)->mWidth * aPointSize / aLayerPointSize);
+				aCharWidth = int(aCharData->mWidth * aPointSize / aLayerPointSize);
 
 				if (aPrevChar != 0)
 				{
 
-					aSpacing = anActiveFontLayer->mBaseFontLayer->mSpacing;
-					CharData* aPrevCharData = anActiveFontLayer->mBaseFontLayer->
-						GetCharData(aPrevChar);
+					aSpacing = aBaseFontLayer->mSpacing;
 					SexyCharToIntMap::iterator aKernItr =
 						aPrevCharData->mKerningOffsets.find(aChar);
 
@@ -2018,8 +2018,8 @@ bool ImageFont::StringToGlyphs(const std::wstring& theString, GlyphVector& theGl
 				aCharMaxWidth = aWidth;
 			if (aHeight > aCharMaxHeight)
 				aCharMaxHeight = aHeight;
-
-			++anItr;
+			if (j < sizeof(glyph.mNativeData) / sizeof(glyph.mNativeData[0]))
+				glyph.mNativeData[j] = aCharData;
 		}
 
 		glyph.mX = x;
@@ -2080,13 +2080,19 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyp
 
 	for (size_t aCharNum = 0; aCharNum < theGlyphSize; aCharNum++)
 	{
-		int aChar = theGlyphs[aCharNum].mIndex;
+		Glyph &aGlyph = theGlyphs[aCharNum];
+		int aChar = aGlyph.mIndex;
 
 		for (size_t i = 0; i < aActiveLayerListSize; i++)
 		{
 			ActiveFontLayer* anActiveFontLayer = &mActiveLayerList[i];
 			FontLayer* aBaseFontLayer = anActiveFontLayer->mBaseFontLayer;
-			CharData* aCharData = aBaseFontLayer->GetCharData(aChar);
+			CharData* aCharData;
+
+			if (i < sizeof(aGlyph.mNativeData) / sizeof(aGlyph.mNativeData[0]))
+				aCharData = (CharData*)aGlyph.mNativeData[i];
+			else
+				aCharData = aBaseFontLayer->GetCharData(aChar);
 
 			int aLayerXPos = theX + theGlyphs[aCharNum].mX;
 			int aLayerYPos = theY + theGlyphs[aCharNum].mY;
