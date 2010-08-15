@@ -2054,6 +2054,9 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY,
 			   size_t from, size_t length,
 			   const Color& theColor, const Rect& theClipRect)
 {
+	if (from > theGlyphs.size() - 1)
+		return;
+
 	AutoCrit anAutoCrit(gRenderCritSec);
 
 	int aPoolIdx;
@@ -2080,7 +2083,9 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY,
 
 	int aCurPoolIdx = 0;
 
-	for (size_t aCharNum = 0; aCharNum < theGlyphSize; aCharNum++)
+	if (from + length < theGlyphSize)
+		theGlyphSize = from + length;
+	for (size_t aCharNum = from; aCharNum < theGlyphSize; aCharNum++)
 	{
 		Glyph &aGlyph = theGlyphs[aCharNum];
 		int aChar = aGlyph.mIndex;

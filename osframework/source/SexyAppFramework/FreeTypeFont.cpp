@@ -103,7 +103,8 @@ void FreeTypeFont::DrawGlyphs(Graphics *g, int theX, int theY,
 			      const Color &theColor,
 			      const Rect& theClipRect)
 {
-	mScaledFont->DrawGlyphs(g, theX, theY, theGlyphs, theColor, theClipRect, mDrawShadow);
+	mScaledFont->DrawGlyphs(g, theX, theY, theGlyphs, from, length,
+				theColor, theClipRect, mDrawShadow);
 }
 
 int FreeTypeFont::CharWidth(int theChar)

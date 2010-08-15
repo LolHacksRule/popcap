@@ -542,10 +542,15 @@ bool FreeTypeScaledFont::StringToGlyphs(const std::wstring &theString,
 }
 
 void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
-				    GlyphVector& theGlyphs, const Color &theColor,
+				    GlyphVector& theGlyphs,
+				    size_t from, size_t length,
+				    const Color &theColor,
 				    const Rect& theClipRect,
 				    bool drawShadow, bool drawOutline)
 {
+	if (from > theGlyphs.size() - 1)
+		return;
+
 	if (!mBaseFont)
 		return;
 
@@ -570,7 +575,9 @@ void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
 	g->SetColor(theColor);
 
 	size_t theGlyphSize = theGlyphs.size();
-	for (size_t i = 0; i < theGlyphSize; i++)
+	if (from + length < theGlyphSize)
+		theGlyphSize = from + length;
+	for (size_t i = from; i < theGlyphSize; i++)
 	{
 		Glyph& aGlyph = theGlyphs[i];
 		FreeTypeGlyphEntry* entry = LookupGlyph(aGlyph.mIndex, true);
