@@ -148,7 +148,8 @@ void Board::ResetMode()
 	if (mMode == 0)
 		return;
 
-	for (size_t i = 0; i < 25; i++)
+	size_t numstrs = mApp->mNumStrs >= 25 ? mApp->mNumStrs : 25;
+	for (size_t i = 0; i < numstrs; i++)
 	{
 		if (mMode == 1)
 		{

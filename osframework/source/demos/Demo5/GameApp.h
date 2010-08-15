@@ -44,6 +44,8 @@ class GameApp : public SexyAppBase
 
 		Board*			mBoard;
 		TitleScreen*	mTitleScreen;
+        public:
+		int             mNumStrs;
 
 	public:
 
@@ -165,6 +167,10 @@ class GameApp : public SexyAppBase
 		//	to the board widget.
 		//////////////////////////////////////////////////////////////////////////		
 		void SetFocusToBoard();
+
+		virtual void  HandleCmdLineParam(const std::string& theParamName,
+						 const std::string& theParamValue);
+
 };
 
 }

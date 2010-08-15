@@ -59,7 +59,7 @@ GameApp::GameApp()
 
 	mBoard = NULL;
 	mTitleScreen = NULL;
-
+	mNumStrs = 25;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -424,4 +424,13 @@ void GameApp::SetFocusToBoard()
 {
 	if (mBoard != NULL)
 		mWidgetManager->SetFocus(mBoard);
+}
+
+void GameApp::HandleCmdLineParam(const std::string& theParamName,
+				 const std::string& theParamValue)
+{
+	if (theParamName == "-numstrs")
+		mNumStrs = atoi(theParamValue.c_str());
+	else
+		SexyAppBase::HandleCmdLineParam(theParamName, theParamValue);
 }
