@@ -68,12 +68,35 @@ Font* TextLayout::GetFont()
 	return mFont;
 }
 
+Rect TextLayout::GetRect()
+{
+	return mRect;
+}
+
+void TextLayout::SetWidth(int width)
+{
+	SetRect(Rect(mRect.mX, mRect.mY, width, mHeight));
+}
+
+void TextLayout::SetHeight(int height)
+{
+	SetRect(Rect(mRect.mX, mRect.mY, mWidth, height));
+}
+
 void TextLayout::SetRect(const Rect &rect)
 {
 	if (mRect == rect)
 		return;
 
 	mRect = rect;
+	if (mRect.mX < 0)
+		mRect.mX = 0;
+	if (mRect.mWidth && mRect.mX > mRect.mWidth - 1)
+		mRect.mX = mRect.mWidth - 1;
+	if (mRect.mY < 0)
+		mRect.mY = 0;
+	if (mRect.mHeight && mRect.mX > mRect.mHeight - 1)
+		mRect.mY = mRect.mHeight - 1;
 	mDirty = true;
 }
 
@@ -119,8 +142,7 @@ void TextLayout::DrawLine(Graphics *g, TextLine& line,
 			else
 				glyphslength = glyphs.size() - (from - numglyphs);
 			mFont->DrawGlyphs(g, xoffset, yoffset,
-					  glyphs,
-					  glyphsstart, glyphslength,
+					  glyphs, glyphsstart, glyphslength,
 					  curcolor, g->mClipRect);
 		}
 		numglyphs += run.mGlyphs.size();
@@ -145,20 +167,24 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 	if (mSingleLine)
 	{
 		TextLine &line = mLines[0];
-		int xoffset = x;
-		int yoffset = y;
+		int xoffset = x + mRect.mX;
+		int yoffset = y + mRect.mY;
 		Rect rect = mRect;
 
 		if (rect.mWidth == 0)
 			rect.mWidth = line.mExtents.mWidth;
 
-		DrawLine(g, line, 0, line.mNumGlyphs, xoffset, yoffset,
-			 color, mJustification, rect);
+		if (!rect.mHeight ||
+		    mRect.mY + line.mExtents.mHeight <= mRect.mHeight)
+			DrawLine(g, line, 0, line.mNumGlyphs, xoffset, yoffset,
+				 color, mJustification, rect);
 	}
 	else
 	{
-		int xoffset = x;
-		int yoffset = y + mFont->GetAscent() - mFont->GetAscentPadding();
+		int xbase = mRect.mX;
+		int ybase =  mRect.mY + mFont->GetAscent() - mFont->GetAscentPadding();
+		int xoffset = 0;
+		int yoffset = 0;
 
 		for (size_t i = 0; i < mLines.size(); i++)
 		{
@@ -169,11 +195,12 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 				rect.mWidth = line.mExtents.mWidth;
 
 			if (!rect.mHeight ||
-			    (yoffset - y >= rect.mY &&
-			     yoffset - y + line.mExtents.mHeight <= rect.mY + rect.mHeight))
+			    (yoffset + mRect.mY >= 0 &&
+			     yoffset + mRect.mY + line.mExtents.mHeight <= rect.mHeight))
 				DrawLine(g, line, 0, line.mNumGlyphs,
-					 xoffset, yoffset, color,
-					 mJustification, rect);
+					 x + xbase + xoffset, y + ybase + yoffset,
+					 color, mJustification, rect);
+			xbase = 0;
 			yoffset += line.mExtents.mHeight;
 		}
 	}
@@ -204,11 +231,13 @@ void TextLayout::DrawGlyphs(Graphics *g,
 		to = mNumGlyphs;
 
 	Rect rect;
-	int xoffset = x;
-	int yoffset = y;
+	int xbase = mRect.mX;
+	int ybase =  mRect.mY;
+	int xoffset = 0;
+	int yoffset = 0;
 
 	if (!mSingleLine)
-		yoffset += mFont->GetAscent() - mFont->GetAscentPadding();
+		ybase += mFont->GetAscent() - mFont->GetAscentPadding();
 
 	for (; i < mLines.size(); i++)
 	{
@@ -227,11 +256,13 @@ void TextLayout::DrawGlyphs(Graphics *g,
 			length = line.mNumGlyphs - start;
 
 		if (!rect.mHeight ||
-		    (yoffset - y >= rect.mY &&
-		     yoffset - y + line.mExtents.mHeight <= rect.mY + rect.mHeight))
-			DrawLine(g, line, start, length, xoffset, yoffset, color,
-				 mJustification, rect);
-
+		    (yoffset + mRect.mY >= 0 &&
+		     yoffset + mRect.mY + line.mExtents.mHeight <= rect.mHeight))
+			DrawLine(g, line, start, length,
+				 x + xbase + xoffset,
+				 y + ybase + yoffset,
+				 color, mJustification, rect);
+		xbase = 0;
 		from += length;
 		numglyphs += line.mNumGlyphs;
 		if (from == to)
@@ -259,7 +290,7 @@ void TextLayout::DrawLines(Graphics *g,
 
 	if (mSingleLine)
 	{
-		if (from > 0)
+		if (from > 0 || length != 1)
 			return;
 
 		Draw(g, x, y, color);
@@ -268,12 +299,18 @@ void TextLayout::DrawLines(Graphics *g,
 
 	Color oldcolor = g->GetColor();
 
-	int xoffset = x;
-	int yoffset = y + mFont->GetAscent() - mFont->GetAscentPadding();
-
 	size_t to = mLines.size();
 	if (from + length < to)
 		to = from + length;
+
+	int xbase = mRect.mX;
+	int ybase = mRect.mY;
+	int xoffset = 0;
+	int yoffset = 0;
+
+	if (!mSingleLine)
+		ybase += mFont->GetAscent() - mFont->GetAscentPadding();
+
 	for (size_t i = 0; i < to; i++)
 	{
 		TextLine &line = mLines[i];
@@ -283,11 +320,13 @@ void TextLayout::DrawLines(Graphics *g,
 			rect.mWidth = line.mExtents.mWidth;
 
 		if (i >= from && (!rect.mHeight ||
-				  (yoffset - y >= rect.mY &&
-				   yoffset - y + line.mExtents.mHeight <= rect.mY + rect.mHeight)))
+				  (yoffset + mRect.mY >= 0 &&
+				   yoffset + mRect.mY + line.mExtents.mHeight <= rect.mHeight)))
 			DrawLine(g, line, 0, line.mNumGlyphs,
-				 xoffset, yoffset, color,
-				 mJustification, rect);
+				 x + xbase + xoffset,
+				 y + ybase + yoffset,
+				 color, mJustification, rect);
+		xbase = 0;
 		yoffset += line.mExtents.mHeight;
 	}
 
@@ -310,11 +349,13 @@ int TextLayout::GetLineSpacing()
 
 void TextLayout::SetJustification(int justification)
 {
+	if (justification != -1 && justification != 0 ||
+	    justification != 1)
+		return;
 	if (mJustification == justification)
 		return;
 
 	mJustification = justification;
-	mDirty = true;
 }
 
 int TextLayout::GetJustification()
@@ -328,7 +369,10 @@ void TextLayout::SetWrap(bool wrap)
 		return;
 
 	mWrap = wrap;
-	mDirty = true;
+
+	// single line mode don't do wrapping
+	if (!mSingleLine)
+		mDirty = true;
 }
 
 bool TextLayout::GetWrap()
@@ -530,7 +574,7 @@ void TextLayout::BuildLines()
 		int spacepos = -1;
 		int maxwidth = 0;
 		int height = 0;
-		int indentx = 0;
+		int indentx = mRect.mX;
 		bool needwrap = false;
 
 		while (curpos < length)

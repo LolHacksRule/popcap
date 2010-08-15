@@ -49,7 +49,10 @@ namespace Sexy {
 		int                       GetHeight();
 		void                      SetFont(Font *font);
 		Font*                     GetFont();
+		void                      SetWidth(int width);
+		void                      SetHeight(int height);
 		void                      SetRect(const Rect &rect);
+		Rect                      GetRect();
 		void                      SetLineSpacing(int linespacing);
 		int                       GetLineSpacing();
 		void                      SetJustification(int justification);
