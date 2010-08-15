@@ -1236,9 +1236,11 @@ bool SexyAppBase::DrawDirtyStuff()
 		if (drewScreen)
 			mScreenBltTime = aEndTime - aPreScreenBltTime;
 
-		if (mFPSTime >= 500) // Show FPS about every 5 seconds
+		static DWORD aLastUpdateStats;
+		if (aEndTime - aLastUpdateStats >= 500) // Show FPS about every 5 seconds
 		{
 			uint32 aTickNow = GetTickCount();
+			aLastUpdateStats = aTickNow;
 
 			//printf("FPSCount: %d FlipCount: %d\n", mFPSCount, mFPSFlipCount);
 			//printf("FPSTime: %u elasped %u\n", mFPSTime, aTickNow - mFPSStartTick);
