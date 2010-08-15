@@ -90,7 +90,8 @@ Board::Board(GameApp* theApp)
 		      "// file about memory leak detection:");
 	mText.SetFont(FONT_DEFAULT);
 	mText.SetRect(Rect(0, 0, 200, 200));
-	mText.SetWrap(true);
+	mText.SetSingleLine(false);
+	//mText.SetWrap(true);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -182,6 +183,7 @@ void Board::ResetMode()
 			mTextLayouts[i].SetText(text);
 			mTextLayouts[i].SetFont(FONT_DEFAULT);
 			mTextLayouts[i].SetRect(Rect(0, 0, 200, 200));
+			mTextLayouts[i].SetSingleLine(false);
 			mTextLayouts[i].SetWrap(true);
 		}
 		mPos.push_back(Point(0, 0));
@@ -321,7 +323,17 @@ void Board::Draw(Graphics* g)
 		}
 	}
 
-	mText.Draw(g, 200, 200, Color(255, 0, 0));
+	if (mMode == 0)
+	{
+		size_t todraw = (mUpdateCnt / 10) % (mText.GetNumGlyphs() + 1);
+
+		mText.DrawGlyphs(g, 0, todraw, 100, 200, Color(255, 0, 0));
+
+		todraw = (mUpdateCnt / 80) % (mText.GetLines().size() + 1);
+		mText.DrawLines(g, 0, todraw, 100, 220 + mText.GetHeight(), Color(255, 0, 0));
+
+		mText.Draw(g, 100, 240 + mText.GetHeight() * 2, Color(255, 0, 0));
+	}
 
 	PerformanceStats& stats = mApp->mPerformanceStats;
 	std::wstring str;
