@@ -328,12 +328,19 @@ void Board::Draw(Graphics* g)
 	{
 		size_t todraw = (mUpdateCnt / 10) % (mText.GetNumGlyphs() + 1);
 
-		mText.DrawGlyphs(g, 0, todraw, 100, 200, Color(255, 0, 0));
+		int x = 60;
+		int y = 200;
+		g->DrawRect(x, y, mText.GetWidth(), mText.GetHeight());
+		mText.DrawGlyphs(g, 0, todraw, x, y, Color(255, 0, 0));
 
 		todraw = (mUpdateCnt / 80) % (mText.GetLines().size() + 1);
-		mText.DrawLines(g, 0, todraw, 100, 220 + mText.GetHeight(), Color(255, 0, 0));
+		y += mText.GetHeight();
+		g->DrawRect(x, y, mText.GetWidth(), mText.GetHeight());
+		mText.DrawLines(g, 0, todraw, x, y, Color(255, 0, 0));
 
-		mText.Draw(g, 100, 240 + mText.GetHeight() * 2, Color(255, 0, 0));
+		y += mText.GetHeight();
+		g->DrawRect(x, y, mText.GetWidth(), mText.GetHeight());
+		mText.Draw(g, x, y, Color(255, 0, 0));
 	}
 
 	PerformanceStats& stats = mApp->mPerformanceStats;
