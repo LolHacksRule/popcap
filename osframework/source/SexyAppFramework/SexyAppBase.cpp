@@ -1236,21 +1236,30 @@ bool SexyAppBase::DrawDirtyStuff()
 		if (drewScreen)
 			mScreenBltTime = aEndTime - aPreScreenBltTime;
 
-		if (1 && mFPSTime >= 2000) // Show FPS about every 5 seconds
+		if (mFPSTime >= 500) // Show FPS about every 5 seconds
 		{
 			uint32 aTickNow = GetTickCount();
 
 			//printf("FPSCount: %d FlipCount: %d\n", mFPSCount, mFPSFlipCount);
 			//printf("FPSTime: %u elasped %u\n", mFPSTime, aTickNow - mFPSStartTick);
-			printf("Theoretical FPS: %d\n", (int) (mFPSCount * 1000 / mFPSTime));
-			printf("Actual      FPS: %d\n", (mFPSFlipCount * 1000) / std::max((aTickNow - mFPSStartTick), 1U));
-			printf("Dirty Rate     : %d\n", (mFPSDirtyCount * 1000) / std::max((aTickNow - mFPSStartTick), 1U));
+			PerformanceStats& stats = mPerformanceStats;
 
-			mFPSTime = 0;
-			mFPSCount = 0;
-			mFPSFlipCount = 0;
-			mFPSStartTick = aTickNow;
-			mFPSDirtyCount = 0;
+			stats.mTheoreticalFPS = mFPSCount * 1000.0f / mFPSTime;
+			stats.mFPS = mFPSFlipCount * 1000.0f / std::max((aTickNow - mFPSStartTick), 1U);
+			stats.mDirtyRate = mFPSDirtyCount * 1000 / std::max((aTickNow - mFPSStartTick), 1U);
+
+			if (mFPSTime >= 2000)
+			{
+				printf("Theoretical FPS: %.2f\n", stats.mTheoreticalFPS);
+				printf("Actual      FPS: %.2f\n", stats.mFPS);
+				printf("Dirty Rate     : %d\n", stats.mDirtyRate);
+
+				mFPSTime = 0;
+				mFPSCount = 0;
+				mFPSFlipCount = 0;
+				mFPSStartTick = aTickNow;
+				mFPSDirtyCount = 0;
+			}
 		}
 
 		if ((mLoadingThreadStarted) && (!mLoadingThreadCompleted))

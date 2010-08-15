@@ -132,6 +132,20 @@ enum
 typedef std::map<HANDLE, int> HandleToIntMap;
 #endif
 
+struct PerformanceStats
+{
+	float mTheoreticalFPS;
+	float mFPS;
+	int   mDirtyRate;
+
+	PerformanceStats()
+	{
+		mTheoreticalFPS = 100.0f;
+		mFPS = 100.0f;
+		mDirtyRate = 100;
+	}
+};
+
 class SexyAppBase : public ButtonListener, public DialogListener
 {
 public:
@@ -362,6 +376,8 @@ public:
 
 	EventVector                             mAccuEvents;
 	std::string                             mCmdLine;
+
+	PerformanceStats                        mPerformanceStats;
 
 #ifdef ZYLOM
 	uint					mZylomGameId;
