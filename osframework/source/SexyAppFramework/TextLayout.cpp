@@ -8,8 +8,10 @@ TextLayout::TextLayout()
 	mFont = 0;
 	mWidth = 0;
 	mHeight = 0;
+	mNumGlyphs = 0;
 	mLineSpacing = -1;
 	mJustification = -1;
+	mSingleLine = true;
 	mWrap = false;
 	mRich = false;
 	mDirty = true;
@@ -18,6 +20,12 @@ TextLayout::TextLayout()
 
 TextLayout::~TextLayout()
 {
+}
+
+size_t TextLayout::GetNumGlyphs()
+{
+	Update();
+	return mNumGlyphs;
 }
 
 void TextLayout::SetText(const std::string &text, bool rich)
@@ -69,7 +77,9 @@ void TextLayout::SetRect(const Rect &rect)
 	mDirty = true;
 }
 
-void TextLayout::DrawLine(Graphics *g, TextLine& line, int xoffset, int yoffset,
+void TextLayout::DrawLine(Graphics *g, TextLine& line,
+			  size_t from, size_t length,
+			  int xoffset, int yoffset,
 			  const Color &color, int justification,
 			  const Rect& rect)
 {
@@ -83,9 +93,12 @@ void TextLayout::DrawLine(Graphics *g, TextLine& line, int xoffset, int yoffset,
 		break;
 	}
 
+	size_t numglyphs = 0;
+	size_t to = from + length;
 	for (size_t i = 0; i < line.mRuns.size(); i++)
 	{
 		TextRun &run = line.mRuns[i];
+		GlyphVector &glyphs = run.mGlyphs;
 		Color curcolor;
 
 		if (run.mHasColor)
@@ -96,9 +109,24 @@ void TextLayout::DrawLine(Graphics *g, TextLine& line, int xoffset, int yoffset,
 		else
 			curcolor = color;
 
-		mFont->DrawGlyphs(g, xoffset, yoffset,
-				  run.mGlyphs, 0, run.mGlyphs.size(),
-				  curcolor, g->mClipRect);
+		size_t glyphslength = 0;
+		if (from >= numglyphs)
+		{
+			size_t glyphsstart = from - numglyphs;
+
+			if (to < numglyphs + glyphs.size())
+				glyphslength = to - from;
+			else
+				glyphslength = glyphs.size() - (from - numglyphs);
+			mFont->DrawGlyphs(g, xoffset, yoffset,
+					  glyphs,
+					  glyphsstart, glyphslength,
+					  curcolor, g->mClipRect);
+		}
+		numglyphs += run.mGlyphs.size();
+		from += glyphslength;
+		if (from == to)
+			break;
 		xoffset += run.mWidth;
 	}
 }
@@ -114,7 +142,7 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 
 	Color oldcolor = g->GetColor();
 
-	if (!mWrap)
+	if (mSingleLine)
 	{
 		TextLine &line = mLines[0];
 		int xoffset = x;
@@ -124,8 +152,8 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 		if (rect.mWidth == 0)
 			rect.mWidth = line.mExtents.mWidth;
 
-		DrawLine(g, line, xoffset, yoffset, color, mJustification,
-			 rect);
+		DrawLine(g, line, 0, line.mNumGlyphs, xoffset, yoffset,
+			 color, mJustification, rect);
 	}
 	else
 	{
@@ -143,10 +171,124 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 			if (!rect.mHeight ||
 			    (yoffset - y >= rect.mY &&
 			     yoffset - y + line.mExtents.mHeight <= rect.mY + rect.mHeight))
-				DrawLine(g, line, xoffset, yoffset, color,
+				DrawLine(g, line, 0, line.mNumGlyphs,
+					 xoffset, yoffset, color,
 					 mJustification, rect);
 			yoffset += line.mExtents.mHeight;
 		}
+	}
+
+	g->SetColor(oldcolor);
+}
+
+void TextLayout::DrawGlyphs(Graphics *g,
+			    size_t from, size_t length,
+			    int x, int y,
+			    const Color &color)
+{
+	Update();
+	if (!mNumGlyphs || from > mNumGlyphs - 1)
+		return;
+
+	size_t numglyphs = 0;
+	size_t i;
+	for (i = 0; i < mLines.size(); i++)
+	{
+		if (from >= numglyphs && from < numglyphs + mLines[i].mNumGlyphs)
+			break;
+		numglyphs += mLines[i].mNumGlyphs;
+	}
+
+	size_t to = from + length;
+	if (to > mNumGlyphs)
+		to = mNumGlyphs;
+
+	Rect rect;
+	int xoffset = x;
+	int yoffset = y;
+
+	if (!mSingleLine)
+		yoffset += mFont->GetAscent() - mFont->GetAscentPadding();
+
+	for (; i < mLines.size(); i++)
+	{
+		TextLine& line = mLines[i];
+
+		rect = mRect;
+		if (rect.mWidth == 0)
+			rect.mWidth = line.mExtents.mWidth;
+
+		size_t start = from - numglyphs;
+		size_t length;
+
+		if (to - from < line.mNumGlyphs)
+			length = to - from;
+		else
+			length = line.mNumGlyphs - start;
+
+		if (!rect.mHeight ||
+		    (yoffset - y >= rect.mY &&
+		     yoffset - y + line.mExtents.mHeight <= rect.mY + rect.mHeight))
+			DrawLine(g, line, start, length, xoffset, yoffset, color,
+				 mJustification, rect);
+
+		from += length;
+		numglyphs += line.mNumGlyphs;
+		if (from == to)
+			break;
+		yoffset += line.mExtents.mHeight;
+	}
+	
+}
+
+void TextLayout::DrawLine(Graphics *g,
+			  size_t line,
+			  int x, int y,
+			  const Color &color)
+{
+	DrawLines(g, line, 1, x, y, color);
+
+}
+
+void TextLayout::DrawLines(Graphics *g,
+			   size_t from, size_t length,
+			   int x, int y,
+			   const Color &color)
+{
+	Update();
+
+	if (mSingleLine)
+	{
+		if (from > 0)
+			return;
+
+		Draw(g, x, y, color);
+		return;
+	}
+
+	Color oldcolor = g->GetColor();
+
+	int xoffset = x;
+	int yoffset = y + mFont->GetAscent() - mFont->GetAscentPadding();
+
+	size_t to = mLines.size();
+	if (from + length < to)
+		to = from + length;
+	for (size_t i = 0; i < to; i++)
+	{
+		TextLine &line = mLines[i];
+		Rect rect = mRect;
+
+		if (rect.mWidth == 0)
+			rect.mWidth = line.mExtents.mWidth;
+
+		if (i >= from && (!rect.mHeight ||
+				  (yoffset - y >= rect.mY &&
+				   yoffset - y + line.mExtents.mHeight <= rect.mY + rect.mHeight)))
+			DrawLine(g, line, 0, line.mNumGlyphs,
+				 xoffset, yoffset, color,
+				 mJustification, rect);
+		yoffset += line.mExtents.mHeight;
 	}
 
 	g->SetColor(oldcolor);
@@ -192,6 +334,51 @@ void TextLayout::SetWrap(bool wrap)
 bool TextLayout::GetWrap()
 {
 	return mWrap;
+}
+
+void TextLayout::SetSingleLine(bool singleline)
+{
+	if (mSingleLine == singleline)
+		return;
+
+	mSingleLine = singleline;
+	mDirty = true;
+}
+
+bool TextLayout::GetSingleLine()
+{
+	return mSingleLine;
+}
+
+const TextLineVector& TextLayout::GetLines()
+{
+	Update();
+	return mLines;
+}
+
+const TextLine* TextLayout::GetLine(size_t line)
+{
+	Update();
+
+	if (line < mLines.size())
+		return &mLines[line];
+	return 0;
+}
+
+TextExtents TextLayout::GetLineExtents(size_t index)
+{
+	const TextLine* line = GetLine(index);
+
+	if (!line)
+	{
+		TextExtents extents;
+
+		extents.mWidth = 0;
+		extents.mHeight = 0;
+		return extents;
+	}
+
+	return line->mExtents;
 }
 
 int TextLayout::GetGlyphsWidth(const GlyphVector &glyphs)
@@ -273,6 +460,7 @@ int TextLayout::BuildLine(std::wstring text, int offset, int length,
 				i += 7;
 
 				run.mWidth = GetGlyphsWidth(run.mGlyphs);
+				line.mNumGlyphs += run.mGlyphs.size();
 				x += run.mWidth;
 
 				str = L"";
@@ -305,6 +493,7 @@ int TextLayout::BuildLine(std::wstring text, int offset, int length,
 		mFont->StringToGlyphs(str, run.mGlyphs);
 
 		run.mWidth = GetGlyphsWidth(run.mGlyphs);
+		line.mNumGlyphs += run.mGlyphs.size();
 		x += run.mWidth;
 	}
 
@@ -314,9 +503,10 @@ int TextLayout::BuildLine(std::wstring text, int offset, int length,
 void TextLayout::BuildLines()
 {
 	mLines.clear();
+	mNumGlyphs = 0;
 
 	int linespacing = mLineSpacing <= 0 ? mFont->GetLineSpacing() : mLineSpacing;
-	if (!mWrap)
+	if (mSingleLine)
 	{
 		mLines.push_back(TextLine());
 
@@ -326,6 +516,7 @@ void TextLayout::BuildLines()
 		line.mExtents.mHeight = linespacing;
 		mWidth = width;
 		mHeight = linespacing;
+		mNumGlyphs = line.mNumGlyphs;
 	}
 	else
 	{
@@ -340,6 +531,7 @@ void TextLayout::BuildLines()
 		int maxwidth = 0;
 		int height = 0;
 		int indentx = 0;
+		bool needwrap = false;
 
 		while (curpos < length)
 		{
@@ -368,7 +560,8 @@ void TextLayout::BuildLines()
 			}
 			else if (curchar == L'\n')
 			{
-				curwidth = mRect.mWidth + 1; // force word wrap
+				// force wrap
+				needwrap = true;
 				spacepos = curpos;
 				curpos += 1; // skip enter on next go round
 			}
@@ -376,7 +569,7 @@ void TextLayout::BuildLines()
 			curwidth += mFont->CharWidthKern(curchar, prevchar);
 			prevchar = curchar;
 
-			if (curwidth > mRect.mWidth) // need to wrap
+			if (needwrap || (mWrap && curwidth > mRect.mWidth)) // need to wrap
 			{
 				mLines.push_back(TextLine());
 
@@ -398,6 +591,7 @@ void TextLayout::BuildLines()
 					writtenwidth = curwidth + indentx;
 					line.mExtents.mWidth = writtenwidth;
 					line.mExtents.mHeight = linespacing;
+					mNumGlyphs += line.mNumGlyphs;
 
 					// skip spaces
 					curpos = spacepos + 1;
@@ -430,6 +624,7 @@ void TextLayout::BuildLines()
 
 					line.mExtents.mWidth = writtenwidth;
 					line.mExtents.mHeight = linespacing;
+					mNumGlyphs += line.mNumGlyphs;
 				}
 
 				if (writtenwidth > maxwidth)
@@ -441,6 +636,7 @@ void TextLayout::BuildLines()
 				curwidth = 0;
 				prevchar = 0;
 				indentx = 0;
+				needwrap = false;
 			}
 			else
 			{
@@ -471,6 +667,7 @@ void TextLayout::BuildLines()
 
 			line.mExtents.mWidth = writtenwidth;
 			line.mExtents.mHeight = linespacing;
+			mNumGlyphs += line.mNumGlyphs;
 			height += line.mExtents.mHeight;
 		}
 		else if (curchar == '\n')
@@ -480,6 +677,7 @@ void TextLayout::BuildLines()
 			TextLine& line = mLines.back();
 			line.mExtents.mWidth = 0;
 			line.mExtents.mHeight = linespacing;
+			line.mNumGlyphs = 0;
 			height += line.mExtents.mHeight;
 		}
 
