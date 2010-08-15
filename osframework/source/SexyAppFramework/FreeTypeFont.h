@@ -48,7 +48,9 @@ namespace Sexy
 		virtual bool                    StringToGlyphs(const std::wstring &theString,
 							       GlyphVector &theGlyphs);
 		virtual void                    DrawGlyphs(Graphics *g, int theX, int theY,
-							   GlyphVector& theGlyphs, const Color &theColor,
+							   GlyphVector& theGlyphs,
+							    size_t from, size_t length,
+							   const Color &theColor,
 							   const Rect& theClipRect);
 
 		virtual Font*			Duplicate();

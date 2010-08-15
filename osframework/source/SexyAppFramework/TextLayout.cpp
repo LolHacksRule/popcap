@@ -96,7 +96,9 @@ void TextLayout::DrawLine(Graphics *g, TextLine& line, int xoffset, int yoffset,
 		else
 			curcolor = color;
 
-		mFont->DrawGlyphs(g, xoffset, yoffset, run.mGlyphs, curcolor, g->mClipRect);
+		mFont->DrawGlyphs(g, xoffset, yoffset,
+				  run.mGlyphs, 0, run.mGlyphs.size(),
+				  curcolor, g->mClipRect);
 		xoffset += run.mWidth;
 	}
 }

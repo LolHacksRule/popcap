@@ -2049,7 +2049,9 @@ static inline Color ColorMulAdd(const Color &c1, const Color &c2, const Color &c
 	return aColor;
 }
 
-void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyphs,
+void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY,
+			   GlyphVector& theGlyphs,
+			   size_t from, size_t length,
 			   const Color& theColor, const Rect& theClipRect)
 {
 	AutoCrit anAutoCrit(gRenderCritSec);

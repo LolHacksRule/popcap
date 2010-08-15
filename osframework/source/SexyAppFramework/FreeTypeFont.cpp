@@ -98,7 +98,9 @@ bool FreeTypeFont::StringToGlyphs(const std::wstring &theString,
 }
 
 void FreeTypeFont::DrawGlyphs(Graphics *g, int theX, int theY,
-			      GlyphVector& theGlyphs, const Color &theColor,
+			      GlyphVector& theGlyphs,
+			      size_t from, size_t length,
+			      const Color &theColor,
 			      const Rect& theClipRect)
 {
 	mScaledFont->DrawGlyphs(g, theX, theY, theGlyphs, theColor, theClipRect, mDrawShadow);
