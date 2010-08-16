@@ -47,7 +47,7 @@ void ButtonWidget::SetFont(Font* theFont)
 {
 	delete mFont;
 	mFont = theFont->Duplicate();
-	mLabelLayout.SetFont(mFont);
+	mLabelText.SetFont(mFont);
 }
 
 bool ButtonWidget::IsButtonDown()
@@ -86,9 +86,9 @@ void ButtonWidget::Draw(Graphics* g)
 	if (mFont != NULL)
 	{
 		if (mLabelJustify == BUTTON_LABEL_CENTER)
-			aFontX = (mWidth - mLabelLayout.GetWidth())/2;
+			aFontX = (mWidth - mLabelText.GetWidth())/2;
 		else if (mLabelJustify == BUTTON_LABEL_RIGHT)
-			aFontX = mWidth - mLabelLayout.GetWidth();
+			aFontX = mWidth - mLabelText.GetWidth();
 		aFontY = (mHeight + mFont->GetAscent() - mFont->GetAscent()/6 - 1)/2;
 
 		//aFontX = (mWidth - mFont->StringWidth(mLabel))/2;
@@ -128,7 +128,7 @@ void ButtonWidget::Draw(Graphics* g)
 				g->SetColor(mColors[COLOR_LABEL]);
 
 			//g->DrawString(mLabel, aFontX+1, aFontY+1);
-			mLabelLayout.Draw(g, aFontX + 1, aFontY + 1,
+			mLabelText.Draw(g, aFontX + 1, aFontY + 1,
 					  g->GetColor());
 		}
 		else
@@ -154,7 +154,7 @@ void ButtonWidget::Draw(Graphics* g)
 				g->SetColor(mColors[COLOR_LABEL]);
 
 			//g->DrawString(mLabel, aFontX, aFontY);
-			mLabelLayout.Draw(g, aFontX, aFontY,
+			mLabelText.Draw(g, aFontX, aFontY,
 					  g->GetColor());
 		}
 	}
@@ -186,7 +186,7 @@ void ButtonWidget::Draw(Graphics* g)
 			else
 				g->SetColor(mColors[COLOR_LABEL]);
 			//g->DrawString(mLabel, aFontX, aFontY);
-			mLabelLayout.Draw(g, aFontX, aFontY,
+			mLabelText.Draw(g, aFontX, aFontY,
 					  g->GetColor());
 		}
 		else
@@ -200,7 +200,7 @@ void ButtonWidget::Draw(Graphics* g)
 
 			g->SetColor(mColors[COLOR_LABEL_HILITE]);
 			//g->DrawString(mLabel, aFontX+1, aFontY+1);
-			mLabelLayout.Draw(g, aFontX + 1, aFontY + 1,
+			mLabelText.Draw(g, aFontX + 1, aFontY + 1,
 					  g->GetColor());
 		}
 	}
@@ -327,7 +327,7 @@ void ButtonWidget::Update()
 	if (mLastLabel != mLabel)
 	{
 		mLastLabel = mLabel;
-		mLabelLayout.SetText(mLabel);
+		mLabelText.SetText(mLabel);
 	}
 
 	if (mIsDown && mIsOver)

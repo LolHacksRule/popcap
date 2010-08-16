@@ -33,7 +33,7 @@ public:
 	SexyString				mLabel;
 	int						mLabelJustify;
 	Font*					mFont;
-	TextLayout                              mLabelLayout;
+	TextLayout                              mLabelText;
 	SexyString                              mLastLabel;
 	Image*					mButtonImage;
 	Image*					mOverImage;

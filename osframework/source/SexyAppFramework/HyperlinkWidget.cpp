@@ -25,7 +25,7 @@ void HyperlinkWidget::Draw(Graphics* g)
 		mFont = mWidgetManager->mApp->mDDInterface->CreateFont
 			(mWidgetManager->mApp, "Arial Unicode MS", 10); //baz changed
 
-	int aFontX = (mWidth - mLabelLayout.GetWidth())/2;
+	int aFontX = (mWidth - mLabelText.GetWidth())/2;
 	int aFontY = (mHeight + mFont->GetAscent())/2 - 1;
 
 	if (mIsOver || mHasFocus)
@@ -35,7 +35,7 @@ void HyperlinkWidget::Draw(Graphics* g)
 
 	g->SetFont(mFont);
 	//g->DrawString(mLabel, aFontX, aFontY);
-	mLabelLayout.Draw(g, aFontX, aFontY, g->GetColor());
+	mLabelText.Draw(g, aFontX, aFontY, g->GetColor());
 
 	for (int i = 0; i < mUnderlineSize; i++)
 		g->FillRect(aFontX, aFontY+mUnderlineOffset+i, mFont->StringWidth(mLabel), 1);
