@@ -473,18 +473,39 @@ bool WidgetManager::DrawScreen()
 	aVisibleRect.mWidth = mWidth;
 	aVisibleRect.mHeight = mHeight;
 
-	// clear it
-	anImage->ClearRect(aVisibleRect);
-
 	Graphics g(aScrG);
 	g.ClipRect(aVisibleRect);
 	g.Translate(-mMouseDestRect.mX, -mMouseDestRect.mY);
 	bool is3D = mApp->Is3DAccelerated();
-	if (aDirtyCount > 0 || cursorChanged)
+	if (mWidgets.empty())
 	{
+		anImage->ClearRect(aVisibleRect);
+	}
+	else if (aDirtyCount > 0 || redrawAll)
+	{
+		// find a widget that isn't transparent and covers the
+		// whole screen.
+		WidgetList::reverse_iterator anItr = mWidgets.rbegin();
+		while (anItr != mWidgets.rend())
+		{
+			Widget* aWidget = *anItr;
+			if (aWidget->mVisible && !aWidget->mHasAlpha &&
+			    aWidget->mX <= 0 && aWidget->mY <= 0 &&
+			    aWidget->mX + aWidget->mWidth >= mWidth &&
+			    aWidget->mY + aWidget->mHeight >= mHeight)
+				break;
+			++anItr;
+		}
 
-		WidgetList::iterator anItr = mWidgets.begin();
-		while (anItr != mWidgets.end())
+		// if failed to find such a widget, then clear
+		// background by ourself.
+		if (anItr == mWidgets.rend())
+		{
+			anImage->ClearRect(aVisibleRect);
+			--anItr;
+		}
+
+		while (true)
 		{
 			Widget* aWidget = *anItr;
 
@@ -504,7 +525,9 @@ bool WidgetManager::DrawScreen()
 				aWidget->mDirty = false;
 			}
 
-			++anItr;
+			if (anItr == mWidgets.rbegin())
+				break;
+			--anItr;
 		}
 	}
 
