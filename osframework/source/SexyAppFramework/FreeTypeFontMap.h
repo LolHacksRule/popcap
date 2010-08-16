@@ -80,7 +80,7 @@ namespace Sexy
 			: mApp(theApp), mFace(theFace), mPointSize(thePointSize),
 			  mBold(bold), mItalics(italics), mUnderline(underline)
 			{
-				Hash();
+				mHashCode = Hash();
 			}
 
 			ScaledFontKey(const ScaledFontKey &other)
@@ -102,8 +102,6 @@ namespace Sexy
                                         h ^= 1237;
                                 if (mItalics)
                                         h ^= 4177;
-                                if (mBold)
-                                        h ^= 6247;
                                 if (mUnderline)
                                         h ^= 9371;
 
