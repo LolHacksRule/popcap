@@ -41,6 +41,7 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 	mBaseFont = aFontMap->CreateBaseFont(theFace.c_str(), 0);
 	if (!mBaseFont)
 		mBaseFont = aFontMap->CreateBaseFont(0, 0);
+	mGlyphMapCookie = 0;
 	mHeight = 0;
 	mAscent = 0;
 	mDescent = 0;
@@ -527,8 +528,8 @@ bool FreeTypeScaledFont::StringToGlyphs(const std::wstring &theString,
 		glyph.mIndex = index;
 		glyph.mX = x;
 		glyph.mY = y;
-		glyph.mWidth = entry->mWidth;
-		glyph.mHeight = entry->mHeight;
+		glyph.mWidth = entry->mMetrics.width;
+		glyph.mHeight = entry->mMetrics.height;
 		glyph.mAdvanceX = entry->mMetrics.x_advance;
 		glyph.mAdvanceY = entry->mMetrics.y_advance;
 
@@ -580,8 +581,21 @@ void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
 	for (size_t i = from; i < theGlyphSize; i++)
 	{
 		Glyph& aGlyph = theGlyphs[i];
-		FreeTypeGlyphEntry* entry = LookupGlyph(aGlyph.mIndex, true);
+		FreeTypeGlyphEntry* entry = 0;
 
+		if (aGlyph.mReserved[0] == mGlyphMapCookie &&
+		    aGlyph.mNativeData[0])
+		{
+			entry = (FreeTypeGlyphEntry*)aGlyph.mNativeData[0];
+			if (!entry->mImage && aGlyph.mWidth && aGlyph.mHeight)
+				entry = 0;
+		}
+		if (!entry)
+		{
+			entry = LookupGlyph(aGlyph.mIndex, true);
+			aGlyph.mReserved[0] = mGlyphMapCookie;
+			aGlyph.mNativeData[0] = entry;
+		}
 		if (!entry)
 			continue;
 
@@ -970,6 +984,9 @@ void FreeTypeScaledFont::RemoveGlyphImage(FT_UInt index)
 void FreeTypeScaledFont::ShrinkGlyphCache(void)
 {
 	size_t size = mGlyphMap.size();
+	if (size > 1024)
+		mGlyphMapCookie++;
+
 	while (size-- > 1024)
 	{
 		GlyphMap::iterator it;

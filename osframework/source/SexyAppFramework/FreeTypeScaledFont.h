@@ -157,6 +157,7 @@ namespace Sexy
 
 		// Glyph info cache
 		GlyphMap			mGlyphMap;
+		int                             mGlyphMapCookie;
 
 		typedef std::map<unsigned int, FT_Int> GlyphIndexMap;
 		GlyphIndexMap                   mGlyphIndexMap;
