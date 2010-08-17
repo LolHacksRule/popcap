@@ -2101,8 +2101,8 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY,
 			else
 				aCharData = aBaseFontLayer->GetCharData(aChar);
 
-			int aLayerXPos = theX + theGlyphs[aCharNum].mX;
-			int aLayerYPos = theY + theGlyphs[aCharNum].mY;
+			int aLayerXPos = theX + aGlyph.mX;
+			int aLayerYPos = theY + aGlyph.mY;
 
 			int anImageX;
 			int anImageY;
@@ -2142,15 +2142,16 @@ void ImageFont::DrawGlyphs(Graphics* g, int theX, int theY,
 				break;
 
 			RenderCommand* aRenderCommand = &gRenderCommandPool[aCurPoolIdx++];
+			const Rect& rect = anActiveFontLayer->mScaledCharImageRects[aChar];
 
 			aRenderCommand->mImage = anActiveFontLayer->mScaledImage;
 			aRenderCommand->mColor = aColors[i];
 			aRenderCommand->mDest[0] = anImageX;
 			aRenderCommand->mDest[1] = anImageY;
-			aRenderCommand->mSrc[0] = anActiveFontLayer->mScaledCharImageRects[aChar].mX;
-			aRenderCommand->mSrc[1] = anActiveFontLayer->mScaledCharImageRects[aChar].mY;
-			aRenderCommand->mSrc[2] = anActiveFontLayer->mScaledCharImageRects[aChar].mWidth;
-			aRenderCommand->mSrc[3] = anActiveFontLayer->mScaledCharImageRects[aChar].mHeight;
+			aRenderCommand->mSrc[0] = rect.mX;
+			aRenderCommand->mSrc[1] = rect.mY;
+			aRenderCommand->mSrc[2] = rect.mWidth;
+			aRenderCommand->mSrc[3] = rect.mHeight;
 			aRenderCommand->mMode = aBaseFontLayer->mDrawMode;
 			aRenderCommand->mNext = NULL;
 
