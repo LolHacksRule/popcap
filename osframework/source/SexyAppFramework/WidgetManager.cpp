@@ -443,17 +443,20 @@ bool WidgetManager::DrawScreen()
 	{
 		Widget* aWidget = *anItr;
 		if (aWidget->mDirty && aWidget->mVisible)
+		{
 			aDirtyCount++;
+			break;
+		}
 		++anItr;
 	}
 
 	mMinDeferredOverlayPriority = 0x7FFFFFFF;
 	mDeferredOverlayWidgets.resize(0);
 
-	Graphics aScrG(dynamic_cast<Image*>(mImage));
+	Graphics aScrG(mImage);
 	mCurG = &aScrG;
 
-	Image* anImage = dynamic_cast<Image*>(mImage);
+	Image* anImage = mImage;
 	bool surfaceLocked = false;
 	//if (anImage != NULL)
 	//surfaceLocked = anImage->LockSurface();
@@ -464,8 +467,11 @@ bool WidgetManager::DrawScreen()
 	UnmapMouse(aCursorX, aCursorY);
 
 	bool cursorChanged = aInterface->UpdateCursor(aCursorX, aCursorY);
+	if (cursorChanged)
+		aDirtyCount++;
 
-	bool redrawAll = cursorChanged;
+	if (!aDirtyCount)
+		return false;
 
 	Rect aVisibleRect;
 	aVisibleRect.mX = -mMouseDestRect.mX;
@@ -481,7 +487,7 @@ bool WidgetManager::DrawScreen()
 	{
 		anImage->ClearRect(aVisibleRect);
 	}
-	else if (aDirtyCount > 0 || redrawAll)
+	else if (aDirtyCount > 0)
 	{
 		// find a widget that isn't transparent and covers the
 		// whole screen.
@@ -512,7 +518,7 @@ bool WidgetManager::DrawScreen()
 			if (aWidget == mWidgetManager->mBaseModalWidget)
 				aModalFlags.mIsOver = true;
 
-			if ((redrawAll || aWidget->mDirty) && (aWidget->mVisible))
+			if (aWidget->mVisible)
 			{
 				Graphics aClipG(g);
 				aClipG.SetFastStretch(!is3D);
