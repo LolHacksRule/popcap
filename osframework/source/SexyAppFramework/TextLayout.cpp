@@ -229,27 +229,28 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 
 	Color oldcolor = g->GetColor();
 
+	if (mCanCached)
+	{
+		if (mLastColor == color)
+		{
+			mSameColorCnt++;
+			if (!mCacheUpdated && mSameColorCnt > 10)
+				UpdateCache(color, true);
+		}
+		else
+		{
+			mSameColorCnt = 0;
+			mCacheUpdated = false;
+			mLastColor = color;
+		}
+	}
+
 	if (mSingleLine)
 	{
 		TextLine &line = mLines[0];
 		int xoffset = x + mRect.mX;
 		int yoffset = y + mRect.mY;
 		Rect rect = mRect;
-
-		if (mCanCached)
-		{
-			if (mLastColor == color)
-			{
-				mSameColorCnt++;
-				if (!mCacheUpdated && mSameColorCnt > 10)
-					UpdateCache(color, true);
-			}
-			else
-			{
-				mSameColorCnt = 0;
-				mCacheUpdated = false;
-			}
-		}
 
 		if (rect.mWidth == 0)
 			rect.mWidth = line.mExtents.mWidth;
