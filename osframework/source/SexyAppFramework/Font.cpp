@@ -107,3 +107,8 @@ void Font::DrawGlyphs(Graphics* g, int theX, int theY, GlyphVector& theGlyphs,
 		      const Color& theColor, const Rect& theClipRect)
 {
 }
+
+bool Font::IsComposited()
+{
+	return mDrawShadow || mOutLine;
+}

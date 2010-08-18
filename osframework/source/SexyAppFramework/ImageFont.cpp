@@ -1451,6 +1451,19 @@ int ImageFont::CharWidth(int theChar)
 	return CharWidthKern(theChar,0);
 }
 
+bool ImageFont::IsComposited()
+{
+	Prepare();
+	if (mActiveLayerList.empty())
+		return false;
+
+	if (mActiveLayerList.size() > 1)
+		return true;
+	if (mActiveLayerList[0].mBaseFontLayer->mColorAdd != Color::Black)
+		return true;
+	return false;
+}
+
 CritSect gRenderCritSec;
 static const int POOL_SIZE = 4096;
 static RenderCommand gRenderCommandPool[POOL_SIZE];

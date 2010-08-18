@@ -206,6 +206,7 @@ public:
 						   size_t from, size_t length,
 						   const Color &theColor,
 						   const Rect& theClipRect);
+	virtual bool                    IsComposited();
 
 	int                             GetMappedChar(int theChar);
 };

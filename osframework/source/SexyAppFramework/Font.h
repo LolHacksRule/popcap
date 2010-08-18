@@ -99,6 +99,8 @@ public:
 							    const Color &theColor,
 							    const Rect& theClipRect);
 
+	virtual bool                             IsComposited();
+
 	virtual Font*			Duplicate() = 0;
 };
 
