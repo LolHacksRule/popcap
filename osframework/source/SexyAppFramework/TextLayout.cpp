@@ -23,6 +23,8 @@ void TextLayout::Init()
 	mRich = false;
 	mDirty = true;
 	mRect = Rect(0, 0, 0, 0);
+	mCanCached = false;
+	mSameColorCnt = 0;
 }
 
 TextLayout::TextLayout(const std::string& text, Font* font,
@@ -155,7 +157,8 @@ void TextLayout::FastDrawLine(Graphics *g, TextLine& line,
 	bool colorizeImages = g->GetColorizeImages();
 
 	g->SetColor(color);
-	g->SetColorizeImages(true);
+	if (!mFont->IsComposited())
+		g->SetColorizeImages(true);
 	g->DrawImage(&mCacheImage, xoffset,
 		     yoffset - mFont->GetAscent() + mFont->GetAscentPadding());
 
@@ -232,6 +235,21 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 		int xoffset = x + mRect.mX;
 		int yoffset = y + mRect.mY;
 		Rect rect = mRect;
+
+		if (mCanCached)
+		{
+			if (mLastColor == color)
+			{
+				mSameColorCnt++;
+				if (!mCacheUpdated && mSameColorCnt > 10)
+					UpdateCache(color, true);
+			}
+			else
+			{
+				mSameColorCnt = 0;
+				mCacheUpdated = false;
+			}
+		}
 
 		if (rect.mWidth == 0)
 			rect.mWidth = line.mExtents.mWidth;
@@ -831,15 +849,13 @@ void TextLayout::Update()
 	}
 	mDirty = false;
 	mCacheUpdated = false;
+	mCacheImage.Create(0, 0);
 	UpdateCache(Color::White);
 }
 
-void TextLayout::UpdateCache(const Color& color)
+void TextLayout::UpdateCache(const Color& color, bool force)
 {
 	if (!mWidth || !mHeight || mCachePolicy == NO_CACHE || mRich)
-		return;
-
-	if (mFont->IsComposited())
 		return;
 
 	if (mLines.size() > 1)
@@ -848,13 +864,21 @@ void TextLayout::UpdateCache(const Color& color)
 	if (mWidth * mHeight * 4 > 32 * 1024)
 		return;
 
+	mCanCached = true;
+
+	if (!force && mFont->IsComposited())
+		return;
+
 	int offset = mFont->GetAscent() - mFont->GetAscentPadding();
 
 	mCacheImage.Create(mWidth, mHeight);
 
 	Graphics g(&mCacheImage);
+	mCanCached = false;
 	Draw(&g, 0, mSingleLine ? offset : 0, color);
 
+	mCanCached = true;
+	mSameColorCnt = 0;
 	mCacheColor = color;
 	mCacheUpdated = true;
 }

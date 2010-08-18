@@ -102,7 +102,7 @@ namespace Sexy {
 	private:
 		void Init();
 		void Update();
-		void UpdateCache(const Color& color);
+		void UpdateCache(const Color& color, bool force = false);
 		int  GetGlyphsWidth(const GlyphVector &glyphs);
 		int  BuildLine(std::wstring text,
 			       int offset, int length,
@@ -140,6 +140,9 @@ namespace Sexy {
 		MemoryImage      mCacheImage;
 		Color            mCacheColor;
 		bool             mCacheUpdated;
+		Color            mLastColor;
+		int              mSameColorCnt;
+		bool             mCanCached;
 	};
 
 }
