@@ -1459,7 +1459,9 @@ bool ImageFont::IsComposited()
 
 	if (mActiveLayerList.size() > 1)
 		return true;
-	if (mActiveLayerList[0].mBaseFontLayer->mColorAdd != Color::Black)
+
+	const Color& color = mActiveLayerList[0].mBaseFontLayer->mColorAdd;
+	if (color.ToInt() != 0)
 		return true;
 	return false;
 }
