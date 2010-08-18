@@ -157,7 +157,7 @@ void TextLayout::FastDrawLine(Graphics *g, TextLine& line,
 	g->SetColor(color);
 	g->SetColorizeImages(true);
 	g->DrawImage(&mCacheImage, xoffset,
-		     yoffset - mFont->GetAscent() - mFont->GetAscentPadding());
+		     yoffset - mFont->GetAscent() + mFont->GetAscentPadding());
 
 	g->SetColorizeImages(colorizeImages);
 }
