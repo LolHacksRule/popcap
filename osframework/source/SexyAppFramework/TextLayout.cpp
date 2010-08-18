@@ -5,6 +5,13 @@ using namespace Sexy;
 
 TextLayout::TextLayout()
 {
+	Init();
+}
+
+void TextLayout::Init()
+{
+	mCachePolicy = AUTO_CACHE;
+	mCacheUpdated = false;
 	mFont = 0;
 	mWidth = 0;
 	mHeight = 0;
@@ -16,6 +23,26 @@ TextLayout::TextLayout()
 	mRich = false;
 	mDirty = true;
 	mRect = Rect(0, 0, 0, 0);
+}
+
+TextLayout::TextLayout(const std::string& text, Font* font,
+		       bool rich, bool singleline)
+{
+	Init();
+	mFont = font;
+	mRich = rich;
+	mSingleLine = singleline;
+	SetText(text);
+}
+
+TextLayout::TextLayout(const std::wstring& text, Font* font,
+		       bool rich, bool singleline)
+{
+	Init();
+	mFont = font;
+	mRich = rich;
+	mSingleLine = singleline;
+	SetText(text);
 }
 
 TextLayout::~TextLayout()
@@ -68,7 +95,7 @@ Font* TextLayout::GetFont()
 	return mFont;
 }
 
-Rect TextLayout::GetRect()
+Rect TextLayout::GetRect() const
 {
 	return mRect;
 }
@@ -98,6 +125,41 @@ void TextLayout::SetRect(const Rect &rect)
 	if (mRect.mHeight && mRect.mX > mRect.mHeight - 1)
 		mRect.mY = mRect.mHeight - 1;
 	mDirty = true;
+}
+
+void TextLayout::SetCachePolicy(TextCachePolicy policy)
+{
+	mCachePolicy = policy;
+}
+
+TextCachePolicy TextLayout::GetCachePolicy() const
+{
+	return mCachePolicy;
+}
+
+void TextLayout::FastDrawLine(Graphics *g, TextLine& line,
+			      int xoffset, int yoffset,
+			      const Color &color, int justification,
+			      const Rect& rect)
+{
+	switch (justification)
+	{
+	case 0:
+		xoffset += (rect.mWidth - line.mExtents.mWidth) / 2;
+		break;
+	case 1:
+		xoffset += (rect.mWidth - line.mExtents.mWidth);
+		break;
+	}
+
+	bool colorizeImages = g->GetColorizeImages();
+
+	g->SetColor(color);
+	g->SetColorizeImages(true);
+	g->DrawImage(&mCacheImage, xoffset,
+		     yoffset - mFont->GetAscent() - mFont->GetAscentPadding());
+
+	g->SetColorizeImages(colorizeImages);
 }
 
 void TextLayout::DrawLine(Graphics *g, TextLine& line,
@@ -176,8 +238,14 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 
 		if (!rect.mHeight ||
 		    mRect.mY + line.mExtents.mHeight <= mRect.mHeight)
-			DrawLine(g, line, 0, line.mNumGlyphs, xoffset, yoffset,
-				 color, mJustification, rect);
+		{
+			if (mCacheUpdated)
+				FastDrawLine(g, line, xoffset, yoffset,
+					     color, mJustification, rect);
+			else
+				DrawLine(g, line, 0, line.mNumGlyphs, xoffset, yoffset,
+					 color, mJustification, rect);
+		}
 	}
 	else
 	{
@@ -186,22 +254,38 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 		int xoffset = 0;
 		int yoffset = 0;
 
-		for (size_t i = 0; i < mLines.size(); i++)
+		if (mLines.size() == 1 && mCacheUpdated)
 		{
-			TextLine &line = mLines[i];
+			TextLine &line = mLines[0];
 			Rect rect = mRect;
 
 			if (rect.mWidth == 0)
 				rect.mWidth = line.mExtents.mWidth;
 
-			if (!rect.mHeight ||
-			    (yoffset + mRect.mY >= 0 &&
-			     yoffset + mRect.mY + line.mExtents.mHeight <= rect.mHeight))
-				DrawLine(g, line, 0, line.mNumGlyphs,
-					 x + xbase + xoffset, y + ybase + yoffset,
-					 color, mJustification, rect);
-			xbase = 0;
-			yoffset += line.mExtents.mHeight;
+			FastDrawLine(g, line,
+				     x + xbase + xoffset,
+				     y + ybase + yoffset,
+				     color, mJustification, rect);
+		}
+		else
+		{
+			for (size_t i = 0; i < mLines.size(); i++)
+			{
+				TextLine &line = mLines[i];
+				Rect rect = mRect;
+
+				if (rect.mWidth == 0)
+					rect.mWidth = line.mExtents.mWidth;
+
+				if (!rect.mHeight ||
+				    (yoffset + mRect.mY >= 0 &&
+				     yoffset + mRect.mY + line.mExtents.mHeight <= rect.mHeight))
+					DrawLine(g, line, 0, line.mNumGlyphs,
+						 x + xbase + xoffset, y + ybase + yoffset,
+						 color, mJustification, rect);
+				xbase = 0;
+				yoffset += line.mExtents.mHeight;
+			}
 		}
 	}
 
@@ -342,14 +426,14 @@ void TextLayout::SetLineSpacing(int linespacing)
 	mDirty = true;
 }
 
-int TextLayout::GetLineSpacing()
+int TextLayout::GetLineSpacing() const
 {
 	return mLineSpacing;
 }
 
 void TextLayout::SetJustification(int justification)
 {
-	if (justification != -1 && justification != 0 ||
+	if (justification != -1 && justification != 0 &&
 	    justification != 1)
 		return;
 	if (mJustification == justification)
@@ -358,7 +442,7 @@ void TextLayout::SetJustification(int justification)
 	mJustification = justification;
 }
 
-int TextLayout::GetJustification()
+int TextLayout::GetJustification() const
 {
 	return mJustification;
 }
@@ -375,7 +459,7 @@ void TextLayout::SetWrap(bool wrap)
 		mDirty = true;
 }
 
-bool TextLayout::GetWrap()
+bool TextLayout::GetWrap() const
 {
 	return mWrap;
 }
@@ -389,7 +473,7 @@ void TextLayout::SetSingleLine(bool singleline)
 	mDirty = true;
 }
 
-bool TextLayout::GetSingleLine()
+bool TextLayout::GetSingleLine() const
 {
 	return mSingleLine;
 }
@@ -746,4 +830,31 @@ void TextLayout::Update()
 		mHeight = 0;
 	}
 	mDirty = false;
+	mCacheUpdated = false;
+	UpdateCache(Color::White);
+}
+
+void TextLayout::UpdateCache(const Color& color)
+{
+	if (!mWidth || !mHeight || mCachePolicy == NO_CACHE || mRich)
+		return;
+
+	if (mFont->IsComposited())
+		return;
+
+	if (mLines.size() > 1)
+		return;
+
+	if (mWidth * mHeight * 4 > 32 * 1024)
+		return;
+
+	int offset = mFont->GetAscent() - mFont->GetAscentPadding();
+
+	mCacheImage.Create(mWidth, mHeight);
+
+	Graphics g(&mCacheImage);
+	Draw(&g, 0, mSingleLine ? offset : 0, color);
+
+	mCacheColor = color;
+	mCacheUpdated = true;
 }

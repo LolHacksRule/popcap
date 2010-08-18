@@ -3,6 +3,7 @@
 
 #include "Graphics.h"
 #include "Font.h"
+#include "MemoryImage.h"
 
 namespace Sexy {
 
@@ -36,10 +37,20 @@ namespace Sexy {
 	};
 	typedef std::vector<TextLine> TextLineVector;
 
+	enum TextCachePolicy
+	{
+		AUTO_CACHE = 0,
+		FORCE_CACHE,
+		NO_CACHE
+	};
 	class TextLayout {
 
 	public:
 		TextLayout();
+		TextLayout(const std::string& text, Font* font = 0,
+			   bool rich = false, bool singleline = false);
+		TextLayout(const std::wstring& text, Font* font = 0,
+			   bool rich = false, bool singleline = false);
 		~TextLayout();
 
 	public:
@@ -52,15 +63,17 @@ namespace Sexy {
 		void                      SetWidth(int width);
 		void                      SetHeight(int height);
 		void                      SetRect(const Rect &rect);
-		Rect                      GetRect();
+		Rect                      GetRect() const;
 		void                      SetLineSpacing(int linespacing);
-		int                       GetLineSpacing();
+		int                       GetLineSpacing() const;
 		void                      SetJustification(int justification);
-		int                       GetJustification();
+		int                       GetJustification() const;
 		void                      SetSingleLine(bool singleline);
-		bool                      GetSingleLine();
+		bool                      GetSingleLine() const;
 		void                      SetWrap(bool wrap);
-		bool                      GetWrap();
+		bool                      GetWrap() const;
+		void                      SetCachePolicy(TextCachePolicy policy);
+		TextCachePolicy           GetCachePolicy() const;
 
 		size_t                    GetNumGlyphs();
 		const TextLineVector&     GetLines();
@@ -87,7 +100,9 @@ namespace Sexy {
 						    const Color &color);
 
 	private:
+		void Init();
 		void Update();
+		void UpdateCache(const Color& color);
 		int  GetGlyphsWidth(const GlyphVector &glyphs);
 		int  BuildLine(std::wstring text,
 			       int offset, int length,
@@ -100,21 +115,31 @@ namespace Sexy {
 			      const Color &color,
 			      int justification,
 			      const Rect& rect);
+		void FastDrawLine(Graphics *g,
+				  TextLine& line,
+				  int xoffset, int yoffset,
+				  const Color &color,
+				  int justification,
+				  const Rect& rect);
 
 	private:
-		bool           mDirty;
-		Font          *mFont;
-		std::wstring   mText;
-		TextLineVector mLines;
-		size_t         mNumGlyphs;
-		Rect           mRect;
-		int            mWidth;
-		int            mHeight;
-		int            mLineSpacing;
-		int            mJustification;
-		bool           mSingleLine;
-		bool           mWrap;
-		bool           mRich;
+		bool             mDirty;
+		TextCachePolicy  mCachePolicy;
+		Font            *mFont;
+		std::wstring     mText;
+		TextLineVector   mLines;
+		size_t           mNumGlyphs;
+		Rect             mRect;
+		int              mWidth;
+		int              mHeight;
+		int              mLineSpacing;
+		int              mJustification;
+		bool             mSingleLine;
+		bool             mWrap;
+		bool             mRich;
+		MemoryImage      mCacheImage;
+		Color            mCacheColor;
+		bool             mCacheUpdated;
 	};
 
 }
