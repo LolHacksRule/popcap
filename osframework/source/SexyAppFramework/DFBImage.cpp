@@ -111,14 +111,30 @@ void DFBImageData::SyncData()
 	int pitch;
 	unsigned char *dst, *src;
 
-	if (mBitsChangedCount == mImage->mBitsChangedCount)
+	if (mWidth == mImage->mWidth &&
+	    mHeight == mImage->mHeight &&
+	    mBitsChangedCount == mImage->mBitsChangedCount)
 		return;
 
 	src = (unsigned char*)mImage->GetBits();
 
+	if (mWidth != mImage->mWidth || mHeight != mImage->mHeight)
+	{
+		mSurface->Release(mSurface);
+		mSurface = mInterface->CreateDFBSurface(mImage->mWidth, mImage->mHeight);
+		if (mSurface)
+			mSurface->GetCapabilities(mSurface, &mCaps);
+	}
+	if (!mSurface)
+		return;
+
 	ret = mSurface->Lock(mSurface, DSLF_WRITE, (void **)&dst, &pitch);
 	if (ret != DFB_OK)
 		return;
+
+	mWidth = mImage->mWidth;
+	mHeight = mImage->mHeight;
+	mBitsChangedCount = mImage->mBitsChangedCount;
 	for (int i = 0; i < mHeight; i++) {
 		if (mCaps & DSCAPS_PREMULTIPLIED)
 		{
@@ -136,8 +152,6 @@ void DFBImageData::SyncData()
 		dst += pitch;
 	}
 	mSurface->Unlock(mSurface);
-
-	mBitsChangedCount = mImage->mBitsChangedCount;
 }
 
 IDirectFBSurface* DFBImage::EnsureSrcSurface(DFBDisplay* interface, Image* theImage)
