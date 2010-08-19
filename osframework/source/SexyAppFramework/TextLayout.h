@@ -143,6 +143,7 @@ namespace Sexy {
 		Color            mLastColor;
 		int              mSameColorCnt;
 		bool             mCanCached;
+		int              mCacheCnt;
 	};
 
 }

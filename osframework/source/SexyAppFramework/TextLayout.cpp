@@ -1,6 +1,12 @@
 #include "TextLayout.h"
 #include "Font.h"
 
+#include <stdlib.h>
+
+#if defined(WIN32) || defined(_WIN32)
+#define random(x) rand(x)
+#endif
+
 using namespace Sexy;
 
 TextLayout::TextLayout()
@@ -25,6 +31,7 @@ void TextLayout::Init()
 	mRect = Rect(0, 0, 0, 0);
 	mCanCached = false;
 	mSameColorCnt = 0;
+	mCacheCnt = 0;
 }
 
 TextLayout::TextLayout(const std::string& text, Font* font,
@@ -234,7 +241,7 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 		if (mLastColor == color)
 		{
 			mSameColorCnt++;
-			if (!mCacheUpdated && mSameColorCnt > 10)
+			if (!mCacheUpdated && mSameColorCnt > mCacheCnt)
 				UpdateCache(color, true);
 		}
 		else
@@ -372,7 +379,6 @@ void TextLayout::DrawGlyphs(Graphics *g,
 			break;
 		yoffset += line.mExtents.mHeight;
 	}
-	
 }
 
 void TextLayout::DrawLine(Graphics *g,
@@ -882,4 +888,5 @@ void TextLayout::UpdateCache(const Color& color, bool force)
 	mSameColorCnt = 0;
 	mCacheColor = color;
 	mCacheUpdated = true;
+	mCacheCnt = 12 + random() % 60;
 }
