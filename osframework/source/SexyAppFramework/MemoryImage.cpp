@@ -1340,7 +1340,7 @@ uint32* MemoryImage::GetBits()
 				*(aDestPtr++) = (r << 16) | (g << 8) | (b) | (anAlpha << 24);
 			}
 		}
-		else if (mD3DData == NULL)
+		else /* if (mD3DData == NULL) */
 		{
 			ZeroMemory(mBits, aSize*sizeof(uint32));
 		}
