@@ -23,14 +23,61 @@ using namespace Sexy;
 #define SURFACE_DIRTY (1 << 0)
 #define BITS_DIRTY    (1 << 1)
 
-typedef struct {
-  GLfloat  tu;
-  GLfloat  tv;
-  SexyRGBA color;
-  GLfloat  sx;
-  GLfloat  sy;
-  GLfloat  sz;
-} SexyGLVertex;
+#pragma pack(push,1)
+struct SexyGLRGBA
+{
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+	unsigned char a;
+
+	SexyGLRGBA()
+	{
+		a = 0;
+		r = 0;
+		g = 0;
+		b = 0;
+	}
+
+	SexyGLRGBA(unsigned char _a, unsigned char _r,
+		   unsigned char _g, unsigned char _b)
+	{
+		a = _a;
+		r = _r;
+		g = _g;
+		b = _b;
+	}
+
+	SexyGLRGBA(const SexyRGBA &rgba)
+	{
+		a = rgba.a;
+		r = rgba.r;
+		g = rgba.g;
+		b = rgba.b;
+	}
+
+	bool operator == (const SexyGLRGBA& rhs) const
+	{
+		return a == rhs.a && r == rhs.r &&
+			g == rhs.g && b == rhs.b;
+	}
+
+	bool operator != (const SexyGLRGBA& rhs) const
+	{
+		return a != rhs.a || r != rhs.r ||
+			g != rhs.g || b != rhs.b;
+	}
+};
+#pragma pack(pop)
+
+struct SexyGLVertex {
+	GLfloat    tu;
+	GLfloat    tv;
+	SexyGLRGBA color;
+	GLfloat    sx;
+	GLfloat    sy;
+	GLfloat    sz;
+};
 
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
@@ -1072,40 +1119,28 @@ void PointClipper<Pred>::ClipPoints (int n, float clipVal, VertexList &in, Verte
 
 static void GLDrawVertexList (VertexList& aList)
 {
+	SexyGLVertex *glVertex = &aList[0];
+
 	GLubyte* colors;
 	GLfloat* coords;
 	GLfloat* verts;
-
-	colors = new GLubyte[4 * aList.size()];
-	coords = new GLfloat[2 * aList.size()];
-	verts = new GLfloat[2 * aList.size()];
-	for (int i = 0; i < aList.size(); ++i) {
-		colors[i * 4]	  = aList[i].color.r;
-		colors[i * 4 + 1] = aList[i].color.g;
-		colors[i * 4 + 2] = aList[i].color.b;
-		colors[i * 4 + 3] = aList[i].color.a;
-		coords[i * 2]	  = aList[i].tu;
-		coords[i * 2 + 1] = aList[i].tv;
-		verts[i * 2]	  = aList[i].sx;
-		verts[i * 2 + 1]  = aList[i].sy;
-	}
 
 	glEnableClientState (GL_VERTEX_ARRAY);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState (GL_COLOR_ARRAY);
 
-	glColorPointer (4, GL_UNSIGNED_BYTE, 0, colors);
-	glVertexPointer (2, GL_FLOAT, 0, verts);
-	glTexCoordPointer (2, GL_FLOAT, 0, coords);
+	colors = (GLubyte*)&glVertex->color;
+	coords = &glVertex->tu;
+	verts = &glVertex->sx;
+
+	glColorPointer (4, GL_UNSIGNED_BYTE, sizeof(*glVertex), colors);
+	glVertexPointer (2, GL_FLOAT, sizeof(*glVertex), verts);
+	glTexCoordPointer (2, GL_FLOAT, sizeof(*glVertex), coords);
 	glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
 
 	glDisableClientState (GL_VERTEX_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState (GL_COLOR_ARRAY);
-
-	delete [] colors;
-	delete [] coords;
-	delete [] verts;
 }
 
 static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
@@ -1315,45 +1350,33 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 	}
 }
 
-#define GetColorFromTriVertex(theVertex, theColor) (theVertex.color ? theVertex.color : theColor)
+#define GetColorFromTriVertex(theVertex, theColor) \
+    (theVertex.color ? theVertex.color : theColor)
 
 static void GLDrawVertexList3 (VertexList& aList)
 {
+	SexyGLVertex *glVertex = &aList[0];
+
 	GLubyte* colors;
 	GLfloat* coords;
 	GLfloat* verts;
-
-	colors = new GLubyte[4 * aList.size()];
-	coords = new GLfloat[2 * aList.size()];
-	verts = new GLfloat[3 * aList.size()];
-	for (int i = 0; i < aList.size(); ++i) {
-		colors[i * 4]	  = aList[i].color.r;
-		colors[i * 4 + 1] = aList[i].color.g;
-		colors[i * 4 + 2] = aList[i].color.b;
-		colors[i * 4 + 3] = aList[i].color.a;
-		coords[i * 2]	  = aList[i].tu;
-		coords[i * 2 + 1] = aList[i].tv;
-		verts[i * 3]	  = aList[i].sx;
-		verts[i * 3 + 1]  = aList[i].sy;
-		verts[i * 3 + 2]  = aList[i].sz;
-	}
 
 	glEnableClientState (GL_VERTEX_ARRAY);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState (GL_COLOR_ARRAY);
 
-	glColorPointer (4, GL_UNSIGNED_BYTE, 0, colors);
-	glVertexPointer (3, GL_FLOAT, 0, verts);
-	glTexCoordPointer (2, GL_FLOAT, 0, coords);
+	colors = (GLubyte*)&glVertex->color;
+	coords = &glVertex->tu;
+	verts = &glVertex->sx;
+
+	glColorPointer (4, GL_UNSIGNED_BYTE, sizeof(*glVertex), colors);
+	glVertexPointer (3, GL_FLOAT, sizeof(*glVertex), verts);
+	glTexCoordPointer (2, GL_FLOAT, sizeof(*glVertex), coords);
 	glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
 
 	glDisableClientState (GL_VERTEX_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState (GL_COLOR_ARRAY);
-
-	delete [] colors;
-	delete [] coords;
-	delete [] verts;
 }
 
 void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriangles,
