@@ -74,10 +74,12 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 	{
 		float scale = mFace->units_per_EM;
 
-		mAscent	 = int(mFace->ascender * mSize / scale);
-		mDescent = int(-mFace->descender * mSize / scale);
-		mHeight	 = int(mFace->height * mSize / scale);
-		mLineSpacingOffset = 0;
+		mAscent	 = ceil(mFace->ascender * mSize / scale);
+		mDescent = floor(-mFace->descender * mSize / scale);
+		mHeight	 = ceil(mFace->height * mSize / scale);
+		mLineSpacingOffset = mHeight - mAscent - mDescent;
+		mHeight -= mLineSpacingOffset;
+
 	}
 	UnlockFace();
 }
@@ -324,7 +326,6 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, FreeTypeGly
 	glyphs.reserve(string.length());
 	glyphs.resize(0);
 
-	FT_Face face = mFace;
 	int len = Utf8FromString(string, unicode, utf8);
 	if (len >= 0)
 	{
@@ -387,7 +388,6 @@ void FreeTypeScaledFont::GlyphsFromString(const std::wstring& string, FreeTypeGl
 
 	glyphs.clear();
 
-	FT_Face face = mFace;
 	for (size_t i = 0; i < string.length(); i++)
 	{
 		if (string[i] == L'\n' || string[i] == L'\r')
@@ -408,6 +408,21 @@ void FreeTypeScaledFont::GlyphsFromString(const std::wstring& string, FreeTypeGl
 	}
 }
 
+static inline void EmitGlyph(std::vector<TriVertex>& vertexList,
+			     float x1, float y1,
+			     float x2, float y2,
+			     float u1, float v1,
+			     float u2, float v2,
+			     DWORD color)
+{
+	vertexList.push_back(TriVertex(x1, y1, u1, v1, color));
+	vertexList.push_back(TriVertex(x2, y1, u2, v1, color));
+	vertexList.push_back(TriVertex(x1, y2, u1, v2, color));
+	vertexList.push_back(TriVertex(x2, y1, u2, v1, color));
+	vertexList.push_back(TriVertex(x2, y2, u2, v2, color));
+	vertexList.push_back(TriVertex(x1, y2, u1, v2, color));
+}
+
 void FreeTypeScaledFont::DrawGlyph(Graphics* g, int theX, int theY, FreeTypeGlyphVector glyphs,
 				   const Color& theColor, const Rect& theClipRect,
 				   bool drawShadow, bool drawOutline)
@@ -426,46 +441,104 @@ void FreeTypeScaledFont::DrawGlyph(Graphics* g, int theX, int theY, FreeTypeGlyp
 	Color anOrigColor = g->GetColor();
 	g->SetColor(theColor);
 
+	Image* anImage = 0;
+	std::vector<TriVertex> vertexList;
+	bool wantTris = g->Is3D() && !g->mDestImage->HasTransform();
+	DWORD color = theColor.ToInt();
+	DWORD shadowColor = aShadowColor.ToInt();
+
 	for (size_t i = 0; i < glyphs.size(); i++)
 	{
 		FreeTypeGlyphEntry* entry = glyphs[i].entry;
+		float x1, y1;
+		float x2, y2;
+		float u1, v1;
+		float u2, v2;
 
 		if (!entry)
 			continue;
 
 		if (entry->mImage)
 		{
+			if (wantTris)
+			{
+				x1 = x + entry->mXOffSet;
+				y1 = y + entry->mYOffSet;
+				x2 = x1 + entry->mWidth;
+				y2 = y1 + entry->mHeight;
+				u1 = (float)entry->mArea->x / entry->mImage->mWidth;
+				v1 = (float)entry->mArea->y / entry->mImage->mHeight;
+				u2 = (float)(entry->mArea->x + entry->mWidth) / entry->mImage->mWidth;
+				v2 = (float)(entry->mArea->y + entry->mHeight) / entry->mImage->mHeight;
+
+				// flush the vertex list
+				if (entry->mImage != anImage && anImage)
+				{
+					g->DrawTrianglesTex(anImage,
+							    (TriVertex (*)[3])&vertexList[0],
+							    vertexList.size() / 3);
+					vertexList.resize(0);
+					anImage = 0;
+				}
+				anImage = entry->mImage;
+			}
+
 			if (drawShadow || drawOutline)
 			{
 				g->SetColor(aShadowColor);
-				if (drawOutline)
+				if (wantTris)
+				{
+					if (drawOutline)
+						EmitGlyph(vertexList,
+							  x1 - 1.0f, y1 - 1.0f, x2 - 1.0f, y2 + 1.0f,
+							  u1, v1, u2, v2, shadowColor);
+
+					EmitGlyph(vertexList,
+						  x1 + 1.0f, y1 + 1.0f, x2 + 1.0f, y2 + 1.0f,
+						  u1, v1, u2, v2, shadowColor);
+					EmitGlyph(vertexList,
+						  x1 - 1.0f, y1 + 1.0f, x2 - 1.0f, y2 + 1.0f,
+						  u1, v1, u2, v2, shadowColor);
+					EmitGlyph(vertexList,
+						  x1 + 1.0f, y1 - 1.0f, x2 + 1.0f, y2 - 1.0f,
+						  u1, v1, u2, v2, shadowColor);
+				}
+				else
+				{
+					if (drawOutline)
+						g->DrawImage(entry->mImage,
+							     (int)floor(x + entry->mXOffSet - 1),
+							     (int)floor(y + entry->mYOffSet - 1),
+							     Rect(entry->mArea->x, entry->mArea->y,
+								  entry->mWidth, entry->mHeight));
 					g->DrawImage(entry->mImage,
 						     (int)floor(x + entry->mXOffSet - 1),
+						     (int)floor(y + entry->mYOffSet + 1),
+						     Rect(entry->mArea->x, entry->mArea->y,
+							  entry->mWidth, entry->mHeight));
+					g->DrawImage(entry->mImage,
+						     (int)floor(x + entry->mXOffSet + 1),
 						     (int)floor(y + entry->mYOffSet - 1),
 						     Rect(entry->mArea->x, entry->mArea->y,
 							  entry->mWidth, entry->mHeight));
-				g->DrawImage(entry->mImage,
-					     (int)floor(x + entry->mXOffSet - 1),
-					     (int)floor(y + entry->mYOffSet + 1),
-					     Rect(entry->mArea->x, entry->mArea->y,
-						  entry->mWidth, entry->mHeight));
-				g->DrawImage(entry->mImage,
-					     (int)floor(x + entry->mXOffSet + 1),
-					     (int)floor(y + entry->mYOffSet - 1),
-					     Rect(entry->mArea->x, entry->mArea->y,
-						  entry->mWidth, entry->mHeight));
-				g->DrawImage(entry->mImage,
-					     (int)floor(x + entry->mXOffSet + 1),
-					     (int)floor(y + entry->mYOffSet + 1),
-					     Rect(entry->mArea->x, entry->mArea->y,
-						  entry->mWidth, entry->mHeight));
+					g->DrawImage(entry->mImage,
+						     (int)floor(x + entry->mXOffSet + 1),
+						     (int)floor(y + entry->mYOffSet + 1),
+						     Rect(entry->mArea->x, entry->mArea->y,
+							  entry->mWidth, entry->mHeight));
+				}
 				g->SetColor(aFontColor);
 			}
-			g->DrawImage(entry->mImage,
-				     (int)floor(x + entry->mXOffSet),
-				     (int)floor(y + entry->mYOffSet),
-				     Rect(entry->mArea->x, entry->mArea->y,
-					  entry->mWidth, entry->mHeight));
+
+			if (wantTris)
+				EmitGlyph(vertexList, x1, y1, x2, y2, u1, v1, u2, v2, color);
+
+			else
+				g->DrawImage(entry->mImage,
+					     (int)floor(x + entry->mXOffSet),
+					     (int)floor(y + entry->mYOffSet),
+					     Rect(entry->mArea->x, entry->mArea->y,
+						  entry->mWidth, entry->mHeight));
 		}
 
 		x += entry->mMetrics.x_advance;
@@ -474,6 +547,10 @@ void FreeTypeScaledFont::DrawGlyph(Graphics* g, int theX, int theY, FreeTypeGlyp
 		if (entry->mArea)
 			entry->mArea->state &= ~FREETYPE_GLYPH_AREA_LOCKED;
 	}
+
+	g->DrawTrianglesTex(anImage,
+			    (TriVertex (*)[3])&vertexList[0],
+			    vertexList.size() / 3);
 
 	g->SetColor(anOrigColor);
 	g->SetColorizeImages(colorizeImages);
@@ -508,7 +585,6 @@ bool FreeTypeScaledFont::StringToGlyphs(const std::wstring &theString,
 		return false;
 	}
 
-	FT_Face face = mFace;
 	float x = 0;
 	float y = 0;
 	for (size_t i = 0; i < theString.length(); i++)
@@ -578,10 +654,24 @@ void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
 	size_t theGlyphSize = theGlyphs.size();
 	if (from + length < theGlyphSize)
 		theGlyphSize = from + length;
+
+	Image* anImage = 0;
+	bool wantTris = g->Is3D() && !g->mDestImage->HasTransform();
+	DWORD color = theColor.ToInt();
+	DWORD shadowColor = aShadowColor.ToInt();
+	size_t lastIndex = 0;
+	std::vector<TriVertex> vertexList;
+	if (wantTris)
+		vertexList.reserve(std::min(theGlyphSize, (size_t)64));
+
 	for (size_t i = from; i < theGlyphSize; i++)
 	{
 		Glyph& aGlyph = theGlyphs[i];
 		FreeTypeGlyphEntry* entry = 0;
+		float x1, y1;
+		float x2, y2;
+		float u1, v1;
+		float u2, v2;
 
 		if (aGlyph.mReserved[0] == mGlyphMapCookie &&
 		    aGlyph.mNativeData[0])
@@ -603,37 +693,108 @@ void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
 		float y = theY + aGlyph.mY;
 		if (entry->mImage)
 		{
+			if (wantTris)
+			{
+				x1 = x + entry->mXOffSet;
+				y1 = y + entry->mYOffSet;
+				x2 = x1 + entry->mWidth;
+				y2 = y1 + entry->mHeight;
+				u1 = (float)entry->mArea->x / entry->mImage->mWidth;
+				v1 = (float)entry->mArea->y / entry->mImage->mHeight;
+				u2 = (float)(entry->mArea->x + entry->mWidth) / entry->mImage->mWidth;
+				v2 = (float)(entry->mArea->y + entry->mHeight) / entry->mImage->mHeight;
+
+				// flush the vertex list
+				if (entry->mImage != anImage && anImage)
+				{
+					g->DrawTrianglesTex(anImage,
+							    (TriVertex (*)[3])&vertexList[0],
+							    vertexList.size() / 3);
+					for (size_t j = lastIndex; j < i - 1; j++)
+					{
+						FreeTypeGlyphEntry *entry =
+							(FreeTypeGlyphEntry*)theGlyphs[j].mNativeData[0];
+						if (entry && entry->mArea)
+							entry->mArea->state &= ~FREETYPE_GLYPH_AREA_LOCKED;
+					}
+					vertexList.resize(0);
+					anImage = 0;
+					lastIndex = i;
+				}
+				anImage = entry->mImage;
+				entry->mArea->state |= FREETYPE_GLYPH_AREA_LOCKED;
+			}
+
 			if (drawShadow || drawOutline)
 			{
 				g->SetColor(aShadowColor);
-				if (drawOutline)
+				if (wantTris)
+				{
+					if (drawOutline)
+						EmitGlyph(vertexList,
+							  x1 - 1.0f, y1 - 1.0f, x2 - 1.0f, y2 + 1.0f,
+							  u1, v1, u2, v2, shadowColor);
+
+					EmitGlyph(vertexList,
+						  x1 + 1.0f, y1 + 1.0f, x2 + 1.0f, y2 + 1.0f,
+						  u1, v1, u2, v2, shadowColor);
+					EmitGlyph(vertexList,
+						  x1 - 1.0f, y1 + 1.0f, x2 - 1.0f, y2 + 1.0f,
+						  u1, v1, u2, v2, shadowColor);
+					EmitGlyph(vertexList,
+						  x1 + 1.0f, y1 - 1.0f, x2 + 1.0f, y2 - 1.0f,
+						  u1, v1, u2, v2, shadowColor);
+				}
+				else
+				{
+					if (drawOutline)
+						g->DrawImage(entry->mImage,
+							     (int)floor(x + entry->mXOffSet - 1),
+							     (int)floor(y + entry->mYOffSet - 1),
+							     Rect(entry->mArea->x, entry->mArea->y,
+								  entry->mWidth, entry->mHeight));
 					g->DrawImage(entry->mImage,
 						     (int)floor(x + entry->mXOffSet - 1),
+						     (int)floor(y + entry->mYOffSet + 1),
+						     Rect(entry->mArea->x, entry->mArea->y,
+							  entry->mWidth, entry->mHeight));
+					g->DrawImage(entry->mImage,
+						     (int)floor(x + entry->mXOffSet + 1),
 						     (int)floor(y + entry->mYOffSet - 1),
 						     Rect(entry->mArea->x, entry->mArea->y,
 							  entry->mWidth, entry->mHeight));
-				g->DrawImage(entry->mImage,
-					     (int)floor(x + entry->mXOffSet - 1),
-					     (int)floor(y + entry->mYOffSet + 1),
-					     Rect(entry->mArea->x, entry->mArea->y,
-						  entry->mWidth, entry->mHeight));
-				g->DrawImage(entry->mImage,
-					     (int)floor(x + entry->mXOffSet + 1),
-					     (int)floor(y + entry->mYOffSet - 1),
-					     Rect(entry->mArea->x, entry->mArea->y,
-						  entry->mWidth, entry->mHeight));
-				g->DrawImage(entry->mImage,
-					     (int)floor(x + entry->mXOffSet + 1),
-					     (int)floor(y + entry->mYOffSet + 1),
-					     Rect(entry->mArea->x, entry->mArea->y,
-						  entry->mWidth, entry->mHeight));
+					g->DrawImage(entry->mImage,
+						     (int)floor(x + entry->mXOffSet + 1),
+						     (int)floor(y + entry->mYOffSet + 1),
+						     Rect(entry->mArea->x, entry->mArea->y,
+							  entry->mWidth, entry->mHeight));
+				}
 				g->SetColor(aFontColor);
 			}
-			g->DrawImage(entry->mImage,
-				     (int)floor(x + entry->mXOffSet),
-				     (int)floor(y + entry->mYOffSet),
-				     Rect(entry->mArea->x, entry->mArea->y,
-					  entry->mWidth, entry->mHeight));
+
+			if (wantTris)
+				EmitGlyph(vertexList, x1, y1, x2, y2, u1, v1, u2, v2, color);
+
+			else
+				g->DrawImage(entry->mImage,
+					     (int)floor(x + entry->mXOffSet),
+					     (int)floor(y + entry->mYOffSet),
+					     Rect(entry->mArea->x, entry->mArea->y,
+						  entry->mWidth, entry->mHeight));
+		}
+	}
+
+	if (anImage)
+	{
+		g->DrawTrianglesTex(anImage,
+				    (TriVertex (*) [3])&vertexList[0],
+				    vertexList.size() / 3);
+		for (size_t j = lastIndex; j < theGlyphSize; j++)
+		{
+			FreeTypeGlyphEntry *entry =
+				(FreeTypeGlyphEntry*)theGlyphs[j].mNativeData[0];
+			if (entry && entry->mArea)
+				entry->mArea->state &= ~FREETYPE_GLYPH_AREA_LOCKED;
 		}
 	}
 
