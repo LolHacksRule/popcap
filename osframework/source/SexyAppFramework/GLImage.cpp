@@ -174,6 +174,14 @@ multiply_rgba(SexyRGBA &rgba)
        rgba.b = multiply_alpha(rgba.b, rgba.a);
 }
 
+static inline void
+multiply_rgba(SexyGLRGBA &rgba)
+{
+       rgba.r = multiply_alpha(rgba.r, rgba.a);
+       rgba.g = multiply_alpha(rgba.g, rgba.a);
+       rgba.b = multiply_alpha(rgba.b, rgba.a);
+}
+
 static inline unsigned int
 multiply_alpha (unsigned int alpha, unsigned int color)
 {
@@ -275,10 +283,10 @@ multiply_pixel_notrans_noalpha_rev (uint pixel)
 	return argb_to_abgr(pixel);
 }
 
-static inline SexyRGBA
+static inline SexyGLRGBA
 ColorToMultipliedRGBA(Color theColor)
 {
-	SexyRGBA rgba = theColor.ToRGBA();
+	SexyGLRGBA rgba = theColor.ToRGBA();
 	multiply_rgba(rgba);
 	return rgba;
 }
