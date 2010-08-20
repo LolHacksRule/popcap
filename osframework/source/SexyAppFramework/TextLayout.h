@@ -106,7 +106,8 @@ namespace Sexy {
 		int  GetGlyphsWidth(const GlyphVector &glyphs);
 		int  BuildLine(std::wstring text,
 			       int offset, int length,
-			       bool rich, TextLine &line);
+			       bool rich, TextLine &line,
+			       bool &lastHasColor, Color &lastColor);
 		void BuildLines();
 		void DrawLine(Graphics *g,
 			      TextLine& line,

@@ -545,7 +545,8 @@ int TextLayout::GetGlyphsWidth(const GlyphVector &glyphs)
 }
 
 int TextLayout::BuildLine(std::wstring text, int offset, int length,
-			   bool rich, TextLine &line)
+			  bool rich, TextLine &line,
+			  bool &lastHasColor, Color &lastColor)
 {
 	std::wstring str;
 	bool hasColor = false;
@@ -561,7 +562,7 @@ int TextLayout::BuildLine(std::wstring text, int offset, int length,
 				str += '^';
 				i++;
 			}
-			else if (i > length - 8) // badly formatted color specification
+			else if (i > offset + length - 8) // badly formatted color specification
 			{
 				break;
 			}
@@ -596,14 +597,9 @@ int TextLayout::BuildLine(std::wstring text, int offset, int length,
 				line.mRuns.push_back(TextRun());
 
 				TextRun& run = line.mRuns.back();
-				run.mHasColor = hasColor;
-				if (hasColor)
-					run.mColor = Color((aColor >> 16) & 0xFF,
-							   (aColor >> 8) & 0xFF,
-							   (aColor) & 0xFF,
-							   0xFF);
-				else
-					run.mColor = Color::White;
+				run.mHasColor = lastHasColor;
+				if (run.mHasColor)
+					run.mColor = lastColor;
 
 #ifdef DEBUG_TEXT_LAYOUT
 				printf("New text run: %S\n", str.c_str());
@@ -616,6 +612,14 @@ int TextLayout::BuildLine(std::wstring text, int offset, int length,
 				line.mNumGlyphs += run.mGlyphs.size();
 				x += run.mWidth;
 
+				lastHasColor = hasColor;
+				if (lastHasColor)
+					lastColor = Color((aColor >> 16) & 0xFF,
+							   (aColor >> 8) & 0xFF,
+							   (aColor) & 0xFF,
+							   0xFF);
+				else
+					lastColor = Color::White;
 				str = L"";
 			}
 		}
@@ -630,14 +634,8 @@ int TextLayout::BuildLine(std::wstring text, int offset, int length,
 		line.mRuns.push_back(TextRun());
 
 		TextRun& run = line.mRuns.back();
-		run.mHasColor = hasColor;
-		if (hasColor)
-			run.mColor = Color((aColor >> 16) & 0xFF,
-					   (aColor >> 8) & 0xFF,
-					   (aColor) & 0xFF,
-					   0xFF);
-		else
-			run.mColor = Color::White;
+		run.mHasColor = lastHasColor;
+		run.mColor = lastColor;
 
 #ifdef DEBUG_TEXT_LAYOUT
 		printf("New text run: %S\n", str.c_str());
@@ -658,13 +656,17 @@ void TextLayout::BuildLines()
 	mLines.clear();
 	mNumGlyphs = 0;
 
+	Color curColor = Color::White;
+	bool hasColor = false;
+
 	int linespacing = mLineSpacing <= 0 ? mFont->GetLineSpacing() : mLineSpacing;
 	if (mSingleLine)
 	{
 		mLines.push_back(TextLine());
 
 		TextLine &line = mLines.back();
-		int width = BuildLine(mText, 0, mText.length(), mRich, line);
+		int width = BuildLine(mText, 0, mText.length(), mRich, line,
+				      hasColor, curColor);
 		line.mExtents.mWidth = width;
 		line.mExtents.mHeight = linespacing;
 		mWidth = width;
@@ -733,7 +735,8 @@ void TextLayout::BuildLines()
 				{
 					BuildLine(mText, linestartpos,
 						  spacepos - linestartpos,
-						  mRich, line);
+						  mRich, line,
+						  hasColor, curColor);
 
 #ifdef DEBUG_TEXT_LAYOUT
 					printf("New Line: %S\n",
@@ -767,7 +770,8 @@ void TextLayout::BuildLines()
 
 					writtenwidth = BuildLine(mText, linestartpos,
 								 curpos - linestartpos,
-								 mRich, line);
+								 mRich, line,
+								 hasColor, curColor);
 
 #ifdef DEBUG_TEXT_LAYOUT
 					printf("New Line: %S\n",
@@ -807,7 +811,8 @@ void TextLayout::BuildLines()
 
 			writtenwidth = BuildLine(mText, linestartpos,
 						 length - linestartpos,
-						 mRich, line);
+						 mRich, line,
+						 hasColor, curColor);
 
 #ifdef DEBUG_TEXT_LAYOUT
 			printf("New Line: %S\n",
