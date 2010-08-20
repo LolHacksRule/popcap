@@ -711,7 +711,7 @@ void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
 					g->DrawTrianglesTex(anImage,
 							    (TriVertex (*)[3])&vertexList[0],
 							    vertexList.size() / 3);
-					for (size_t j = lastIndex; j < i - 1; j++)
+					for (size_t j = lastIndex; i > 0 && j < i - 1; j++)
 					{
 						FreeTypeGlyphEntry *entry =
 							(FreeTypeGlyphEntry*)theGlyphs[j].mNativeData[0];
