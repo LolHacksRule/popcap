@@ -548,9 +548,10 @@ void FreeTypeScaledFont::DrawGlyph(Graphics* g, int theX, int theY, FreeTypeGlyp
 			entry->mArea->state &= ~FREETYPE_GLYPH_AREA_LOCKED;
 	}
 
-	g->DrawTrianglesTex(anImage,
-			    (TriVertex (*)[3])&vertexList[0],
-			    vertexList.size() / 3);
+	if (anImage)
+		g->DrawTrianglesTex(anImage,
+				    (TriVertex (*)[3])&vertexList[0],
+				    vertexList.size() / 3);
 
 	g->SetColor(anOrigColor);
 	g->SetColorizeImages(colorizeImages);
