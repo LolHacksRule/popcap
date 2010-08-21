@@ -1452,7 +1452,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 
 		glTexCoordPointer (2, GL_FLOAT, sizeof(SexyGLVertex), &aVertexCache[0].tu);
 		glColorPointer (4, GL_UNSIGNED_BYTE, sizeof(SexyGLVertex), &aVertexCache[0].color);
-		glVertexPointer (3, GL_FLOAT, sizeof(SexyGLVertex), &aVertexCache[0].sx);
+		glVertexPointer (2, GL_FLOAT, sizeof(SexyGLVertex), &aVertexCache[0].sx);
 
 		for (int aTriangleNum = 0; aTriangleNum < theNumTriangles; aTriangleNum++)
 		{
@@ -1464,7 +1464,6 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 
 			aVertex[0].sx = aTriVerts[0].x + tx;
 			aVertex[0].sy = aTriVerts[0].y + ty;
-			aVertex[0].sz = 0;
 			col = GetColorFromTriVertex(aTriVerts[0],theColor);
 			aVertex[0].color = ColorToMultipliedRGBA(col);
 			aVertex[0].tu = aTriVerts[0].u * mMaxTotalU;
@@ -1472,7 +1471,6 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 
 			aVertex[1].sx = aTriVerts[1].x + tx;
 			aVertex[1].sy = aTriVerts[1].y + ty;
-			aVertex[1].sz = 0;
 			col = GetColorFromTriVertex(aTriVerts[0],theColor);
 			aVertex[1].color = ColorToMultipliedRGBA(col);
 			aVertex[1].tu = aTriVerts[1].u * mMaxTotalU;
@@ -1480,7 +1478,6 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 
 			aVertex[2].sx = aTriVerts[2].x + tx;
 			aVertex[2].sy = aTriVerts[2].y + ty;
-			aVertex[2].sz = 0;
 			col = GetColorFromTriVertex(aTriVerts[0],theColor);
 			aVertex[2].color = ColorToMultipliedRGBA(col);
 			aVertex[2].tu = aTriVerts[2].u * mMaxTotalU;
