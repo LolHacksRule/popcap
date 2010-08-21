@@ -146,8 +146,9 @@ public:
 	void			  Blt (float theX, float theY, const Rect& theSrcRect, const Color& theColor);
 	void			  BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcRect, const Color& theColor,
 						  const Rect *theClipRect = NULL, float theX = 0, float theY = 0, bool center = false);
-	void			  BltTriangles (const TriVertex theVertices[][3], int theNumTriangles, uint32 theColor,
-						float tx = 0, float ty = 0);
+	void			  BltTriangles (const TriVertex theVertices[][3], int theNumTriangles,
+						uint32 theColor, float tx = 0, float ty = 0,
+						const Rect *theClipRect = 0);
 };
 }
 
@@ -1185,7 +1186,35 @@ static void DrawPolyClipped(const Rect *theClipRect, const VertexList &theList)
 		GLDrawVertexList (aList);
 }
 
-static void DoPolyTextureClip (VertexList &theList)
+static void DoPolyClip (VertexList &theList, const Rect* theRect)
+{
+	VertexList l2;
+
+	float left = theRect->mX;
+	float right = theRect->mX + theRect->mWidth;
+	float top = theRect->mY;
+	float bottom = theRect->mY + theRect->mHeight;
+
+	VertexList *in = &theList, *out = &l2;
+	PointClipper<std::less<float> > aLessClipper;
+	PointClipper<std::greater_equal<float> > aGreaterClipper;
+
+	aLessClipper.ClipPoints (0, left, *in, *out);
+	std::swap (in, out);
+	out->clear ();
+
+	aLessClipper.ClipPoints (1, top, *in, *out);
+	std::swap (in,out);
+	out->clear();
+
+	aGreaterClipper.ClipPoints (0, right, *in, *out);
+	std::swap (in,out);
+	out->clear();
+
+	aGreaterClipper.ClipPoints (1, bottom, *in, *out);
+}
+
+static void DoPolyTextureClip (VertexList &theList, const Rect *theRect = 0)
 {
 	VertexList l2;
 
@@ -1290,8 +1319,11 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 			float x = dstX;// - pixelcorrect; // - 0.5f; //FIXME correct??
 			float y = dstY;// - pixelcorrect; // - 0.5f;
 
-			SexyVector2 p[4] = { SexyVector2 (x, y),	   SexyVector2 (x,	    y + aHeight),
-					     SexyVector2 (x + aWidth, y) , SexyVector2 (x + aWidth, y + aHeight) };
+			SexyVector2 p[4] =
+			{
+				SexyVector2 (x, y),	   SexyVector2 (x,	    y + aHeight),
+				SexyVector2 (x + aWidth, y) , SexyVector2 (x + aWidth, y + aHeight)
+			};
 			SexyVector2 tp[4];
 
 			int i;
@@ -1322,7 +1354,8 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 
 			glBindTexture (mTarget, aTexture);
 
-			if (!clipped) {
+			if (!clipped)
+			{
 				GLDrawQuadTransformed (tp[0].x, tp[0].y,
 						       tp[1].x, tp[1].y,
 						       tp[2].x, tp[2].y,
@@ -1333,14 +1366,26 @@ void GLTexture::BltTransformed (const SexyMatrix3 &theTrans, const Rect& theSrcR
 			{
 				VertexList aList;
 
-				SexyGLVertex vertex0 = {(GLfloat)u1, (GLfloat)v1, rgba,
-							(GLfloat)tp[0].x, (GLfloat)tp[0].y};
-				SexyGLVertex vertex1 = {(GLfloat)u1, (GLfloat)v2, rgba,
-							(GLfloat)tp[1].x, (GLfloat)tp[1].y};
-				SexyGLVertex vertex2 = {(GLfloat)u2, (GLfloat)v1, rgba,
-							(GLfloat)tp[2].x, (GLfloat)tp[2].y};
-				SexyGLVertex vertex3 = {(GLfloat)u2, (GLfloat)v2, rgba,
-							(GLfloat)tp[3].x, (GLfloat)tp[3].y};
+				SexyGLVertex vertex0 =
+			        {
+					(GLfloat)u1, (GLfloat)v1, rgba,
+					(GLfloat)tp[0].x, (GLfloat)tp[0].y
+				};
+				SexyGLVertex vertex1 =
+				{
+					(GLfloat)u1, (GLfloat)v2, rgba,
+					(GLfloat)tp[1].x, (GLfloat)tp[1].y
+				};
+				SexyGLVertex vertex2 =
+				{
+					(GLfloat)u2, (GLfloat)v1, rgba,
+					(GLfloat)tp[2].x, (GLfloat)tp[2].y
+				};
+				SexyGLVertex vertex3 =
+				{
+					(GLfloat)u2, (GLfloat)v2, rgba,
+					(GLfloat)tp[3].x, (GLfloat)tp[3].y
+				};
 
 				aList.push_back (vertex0);
 				aList.push_back (vertex1);
@@ -1388,26 +1433,26 @@ static void GLDrawVertexList3 (VertexList& aList)
 }
 
 void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriangles,
-			      uint32 theColor, float tx, float ty)
+			      uint32 theColor, float tx, float ty,
+			      const Rect *theClipRect)
 {
-	glEnable(mTarget); //FIXME only set this at start of drawing all
+	glEnable(mTarget);
 
-	if ((mMaxTotalU <= 1.0) && (mMaxTotalV <= 1.0))
+	if (mMaxTotalU <= 1.0 && mMaxTotalV <= 1.0 && !theClipRect)
 	{
 		glBindTexture(mTarget, mTextures[0].mTexture);
 
-		SexyGLVertex aVertexCache[300];
+		const int MAX_VERTEXES = 64 * 3;
+		SexyGLVertex aVertexCache[MAX_VERTEXES];
 		int aVertexCacheNum = 0;
 
 		glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 		glEnableClientState (GL_COLOR_ARRAY);
 		glEnableClientState (GL_VERTEX_ARRAY);
 
-		glTexCoordPointer (2, GL_FLOAT, 5 * sizeof(GLfloat) + 4 * sizeof(GLubyte), aVertexCache);
-		glColorPointer (4, GL_UNSIGNED_BYTE, 5 * sizeof(GLfloat) + 4 * sizeof(GLubyte),
-				((GLubyte*)aVertexCache) + 2 * sizeof(GLfloat));
-		glVertexPointer (3, GL_FLOAT, 5 * sizeof(GLfloat) + 4 * sizeof(GLubyte),
-				 ((GLubyte*)aVertexCache) + 2 * sizeof(GLfloat) + 4 * sizeof(GLubyte));
+		glTexCoordPointer (2, GL_FLOAT, sizeof(SexyGLVertex), &aVertexCache[0].tu);
+		glColorPointer (4, GL_UNSIGNED_BYTE, sizeof(SexyGLVertex), &aVertexCache[0].color);
+		glVertexPointer (3, GL_FLOAT, sizeof(SexyGLVertex), &aVertexCache[0].sx);
 
 		for (int aTriangleNum = 0; aTriangleNum < theNumTriangles; aTriangleNum++)
 		{
@@ -1441,7 +1486,7 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 			aVertex[2].tu = aTriVerts[2].u * mMaxTotalU;
 			aVertex[2].tv = aTriVerts[2].v * mMaxTotalV;
 
-			if ((aVertexCacheNum == 300) || (aTriangleNum == theNumTriangles - 1))
+			if ((aVertexCacheNum == MAX_VERTEXES) || (aTriangleNum == theNumTriangles - 1))
 			{
 				glDrawArrays (GL_TRIANGLES, 0, aVertexCacheNum);
 				aVertexCacheNum = 0;
@@ -1460,23 +1505,32 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 			SexyGLVertex aVertex[3];
 			Color col = GetColorFromTriVertex(aTriVerts[0],theColor);
 
-			SexyGLVertex vertex1 = {(GLfloat)(aTriVerts[0].u * mMaxTotalU),
-						(GLfloat)(aTriVerts[0].v * mMaxTotalV),
-						ColorToMultipliedRGBA(col),
-						aTriVerts[0].x + tx, aTriVerts[0].y + ty, 0.0f};
+			SexyGLVertex vertex1 =
+			{
+				(GLfloat)(aTriVerts[0].u * mMaxTotalU),
+				(GLfloat)(aTriVerts[0].v * mMaxTotalV),
+				ColorToMultipliedRGBA(col),
+				aTriVerts[0].x + tx, aTriVerts[0].y + ty, 0.0f
+			};
 
 			col = GetColorFromTriVertex(aTriVerts[1],theColor);
 
-			SexyGLVertex vertex2 = {(GLfloat)(aTriVerts[1].u * mMaxTotalU),
-						(GLfloat)(aTriVerts[1].v * mMaxTotalV),
-						ColorToMultipliedRGBA(col),
-						aTriVerts[1].x + tx, aTriVerts[1].y + ty, 0.0f};
+			SexyGLVertex vertex2 =
+			{
+				(GLfloat)(aTriVerts[1].u * mMaxTotalU),
+				(GLfloat)(aTriVerts[1].v * mMaxTotalV),
+				ColorToMultipliedRGBA(col),
+				aTriVerts[1].x + tx, aTriVerts[1].y + ty, 0.0f
+			};
 			col = GetColorFromTriVertex (aTriVerts[2],theColor);
 
-			SexyGLVertex vertex3 = {(GLfloat)(aTriVerts[2].u * mMaxTotalU),
-						(GLfloat)(aTriVerts[2].v * mMaxTotalV),
-						ColorToMultipliedRGBA(col),
-						aTriVerts[2].x + tx, aTriVerts[2].y + ty, 0.0f};
+			SexyGLVertex vertex3 =
+			{
+				(GLfloat)(aTriVerts[2].u * mMaxTotalU),
+				(GLfloat)(aTriVerts[2].v * mMaxTotalV),
+				ColorToMultipliedRGBA(col),
+				aTriVerts[2].x + tx, aTriVerts[2].y + ty, 0.0f
+			};
 
 			aVertex[0] = vertex1;
 			aVertex[1] = vertex2;
@@ -1534,16 +1588,20 @@ void GLTexture::BltTriangles (const TriVertex theVertices[][3], int theNumTriang
 					{
 						aList[k].tu -= j;
 						aList[k].tv -= i;
-						if (i == mTexVecHeight-1)
-							aList[k].tv *= (float)aStandardBlock.mHeight / aBlock.mHeight;
-						if (j == mTexVecWidth-1)
-							aList[k].tu *= (float)aStandardBlock.mWidth / aBlock.mWidth;
+						if (i == mTexVecHeight - 1)
+							aList[k].tv *=
+								(float)aStandardBlock.mHeight / aBlock.mHeight;
+						if (j == mTexVecWidth - 1)
+							aList[k].tu *=
+								(float)aStandardBlock.mWidth / aBlock.mWidth;
 					}
 
 					DoPolyTextureClip (aList);
 					if (aList.size() >= 3)
 					{
 						glBindTexture (mTarget, aBlock.mTexture);
+						if (theClipRect)
+							DoPolyClip(aList, theClipRect);
 						GLDrawVertexList3 (aList);
 					}
 				}
@@ -1719,7 +1777,8 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 	VertexList aList;
 	for (int i = 0; i < theNumVertices; i++)
 	{
-		SexyGLVertex vert = {
+		SexyGLVertex vert =
+		{
 			0, 0, aColor, theVertices[i].mX + tx, theVertices[i].mY + ty, 0
 		};
 
@@ -1733,19 +1792,16 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 		aList.push_back (vert);
 	}
 
-	if (theClipRect != NULL) {
+	if (theClipRect != NULL)
+	{
 		DrawPolyClipped (theClipRect, aList);
-	} else {
+	}
+	else
+	{
 		glDisable (GetTextureTarget());
 		glColor4ub (aColor.r, aColor.g, aColor.b, aColor.a);
 
-		GLfloat* verts;
-
-		verts = new GLfloat[2 * aList.size()];
-		for (int i = 0; i < aList.size(); ++i) {
-			verts[i * 2]	  = aList[i].sx;
-			verts[i * 2 + 1]  = aList[i].sy;
-		}
+		GLfloat* verts = &aList[0].sx;
 
 		glEnableClientState (GL_VERTEX_ARRAY);
 
@@ -1753,8 +1809,6 @@ bool GLImage::PolyFill3D(const Point theVertices[], int theNumVertices, const Re
 		glDrawArrays (GL_TRIANGLE_FAN, 0, aList.size());
 
 		glDisableClientState (GL_VERTEX_ARRAY);
-
-		delete [] verts;
 	}
 
 	return true;
@@ -1786,10 +1840,13 @@ void GLImage::FillRect(const Rect& theRect, const Color& theColor, int theDrawMo
 
 	if (!mTransformStack.empty())
 	{
-		SexyVector2 p[4] = { SexyVector2(x, y),
-				     SexyVector2(x, y + aHeight),
-				     SexyVector2(x + aWidth, y),
-				     SexyVector2(x + aWidth, y + aHeight) };
+		SexyVector2 p[4] =
+		{
+			SexyVector2(x, y),
+			SexyVector2(x, y + aHeight),
+			SexyVector2(x + aWidth, y),
+			SexyVector2(x + aWidth, y + aHeight)
+		};
 
 		int i;
 		for (i = 0; i < 4; i++)
@@ -2314,7 +2371,8 @@ void GLImage::BltTrianglesTex(Image *theImage, const TriVertex theVertices[][3],
 
 	SetBlendFunc (theDrawMode, true);
 	aTexture->SetTextureFilter(blend);
-	aTexture->BltTriangles (theVertices, theNumTriangles, (uint32)theColor.ToInt(), tx, ty);
+	aTexture->BltTriangles (theVertices, theNumTriangles, (uint32)theColor.ToInt(), tx, ty,
+				theClipRect == Rect(0, 0, mWidth, mHeight) ? 0 : &theClipRect);
 }
 
 bool GLImage::Palletize()
