@@ -254,16 +254,17 @@ class ResourceGenerator(gtk.Window):
         dialog = ProjectDialog('New Project', self)
         dialog.show_all()
         response = dialog.run()
+        item = dialog.get_result()
         dialog.destroy()
 
         if response != gtk.RESPONSE_OK:
             return
 
-        item = dialog.get_result()
         if not item[1]:
             return
 
         self.projects.append(item)
+        print self.projects
         self.save_projects()
 
         model = self.treeview.get_model()
@@ -285,12 +286,12 @@ class ResourceGenerator(gtk.Window):
         dialog.set_values(model.get(iter, 0, 1, 2, 3))
         dialog.show_all()
         response = dialog.run()
+        item = dialog.get_result()
         dialog.destroy()
 
         if response != gtk.RESPONSE_OK:
             return
 
-        item = dialog.get_result()
         if not item[1]:
             return
 
