@@ -46,7 +46,7 @@ def write_entry(entry, doc, root, compat = False):
     ### msgctxt
     if not compat and entry.msgctxt:
         msgctxt = doc.createElement("msgctxt")
-        text_node = doc.createCDATASection(entry.msgctxt)
+        text_node = doc.createTextNode(entry.msgctxt)
         msgctxt.appendChild(text_node)
         msg.appendChild(msgctxt)
 
@@ -157,7 +157,7 @@ def read_entry(node):
     ### msgctxt
     msgctxts = node.getElementsByTagName('msgctxt')
     if msgctxts:
-        data = findCDataChildNode(msgctxts[0]).data.strip()
+        data = findTexthildNode(msgctxts[0]).data.strip()
         entry.msgctxt = data
 
     ### msgid
@@ -176,13 +176,21 @@ def read_entry(node):
     msgstrs = node.getElementsByTagName('msgstr')
     if msgstrs:
         if not msgstrs[0].hasAttribute('index'):
-            data = findCDataChildNode(msgstrs[0]).data.strip()
+            child = findCDataChildNode(msgstrs[0])
+            if not child:
+                data = ''
+            else:
+                data = child.data.strip()
             entry.msgstr = data
         else:
             for msgstr in msgstrs:
                 assert (msgstr.hasAttribute('index'))
                 index = int(msgstr.getAttribute('index'))
-                data = findCDataChildNode(msgstr).data.strip()
+                child = findCDataChildNode(msgstr)
+                if not child:
+                    data = ''
+                else:
+                    data = child.data.strip()
                 entry.msgstr_plural[index] = data
 
     return entry
@@ -219,12 +227,27 @@ def xml2po(f, t):
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) > 2:
+    if len(sys.argv) > 1:
         f = sys.argv[1]
-        t = sys.argv[2]
+        if len(sys.argv) > 2:
+            t = sys.argv[2]
+        else:
+            t = None
+            fn, ext = os.path.splitext(f)
+            if ext == '.po':
+                t = fn + '.xml'
+            elif ext == '.xml':
+                t = fn + '.po'
+            if not t:
+                print 'Bad agument'
+                os.exit(-1)
+        print 'converting %s to %s' % (f, t)
         if f.find('.po') >= 0:
             po2xml(f, t)
         else:
             xml2po(f, t)
+    else:
+        print 'Usage: po2xml from [to]'
+
     sys.exit (0)
 
