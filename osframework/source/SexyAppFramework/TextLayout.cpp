@@ -755,7 +755,7 @@ void TextLayout::BuildLines()
 					{
 						while (curpos < length)
 						{
-							if (mText[curpos] == L' ')
+							if (mText[curpos] != L' ')
 								break;
 							curpos++;
 						}

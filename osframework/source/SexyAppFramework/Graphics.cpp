@@ -1477,7 +1477,7 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const std::string& theLine,
 				{
 					while (aCurPos < aStrLen)
 					{
-						if (theLine[aCurPos] == _S(' '))
+						if (theLine[aCurPos] != _S(' '))
 							break;
 						aCurPos++;
 					}
@@ -1677,7 +1677,7 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const std::wstring& theLine,
 				{
 					while (aCurPos < aStrLen)
 					{
-						if (theLine[aCurPos] == _S(' '))
+						if (theLine[aCurPos] != _S(' '))
 							break;
 						aCurPos++;
 					}
