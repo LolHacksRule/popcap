@@ -331,6 +331,7 @@ void WidgetManager::SetFocus(Widget* aWidget)
 
 	if ((aWidget != NULL) && (aWidget->mWidgetManager == this))
 	{
+		Widget* OldFocusWidget = mFocusWidget;
 		Widget* aFocusWidget = aWidget;
 
 		// set the focus widget to top level widget
@@ -338,19 +339,16 @@ void WidgetManager::SetFocus(Widget* aWidget)
 			aFocusWidget = (Widget*)aFocusWidget->mParent;
 		mFocusWidget = aFocusWidget;
 
+		if (OldFocusWidget != NULL)
+			OldFocusWidget->LostFocus();
+
 		if ((mHasFocus) && (mFocusWidget != NULL))
 		{
 			// Let the top level widget handle the focus
 			if (aFocusWidget == aWidget)
-			{
-				if (mFocusWidget != NULL)
-					mFocusWidget->LostFocus();
 				mFocusWidget->GotFocus();
-			}
 			else
-			{
 				mFocusWidget->SetFocus(aWidget);
-			}
 		}
 	}
 	else
