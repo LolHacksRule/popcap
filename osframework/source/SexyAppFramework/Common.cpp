@@ -308,6 +308,16 @@ std::wstring Sexy::StringToWString(const std::string &theString)
 
 std::string Sexy::WStringToString(const std::wstring &theString)
 {
+#if defined(ANDROID) || defined(__android__)
+	char* aBuffer = new char[theString.length() + 1];
+	std::wstring::size_type i;
+	for (i = 0; i < theString.length(); i++)
+		aBuffer[i] = theString[i] & 0xff;
+	aBuffer[i] = '\0';
+	std::string aStr = aBuffer;
+	delete[] aBuffer;
+	return aStr;
+#else
 	size_t aRequiredLength = wcstombs( NULL, theString.c_str(), 0 );
 	if (aRequiredLength < 16384)
 	{
@@ -337,6 +347,7 @@ std::string Sexy::WStringToString(const std::wstring &theString)
 		delete[] aBuffer;
 		return aStr;
 	}
+#endif
 }
 
 SexyString Sexy::StringToSexyString(const std::string& theString)
