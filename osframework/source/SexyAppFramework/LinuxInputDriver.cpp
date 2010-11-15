@@ -13,7 +13,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/kd.h>
 #include <cstdlib>
 #include <limits.h>
 #include <ctype.h>
