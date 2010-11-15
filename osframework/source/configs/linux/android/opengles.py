@@ -21,3 +21,6 @@ def Configure (env):
 
     ### gstreamer sound manager
     #configs.AudiereSoundConfigure (env)
+
+    env.AppendUnique(BUILD_PACKAGES = ['freetype'])
+    env['FREETYPECONFIG'] = None
