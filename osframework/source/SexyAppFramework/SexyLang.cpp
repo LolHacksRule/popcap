@@ -1,6 +1,6 @@
 #include "SexyLang.h"
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(ANDROID) && !defined(__android__)
 #include <langinfo.h>
 #endif
 
@@ -51,7 +51,11 @@ Sexy::SexyGetCharset()
 	std::string charset;
 
 #ifndef WIN32
+#if defined(ANDROID) || defined(__android__)
+	charset = "UTF-8";
+#else
 	charset = nl_langinfo(CODESET) || "ASCII";
+#endif
 #else
 	char buf[64];
 

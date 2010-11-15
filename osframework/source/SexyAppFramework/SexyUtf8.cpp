@@ -5,7 +5,9 @@
 
 #ifndef WIN32
 #include <errno.h>
+#if !defined(ANDROID) && !defined(__android__)
 #include <langinfo.h>
+#endif
 #endif
 
 #include <assert.h>
