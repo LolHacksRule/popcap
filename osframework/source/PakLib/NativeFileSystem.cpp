@@ -119,10 +119,18 @@ static FILE* _fopencase(const char *path, const char * mode)
 static char * p_wcstombs(const wchar_t * theString)
 {
         char * aString;
-        size_t length = wcstombs(NULL, theString, 0);
+        size_t length;
 
+#if defined(ANDROID)
+	length = wcslen(theString);
+        aString = new char[length + 1];
+	for (size_t i = 0; i < length + 1; i++)
+	    aString[i] = (char)theString[i];
+#else
+	length = wcstombs(NULL, theString, 0);
         aString = new char[length + 1];
         wcstombs(aString, theString, length + 1);
+#endif
 
         return aString;
 }
