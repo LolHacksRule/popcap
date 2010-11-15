@@ -27,6 +27,8 @@ def Configure (env):
                       CXXFLAGS = ['-g', '-Wall'],
                       LINKFLAGS = ['-g', '-fno-unit-at-a-time', '-export-dynamic'],
                       LIBS = ['rt', 'm'])
+    env['STDCXX_LIBS'] = ['stdc++']
+
     if env['optimize']:
         env.AppendUnique (CCFLAGS = ['-O$optimize_level'])
 
