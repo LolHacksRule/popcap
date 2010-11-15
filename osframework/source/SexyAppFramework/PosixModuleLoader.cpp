@@ -17,7 +17,7 @@ PosixModuleLoader::~PosixModuleLoader ()
 #endif
 
 #ifndef RTLD_LAZY
-#define RTLD_LAZY
+#define RTLD_LAZY 0
 #endif
 
 #ifdef __APPLE__
