@@ -48,7 +48,7 @@ float fastatanf(float x)
 	int a, b, c;
 	float d;
 
-	if (x > 0.0)
+	if (x >= 0.0)
 	{
 		a = 0;
 		b = (MAX_STEP / 2) - 1;
@@ -71,10 +71,7 @@ float fastatanf(float x)
 
 	} while ((a <= b) && (d));
 
-	if (x > 0)
-		return (c * pi) / MAX_STEP;
-
-	return (c - MAX_STEP) * pi / MAX_STEP;
+	return atan_tab[c];
 }
 
 float fastatan2f(float y, float x)
