@@ -2,6 +2,7 @@
 
 #include <limits.h>
 #include <math.h>
+#include <float.h>
 
 #ifndef INFINITY
 #define INFINITY HUG_VAL
@@ -77,8 +78,8 @@ float fastatanf(float x)
 float fastatan2f(float y, float x)
 {
 #if defined(WIN32) || defined(_WIN32)
-#define F_ISNAN(x)    _isnanf(x)
-#define F_ISFINITE(x) _finitef(x)
+#define F_ISNAN(x)    _isnan(x)
+#define F_ISFINITE(x) _finite(x)
 #define F_ISPZ(x)     (_fpclass(x) == _FPCLASS_PZ)
 #define F_ISNZ(x)     (_fpclass(x) == _FPCLASS_NZ)
 #define F_ISINF(x)    (_fpclass(x) == _FPCLASS_PINF || _fpclass(x) == _FPCLASS_NINF)

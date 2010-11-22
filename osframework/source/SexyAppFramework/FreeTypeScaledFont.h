@@ -55,7 +55,7 @@ namespace Sexy
 
 	struct FreeTypeGlyphArea
 	{
-		short state;
+		unsigned short state;
 		unsigned short level;
 		int x;
 		int y;
@@ -63,6 +63,7 @@ namespace Sexy
 		int height;
 
 		FT_UInt index;
+		float unit[2];
 
 		FreeTypeGlyphArea * children[4];
 	};
@@ -166,6 +167,7 @@ namespace Sexy
 		MemoryImage*			mImages[MAX_CACHED_IMAGES];
 		int				mImageSizeOrder[MAX_CACHED_IMAGES];
 		FreeTypeGlyphArea		mImageAreas[MAX_CACHED_IMAGES];
+		float                           mImageUVUnit[MAX_CACHED_IMAGES][2];
 
 		void				LockFace();
 		void				UnlockFace();

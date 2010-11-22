@@ -57,6 +57,8 @@ void FreeTypeScaledFont::Init(SexyAppBase* theApp, const std::string& theFace, i
 		mImages[i] = 0;
 		// default to 128x128
 		mImageSizeOrder[i] = i + DEFAULT_CACHE_ORDER;
+		mImageUVUnit[i][0] = 1.0f / (1 << mImageSizeOrder[i]);
+		mImageUVUnit[i][1] = 1.0f / (1 << mImageSizeOrder[i]);
 
 		// setup glyph cache root area
 		FreeTypeGlyphArea* area = &mImageAreas[i];
@@ -700,11 +702,17 @@ void FreeTypeScaledFont::DrawGlyphs(Graphics *g, int theX, int theY,
 				y1 = y + entry->mYOffSet;
 				x2 = x1 + entry->mWidth;
 				y2 = y1 + entry->mHeight;
+#if 1
 				u1 = (float)entry->mArea->x / entry->mImage->mWidth;
 				v1 = (float)entry->mArea->y / entry->mImage->mHeight;
 				u2 = (float)(entry->mArea->x + entry->mWidth) / entry->mImage->mWidth;
 				v2 = (float)(entry->mArea->y + entry->mHeight) / entry->mImage->mHeight;
-
+#else
+				u1 = entry->mArea->x * entry->mArea->unit[0];
+				v1 = entry->mArea->y * entry->mArea->unit[1];
+				u2 = (entry->mArea->x + entry->mWidth) * entry->mArea->unit[0];
+				v2 = (entry->mArea->y + entry->mHeight) * entry->mArea->unit[1];
+#endif
 				// flush the vertex list
 				if (entry->mImage != anImage && anImage)
 				{
@@ -1353,6 +1361,8 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 				mImages[i]->mFilePath = mName;
 			}
 			*image = mImages[i];
+			area->unit[0] = mImageUVUnit[i][0];
+			area->unit[1] = mImageUVUnit[i][1];
 			return area;
 		}
 	}
@@ -1368,6 +1378,8 @@ FreeTypeGlyphArea* FreeTypeScaledFont::FindGlyphArea(int width, int height, FT_U
 				mImages[i]->mFilePath = mName;
 			}
 			*image = mImages[i];
+			area->unit[0] = mImageUVUnit[i][0];
+			area->unit[1] = mImageUVUnit[i][1];
 			return area;
 		}
 	}
