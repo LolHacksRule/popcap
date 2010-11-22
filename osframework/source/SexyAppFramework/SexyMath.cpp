@@ -94,8 +94,11 @@ float fastatan2f(float y, float x)
 #define F_ISNINF(x)   (fpclassify(x) == FP_INFINITE && signbit(x) != 0)
 #endif
 
-	if (F_ISNAN(y) || F_ISNAN(x))
+	if (F_ISNAN(y))
 		return y;
+
+	if (F_ISNAN(x))
+		return x;
 
 	if (y == 0)
 	{
