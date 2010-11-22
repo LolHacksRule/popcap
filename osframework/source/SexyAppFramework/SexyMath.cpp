@@ -39,7 +39,7 @@ float fastacosf(float x)
 
 float fasttanf(float x)
 {
-	int index = int(floor(x * MAX_STEP / pi + 0.5)) + MAX_STEP;
+	int index = int(((x * MAX_STEP) + (pi / 2)) / pi) + MAX_STEP;
 	return tan_tab[index % MAX_STEP];
 }
 
@@ -76,6 +76,66 @@ float fastatanf(float x)
 
 float fastatan2f(float y, float x)
 {
+#if defined(WIN32) || defined(_WIN32)
+#define F_ISNAN(x)    _isnanf(x)
+#define F_ISFINITE(x) _finitef(x)
+#define F_ISPZ(x)     (_fpclass(x) == _FPCLASS_PZ)
+#define F_ISNZ(x)     (_fpclass(x) == _FPCLASS_NZ)
+#define F_ISINF(x)    (_fpclass(x) == _FPCLASS_PINF || _fpclass(x) == _FPCLASS_NINF)
+#define F_ISPINF(x)   (_fpclass(x) == _FPCLASS_PINF)
+#define F_ISNINF(x)   (_fpclass(x) == _FPCLASS_NINF)
+#else
+#define F_ISNAN(x)    isnan(x)
+#define F_ISFINITE(x) isfinite(x)
+#define F_ISPZ(x)     (x == 0.0 && signbit(x) == 0)
+#define F_ISNZ(x)     (x == 0.0 && signbit(x) != 0)
+#define F_ISINF(x)    fpclassify(x) == FP_INFINITE
+#define F_ISPINF(x)   (fpclassify(x) == FP_INFINITE && signbit(x) == 0)
+#define F_ISNINF(x)   (fpclassify(x) == FP_INFINITE && signbit(x) != 0)
+#endif
+
+	if (F_ISNAN(y) || F_ISNAN(x))
+		return y;
+
+	if (y == 0)
+	{
+		if (F_ISNZ(x))
+			return F_ISPZ(y) ?  pi : -pi;
+		else if (F_ISPZ(x))
+			return F_ISPZ(y) ?  +0.0f : -0.0f;
+		else if (x < 0)
+			return F_ISPZ(y) ?  pi : -pi;
+		else if (x > 0)
+			return F_ISPZ(y) ?  +0.0f : -0.0f;
+	}
+	else if (y < 0)
+	{
+		if (x == 0)
+			return -pi / 2;
+	}
+	else if (y > 0)
+	{
+		if (x == 0)
+			return pi / 2;
+	}
+
+	if (y != 0.0f && F_ISFINITE(y) && F_ISINF(x))
+	{
+		if (F_ISNINF(x))
+			return y > 0 ? pi : -pi;
+		else
+			return y > 0 ? +0.0f : -0.0f;
+	}
+	else if (F_ISINF(y))
+	{
+		if (F_ISFINITE(x))
+			return F_ISPINF(y) ? pi / 2 : -pi / 2;
+		else if (F_ISNINF(x))
+			return F_ISPINF(y) ? +3 * pi / 4 : -3 * pi / 4;
+		else if (F_ISPINF(x))
+			return F_ISPINF(y) ? pi / 4 : -pi / 4;
+	}
+
 	return fasttanf(y / x);
 }
 
