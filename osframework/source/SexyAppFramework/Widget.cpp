@@ -273,6 +273,10 @@ void Widget::SetFocus(Widget* theWidget)
 				aOldParents[i]->LostFocus();
 				for (i = 0; i < aParents.size(); i++)
 				{
+					if (i)
+						aParents[i]->mFocus = aParents[i - 1];
+					else
+						aParents[i]->mFocus = theWidget;
 					aParents[i]->GotFocus();
 					aParents[i]->mIsSelected = true;
 				}
@@ -287,6 +291,10 @@ void Widget::SetFocus(Widget* theWidget)
 				// Doesn't have a focus yet
 				for (i = 0; i < aParents.size(); i++)
 				{
+					if (i)
+						aParents[i]->mFocus = aParents[i - 1];
+					else
+						aParents[i]->mFocus = theWidget;
 					aParents[i]->GotFocus();
 					aParents[i]->mIsSelected = true;
 				}
