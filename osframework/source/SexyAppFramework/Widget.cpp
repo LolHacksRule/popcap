@@ -268,6 +268,7 @@ void Widget::SetFocus(Widget* theWidget)
 		{
 			if (aParent)
 			{
+				// The old focus and new focus has a common ancestor.
 				assert (aParent == aParents[i - 1]);
 				aOldParents[i]->LostFocus();
 				for (i = 0; i < aParents.size(); i++)
@@ -278,7 +279,17 @@ void Widget::SetFocus(Widget* theWidget)
 			}
 			else if (mFocus)
 			{
+				// No common ancestor.
 				mFocus->LostFocus();
+			}
+			else
+			{
+				// Doesn't have a focus yet
+				for (i = 0; i < aParents.size(); i++)
+				{
+					aParents[i]->GotFocus();
+					aParents[i]->mIsSelected = true;
+				}
 			}
 		}
 		else if (mFocus)
