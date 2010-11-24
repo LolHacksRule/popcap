@@ -49,6 +49,7 @@ def AndroidProgram(env, target, source, **kwargs):
 def Configure (env):
     import re
     configs.linux.Configure (env)
+    env['TARGET_PLATFORM'] = 'android'
 
     env['LINKCOM'] += ' $POSTLINKFLAGS'
     env['POSTLINKFLAGS'] = SCons.Util.CLVar('')
