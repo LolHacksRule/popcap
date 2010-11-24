@@ -1,0 +1,12 @@
+--- include/curl/curl.h	2010-11-24 11:27:27.816092001 +0800
++++ include/curl/curl.h.new	2010-11-24 11:28:09.267092499 +0800
+@@ -70,7 +70,8 @@
+    libc5-based Linux systems. Only include it on system that are known to
+    require it! */
+ #if defined(_AIX) || defined(__NOVELL_LIBC__) || defined(__NetBSD__) || \
+-    defined(__minix) || defined(__SYMBIAN32__) || defined(__INTEGRITY)
++    defined(__minix) || defined(__SYMBIAN32__) || defined(__INTEGRITY) || \
++    defined(ANDROID) || defined(__ANDROID__)
+ #include <sys/select.h>
+ #endif
+ 
