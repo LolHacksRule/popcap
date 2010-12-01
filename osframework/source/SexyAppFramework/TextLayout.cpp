@@ -236,7 +236,7 @@ void TextLayout::Draw(Graphics *g, int x, int y, const Color &color)
 
 	Color oldcolor = g->GetColor();
 
-	if (mCanCached)
+	if (mCanCached && mFont->IsComposited())
 	{
 		if (mLastColor == color)
 		{
