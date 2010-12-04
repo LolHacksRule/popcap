@@ -10,7 +10,7 @@ def AddOptions (opts):
 
 def EnableAndroidGLES (env):
     env.PrependUnique (CPPDEFINES = ['SEXY_OPENGLES'],
-                       LIBS = ['GLESv1_CM'])
+                       LIBS = ['GLESv1_CM', 'log'])
 
 def Configure (env):
     configs.linux.android.Configure (env)

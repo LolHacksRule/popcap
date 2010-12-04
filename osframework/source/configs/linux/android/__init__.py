@@ -29,10 +29,14 @@ def AddOptions (opts):
 
 def AndroidProgram(env, target, source, **kwargs):
     archdir = env['archdir']
-    linkflags = ["-Bdynamic", "-Wl,-dynamic-linker,/system/bin/linker",
+    linkflags = [#"-Bdynamic",
+                 "-Wl,-Bsymbolic",
+                 "-Wl,-dynamic-linker,/system/bin/linker",
                  "-Wl,--gc-sections", "-Wl,-z,nocopyreloc",
                  "-Wl,--no-undefined", "-nostdlib",
                  '-L' + os.path.join(archdir, 'usr', 'lib'),
+                 '-L' + os.path.join(env['gccdir'], env['gccabi'], 'lib', 'interwork'),
+                 '-L' + os.path.join(env['gccdir'], env['gccabi'], 'lib'),
                  os.path.join(archdir, 'usr', 'lib', "crtend_android.o"),
                  os.path.join(archdir, 'usr', 'lib', "crtbegin_dynamic.o"),
                  "-lc", '-ldl']
@@ -45,6 +49,29 @@ def AndroidProgram(env, target, source, **kwargs):
         linkflags += env['LINKFLAGS']
     kwargs['LINKFLAGS'] = linkflags
     return env.OldProgram(target, source, **kwargs)
+
+def AndroidSharedLibrary(env, target, source, **kwargs):
+    archdir = env['archdir']
+    linkflags = ["-Wl,--gc-sections", "-Wl,-z,nocopyreloc",
+                 "-Wl,--no-undefined", "-Wl,-shared,-Bsymbolic",
+                 "-nostdlib",
+                 '-L' + os.path.join(archdir, 'usr', 'lib'),
+                 '-L' + os.path.join(env['gccdir'], env['gccabi'], 'lib', 'interwork'),
+                 '-L' + os.path.join(env['gccdir'], env['gccabi'], 'lib')]
+    if 'LINKFLAGS' in kwargs:
+        linkflags += kwargs['LINKFLAGS']
+    else:
+        linkflags += env['LINKFLAGS']
+    kwargs['LINKFLAGS'] = linkflags
+
+    libs = []
+    if 'LIBS' in kwargs:
+        libs += kwargs['LIBS']
+    else:
+        libs += env['LIBS']
+    libs += ['gcc']
+    kwargs['LIBS'] = libs
+    return env.OldSharedLibrary(target, source, **kwargs)
 
 def Configure (env):
     import re
@@ -86,23 +113,28 @@ def Configure (env):
     env['SHLIBSUFFIX'] = '.so'
     env.AppendUnique (CPPDEFINES = ['ANDROID', 'SEXY_ANDROID'])
     env.AppendUnique (CPPPATH = [os.path.join(archdir, 'usr', 'include')],
+                      CCFLAGS = ["-mthumb-interwork"],
                       LINKFLAGS = [('--sysroot', os.path.join (toolchain, env['android_abi']))],
-                      SHLINKFLAGS = ['-nostdlib', "-Wl,--gc-sections", "-Wl,-z,nocopyreloc",
-                                     "-Wl,--no-undefined"],
+                      SHLINKFLAGS = [],
                       POSTSHLINKFLAGS = ['-lc', '-ldl'],
                       LIBPATH = [os.path.join(archdir, 'usr', 'lib')],
-                      LIBS = [])
+                      LIBS = ['stdc++'])
 
     ### replace the Program()
+    env['BUILDERS']['OldSharedLibrary'] = env['BUILDERS']['SharedLibrary']
+    env['BUILDERS']['SharedLibrary'] = AndroidSharedLibrary
     env['BUILDERS']['OldProgram'] = env['BUILDERS']['Program']
     env['BUILDERS']['Program'] = AndroidProgram
 
     ### andriod doesn't have librt.so
-    if 'rt' in env['LIBS']:
-        env['LIBS'].remove('rt')
-
-    if '-pthread' in env['CCFLAGS']:
-        env['CCFLAGS'].remove('-pthread')
-
-    if '-pthread' in env['LINKFLAGS']:
-        env['LINKFLAGS'].remove('-pthread')
+    bad_flags = {
+        'LIBS' : ['rt'],
+        'CCFLAGS' : ['-pthread'],
+        'LINKFLAGS' : ['-pthread', '-export-dynamic']
+    }
+    for var in bad_flags.keys():
+        for flag in bad_flags[var]:
+            if flag in env[var]:
+                env[var].remove(flag)
+    if True:
+        env.AppendUnique(CCFLAGS = ["-march=armv5te", "-mtune=xscale", "-msoft-float"])
