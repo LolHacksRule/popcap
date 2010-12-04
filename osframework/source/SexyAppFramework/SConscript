@@ -256,7 +256,7 @@ headers = ['FlashWidget.h', 'Font.h', 'ImageFont.h', 'SexyVector.h',
            'SexyMatrix.h', 'Flags.h', 'HyperlinkWidget.h',
            'NativeFont.h', 'SexyThread.h', 'XMLWriter.h',
            'SexyI18n.h', 'SexyLang.h', 'SexyTimer.h', 'Find.h',
-           'TextLayout.h'
+           'TextLayout.h', 'SexyString.h'
 ]
 
 sexyapp_sdk = env.Install (header_dir, headers)
