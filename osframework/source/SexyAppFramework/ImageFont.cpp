@@ -100,7 +100,7 @@ FontData::~FontData()
 	DataElementMap::iterator anItr = mDefineMap.begin();
 	while (anItr != mDefineMap.end())
 	{
-		std::wstring aDefineName = anItr->first;
+		Sexy::WString aDefineName = anItr->first;
 		DataElement* aDataElement = anItr->second;
 
 		delete aDataElement;
@@ -129,7 +129,7 @@ bool FontData::Error(const std::string& theError)
 
 		if (mCurrentLine.length() > 0)
 		{
-			anErrorString += " on Line " + StrFormat("%d:\r\n\r\n", mCurrentLineNum) + WStringToString(mCurrentLine);
+			anErrorString += " on Line " + StrFormat("%d:\r\n\r\n", mCurrentLineNum) + std::string(mCurrentLine.begin(), mCurrentLine.end());
 		}
 
 		mApp->Popup(anErrorString);
@@ -145,7 +145,7 @@ bool FontData::DataToLayer(DataElement* theSource, FontLayer** theFontLayer)
 	if (theSource->mIsList)
 		return false;
 
-	std::wstring aLayerName = StringToUpper(((SingleDataElement*) theSource)->mString);
+	Sexy::WString aLayerName = StringToUpper(((SingleDataElement*) theSource)->mString);
 
 	FontLayerMap::iterator anItr = mFontLayerMap.find(aLayerName);
 	if (anItr == mFontLayerMap.end())
@@ -187,22 +187,22 @@ bool FontData::GetColorFromDataElement(DataElement *theElement, Color &theColor)
 
 bool FontData::HandleCommand(const ListDataElement& theParams)
 {
-	std::wstring aCmd = ((SingleDataElement*) theParams.mElementVector[0])->mString;
+	Sexy::WString aCmd = ((SingleDataElement*) theParams.mElementVector[0])->mString;
 
 	bool invalidNumParams = false;
 	bool invalidParamFormat = false;
 	bool literalError = false;
 	bool sizeMismatch = false;
 
-#define LWS(x) StringToLower(x)
-	aCmd = StringToLower(aCmd);
+#define LWS(x) Lower(WSTR(x))
+	inlineLower(aCmd);
 	if (aCmd == LWS(L"Define"))
 	{
 		if (theParams.mElementVector.size() == 3)
 		{
 			if (!theParams.mElementVector[1]->mIsList)
 			{
-				std::wstring aDefineName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
+				Sexy::WString aDefineName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
 
 				if (!IsImmediate(aDefineName))
 				{
@@ -257,7 +257,7 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 				(aRectIntVector.size() == 4) &&
 				(DataToIntVector(theParams.mElementVector[3], &aWidthsVector)))
 			{
-				std::wstring aDefineName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
+				Sexy::WString aDefineName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
 
 				int aXPos = 0;
 
@@ -269,18 +269,18 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 					aRectList->mElementVector.push_back(aRectElement);
 
 					char aStr[256];
-					
+
 					sprintf(aStr, "%d", aRectIntVector[0] + aXPos);
-					aRectElement->mElementVector.push_back(new SingleDataElement(StringToWString(aStr)));
+					aRectElement->mElementVector.push_back(new SingleDataElement(WSTR(aStr)));
 
 					sprintf(aStr, "%d", aRectIntVector[1]);
-					aRectElement->mElementVector.push_back(new SingleDataElement(StringToWString(aStr)));
+					aRectElement->mElementVector.push_back(new SingleDataElement(WSTR(aStr)));
 
 					sprintf(aStr, "%d", aWidthsVector[aWidthNum]);
-					aRectElement->mElementVector.push_back(new SingleDataElement(StringToWString(aStr)));
+					aRectElement->mElementVector.push_back(new SingleDataElement(WSTR(aStr)));
 
 					sprintf(aStr, "%d", aRectIntVector[3]);
-					aRectElement->mElementVector.push_back(new SingleDataElement(StringToWString(aStr)));
+					aRectElement->mElementVector.push_back(new SingleDataElement(WSTR(aStr)));
 
 					aXPos += aWidthsVector[aWidthNum];
 				}
@@ -357,7 +357,7 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 		{
 			if (!theParams.mElementVector[1]->mIsList)
 			{
-				std::wstring aLayerName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
+				Sexy::WString aLayerName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
 
 				mFontLayerList.push_back(FontLayer(this));
 				FontLayer* aFontLayer = &mFontLayerList.back();
@@ -381,7 +381,7 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 
 			if ((!theParams.mElementVector[1]->mIsList) && (DataToLayer(theParams.mElementVector[2], &aSourceLayer)))
 			{
-				std::wstring aLayerName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
+				Sexy::WString aLayerName = StringToUpper(((SingleDataElement*) theParams.mElementVector[1])->mString);
 
 				mFontLayerList.push_back(FontLayer(*aSourceLayer));
 				FontLayer* aFontLayer = &mFontLayerList.back();
@@ -511,12 +511,13 @@ bool FontData::HandleCommand(const ListDataElement& theParams)
 		if (theParams.mElementVector.size() == 3)
 		{
 			FontLayer* aLayer;
-			std::wstring aFileNameString;
+			Sexy::WString aFileNameString;
 
 			if ((DataToLayer(theParams.mElementVector[1], &aLayer)) &&
 				(DataToString(theParams.mElementVector[2], &aFileNameString)))
 			{
-				std::string aFileName = GetPathFrom(WStringToString(aFileNameString),
+				std::string aFileName = GetPathFrom(std::string(aFileNameString.begin(),
+										aFileNameString.end()),
 								    GetFileDir(mSourceFile));
 
 				bool isNew;
@@ -1004,7 +1005,7 @@ bool FontData::Load(SexyAppBase* theSexyApp, const std::string& theFontDescFileN
 	bool hasErrors = false;
 
 	mApp = theSexyApp;
-	mCurrentLine = L"";
+	mCurrentLine.clear();
 
 	mFontErrorHeader = "Font Descriptor Error in " + theFontDescFileName + "\r\n";
 
@@ -1023,7 +1024,7 @@ bool FontData::LoadLegacy(Image* theFontImage, const std::string& theFontDescFil
 	mFontLayerList.push_back(FontLayer(this));
 	FontLayer* aFontLayer = &mFontLayerList.back();
 
-	FontLayerMap::iterator anItr = mFontLayerMap.insert(FontLayerMap::value_type(L"", aFontLayer)).first;
+	FontLayerMap::iterator anItr = mFontLayerMap.insert(FontLayerMap::value_type(WSTR(""), aFontLayer)).first;
 	if (anItr == mFontLayerMap.end())
 		return false;
 
@@ -1129,7 +1130,7 @@ ImageFont::ImageFont(Image *theFontImage)
 	mFontData->mFontLayerList.push_back(FontLayer(mFontData));
 	FontLayer* aFontLayer = &mFontData->mFontLayerList.back();
 
-	mFontData->mFontLayerMap.insert(FontLayerMap::value_type(L"", aFontLayer)).first;
+	mFontData->mFontLayerMap.insert(FontLayerMap::value_type(WSTR(""), aFontLayer)).first;
 	aFontLayer->mImage = (MemoryImage*) theFontImage;
 	aFontLayer->mDefaultHeight = aFontLayer->mImage->GetHeight();
 	aFontLayer->mAscent = aFontLayer->mImage->GetHeight();
@@ -1343,7 +1344,7 @@ void ImageFont::GenerateActiveFontLayers()
 
 int ImageFont::StringWidth(const std::string& theString)
 {
-	std::wstring aString;
+	Sexy::WString aString;
 	int aLen = Graphics::WStringFromString(theString, aString);
 	if (aLen > 0)
 		return StringWidth(aString);
@@ -1360,7 +1361,7 @@ int ImageFont::StringWidth(const std::string& theString)
 	return aWidth;
 }
 
-int ImageFont::StringWidth(const std::wstring& theString)
+int ImageFont::StringWidth(const Sexy::WString& theString)
 {
 	int aWidth = 0;
 	int aPrevChar = 0;
@@ -1738,7 +1739,7 @@ void ImageFont::DrawStringEx(Graphics* g, int theX, int theY, const SexyString& 
 	g->SetColorizeImages(colorizeImages);
 }
 
-void ImageFont::DrawStringEx(Graphics* g, int theX, int theY, const std::wstring& theString,
+void ImageFont::DrawStringEx(Graphics* g, int theX, int theY, const Sexy::WString& theString,
 			     const Color& theColor, const Rect* theClipRect, RectList* theDrawnAreas,
 			     int* theWidth)
 {
@@ -1994,7 +1995,7 @@ void ImageFont::DrawStringEx(Graphics* g, int theX, int theY, const std::wstring
 	g->SetColorizeImages(colorizeImages);
 }
 
-bool ImageFont::StringToGlyphs(const std::wstring& theString, GlyphVector& theGlyphs)
+bool ImageFont::StringToGlyphs(const Sexy::WString& theString, GlyphVector& theGlyphs)
 {
 	int aPrevChar = 0;
 	float x = 0;
@@ -2255,7 +2256,7 @@ void ImageFont::DrawString(Graphics* g, int theX, int theY, const std::string& t
 	DrawStringEx(g, theX, theY, theString, theColor, &theClipRect, NULL, NULL);
 }
 
-void ImageFont::DrawString(Graphics* g, int theX, int theY, const std::wstring& theString, const Color& theColor, const Rect& theClipRect)
+void ImageFont::DrawString(Graphics* g, int theX, int theY, const Sexy::WString& theString, const Color& theColor, const Rect& theClipRect)
 {
 	DrawStringEx(g, theX, theY, theString, theColor, &theClipRect, NULL, NULL);
 }
@@ -2287,20 +2288,20 @@ int	ImageFont::GetDefaultPointSize()
 	return mFontData->mDefaultPointSize;
 }
 
-bool ImageFont::AddTag(const std::wstring& theTagName)
+bool ImageFont::AddTag(const Sexy::WString& theTagName)
 {
 	if (HasTag(theTagName))
 		return false;
 
-	std::wstring aTagName = StringToUpper(theTagName);
+	Sexy::WString aTagName = Upper(theTagName);
 	mTagVector.push_back(aTagName);
 	mActiveListValid = false;
 	return true;
 }
 
-bool ImageFont::RemoveTag(const std::wstring& theTagName)
+bool ImageFont::RemoveTag(const Sexy::WString& theTagName)
 {
-	std::wstring aTagName = StringToUpper(theTagName);
+	Sexy::WString aTagName = Upper(theTagName);
 
 	WStringVector::iterator anItr = std::find(mTagVector.begin(), mTagVector.end(), aTagName);
 	if (anItr == mTagVector.end())
@@ -2311,7 +2312,7 @@ bool ImageFont::RemoveTag(const std::wstring& theTagName)
 	return true;
 }
 
-bool ImageFont::HasTag(const std::wstring& theTagName)
+bool ImageFont::HasTag(const Sexy::WString& theTagName)
 {
 	WStringVector::iterator anItr = std::find(mTagVector.begin(), mTagVector.end(), theTagName);
 	return anItr != mTagVector.end();
@@ -2319,28 +2320,28 @@ bool ImageFont::HasTag(const std::wstring& theTagName)
 
 bool ImageFont::AddTag(const std::string& theTagName)
 {
-	std::wstring aTagName(StringToWString(theTagName));
+	Sexy::WString aTagName(Sexy::WString(theTagName.begin(), theTagName.end()));
 	return AddTag(aTagName);
 }
 
 bool ImageFont::RemoveTag(const std::string& theTagName)
 {
-	std::wstring aTagName(StringToWString(theTagName));
+	Sexy::WString aTagName(Sexy::WString(theTagName.begin(), theTagName.end()));
 	return RemoveTag(aTagName);
 }
 
 bool ImageFont::HasTag(const std::string& theTagName)
 {
-	std::wstring aTagName(StringToWString(theTagName));
+	Sexy::WString aTagName(Sexy::WString(theTagName.begin(), theTagName.end()));
 	return HasTag(aTagName);
 }
 
-std::wstring ImageFont::GetDefine(const std::wstring& theName)
+Sexy::WString ImageFont::GetDefine(const Sexy::WString& theName)
 {
 	DataElement* aDataElement = mFontData->Dereference(theName);
 
 	if (aDataElement == NULL)
-		return L"";
+		return Sexy::WString();
 
 	return mFontData->DataElementToString(aDataElement);
 }

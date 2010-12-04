@@ -11,7 +11,7 @@ using namespace std;
 
 static char* gWebEncodeMap = ".-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-static int gWebDecodeMap[256] = 
+static int gWebDecodeMap[256] =
 {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 -1, -1, -1, 0, -1, 1, 0, -1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, -1, -1, -1, -1, -1
@@ -58,7 +58,7 @@ static unsigned long UpdateCRC(unsigned long crc_accum,
 {
 	if (!bCrcTableGenerated)
 		GenerateCRCTable();
-	
+
 	register int i, j;
 	for (j = 0; j < data_blk_size; j++)
 	{
@@ -71,7 +71,7 @@ static unsigned long UpdateCRC(unsigned long crc_accum,
 //----------------------------------------------------------------------------
 // Stream UTF8 data in a const char* to keep receiving wchar_ts
 //----------------------------------------------------------------------------
-static int GetUTF8Char(const char** theBuffer, int theLen, wchar_t* theChar)
+static int GetUTF8Char(const char** theBuffer, int theLen, unichar_t* theChar)
 {
 	static const unsigned short aMaskData[] = {
 		0xC0,		// 1 extra byte
@@ -144,11 +144,11 @@ static int GetUTF8Char(const char** theBuffer, int theLen, wchar_t* theChar)
 	}
 
 	int aConsumedCount = aBuffer - *theBuffer;
-	
-	if ( (aTempChar >= 0xD800 && aTempChar <= 0xDFFF) || (aTempChar >= 0xFFFE && aTempChar <= 0xFFFF) ) 
+
+	if ( (aTempChar >= 0xD800 && aTempChar <= 0xDFFF) || (aTempChar >= 0xFFFE && aTempChar <= 0xFFFF) )
 		return 0;
 
-	*theChar = (wchar_t)aTempChar;
+	*theChar = (unichar_t)aTempChar;
 
 	*theBuffer = aBuffer;
 	return aConsumedCount;
@@ -158,7 +158,7 @@ Buffer::Buffer()
 {
 	mDataBitSize = 0;
 	mReadBitPos = 0;
-	mWriteBitPos = 0;	
+	mWriteBitPos = 0;
 }
 
 Buffer::~Buffer()
@@ -169,7 +169,7 @@ std::string Buffer::ToWebString() const
 {
 	std::string aString;
 	int aSizeBits = mWriteBitPos;
-	
+
 	int anOldReadBitPos = mReadBitPos;
 	mReadBitPos = 0;
 
@@ -180,24 +180,24 @@ std::string Buffer::ToWebString() const
 	int aNumChars = (aSizeBits + 5) / 6;
 	for (int aCharNum = 0; aCharNum < aNumChars; aCharNum++)
 		aString += gWebEncodeMap[ReadNumBits(6, false)];
-	
+
 	mReadBitPos = anOldReadBitPos;
-	
+
 	return aString;
 }
 
-std::wstring Buffer::UTF8ToWideString() const
+Sexy::WString Buffer::UTF8ToWideString() const
 {
 	const char* aData = (const char*)GetDataPtr();
 	int aLen = GetDataLen();
 
 	bool firstChar = true;
 
-	std::wstring aString;
+	Sexy::WString aString;
 	aString.reserve(aLen); // worst case
 	while (aLen > 0)
 	{
-		wchar_t aChar;
+		unichar_t aChar;
 		int aConsumed = GetUTF8Char(&aData, aLen, &aChar);
 		if (aConsumed == 0) break;
 		aLen -= aConsumed;
@@ -219,7 +219,7 @@ void Buffer::FromWebString(const std::string& theString)
 
 	if (theString.size() < 4)
 		return;
-	
+
 	int aSizeBits = 0;
 
 	for (int aDigitNum = 0; aDigitNum < 8; aDigitNum++)
@@ -245,7 +245,7 @@ void Buffer::FromWebString(const std::string& theString)
 		int aVal = gWebDecodeMap[aChar];
 		int aNumBits = min(aNumBitsLeft, 6);
 		WriteNumBits(aVal, aNumBits);
-		aNumBitsLeft -= aNumBits;		
+		aNumBitsLeft -= aNumBits;
 	}
 
 	SeekFront();
@@ -253,7 +253,7 @@ void Buffer::FromWebString(const std::string& theString)
 
 void Buffer::SeekFront() const
 {
-	mReadBitPos = 0;	
+	mReadBitPos = 0;
 }
 
 void Buffer::Clear()
@@ -265,14 +265,14 @@ void Buffer::Clear()
 }
 
 void Buffer::WriteByte(uchar theByte)
-{	
+{
 	if (mWriteBitPos % 8 == 0)
 		mData.push_back((char) theByte);
 	else
-	{		
+	{
 		int anOfs = mWriteBitPos  % 8;
 		mData[mWriteBitPos /8] |= theByte << anOfs;
-		mData.push_back((char) (theByte >> (8-anOfs)));		
+		mData.push_back((char) (theByte >> (8-anOfs)));
 	}
 
 	mWriteBitPos += 8;
@@ -299,14 +299,14 @@ int Buffer::GetBitsRequired(int theNum, bool isSigned)
 {
 	if (theNum < 0) // two's compliment stuff
 		theNum = -theNum - 1;
-	
+
 	int aNumBits = 0;
 	while (theNum >= 1<<aNumBits)
 		aNumBits++;
-		
+
 	if (isSigned)
 		aNumBits++;
-		
+
 	return aNumBits;
 }
 
@@ -336,7 +336,7 @@ void Buffer::WriteString(const std::string& theString)
 		WriteByte(theString[i]);
 }
 
-void Buffer::WriteUTF8String(const std::wstring& theString)
+void Buffer::WriteUTF8String(const Sexy::WString& theString)
 {
 	if ((mWriteBitPos & 7) != 0) // boo! let's get byte aligned.
 		mWriteBitPos = (mWriteBitPos + 8) & ~7;
@@ -349,18 +349,18 @@ void Buffer::WriteUTF8String(const std::wstring& theString)
 		{
 			WriteByte((uchar)c);
 		}
-		else if (c < 0x800) 
+		else if (c < 0x800)
 		{
 			WriteByte((uchar)(0xC0 | (c>>6)));
 			WriteByte((uchar)(0x80 | (c & 0x3F)));
 		}
-		else if (c < 0x10000) 
+		else if (c < 0x10000)
 		{
 			WriteByte((uchar)(0xE0 | c>>12));
 			WriteByte((uchar)(0x80 | ((c>>6) & 0x3F)));
 			WriteByte((uchar)(0x80 | (c & 0x3F)));
 		}
-		else if (c < 0x110000) 
+		else if (c < 0x110000)
 		{
 			WriteByte((uchar)(0xF0 | (c>>18)));
 			WriteByte((uchar)(0x80 | ((c>>12) & 0x3F)));
@@ -404,7 +404,7 @@ void Buffer::SetData(uchar* thePtr, int theCount)
 uchar Buffer::ReadByte() const
 {
 	if ((mReadBitPos + 7)/8 >= (int)mData.size())
-	{		
+	{
 		return 0; // Underflow
 	}
 
@@ -417,20 +417,20 @@ uchar Buffer::ReadByte() const
 	else
 	{
 		int anOfs = mReadBitPos % 8;
-			
+
 		uchar b = 0;
-		
+
 		b = mData[mReadBitPos/8] >> anOfs;
 		b |= mData[(mReadBitPos/8)+1] << (8 - anOfs);
-		
-		mReadBitPos += 8;		
-		
+
+		mReadBitPos += 8;
+
 		return b;
 	}
 }
 
 int Buffer::ReadNumBits(int theBits, bool isSigned) const
-{	
+{
 	int aByteLength = (int) mData.size();
 
 	int theNum = 0;
@@ -442,16 +442,16 @@ int Buffer::ReadNumBits(int theBits, bool isSigned) const
 		if (aBytePos >= aByteLength)
 			break;
 
-		if (bset = (mData[aBytePos] & (1<<(mReadBitPos%8))) != 0)			
+		if (bset = (mData[aBytePos] & (1<<(mReadBitPos%8))) != 0)
 			theNum |= 1<<aBitNum;
-		
+
 		mReadBitPos++;
 	}
-	
+
 	if ((isSigned) && (bset)) // sign extend
 		for (int aBitNum = theBits; aBitNum < 32; aBitNum++)
 			theNum |= 1<<aBitNum;
-	
+
 	return theNum;
 }
 
@@ -464,7 +464,7 @@ short Buffer::ReadShort() const
 {
 	short aShort = ReadByte();
 	aShort |= ((short) ReadByte() << 8);
-	return aShort;	
+	return aShort;
 }
 
 long Buffer::ReadLong() const
@@ -488,12 +488,12 @@ std::string	Buffer::ReadString() const
 	return aString;
 }
 
-std::wstring Buffer::ReadUTF8String() const
+Sexy::WString Buffer::ReadUTF8String() const
 {
 	if ((mReadBitPos & 7) != 0)
 		mReadBitPos = (mReadBitPos + 8) & ~7; // byte align the read position
 
-	std::wstring aString;
+	Sexy::WString aString;
 	int aLen = ReadShort();
 
 	const char* aData = (const char*)(&mData[mReadBitPos/8]);
@@ -502,7 +502,7 @@ std::wstring Buffer::ReadUTF8String() const
 	int i;
 	for (i = 0; aDataSizeBytes > 0 && i < aLen; ++i)
 	{
-		wchar_t aChar;
+		unichar_t aChar;
 		int aConsumed = GetUTF8Char(&aData, aDataSizeBytes, &aChar);
 		if (aConsumed == 0) break;
 		aDataSizeBytes -= aConsumed;
@@ -542,7 +542,7 @@ void Buffer::ReadBytes(uchar* theData, int theLen) const
 void Buffer::ReadBuffer(ByteVector* theByteVector) const
 {
 	theByteVector->clear();
-	
+
 	ulong aLength = ReadLong();
 	theByteVector->resize(aLength);
 	ReadBytes(&(*theByteVector)[0], aLength);
@@ -566,14 +566,14 @@ int Buffer::GetDataLenBits() const
 }
 
 ulong Buffer::GetCRC32(ulong theSeed) const
-{	
+{
 	ulong aCRC = theSeed;
-	aCRC = UpdateCRC(aCRC, (const char*) &mData[0], (int) mData.size());	
+	aCRC = UpdateCRC(aCRC, (const char*) &mData[0], (int) mData.size());
 	return aCRC;
 }
 
 bool Buffer::AtEnd() const
-{ 
+{
 	//return mReadBitPos >= (int)mData.size()*8;
 	return mReadBitPos >= mDataBitSize;
 }

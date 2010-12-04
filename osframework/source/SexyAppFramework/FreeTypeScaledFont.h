@@ -114,9 +114,9 @@ namespace Sexy
 							   bool drawShadow = false,
 							   bool drawOutline = false);
 
-		int				StringWidth(const std::wstring& theString);
+		int				StringWidth(const Sexy::WString& theString);
 		void				DrawString(Graphics* g, int theX, int theY,
-							   const std::wstring& theString,
+							   const Sexy::WString& theString,
 							   const Color& theColor,
 							   const Rect& theClipRect,
 							   bool drawShadow = false,
@@ -125,7 +125,7 @@ namespace Sexy
 		int				CharWidth(int theChar);
 		int				CharWidthKern(int theChar, int thePrevChar);
 
-		bool                            StringToGlyphs(const std::wstring &theString,
+		bool                            StringToGlyphs(const Sexy::WString &theString,
 							       GlyphVector &theGlyphs);
 		void                            DrawGlyphs(Graphics *g, int theX, int theY,
 							   GlyphVector& theGlyphs,
@@ -199,7 +199,7 @@ namespace Sexy
 								 bool render = false,
 								 bool unicode = false);
 
-		void				GlyphsFromString(const std::wstring& string,
+		void				GlyphsFromString(const Sexy::WString& string,
 								 FreeTypeGlyphVector& glyphs,
 								 bool render = false);
 

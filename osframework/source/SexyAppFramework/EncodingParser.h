@@ -8,7 +8,7 @@ struct PFILE;
 namespace Sexy
 {
 
-typedef std::vector<wchar_t> WcharBuffer;
+typedef std::vector<unichar_t> WcharBuffer;
 
 class EncodingParser
 {
@@ -17,17 +17,17 @@ protected:
 
 private:
 	WcharBuffer				mBufferedText;
-	bool					(EncodingParser::*mGetCharFunc)(wchar_t* theChar, bool* error);
+	bool					(EncodingParser::*mGetCharFunc)(unichar_t* theChar, bool* error);
 	bool					mForcedEncodingType;
 	bool					mFirstChar;
 	bool					mByteSwap;
 
 private:
-	bool					GetAsciiChar(wchar_t* theChar, bool* error);
-	bool					GetUTF8Char(wchar_t* theChar, bool* error);
-	bool					GetUTF16Char(wchar_t* theChar, bool* error);
-	bool					GetUTF16LEChar(wchar_t* theChar, bool* error);
-	bool					GetUTF16BEChar(wchar_t* theChar, bool* error);
+	bool					GetAsciiChar(unichar_t* theChar, bool* error);
+	bool					GetUTF8Char(unichar_t* theChar, bool* error);
+	bool					GetUTF16Char(unichar_t* theChar, bool* error);
+	bool					GetUTF16LEChar(unichar_t* theChar, bool* error);
+	bool					GetUTF16BEChar(unichar_t* theChar, bool* error);
 
 public:
 	enum EncodingType
@@ -55,12 +55,12 @@ public:
 	virtual bool			OpenFile(const std::string& theFilename);
 	virtual bool			CloseFile();
 	virtual bool			EndOfFile();
-	virtual void			SetStringSource(const std::wstring& theString);
+	virtual void			SetStringSource(const Sexy::WString& theString);
 	void					SetStringSource(const std::string& theString);
 
-	virtual GetCharReturnType GetChar(wchar_t* theChar);
-	virtual bool			PutChar(const wchar_t& theChar);
-	virtual bool			PutString(const std::wstring& theString);
+	virtual GetCharReturnType GetChar(unichar_t* theChar);
+	virtual bool			PutChar(const unichar_t& theChar);
+	virtual bool			PutString(const Sexy::WString& theString);
 };
 
 };

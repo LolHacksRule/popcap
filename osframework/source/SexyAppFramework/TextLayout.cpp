@@ -44,7 +44,7 @@ TextLayout::TextLayout(const std::string& text, Font* font,
 	SetText(text);
 }
 
-TextLayout::TextLayout(const std::wstring& text, Font* font,
+TextLayout::TextLayout(const Sexy::WString& text, Font* font,
 		       bool rich, bool singleline)
 {
 	Init();
@@ -69,7 +69,7 @@ void TextLayout::SetText(const std::string &text, bool rich)
 	SetText(Graphics::WStringFromString(text), rich);
 }
 
-void TextLayout::SetText(const std::wstring &text, bool rich)
+void TextLayout::SetText(const Sexy::WString &text, bool rich)
 {
 	if (mText == text && mRich == rich)
 		return;
@@ -544,11 +544,11 @@ int TextLayout::GetGlyphsWidth(const GlyphVector &glyphs)
 	return width;
 }
 
-int TextLayout::BuildLine(std::wstring text, int offset, int length,
+int TextLayout::BuildLine(Sexy::WString text, int offset, int length,
 			  bool rich, TextLine &line,
 			  bool &lastHasColor, Color &lastColor)
 {
-	std::wstring str;
+	Sexy::WString str;
 	bool hasColor = false;
 	DWORD aColor = 0;
 	int x = 0;
@@ -620,7 +620,7 @@ int TextLayout::BuildLine(std::wstring text, int offset, int length,
 							   0xFF);
 				else
 					lastColor = Color::White;
-				str = L"";
+				str.clear();
 			}
 		}
 		else

@@ -475,7 +475,6 @@ namespace Sexy
 			if (len < 0)
 				return false;
 
-			str.reserve(len);
 			str.resize(len);
 
 			for (int i = 0; i < len; i++)
@@ -494,7 +493,6 @@ namespace Sexy
 			if (len < 0)
 				return false;
 
-			str.reserve(len);
 			str.resize(len);
 
 			for (int i = 0; i < len; i++)
@@ -504,6 +502,138 @@ namespace Sexy
 		}
 
 		return true;
+	}
+
+	bool SexyUtf8ToWString(const std::string& utf8,
+			       Sexy::WString& str)
+	{
+		// asume the encoding of wstring is utf-16
+		if (sizeof(Sexy::WString::value_type) == 2)
+		{
+			short *utf16;
+			int len;
+
+			len = SexyUtf8ToUtf16(utf8.c_str(), utf8.length(), &utf16);
+
+			if (len < 0)
+				return false;
+
+			str.resize(len);
+
+			for (int i = 0; i < len; i++)
+				str[i] = utf16[i];
+
+			delete [] utf16;
+		}
+		else
+		{
+			// asume the encoding of wstring is ucs4 otherwise
+			uint32 *ucs4;
+			int len;
+
+			len = SexyUtf8ToUcs4(utf8.c_str(), utf8.length(), &ucs4);
+
+			if (len < 0)
+				return false;
+
+			str.resize(len);
+
+			for (int i = 0; i < len; i++)
+				str[i] = ucs4[i];
+
+			delete [] ucs4;
+		}
+
+		return true;
+	}
+
+	int
+	SexyUcs4FromUtf16(const short *utf16, int *ret, int inlen)
+	{
+		static const int UNI_SUR_HIGH_START = 0xd800;
+		static const int UNI_SUR_HIGH_END   = 0xdbff;
+		static const int UNI_SUR_LOW_START  = 0xdc00;
+		static const int UNI_SUR_LOW_END    = 0xdfff;
+		int ch;
+		int len = 1;
+
+		ch = utf16[0];
+		if (ch >= UNI_SUR_HIGH_START && ch <= UNI_SUR_HIGH_END)
+		{
+			int ch2;
+
+			if (inlen < 2)
+				return -2;
+
+			ch2 = utf16[1];
+			if (ch2 >= UNI_SUR_LOW_START && ch2 <= UNI_SUR_LOW_END)
+			{
+				len++;
+				ch = (ch - UNI_SUR_HIGH_START) << 10;
+				ch +=  ch2 - UNI_SUR_LOW_START + 0x0010000;
+			}
+			else
+			{
+				return -1;
+			}
+		}
+
+		if (ret)
+			*ret = ch;
+		return len;
+	}
+
+	std::string SexyUtf8FromWString(const Sexy::WString &str)
+	{
+		if (sizeof(Sexy::WString::value_type) == 2)
+		{
+			std::string r;
+			const Sexy::WString::value_type *s = str.c_str();
+			size_t left = str.length();
+
+			while (left)
+			{
+				int ret;
+				int ch;
+				char bytes[6];
+
+				ret = SexyUcs4FromUtf16((short*)s, &ch, left);
+				if (ret == -1)
+					return std::string();
+				else if (ret == -2)
+					return r;
+
+				left -= ret;
+				s += ret;
+
+				ret = SexyUsc4ToUtf8(ch, bytes);
+				r.append(bytes, ret);
+
+			}
+
+			return r;
+		}
+		else
+		{
+			std::string r;
+			const Sexy::WString::value_type *s = str.c_str();
+			size_t left = str.length();
+
+			while (left)
+			{
+				int ret;
+				int ch;
+				char bytes[6];
+
+				ch = s[0];
+				ret = SexyUsc4ToUtf8(ch, bytes);
+				r.append(bytes, ret);
+
+				s += 1;
+				left -= 1;
+			}
+			return r;
+		}
 	}
 }
 

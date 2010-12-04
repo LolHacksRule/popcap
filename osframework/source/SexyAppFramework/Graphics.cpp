@@ -667,7 +667,7 @@ void Graphics::DrawString(const std::string& theString, int theX, int theY)
 	if (mFont == NULL)
 		return;
 
-	std::wstring aString;
+	Sexy::WString aString;
 	int aLen = Graphics::WStringFromString(theString, aString);
 	if (aLen)
 		mFont->DrawString(this, theX, theY, aString, mColor, mClipRect);
@@ -675,7 +675,7 @@ void Graphics::DrawString(const std::string& theString, int theX, int theY)
 		mFont->DrawString(this, theX, theY, theString, mColor, mClipRect);
 }
 
-void Graphics::DrawString(const std::wstring& theString, int theX, int theY)
+void Graphics::DrawString(const Sexy::WString& theString, int theX, int theY)
 {
 	if (mFont != NULL)
 		mFont->DrawString(this, theX, theY, theString, mColor, mClipRect);
@@ -1031,7 +1031,7 @@ int Graphics::StringWidth(const std::string& theString)
 	return mFont->StringWidth(theString);
 }
 
-int Graphics::StringWidth(const std::wstring& theString)
+int Graphics::StringWidth(const Sexy::WString& theString)
 {
 	return mFont->StringWidth(theString);
 }
@@ -1136,7 +1136,7 @@ int Graphics::WriteString(const std::string& theString, int theX, int theY, int 
 		aLength = theOffset + theLength;
 
 	std::string aStr(theString.c_str() + theOffset, aLength - theOffset);
-	std::wstring aLine;
+	Sexy::WString aLine;
 	int aStrLen = Graphics::WStringFromString(aStr, aLine);
 	if (aStrLen > 0)
 		return WriteString(aLine, theX, theY, theWidth, theJustification,
@@ -1232,7 +1232,7 @@ int Graphics::WriteString(const std::string& theString, int theX, int theY, int 
 	return aXOffset;
 }
 
-int Graphics::WriteString(const std::wstring& theString, int theX, int theY, int theWidth,
+int Graphics::WriteString(const Sexy::WString& theString, int theX, int theY, int theWidth,
 			  int theJustification, bool drawString, int theOffset, int theLength,
 			  int theOldColor)
 {
@@ -1259,7 +1259,7 @@ int Graphics::WriteString(const std::wstring& theString, int theX, int theY, int
 		theLength = theOffset + theLength;
 
 
-	std::wstring aString;
+	Sexy::WString aString;
 	int aXOffset = 0;
 
 	for (int i = theOffset; i < theLength; i++)
@@ -1279,7 +1279,8 @@ int Graphics::WriteString(const std::wstring& theString, int theX, int theY, int
 
 			       if (theString[i+1]== L'o' || theString[i+1] == L'O')
 				{
-				       std::wstring s = StringToLower(theString.substr(i + 1, 6));
+				       Sexy::WString s = theString.substr(i + 1, 6);
+				       inlineLower(s);
 				       if (s == L"oldclr")
 						aColor = theOldColor;
 				}
@@ -1314,7 +1315,7 @@ int Graphics::WriteString(const std::wstring& theString, int theX, int theY, int
 
 				aXOffset += GetFont()->StringWidth(aString);
 
-				aString = L"";
+				aString.clear();
 			}
 		}
 		else
@@ -1345,7 +1346,7 @@ static int WriteWordWrappedHelper(Graphics *g, const std::string& theString,
 			      theOffset,theLength,theOldColor);
 }
 
-static int WriteWordWrappedHelper(Graphics *g, const std::wstring& theString,
+static int WriteWordWrappedHelper(Graphics *g, const Sexy::WString& theString,
 				  int theX, int theY, int theWidth, int theJustification,
 				  bool drawString, int theOffset, int theLength,
 				  int theOldColor, int theMaxChars)
@@ -1363,7 +1364,7 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const std::string& theLine,
 				   int theLineSpacing, int theJustification,
 				   int *theMaxWidth, int theMaxChars, int *theLastWidth)
 {
-	std::wstring aLine;
+	Sexy::WString aLine;
 	int aStrLen = Graphics::WStringFromString(theLine, aLine);
 
 	if (aStrLen > 0)
@@ -1568,7 +1569,7 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const std::string& theLine,
 }
 
 
-int	Graphics::WriteWordWrapped(const Rect& theRect, const std::wstring& theLine,
+int	Graphics::WriteWordWrapped(const Rect& theRect, const Sexy::WString& theLine,
 				   int theLineSpacing, int theJustification,
 				   int *theMaxWidth, int theMaxChars, int *theLastWidth)
 {
@@ -1589,7 +1590,7 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const std::wstring& theLine,
 
 	int aStrLen = theLine.length();
 
-	std::wstring aCurString;
+	Sexy::WString aCurString;
 	long aCurPos = 0;
 	int aLineStartPos = 0;
 	int aCurWidth = 0;
@@ -1769,7 +1770,7 @@ int	Graphics::DrawStringColor(const std::string& theLine, int theX, int theY, in
 	return WriteString(theLine, theX, theY, -1, -1,true,0,-1,theOldColor);
 }
 
-int	Graphics::DrawStringColor(const std::wstring& theLine, int theX, int theY, int theOldColor)
+int	Graphics::DrawStringColor(const Sexy::WString& theLine, int theX, int theY, int theOldColor)
 {
 	return WriteString(theLine, theX, theY, -1, -1,true,0,-1,theOldColor);
 }
@@ -1782,7 +1783,7 @@ int	Graphics::DrawStringWordWrapped(const std::string& theLine, int theX, int th
 	return WriteWordWrapped(aRect, theLine, theLineSpacing, theJustification, theMaxWidth);
 }
 
-int	Graphics::DrawStringWordWrapped(const std::wstring& theLine, int theX, int theY, int theWrapWidth, int theLineSpacing, int theJustification, int *theMaxWidth)
+int	Graphics::DrawStringWordWrapped(const Sexy::WString& theLine, int theX, int theY, int theWrapWidth, int theLineSpacing, int theJustification, int *theMaxWidth)
 {
 	int aYOffset = mFont->GetAscent() - mFont->GetAscentPadding();
 
@@ -1799,7 +1800,7 @@ int	Graphics::GetWordWrappedHeight(int theWidth, const std::string& theLine, int
 	return aHeight;
 }
 
-int	Graphics::GetWordWrappedHeight(int theWidth, const std::wstring& theLine, int theLineSpacing, int *theMaxWidth)
+int	Graphics::GetWordWrappedHeight(int theWidth, const Sexy::WString& theLine, int theLineSpacing, int *theMaxWidth)
 {
 	Graphics aTestG;
 	aTestG.SetFont(mFont);
@@ -1808,7 +1809,7 @@ int	Graphics::GetWordWrappedHeight(int theWidth, const std::wstring& theLine, in
 	return aHeight;
 }
 
-int Graphics::WStringFromString(const std::string& string, std::wstring& wstr)
+int Graphics::WStringFromString(const std::string& string, Sexy::WString& wstr)
 {
 	int len;
 	char* result;
@@ -1831,12 +1832,12 @@ int Graphics::WStringFromString(const std::string& string, std::wstring& wstr)
 	return -1;
 }
 
-std::wstring Graphics::WStringFromString(const std::string& string)
+Sexy::WString Graphics::WStringFromString(const std::string& string)
 {
-	std::wstring aStr;
+	Sexy::WString aStr;
 
 	if (Graphics::WStringFromString(string, aStr) > 0)
 		return aStr;
 
-	return StringToWString(string);
+	return Sexy::WString(string.begin(), string.end());
 }

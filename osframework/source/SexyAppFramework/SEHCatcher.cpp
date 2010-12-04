@@ -52,10 +52,10 @@ bool						SEHCatcher::mExiting = false;
 bool						SEHCatcher::mShowUI = true;
 bool						SEHCatcher::mAllowSubmit = true;
 
-std::wstring					SEHCatcher::mCrashMessage = L"An unexpected error has occured!";
+Sexy::WString					SEHCatcher::mCrashMessage = L"An unexpected error has occured!";
 std::string						SEHCatcher::mSubmitHost;
-std::wstring					SEHCatcher::mSubmitMessage = L"Please help out by providing as much information as you can about this crash.";
-std::wstring					SEHCatcher::mSubmitErrorMessage = L"Failed to connect to server.";
+Sexy::WString					SEHCatcher::mSubmitMessage = L"Please help out by providing as much information as you can about this crash.";
+Sexy::WString					SEHCatcher::mSubmitErrorMessage = L"Failed to connect to server.";
 
 static bool gUseDefaultFonts = true;
 

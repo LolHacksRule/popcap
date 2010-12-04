@@ -10,7 +10,7 @@ namespace Sexy
 class DataElement
 {
 public:
-	bool					mIsList;
+	bool				mIsList;
 
 public:
 	DataElement();
@@ -22,12 +22,12 @@ public:
 class SingleDataElement : public DataElement
 {
 public:
-	std::wstring				mString;
+	Sexy::WString			mString;
 	DataElement*			mValue;
 
 public:
 	SingleDataElement();
-	SingleDataElement(const std::wstring& theString);
+	SingleDataElement(const Sexy::WString& theString);
 	virtual ~SingleDataElement();
 
 	virtual DataElement*	Duplicate();
@@ -50,8 +50,8 @@ public:
 	virtual DataElement*	Duplicate();
 };
 
-typedef std::map<std::wstring, DataElement*> DataElementMap;
-typedef std::vector<std::wstring> WStringVector;
+typedef std::map<Sexy::WString, DataElement*> DataElementMap;
+typedef std::vector<Sexy::WString> WStringVector;
 typedef std::vector<int> IntVector;
 typedef std::vector<double> DoubleVector;
 
@@ -65,22 +65,23 @@ public:
 	};
 
 public:
-	int						mCmdSep;
+	int					mCmdSep;
 
-	std::wstring				mError;
-	int						mCurrentLineNum;
-	std::wstring			mCurrentLine;
-	DataElementMap			mDefineMap;
+	Sexy::WString				mError;
+	int					mCurrentLineNum;
+	Sexy::WString			        mCurrentLine;
+	DataElementMap			        mDefineMap;
 
 public:
-	virtual bool			Error(const std::wstring& theError);
-	virtual DataElement*	Dereference(const std::wstring& theString);
-	bool					IsImmediate(const std::wstring& theString);
-	std::wstring				Unquote(const std::wstring& theQuotedString);
+	virtual bool			        Error(const Sexy::WString& theError);
+	virtual DataElement*	                Dereference(const Sexy::WString& theString);
+	bool					IsImmediate(const Sexy::WString& theString);
+	Sexy::WString				Unquote(const Sexy::WString& theQuotedString);
 	bool					GetValues(ListDataElement* theSource, ListDataElement* theValues);
-	std::wstring				DataElementToString(const DataElement* theDataElement, bool enclose = true);
-	bool					DataToString(DataElement* theSource, std::wstring* theString);
-	bool					DataToKeyAndValue(DataElement* theSource, std::wstring* theKey, DataElement** theValue);
+	Sexy::WString				DataElementToString(const DataElement* theDataElement, bool enclose = true);
+	bool					DataToString(DataElement* theSource, Sexy::WString* theString);
+	bool					DataToKeyAndValue(DataElement* theSource, Sexy::WString* theKey,
+								  DataElement** theValue);
 	bool					DataToInt(DataElement* theSource, int* theInt);
 	bool					DataToDouble(DataElement* theSource, double* theDouble);
 	bool					DataToBoolean(DataElement* theSource, bool* theBool);
@@ -88,17 +89,18 @@ public:
 	bool					DataToList(DataElement* theSource, ListDataElement* theValues);
 	bool					DataToIntVector(DataElement* theSource, IntVector* theIntVector);
 	bool					DataToDoubleVector(DataElement* theSource, DoubleVector* theDoubleVector);
-	bool					ParseToList(const std::wstring& theString, ListDataElement* theList, bool expectListEnd, int* theStringPos);
-	bool					ParseDescriptorLine(const std::wstring& theDescriptorLine);
+	bool					ParseToList(const Sexy::WString& theString, ListDataElement* theList,
+							    bool expectListEnd, int* theStringPos);
+	bool					ParseDescriptorLine(const Sexy::WString& theDescriptorLine);
 
 	// You must implement this one
-	virtual bool			HandleCommand(const ListDataElement& theParams) = 0;
+	virtual bool			        HandleCommand(const ListDataElement& theParams) = 0;
 
 public:
 	DescParser();
 	virtual ~DescParser();
 
-	virtual bool			LoadDescriptor(const std::string& theFileName);
+	virtual bool			        LoadDescriptor(const std::string& theFileName);
 };
 
 }

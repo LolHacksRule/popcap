@@ -32,7 +32,7 @@ class FontLayer
 {
 public:
 	typedef std::vector<std::string> StringVector;
-	typedef std::map<std::wstring, std::wstring> ExInfoMap;
+	typedef std::map<Sexy::WString, Sexy::WString> ExInfoMap;
 public:
 	FontData*				mFontData;
 	ExInfoMap				mExtendedInfo;
@@ -66,7 +66,7 @@ public:
 };
 
 typedef std::list<FontLayer> FontLayerList;
-typedef std::map<std::wstring, FontLayer*> FontLayerMap;
+typedef std::map<Sexy::WString, FontLayer*> FontLayerMap;
 typedef std::list<Rect> RectList;
 typedef std::vector<int> IntVector;
 
@@ -157,7 +157,7 @@ public:
 						     const Color& theColor, const Rect* theClipRect,
 						     RectList* theDrawnAreas, int* theWidth);
 	virtual void			DrawStringEx(Graphics* g, int theX, int theY,
-						     const std::wstring& theString,
+						     const Sexy::WString& theString,
 						     const Color& theColor, const Rect* theClipRect,
 						     RectList* theDrawnAreas, int* theWidth);
 public:
@@ -178,9 +178,9 @@ public:
 						   const Color& theColor,
 						   const Rect& theClipRect);
 
-	virtual int			StringWidth(const std::wstring& theString);
+	virtual int			StringWidth(const Sexy::WString& theString);
 	virtual void			DrawString(Graphics* g, int theX, int theY,
-						   const std::wstring& theString,
+						   const Sexy::WString& theString,
 						   const Color& theColor,
 						   const Rect& theClipRect);
 
@@ -190,16 +190,16 @@ public:
 	virtual int				GetPointSize();
 	virtual void			SetScale(double theScale);
 	virtual int				GetDefaultPointSize();
-	virtual bool			AddTag(const std::wstring& theTagName);
-	virtual bool			RemoveTag(const std::wstring& theTagName);
-	virtual bool			HasTag(const std::wstring& theTagName);
+	virtual bool			AddTag(const Sexy::WString& theTagName);
+	virtual bool			RemoveTag(const Sexy::WString& theTagName);
+	virtual bool			HasTag(const Sexy::WString& theTagName);
 	virtual bool			AddTag(const std::string& theTagName);
 	virtual bool			RemoveTag(const std::string& theTagName);
 	virtual bool			HasTag(const std::string& theTagName);
-	virtual std::wstring		GetDefine(const std::wstring& theName);
+	virtual Sexy::WString		GetDefine(const Sexy::WString& theName);
 
 	virtual void			Prepare();
-	virtual  bool                   StringToGlyphs(const std::wstring &theString,
+	virtual  bool                   StringToGlyphs(const Sexy::WString &theString,
 						       GlyphVector &theGlyphs);
 	virtual  void                   DrawGlyphs(Graphics *g, int theX, int theY,
 						   GlyphVector& theGlyphs,

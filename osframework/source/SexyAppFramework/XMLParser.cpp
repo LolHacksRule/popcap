@@ -23,8 +23,8 @@ void XMLParser::SetEncodingType(XMLEncodingType theEncoding)
 {
 	switch (theEncoding)
 	{
-		case ASCII:		mGetCharFunc = &XMLParser::GetAsciiChar;	mForcedEncodingType = true; break;
-		case UTF_8:		mGetCharFunc = &XMLParser::GetUTF8Char;		mForcedEncodingType = true; break;
+		case ASCII:     mGetCharFunc = &XMLParser::GetAsciiChar;	mForcedEncodingType = true; break;
+		case UTF_8:	mGetCharFunc = &XMLParser::GetUTF8Char;		mForcedEncodingType = true; break;
 		case UTF_16:	mGetCharFunc = &XMLParser::GetUTF16Char;	mForcedEncodingType = true; break;
 		case UTF_16_LE:	mGetCharFunc = &XMLParser::GetUTF16LEChar;	mForcedEncodingType = true; break;
 		case UTF_16_BE:	mGetCharFunc = &XMLParser::GetUTF16BEChar;	mForcedEncodingType = true; break;
@@ -47,6 +47,13 @@ void XMLParser::Init()
 	mByteSwap = false;
 }
 
+bool XMLParser::AddAttribute(XMLElement* theElement, const Sexy::WString& theAttributeKey, const Sexy::WString& theAttributeValue)
+{
+	return AddAttribute(theElement,
+			    std::string(theAttributeKey.begin(), theAttributeKey.end()),
+			    std::string(theAttributeValue.begin(), theAttributeValue.end()));
+}
+
 bool XMLParser::AddAttribute(XMLElement* theElement, const SexyString& theAttributeKey, const SexyString& theAttributeValue)
 {
 	std::pair<XMLParamMap::iterator,bool> aRet;
@@ -61,9 +68,9 @@ bool XMLParser::AddAttribute(XMLElement* theElement, const SexyString& theAttrib
 	return aRet.second;
 }
 
-bool XMLParser::GetAsciiChar(wchar_t* theChar, bool* error)
+bool XMLParser::GetAsciiChar(unichar_t* theChar, bool* error)
 {
-	wchar_t aChar = 0;
+	unsigned char aChar = 0;
 	if (p_fread(&aChar, 1, 1, mFile) != 1)
 		return false;
 
@@ -71,7 +78,7 @@ bool XMLParser::GetAsciiChar(wchar_t* theChar, bool* error)
 	return true;
 }
 
-bool XMLParser::GetUTF8Char(wchar_t* theChar, bool* error)
+bool XMLParser::GetUTF8Char(unichar_t* theChar, bool* error)
 {
 	static const unsigned short aMaskData[] = {
 		0xC0,		// 1 extra byte
@@ -82,9 +89,11 @@ bool XMLParser::GetUTF8Char(wchar_t* theChar, bool* error)
 	};
 	*error = true;
 
-	int aTempChar = 0;
-	if (p_fread(&aTempChar, 1, 1, mFile) == 1)
+	unsigned aTempChar = 0;
+	unsigned char c;
+	if (p_fread(&c, 1, 1, mFile) == 1)
 	{
+		aTempChar = c;
 		if ((aTempChar & 0x80) != 0)
 		{
 			if ((aTempChar & 0xC0) != 0xC0) return false; // sanity check: high bit should not be set without the next highest bit being set too.
@@ -106,10 +115,11 @@ bool XMLParser::GetUTF8Char(wchar_t* theChar, bool* error)
 
 			DBG_ASSERTE(aTotalLen >= 2 && aTotalLen <= 6);
 
-			int anExtraChar = 0;
+			unsigned anExtraChar = 0;
 			while (aLen > 0)
 			{
-				if (p_fread(&anExtraChar, 1, 1, mFile) != 1) return false;
+				if (p_fread(&c, 1, 1, mFile) != 1) return false;
+				anExtraChar = c;
 				if ((anExtraChar & 0xC0) != 0x80) return false; // sanity check: high bit set, and next highest bit NOT set.
 
 				*aBytesReadPtr++ = anExtraChar;
@@ -149,7 +159,7 @@ bool XMLParser::GetUTF8Char(wchar_t* theChar, bool* error)
 			return GetUTF8Char(theChar, error);
 		}
 
-		*theChar = (wchar_t)aTempChar;
+		*theChar = (unichar_t)aTempChar;
 		*error = false;
 		return true;
 	}
@@ -158,9 +168,9 @@ bool XMLParser::GetUTF8Char(wchar_t* theChar, bool* error)
 	return false;
 }
 
-bool XMLParser::GetUTF16Char(wchar_t* theChar, bool* error)
+bool XMLParser::GetUTF16Char(unichar_t* theChar, bool* error)
 {
-	wchar_t aTempChar = 0;
+	unichar_t aTempChar = 0;
 	if (p_fread(&aTempChar, 2, 1, mFile) != 1)
 		return false;
 
@@ -178,18 +188,18 @@ bool XMLParser::GetUTF16Char(wchar_t* theChar, bool* error)
 			return GetUTF16Char(theChar, error);
 		}
 	}
-	if (mByteSwap) aTempChar = (wchar_t)((aTempChar << 8) | (aTempChar >> 8));
+	if (mByteSwap) aTempChar = (unichar_t)((aTempChar << 8) | (aTempChar >> 8));
 
 	if ((aTempChar & 0xD800) == 0xD800)
 	{
-		wchar_t aNextChar = 0;
+		unichar_t aNextChar = 0;
 		if (p_fread(&aNextChar, 2, 1, mFile) != 1)
 			return false;
 
-		if (mByteSwap) aNextChar = (wchar_t)((aNextChar << 8) | (aNextChar >> 8));
+		if (mByteSwap) aNextChar = (unichar_t)((aNextChar << 8) | (aNextChar >> 8));
 		if ((aNextChar & 0xDC00) == 0xDC00)
 		{
-			*theChar = (wchar_t)((((aTempChar & ~0xD800) << 10) | (aNextChar & ~0xDC00)) + 0x10000);
+			*theChar = (unichar_t)((((aTempChar & ~0xD800) << 10) | (aNextChar & ~0xDC00)) + 0x10000);
 		}
 		else return false;
 	}
@@ -198,9 +208,9 @@ bool XMLParser::GetUTF16Char(wchar_t* theChar, bool* error)
 	return true;
 }
 
-bool XMLParser::GetUTF16LEChar(wchar_t* theChar, bool* error)
+bool XMLParser::GetUTF16LEChar(unichar_t* theChar, bool* error)
 {
-	wchar_t aTempChar = 0;
+	unichar_t aTempChar = 0;
 	if (p_fread(&aTempChar, 2, 1, mFile) != 1)
 		return false;
 
@@ -208,14 +218,14 @@ bool XMLParser::GetUTF16LEChar(wchar_t* theChar, bool* error)
 
 	if ((aTempChar & 0xD800) == 0xD800)
 	{
-		wchar_t aNextChar = 0;
+		unichar_t aNextChar = 0;
 		if (p_fread(&aNextChar, 2, 1, mFile) != 1)
 			return false;
 
 		aNextChar = WORD_LITTLEE_TO_NATIVE(aTempChar);
 		if ((aNextChar & 0xDC00) == 0xDC00)
 		{
-			*theChar = (wchar_t)((((aTempChar & ~0xD800) << 10) | (aNextChar & ~0xDC00)) + 0x10000);
+			*theChar = (unichar_t)((((aTempChar & ~0xD800) << 10) | (aNextChar & ~0xDC00)) + 0x10000);
 		}
 		else return false;
 	}
@@ -223,9 +233,9 @@ bool XMLParser::GetUTF16LEChar(wchar_t* theChar, bool* error)
 	return true;
 }
 
-bool XMLParser::GetUTF16BEChar(wchar_t* theChar, bool* error)
+bool XMLParser::GetUTF16BEChar(unichar_t* theChar, bool* error)
 {
-	wchar_t aTempChar = 0;
+	unichar_t aTempChar = 0;
 	if (p_fread(&aTempChar, 2, 1, mFile) != 1)
 		return false;
 
@@ -233,14 +243,14 @@ bool XMLParser::GetUTF16BEChar(wchar_t* theChar, bool* error)
 
 	if ((aTempChar & 0xD800) == 0xD800)
 	{
-		wchar_t aNextChar = 0;
+		unichar_t aNextChar = 0;
 		if (p_fread(&aNextChar, 2, 1, mFile) != 1)
 			return false;
 
 		aNextChar = WORD_BIGE_TO_NATIVE(aTempChar);
 		if ((aNextChar & 0xDC00) == 0xDC00)
 		{
-			*theChar = (wchar_t)((((aTempChar & ~0xD800) << 10) | (aNextChar & ~0xDC00)) + 0x10000);
+			*theChar = (unichar_t)((((aTempChar & ~0xD800) << 10) | (aNextChar & ~0xDC00)) + 0x10000);
 		}
 		else return false;
 	}
@@ -299,7 +309,7 @@ bool XMLParser::OpenFile(const std::string& theFileName)
 	return true;
 }
 
-void XMLParser::SetStringSource(const std::wstring& theString)
+void XMLParser::SetStringSource(const Sexy::WString& theString)
 {
 	Init();
 
@@ -312,7 +322,12 @@ void XMLParser::SetStringSource(const std::wstring& theString)
 
 void XMLParser::SetStringSource(const std::string& theString)
 {
-	SetStringSource(StringToWString(theString));
+	WString s;
+
+	s.reserve(theString.size());
+	for (size_t i = 0; i < theString.length(); i++)
+		s += (uchar)theString[i];
+	SetStringSource(s);
 }
 
 bool XMLParser::NextElement(XMLElement* theElement)
@@ -331,16 +346,16 @@ bool XMLParser::NextElement(XMLElement* theElement)
 
 		bool doingAttribute = false;
 		bool AttributeVal = false;
-		std::wstring aAttributeKey;
-		std::wstring aAttributeValue;
+		Sexy::WString aAttributeKey;
+		Sexy::WString aAttributeValue;
 
-		std::wstring aLastAttributeKey;
+		Sexy::WString aLastAttributeKey;
 
 		for (;;)
 		{
 			// Process character by character
 
-			wchar_t c;
+			unichar_t c;
 			int aVal;
 
 			if (mBufferedText.size() > 0)
@@ -490,15 +505,17 @@ bool XMLParser::NextElement(XMLElement* theElement)
 										aAttributeValue = XMLDecodeString(aAttributeValue);
 
 										aLastAttributeKey = aAttributeKey;
-										AddAttribute(theElement, WStringToSexyString(aLastAttributeKey), WStringToSexyString(aAttributeValue));
+										AddAttribute(theElement,
+											     aLastAttributeKey,
+											     aAttributeValue);
 
-										aAttributeKey = L"";
-										aAttributeValue = L"";
+										aAttributeKey.clear();
+										aAttributeValue.clear();
 									}
 
 									if (aLastAttributeKey.length() > 0)
 									{
-										SexyString aVal = theElement->mAttributes[WStringToSexyString(aLastAttributeKey)];
+										SexyString aVal = theElement->mAttributes[SexyWStringToString(aLastAttributeKey)];
 
 										int aLen = aVal.length();
 
@@ -507,7 +524,9 @@ bool XMLParser::NextElement(XMLElement* theElement)
 											// Its an empty element, fake start and end segments
 //											theElement->mAttributes[aLastAttributeKey] = aVal.substr(0, aLen - 1);
 
-											AddAttribute(theElement, WStringToSexyString(aLastAttributeKey), XMLDecodeString(aVal.substr(0, aLen - 1)));
+											AddAttribute(theElement,
+												     SexyWStringToString(aLastAttributeKey),
+												     XMLDecodeString(aVal.substr(0, aLen - 1)));
 
 											insertEnd = true;
 										}
@@ -536,11 +555,12 @@ bool XMLParser::NextElement(XMLElement* theElement)
 									mBufferedText.resize(anOldSize + anAddLength);
 
 									for (int i = 0; i < anAddLength; i++)
-										mBufferedText[anOldSize + i] = (wchar_t)(anAddString[anAddLength - i - 1]);
+										mBufferedText[anOldSize + i] =
+											(unichar_t)(anAddString[anAddLength - i - 1]);
 
 									// clear out aAttributeKey, since it contains "/" as its value and will insert
 									// it into the element's attribute map.
-									aAttributeKey = L"";
+									aAttributeKey.clear();
 
 									//OLD: mBufferedText = "</" + theElement->mValue + ">" + mBufferedText;
 								}
@@ -652,10 +672,12 @@ bool XMLParser::NextElement(XMLElement* theElement)
 
 //										theElement->mAttributes[aAttributeKey] = aAttributeValue;
 
-										AddAttribute(theElement, WStringToSexyString(aAttributeKey), WStringToSexyString(aAttributeValue));
+										AddAttribute(theElement,
+											     aAttributeKey,
+											     aAttributeValue);
 
-										aAttributeKey = L"";
-										aAttributeValue = L"";
+										aAttributeKey.clear();
+										aAttributeValue.clear();
 
 										aLastAttributeKey = aAttributeKey;
 									}
@@ -670,7 +692,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 								hasSpace = false;
 							}
 
-							std::wstring* aStrPtr = NULL;
+							Sexy::WString* aStrPtr = NULL;
 
 							if (!doingAttribute)
 							{
@@ -725,7 +747,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 			aAttributeValue = XMLDecodeString(aAttributeValue);
 //			theElement->mAttributes[aAttributeKey] = aAttributeValue;
 
-			AddAttribute(theElement, WStringToSexyString(aAttributeKey), WStringToSexyString(aAttributeValue));
+			AddAttribute(theElement, aAttributeKey, aAttributeValue);
 		}
 
 		theElement->mValue = XMLDecodeString(theElement->mValue);

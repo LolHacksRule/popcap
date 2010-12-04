@@ -300,16 +300,16 @@ SexyAppBase::SexyAppBase()
 		mAdd8BitMaxTable[i] = 255;
 
 	// Set default strings.  Init could read in overrides from partner.xml
-	SetString("DIALOG_BUTTON_OK",		L"OK");
-	SetString("DIALOG_BUTTON_CANCEL",	L"CANCEL");
+	SetString("DIALOG_BUTTON_OK",		WSTR("OK"));
+	SetString("DIALOG_BUTTON_CANCEL",	WSTR("CANCEL"));
 
-	SetString("UPDATE_CHECK_TITLE",		L"Update Check");
-	SetString("UPDATE_CHECK_BODY",		L"Checking if there are any updates available for this product ...");
+	SetString("UPDATE_CHECK_TITLE",		WSTR("Update Check"));
+	SetString("UPDATE_CHECK_BODY",		WSTR("Checking if there are any updates available for this product ..."));
 
-	SetString("UP_TO_DATE_TITLE",		L"Up to Date");
-	SetString("UP_TO_DATE_BODY",		L"There are no updates available for this product at this time.");
-	SetString("NEW_VERSION_TITLE",		L"New Version");
-	SetString("NEW_VERSION_BODY",		L"There is an update available for this product.  Would you like to visit the web site to download it?");
+	SetString("UP_TO_DATE_TITLE",		WSTR("Up to Date"));
+	SetString("UP_TO_DATE_BODY",		WSTR("There are no updates available for this product at this time."));
+	SetString("NEW_VERSION_TITLE",		WSTR("New Version"));
+	SetString("NEW_VERSION_BODY",		WSTR("There is an update available for this product.  Would you like to visit the web site to download it?"));
 
 
 	mDemoPrefix = "sexyapp";
@@ -1342,7 +1342,7 @@ int SexyAppBase::MsgBox(const std::string& theText, const std::string& theTitle,
 	return aResult;
 }
 
-int SexyAppBase::MsgBox(const std::wstring& theText, const std::wstring& theTitle, int theFlags)
+int SexyAppBase::MsgBox(const Sexy::WString& theText, const Sexy::WString& theTitle, int theFlags)
 {
 //	if (mDDInterface && mDDInterface->mDD)
 //		mDDInterface->mDD->FlipToGDISurface();
@@ -1368,11 +1368,11 @@ void SexyAppBase::Popup(const std::string& theString)
 	EndPopup();
 }
 
-void SexyAppBase::Popup(const std::wstring& theString)
+void SexyAppBase::Popup(const Sexy::WString& theString)
 {
 	BeginPopup();
 	if (!mShutdown)
-		std::wcout<<"popup:"<<theString<<std::endl;
+		std::cout<<"popup:"<<std::string(theString.begin(), theString.end())<<std::endl;
 	EndPopup();
 }
 
@@ -2873,7 +2873,7 @@ SexyString SexyAppBase::GetString(const std::string& theId)
 	DBG_ASSERTE(anItr != mStringProperties.end());
 
 	if (anItr != mStringProperties.end())
-		return WStringToSexyString(anItr->second);
+		return std::string(anItr->second.begin(), anItr->second.end());
 	else
 		return _S("");
 }
@@ -2883,7 +2883,29 @@ SexyString SexyAppBase::GetString(const std::string& theId, const SexyString& th
 	StringWStringMap::iterator anItr = mStringProperties.find(theId);
 
 	if (anItr != mStringProperties.end())
-		return WStringToSexyString(anItr->second);
+		return std::string(anItr->second.begin(), anItr->second.end());
+	else
+		return theDefault;
+}
+
+
+Sexy::WString SexyAppBase::GetWString(const std::string& theId)
+{
+	StringWStringMap::iterator anItr = mStringProperties.find(theId);
+	DBG_ASSERTE(anItr != mStringProperties.end());
+
+	if (anItr != mStringProperties.end())
+		return anItr->second;
+	else
+		return Sexy::WString();
+}
+
+Sexy::WString SexyAppBase::GetWString(const std::string& theId, const Sexy::WString& theDefault)
+{
+	StringWStringMap::iterator anItr = mStringProperties.find(theId);
+
+	if (anItr != mStringProperties.end())
+		return anItr->second;
 	else
 		return theDefault;
 }
@@ -2899,7 +2921,7 @@ StringVector SexyAppBase::GetStringVector(const std::string& theId)
 		return StringVector();
 }
 
-void SexyAppBase::SetString(const std::string& theId, const std::wstring& theValue)
+void SexyAppBase::SetString(const std::string& theId, const Sexy::WString& theValue)
 {
 	std::pair<StringWStringMap::iterator, bool> aPair = mStringProperties.insert(StringWStringMap::value_type(theId, theValue));
 	if (!aPair.second) // Found it, change value

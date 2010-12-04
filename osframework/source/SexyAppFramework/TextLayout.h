@@ -49,13 +49,13 @@ namespace Sexy {
 		TextLayout();
 		TextLayout(const std::string& text, Font* font = 0,
 			   bool rich = false, bool singleline = false);
-		TextLayout(const std::wstring& text, Font* font = 0,
+		TextLayout(const Sexy::WString& text, Font* font = 0,
 			   bool rich = false, bool singleline = false);
 		~TextLayout();
 
 	public:
 		void                      SetText(const std::string &text, bool rich = false);
-		void                      SetText(const std::wstring &text, bool rich = false);
+		void                      SetText(const Sexy::WString &text, bool rich = false);
 		int                       GetWidth();
 		int                       GetHeight();
 		void                      SetFont(Font *font);
@@ -104,7 +104,7 @@ namespace Sexy {
 		void Update();
 		void UpdateCache(const Color& color, bool force = false);
 		int  GetGlyphsWidth(const GlyphVector &glyphs);
-		int  BuildLine(std::wstring text,
+		int  BuildLine(Sexy::WString text,
 			       int offset, int length,
 			       bool rich, TextLine &line,
 			       bool &lastHasColor, Color &lastColor);
@@ -127,7 +127,7 @@ namespace Sexy {
 		bool             mDirty;
 		TextCachePolicy  mCachePolicy;
 		Font            *mFont;
-		std::wstring     mText;
+		Sexy::WString     mText;
 		TextLineVector   mLines;
 		size_t           mNumGlyphs;
 		Rect             mRect;

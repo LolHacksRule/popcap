@@ -50,10 +50,10 @@ public:
 	static std::string		mErrorText;
 	static std::string		mUserText;
 	static std::string		mUploadFileName;
-	static std::wstring		mCrashMessage;
+	static Sexy::WString		mCrashMessage;
 	static std::string		mSubmitHost;
-	static std::wstring		mSubmitErrorMessage;
-	static std::wstring		mSubmitMessage;
+	static Sexy::WString		mSubmitErrorMessage;
+	static Sexy::WString		mSubmitMessage;
 	static HMODULE			mImageHelpLib;
 	static SYMINITIALIZEPROC mSymInitialize;
 	static SYMSETOPTIONSPROC mSymSetOptions;

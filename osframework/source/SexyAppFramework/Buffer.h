@@ -32,7 +32,7 @@ public:
 	void					WriteShort(short theShort);
 	void					WriteLong(long theLong);
 	void					WriteString(const std::string& theString);
-	void					WriteUTF8String(const std::wstring& theString);
+	void					WriteUTF8String(const Sexy::WString& theString);
 	void					WriteLine(const std::string& theString);	
 	void					WriteBuffer(const ByteVector& theBuffer);
 	void					WriteBytes(const uchar* theByte, int theCount);
@@ -40,14 +40,14 @@ public:
 	void					SetData(uchar* thePtr, int theCount);
 
 	std::string				ToWebString() const;
-	std::wstring			UTF8ToWideString() const;
+	Sexy::WString			UTF8ToWideString() const;
 	uchar					ReadByte() const;
 	int						ReadNumBits(int theBits, bool isSigned) const;
 	bool					ReadBoolean() const;
 	short					ReadShort() const;
 	long					ReadLong() const;
 	std::string				ReadString() const;	
-	std::wstring			ReadUTF8String() const;
+	Sexy::WString			ReadUTF8String() const;
 	std::string				ReadLine() const;
 	void					ReadBytes(uchar* theData, int theLen) const;
 	void					ReadBuffer(ByteVector* theByteVector) const;

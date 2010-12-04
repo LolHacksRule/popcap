@@ -229,7 +229,7 @@ int FreeTypeScaledFont::StringWidth(const std::string& theString, bool unicode)
 	return (int)floor(x + 0.5);
 }
 
-int FreeTypeScaledFont::StringWidth(const std::wstring& theString)
+int FreeTypeScaledFont::StringWidth(const Sexy::WString& theString)
 {
 	if (!mBaseFont)
 		return 0;
@@ -383,7 +383,7 @@ void FreeTypeScaledFont::GlyphsFromString(const std::string& string, FreeTypeGly
 	}
 }
 
-void FreeTypeScaledFont::GlyphsFromString(const std::wstring& string, FreeTypeGlyphVector& glyphs,
+void FreeTypeScaledFont::GlyphsFromString(const Sexy::WString& string, FreeTypeGlyphVector& glyphs,
 					  bool render)
 {
 	std::string utf8;
@@ -575,7 +575,7 @@ void FreeTypeScaledFont::DrawGlyph(Graphics* g, int theX, int theY, FreeTypeGlyp
 #endif
 }
 
-bool FreeTypeScaledFont::StringToGlyphs(const std::wstring &theString,
+bool FreeTypeScaledFont::StringToGlyphs(const Sexy::WString &theString,
 					GlyphVector &theGlyphs)
 {
 	if (!mBaseFont)
@@ -835,7 +835,7 @@ void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const std::
 	UnlockFace();
 }
 
-void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const std::wstring& theString,
+void FreeTypeScaledFont::DrawString(Graphics* g, int theX, int theY, const Sexy::WString& theString,
 				    const Color& theColor, const Rect& theClipRect,
 				    bool drawShadow, bool drawOutline)
 {

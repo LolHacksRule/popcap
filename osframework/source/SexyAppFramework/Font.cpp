@@ -71,7 +71,7 @@ int Font::StringWidth(const std::string& theString)
 	return 0;
 }
 
-int Font::StringWidth(const std::wstring& theString)
+int Font::StringWidth(const Sexy::WString& theString)
 {
 	return 0;
 }
@@ -92,12 +92,12 @@ void Font::DrawString(Graphics* g, int theX, int theY, const std::string& theStr
 {
 }
 
-void Font::DrawString(Graphics* g, int theX, int theY, const std::wstring& theString,
+void Font::DrawString(Graphics* g, int theX, int theY, const Sexy::WString& theString,
 		      const Color& theColor, const Rect& theClipRect)
 {
 }
 
-bool Font::StringToGlyphs(const std::wstring& theString, GlyphVector& theGlyphs)
+bool Font::StringToGlyphs(const Sexy::WString& theString, GlyphVector& theGlyphs)
 {
 	return false;
 }

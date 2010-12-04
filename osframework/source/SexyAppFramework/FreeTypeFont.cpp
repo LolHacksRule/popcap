@@ -80,18 +80,18 @@ void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const std::string
 				unicode, mDrawShadow);
 }
 
-int FreeTypeFont::StringWidth(const std::wstring& theString)
+int FreeTypeFont::StringWidth(const Sexy::WString& theString)
 {
 	return mScaledFont->StringWidth(theString);
 }
 
-void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const std::wstring& theString,
+void FreeTypeFont::DrawString(Graphics* g, int theX, int theY, const Sexy::WString& theString,
 			      const Color& theColor, const Rect& theClipRect)
 {
 	mScaledFont->DrawString(g, theX, theY, theString, theColor, theClipRect, mDrawShadow);
 }
 
-bool FreeTypeFont::StringToGlyphs(const std::wstring &theString,
+bool FreeTypeFont::StringToGlyphs(const Sexy::WString &theString,
 				  GlyphVector &theGlyphs)
 {
 	return mScaledFont->StringToGlyphs(theString, theGlyphs);

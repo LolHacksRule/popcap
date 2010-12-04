@@ -37,15 +37,15 @@ namespace Sexy
 							   const Color& theColor,
 							   const Rect& theClipRect);
 
-		virtual int			StringWidth(const std::wstring& theString);
+		virtual int			StringWidth(const Sexy::WString& theString);
 		virtual void			DrawString(Graphics* g, int theX, int theY,
-							   const std::wstring& theString,
+							   const Sexy::WString& theString,
 							   const Color& theColor,
 							   const Rect& theClipRect);
 
 		virtual int			CharWidth(int theChar);
 		virtual int			CharWidthKern(int theChar, int thePrevChar);
-		virtual bool                    StringToGlyphs(const std::wstring &theString,
+		virtual bool                    StringToGlyphs(const Sexy::WString &theString,
 							       GlyphVector &theGlyphs);
 		virtual void                    DrawGlyphs(Graphics *g, int theX, int theY,
 							   GlyphVector& theGlyphs,

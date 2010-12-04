@@ -32,7 +32,7 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp",
         'InputDriverFactory.cpp', 'InputManager.cpp',
         'ModuleLoader.cpp', 'ModuleManager.cpp', 'SexyTimer.cpp',
         'SexyThread.cpp', 'SexyDebug.cpp', 'SexyI18n.cpp',
-        'SexyLang.cpp', 'Find.cpp', 'TextLayout.cpp']
+        'SexyLang.cpp', 'Find.cpp', 'TextLayout.cpp', 'SexyString.cpp']
 
 ### uniconv
 srcs += map(lambda f:os.path.join ('uniconv', f),

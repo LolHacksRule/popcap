@@ -31,7 +31,7 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <shellapi.h> 
+#include <shellapi.h>
 #include <mmsystem.h>
 #define snprintf _snprintf
 #define wcsncmp wcsicmp
@@ -58,6 +58,7 @@ typedef int BOOL;
 #define Sleep(s) usleep(s)
 #endif
 #include "ModVal.h"
+#include "SexyString.h"
 
 #ifdef _USE_WIDE_STRING
 
@@ -114,24 +115,24 @@ typedef std::string			SexyString;
 #define sexyatoi			atoi
 #define sexystrcpy			strcpy
 
-#define sexystrlen                      strlen
-#define sexyatof                        atof
-#define sexysatol                       atol
-#define sexystrtoul                     strtoul
-#define sexysscanf                      sscanf
-#define sexyisspace                     isspace
-#define sexyisdigit                     isdigit
-#define sexystrtok                      strtok
-#define sexystrchr                      strchr
-#define sexysprintf                     sprintf
-#define sexytolower                     tolower
-#define sexyfstream                     std::fstream
-#define sexygetcwd                      getcwd
-#define sexychdir                       chdir
-#define sexyfgets                       fgets
-#define sexystrtok                      strtok
-#define sexyitoa                        itoa
-#define sexytoupper                     toupper
+#define sexystrlen			strlen
+#define sexyatof			atof
+#define sexysatol			atol
+#define sexystrtoul			strtoul
+#define sexysscanf			sscanf
+#define sexyisspace			isspace
+#define sexyisdigit			isdigit
+#define sexystrtok			strtok
+#define sexystrchr			strchr
+#define sexysprintf			sprintf
+#define sexytolower			tolower
+#define sexyfstream			std::fstream
+#define sexygetcwd			getcwd
+#define sexychdir			chdir
+#define sexyfgets			fgets
+#define sexystrtok			strtok
+#define sexyitoa			itoa
+#define sexytoupper			toupper
 
 #define SexyStringToStringFast(x)	(x)
 #define SexyStringToWStringFast(x)	StringToWString(x)
@@ -178,137 +179,197 @@ typedef SexyString::value_type					SexyChar;
 namespace Sexy
 {
 
-const ulong SEXY_RAND_MAX = 0x7FFFFFFF;
+	const ulong SEXY_RAND_MAX = 0x7FFFFFFF;
 
-extern bool			gDebug;
+	extern bool			gDebug;
 #ifdef WIN32
-extern HINSTANCE	gHInstance;
+	extern HINSTANCE		gHInstance;
 #endif
 
-int					Rand();
-int					Rand(int range);
-float				Rand(float range);
-void				SRand(ulong theSeed);
-std::string	vformat(const char* fmt, va_list argPtr);
-std::wstring	vformat(const wchar_t* fmt, va_list argPtr);
-std::string	StrFormat(const char* fmt ...);
-std::wstring	StrFormat(const wchar_t* fmt ...);
-bool				CheckFor98Mill();
-bool				CheckForVista();
-std::string                     GetResourcesFolder();
-void                            SetResourcesFolder(const std::string& thePath);
-std::string			GetAppDataFolder();
-void				SetAppDataFolder(const std::string& thePath);
-std::string			URLEncode(const std::string& theString);
-std::string			StringToUpper(const std::string& theString);
-std::wstring		StringToUpper(const std::wstring& theString);
-std::string			StringToLower(const std::string& theString);
-std::wstring		StringToLower(const std::wstring& theString);
-std::wstring		StringToWString(const std::string &theString);
-std::string			WStringToString(const std::wstring &theString);
-SexyString			StringToSexyString(const std::string& theString);
-SexyString			WStringToSexyString(const std::wstring& theString);
-std::string			SexyStringToString(const SexyString& theString);
-std::wstring		SexyStringToWString(const SexyString& theString);
-std::string			Upper(const std::string& theData);
-std::wstring		Upper(const std::wstring& theData);
-std::string			Lower(const std::string& theData);
-std::wstring		Lower(const std::wstring& theData);
-std::string			Trim(const std::string& theString);
-std::wstring		Trim(const std::wstring& theString);
-bool				StringToInt(const std::string theString, int* theIntVal);
-bool				StringToDouble(const std::string theString, double* theDoubleVal);
-bool				StringToInt(const std::wstring theString, int* theIntVal);
-bool				StringToDouble(const std::wstring theString, double* theDoubleVal);
-int					StrFindNoCase(const char *theStr, const char *theFind);
-bool				StrPrefixNoCase(const char *theStr, const char *thePrefix, int maxLength = 10000000);
-SexyString			CommaSeperate(int theValue);
-std::string			Evaluate(const std::string& theString, const DefinesMap& theDefinesMap);
-std::string			XMLDecodeString(const std::string& theString);
-std::string			XMLEncodeString(const std::string& theString);
-std::wstring		XMLDecodeString(const std::wstring& theString);
-std::wstring		XMLEncodeString(const std::wstring& theString);
+	int				Rand();
+	int				Rand(int range);
+	float				Rand(float range);
+	void				SRand(ulong theSeed);
+	std::string			vformat(const char* fmt, va_list argPtr);
+	std::wstring			vformat(const wchar_t* fmt, va_list argPtr);
+	std::string			StrFormat(const char* fmt ...);
+	std::wstring			StrFormat(const wchar_t* fmt ...);
+	bool				CheckFor98Mill();
+	bool				CheckForVista();
+	std::string			GetResourcesFolder();
+	void				SetResourcesFolder(const std::string& thePath);
+	std::string			GetAppDataFolder();
+	void				SetAppDataFolder(const std::string& thePath);
+	std::string			URLEncode(const std::string& theString);
+	std::string			StringToUpper(const std::string& theString);
+	std::wstring			StringToUpper(const std::wstring& theString);
+	Sexy::WString			StringToUpper(const Sexy::WString& theString);
+	std::string			StringToLower(const std::string& theString);
+	std::wstring			StringToLower(const std::wstring& theString);
+	Sexy::WString			StringToLower(const Sexy::WString& theString);
+	std::wstring			StringToWString(const std::string &theString);
+	std::string			WStringToString(const std::wstring &theString);
+	std::string			WStringToString(const Sexy::WString &theString);
+	SexyString			StringToSexyString(const std::string& theString);
+	SexyString			WStringToSexyString(const std::wstring& theString);
+	std::string			SexyStringToString(const SexyString& theString);
+	std::wstring			SexyStringToWString(const SexyString& theString);
+	std::string			Upper(const std::string& theData);
+	std::wstring			Upper(const std::wstring& theData);
+	Sexy::WString			Upper(const Sexy::WString& theData);
+	std::string			Lower(const std::string& theData);
+	std::wstring			Lower(const std::wstring& theData);
+	Sexy::WString			Lower(const Sexy::WString& theData);
+	std::string			Trim(const std::string& theString);
+	std::wstring			Trim(const std::wstring& theString);
+	Sexy::WString			Trim(const Sexy::WString& theString);
+	bool				StringToInt(const std::string theString, int* theIntVal);
+	bool				StringToDouble(const std::string theString, double* theDoubleVal);
+	bool				StringToInt(const std::wstring theString, int* theIntVal);
+	bool				StringToDouble(const std::wstring theString, double* theDoubleVal);
+	bool				StringToInt(const Sexy::WString theString, int* theIntVal);
+	bool				StringToDouble(const Sexy::WString theString, double* theDoubleVal);
+	int				StrFindNoCase(const char *theStr, const char *theFind);
+	bool				StrPrefixNoCase(const char *theStr, const char *thePrefix,
+							int maxLength = 10000000);
+	SexyString			CommaSeperate(int theValue);
+	std::string			Evaluate(const std::string& theString,
+						 const DefinesMap& theDefinesMap);
+	std::string			XMLDecodeString(const std::string& theString);
+	std::string			XMLEncodeString(const std::string& theString);
+	std::wstring			XMLDecodeString(const std::wstring& theString);
+	std::wstring			XMLEncodeString(const std::wstring& theString);
+	Sexy::WString			XMLDecodeString(const Sexy::WString& theString);
+	Sexy::WString			XMLEncodeString(const Sexy::WString& theString);
 
-bool				Deltree(const std::string& thePath);
-bool				FileExists(const std::string& theFileName);
-void				MkDir(const std::string& theDir);
-std::string			GetFileName(const std::string& thePath, bool noExtension = false);
-std::string			GetFileDir(const std::string& thePath, bool withSlash = false);
-std::string			RemoveTrailingSlash(const std::string& theDirectory);
-std::string			AddTrailingSlash(const std::string& theDirectory, bool backSlash = false);
-time_t				GetFileDate(const std::string& theFileName);
-std::string			GetCurDir();
-std::string			GetFullPath(const std::string& theRelPath);
-std::string			GetPathFrom(const std::string& theRelPath, const std::string& theDir);
-bool				AllowAllAccess(const std::string& theFileName);
+	bool				Deltree(const std::string& thePath);
+	bool				FileExists(const std::string& theFileName);
+	void				MkDir(const std::string& theDir);
+	std::string			GetFileName(const std::string& thePath, bool noExtension = false);
+	std::string			GetFileDir(const std::string& thePath, bool withSlash = false);
+	std::string			RemoveTrailingSlash(const std::string& theDirectory);
+	std::string			AddTrailingSlash(const std::string& theDirectory,
+							 bool backSlash = false);
+	time_t				GetFileDate(const std::string& theFileName);
+	std::string			GetCurDir();
+	std::string			GetFullPath(const std::string& theRelPath);
+	std::string			GetPathFrom(const std::string& theRelPath,
+						    const std::string& theDir);
+	bool				AllowAllAccess(const std::string& theFileName);
 
 
-inline void			inlineUpper(std::string &theData)
-{
-    //std::transform(theData.begin(), theData.end(), theData.begin(), toupper);
-
-	int aStrLen = (int) theData.length();
-	for (int i = 0; i < aStrLen; i++)
+	inline void			inlineUpper(std::string &theData)
 	{
-		theData[i] = toupper(theData[i]);
+		//std::transform(theData.begin(), theData.end(), theData.begin(), toupper);
+
+		int aStrLen = (int) theData.length();
+		for (int i = 0; i < aStrLen; i++)
+		{
+			theData[i] = toupper(theData[i]);
+		}
 	}
-}
 
-inline void			inlineUpper(std::wstring &theData)
-{
-    //std::transform(theData.begin(), theData.end(), theData.begin(), toupper);
-
-	int aStrLen = (int) theData.length();
-	for (int i = 0; i < aStrLen; i++)
+	inline void			inlineUpper(std::wstring &theData)
 	{
-            theData[i] = toupper(theData[i]);
+		//std::transform(theData.begin(), theData.end(), theData.begin(), toupper);
+
+		int aStrLen = (int) theData.length();
+		for (int i = 0; i < aStrLen; i++)
+		{
+			theData[i] = toupper(theData[i]);
+		}
 	}
-}
 
-inline void			inlineLower(std::string &theData)
-{
-    std::transform(theData.begin(), theData.end(), theData.begin(), tolower);
-}
+	inline void			inlineUpper(Sexy::WString &theData)
+	{
+		//std::transform(theData.begin(), theData.end(), theData.begin(), toupper);
 
-inline void			inlineLower(std::wstring &theData)
-{
-    std::transform(theData.begin(), theData.end(), theData.begin(), tolower);
-}
+		int aStrLen = (int) theData.length();
+		for (int i = 0; i < aStrLen; i++)
+		{
+			theData[i] = toupper(theData[i]);
+		}
+	}
 
-inline void			inlineLTrim(std::string &theData, const std::string& theChars = " \t\r\n")
-{
-    theData.erase(0, theData.find_first_not_of(theChars));
-}
+	inline void			inlineLower(std::string &theData)
+	{
+		std::transform(theData.begin(), theData.end(), theData.begin(), tolower);
+	}
 
-inline void			inlineLTrim(std::wstring &theData, const std::wstring& theChars = L" \t\r\n")
-{
-    theData.erase(0, theData.find_first_not_of(theChars));
-}
+	inline void			inlineLower(std::wstring &theData)
+	{
+		std::transform(theData.begin(), theData.end(), theData.begin(), tolower);
+	}
 
+	inline void			inlineLower(Sexy::WString &theData)
+	{
+		std::transform(theData.begin(), theData.end(), theData.begin(), tolower);
+	}
 
-inline void			inlineRTrim(std::string &theData, const std::string& theChars = " \t\r\n")
-{
-    theData.resize(theData.find_last_not_of(theChars) + 1);
-}
+	inline void			inlineLTrim(std::string &theData,
+						    const std::string& theChars = " \t\r\n")
+	{
+		theData.erase(0, theData.find_first_not_of(theChars));
+	}
 
-inline void			inlineRTrim(std::wstring &theData, const std::wstring& theChars = L" \t\r\n")
-{
-    theData.resize(theData.find_last_not_of(theChars) + 1);
-}
+	inline void			inlineLTrim(std::wstring &theData,
+						    const std::wstring& theChars = L" \t\r\n")
+	{
+		theData.erase(0, theData.find_first_not_of(theChars));
+	}
 
-inline void			inlineTrim(std::string &theData, const std::string& theChars = " \t\r\n")
-{
-	inlineRTrim(theData, theChars);
-	inlineLTrim(theData, theChars);
-}
+	inline void			inlineLTrim(Sexy::WString &theData,
+						    const Sexy::WString& theChars = WSTR(" \t\r\n"))
+	{
+		theData.erase(0, theData.find_first_not_of(theChars));
+	}
 
-inline void			inlineTrim(std::wstring &theData, const std::wstring& theChars = L" \t\r\n")
-{
-	inlineRTrim(theData, theChars);
-	inlineLTrim(theData, theChars);
-}
+	inline void			inlineRTrim(std::string &theData,
+						    const std::string& theChars = " \t\r\n")
+	{
+		theData.resize(theData.find_last_not_of(theChars) + 1);
+	}
 
-struct StringLessNoCase { bool operator()(const std::string &s1, const std::string &s2) const { return _stricmp(s1.c_str(),s2.c_str())<0; } };
+	inline void			inlineRTrim(std::wstring &theData,
+						    const std::wstring& theChars = L" \t\r\n")
+	{
+		theData.resize(theData.find_last_not_of(theChars) + 1);
+	}
+
+	inline void			inlineRTrim(Sexy::WString &theData,
+						    const Sexy::WString& theChars = WSTR(" \t\r\n"))
+	{
+		theData.resize(theData.find_last_not_of(theChars) + 1);
+	}
+
+	inline void			inlineTrim(std::string &theData,
+						   const std::string& theChars = " \t\r\n")
+	{
+		inlineRTrim(theData, theChars);
+		inlineLTrim(theData, theChars);
+	}
+
+	inline void			inlineTrim(std::wstring &theData,
+						   const std::wstring& theChars = L" \t\r\n")
+	{
+		inlineRTrim(theData, theChars);
+		inlineLTrim(theData, theChars);
+	}
+
+	inline void			inlineTrim(Sexy::WString &theData,
+						   const Sexy::WString& theChars = WSTR(" \t\r\n"))
+	{
+		inlineRTrim(theData, theChars);
+		inlineLTrim(theData, theChars);
+	}
+
+	struct StringLessNoCase
+	{
+		bool operator()(const std::string &s1, const std::string &s2) const
+		{
+			return _stricmp(s1.c_str(),s2.c_str())<0;
+		}
+	};
 
 }
 

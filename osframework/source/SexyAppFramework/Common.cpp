@@ -261,7 +261,7 @@ std::string Sexy::StringToUpper(const std::string& theString)
 {
 	std::string aString;
 
-	for (unsigned i = 0; i < theString.length(); i++)
+	for (size_t i = 0; i < theString.length(); i++)
 		aString += toupper(theString[i]);
 
 	return aString;
@@ -271,7 +271,17 @@ std::wstring Sexy::StringToUpper(const std::wstring& theString)
 {
 	std::wstring aString;
 
-	for (unsigned i = 0; i < theString.length(); i++)
+	for (size_t i = 0; i < theString.length(); i++)
+		aString += towupper(theString[i]);
+
+	return aString;
+}
+
+Sexy::WString Sexy::StringToUpper(const Sexy::WString& theString)
+{
+	Sexy::WString aString;
+
+	for (size_t i = 0; i < theString.length(); i++)
 		aString += towupper(theString[i]);
 
 	return aString;
@@ -281,7 +291,7 @@ std::string Sexy::StringToLower(const std::string& theString)
 {
 	std::string aString;
 
-	for (unsigned i = 0; i < theString.length(); i++)
+	for (size_t i = 0; i < theString.length(); i++)
 		aString += tolower(theString[i]);
 
 	return aString;
@@ -291,7 +301,17 @@ std::wstring Sexy::StringToLower(const std::wstring& theString)
 {
 	std::wstring aString;
 
-	for (unsigned i = 0; i < theString.length(); ++i)
+	for (size_t i = 0; i < theString.length(); ++i)
+		aString += tolower(theString[i]);
+
+	return aString;
+}
+
+Sexy::WString Sexy::StringToLower(const Sexy::WString& theString)
+{
+	Sexy::WString aString;
+
+	for (size_t i = 0; i < theString.length(); ++i)
 		aString += tolower(theString[i]);
 
 	return aString;
@@ -412,6 +432,19 @@ std::wstring Sexy::Trim(const std::wstring& theString)
 	return theString.substr(aStartPos, anEndPos - aStartPos + 1);
 }
 
+Sexy::WString Sexy::Trim(const Sexy::WString& theString)
+{
+	int aStartPos = 0;
+	while ( aStartPos < (int) theString.length() && isspace(theString[aStartPos]) )
+		aStartPos++;
+
+	int anEndPos = theString.length() - 1;
+	while ( anEndPos >= 0 && isspace(theString[anEndPos]) )
+		anEndPos--;
+
+	return theString.substr(aStartPos, anEndPos - aStartPos + 1);
+}
+
 bool Sexy::StringToInt(const std::string theString, int* theIntVal)
 {
 	*theIntVal = 0;
@@ -500,6 +533,58 @@ bool Sexy::StringToInt(const std::wstring theString, int* theIntVal)
 				*theIntVal = (*theIntVal * 0x10) + (aChar - L'a') + 0x0A;
 		}
 		else if (((aChar == L'x') || (aChar == L'X')) && (i == 1) && (*theIntVal == 0))
+		{
+			theRadix = 0x10;
+		}
+		else
+		{
+			*theIntVal = 0;
+			return false;
+		}
+	}
+
+	if (isNeg)
+		*theIntVal = -*theIntVal;
+
+	return true;
+}
+
+bool Sexy::StringToInt(const Sexy::WString theString, int* theIntVal)
+{
+	*theIntVal = 0;
+
+	if (theString.length() == 0)
+		return false;
+
+	int theRadix = 10;
+	bool isNeg = false;
+
+	unsigned i = 0;
+	if (theString[i] == '-')
+	{
+		isNeg = true;
+		i++;
+	}
+
+	for (; i < theString.length(); i++)
+	{
+		int aChar = theString[i];
+
+		if ((theRadix == 10) && (aChar >= '0') && (aChar <= '9'))
+			*theIntVal = (*theIntVal * 10) + (aChar - L'0');
+		else if ((theRadix == 0x10) &&
+			(((aChar >= '0') && (aChar <= '9')) ||
+			 ((aChar >= 'A') && (aChar <= 'F')) ||
+			 ((aChar >= 'a') && (aChar <= 'f'))))
+		{
+			if (aChar <= '9')
+				*theIntVal = (*theIntVal * 0x10) + (aChar - '0');
+			else if (aChar <= 'F')
+				*theIntVal = (*theIntVal * 0x10) + (aChar - 'A') + 0x0A;
+			else
+				*theIntVal = (*theIntVal * 0x10) + (aChar - 'a') + 0x0A;
+		}
+		else if (((aChar == 'x') || (aChar == 'X')) && (i == 1) && (*theIntVal == 0))
 		{
 			theRadix = 0x10;
 		}
@@ -630,6 +715,64 @@ bool Sexy::StringToDouble(const std::wstring theString, double* theDoubleVal)
 	return true;
 }
 
+
+bool Sexy::StringToDouble(const Sexy::WString theString, double* theDoubleVal)
+{
+	*theDoubleVal = 0.0;
+
+	if (theString.length() == 0)
+		return false;
+
+	bool isNeg = false;
+
+	unsigned i = 0;
+	if (theString[i] == '-')
+	{
+		isNeg = true;
+		i++;
+	}
+
+	for (; i < theString.length(); i++)
+	{
+		int aChar = theString[i];
+
+		if ((aChar >= '0') && (aChar <= '9'))
+			*theDoubleVal = (*theDoubleVal * 10) + (aChar - '0');
+		else if (aChar == L'.')
+		{
+			i++;
+			break;
+		}
+		else
+		{
+			*theDoubleVal = 0.0;
+			return false;
+		}
+	}
+
+	double aMult = 0.1;
+	for (; i < theString.length(); i++)
+	{
+		int aChar = theString[i];
+
+		if ((aChar >= '0') && (aChar <= '9'))
+		{
+			*theDoubleVal += (aChar - '0') * aMult;
+			aMult /= 10.0;
+		}
+		else
+		{
+			*theDoubleVal = 0.0;
+			return false;
+		}
+	}
+
+	if (isNeg)
+		*theDoubleVal = -*theDoubleVal;
+
+	return true;
+}
+
 // TODO: Use <locale> for localization of number output?
 SexyString Sexy::CommaSeperate(int theValue)
 {
@@ -655,7 +798,7 @@ SexyString Sexy::CommaSeperate(int theValue)
 
 std::string Sexy::GetCurDir()
 {
-	char aDir[256];
+	char aDir[1024];
 #ifdef WIN32
 	return _getcwd(aDir, sizeof(aDir));
 #else
@@ -1283,6 +1426,48 @@ std::wstring Sexy::XMLDecodeString(const std::wstring& theString)
 	return aNewString;
 }
 
+Sexy::WString Sexy::XMLDecodeString(const Sexy::WString& theString)
+{
+	Sexy::WString aNewString;
+
+	int aUTF8Len = 0;
+	int aUTF8CurVal = 0;
+
+	for (size_t i = 0; i < theString.length(); i++)
+	{
+		int c = theString[i];
+
+		if (c == '&')
+		{
+			int aSemiPos = theString.find(';', i);
+
+			if (aSemiPos != -1)
+			{
+				Sexy::WString anEntName = theString.substr(i+1, aSemiPos-i-1);
+				i = aSemiPos;
+
+				if (anEntName == WSTR("lt"))
+					c = '<';
+				else if (anEntName == WSTR("amp"))
+					c = '&';
+				else if (anEntName == WSTR("gt"))
+					c = '>';
+				else if (anEntName == WSTR("quot"))
+					c = '"';
+				else if (anEntName == WSTR("apos"))
+					c = '\'';
+				else if (anEntName == WSTR("nbsp"))
+					c = ' ';
+				else if (anEntName == WSTR("cr"))
+					c = '\n';
+			}
+		}
+
+		aNewString += c;
+	}
+
+	return aNewString;
+}
 
 std::string Sexy::XMLEncodeString(const std::string& theString)
 {
@@ -1406,6 +1591,67 @@ std::wstring Sexy::XMLEncodeString(const std::wstring& theString)
 	return aNewString;
 }
 
+Sexy::WString Sexy::XMLEncodeString(const Sexy::WString& theString)
+{
+	Sexy::WString aNewString;
+
+	bool hasSpace = false;
+
+	for (size_t i = 0; i < theString.length(); i++)
+	{
+		int c = theString[i];
+
+		if (c == ' ')
+		{
+			if (hasSpace)
+			{
+				aNewString += WSTR("&nbsp;");
+				continue;
+			}
+
+			hasSpace = true;
+		}
+		else
+			hasSpace = false;
+
+		/*if ((uchar) c >= 0x80)
+		{
+			// Convert to UTF
+			aNewString += (char) (0xC0 | ((c >> 6) & 0xFF));
+			aNewString += (char) (0x80 | (c & 0x3F));
+		}
+		else*/
+		{
+			switch (c)
+			{
+			case '<':
+				aNewString += WSTR("&lt;");
+				break;
+			case '&':
+				aNewString += WSTR("&amp;");
+				break;
+			case '>':
+				aNewString += WSTR("&gt;");
+				break;
+			case '"':
+				aNewString += WSTR("&quot;");
+				break;
+			case '\'':
+				aNewString += WSTR("&apos;");
+				break;
+			case '\n':
+				aNewString += WSTR("&cr;");
+				break;
+			default:
+				aNewString += c;
+				break;
+			}
+		}
+	}
+
+	return aNewString;
+}
+
 std::string Sexy::Upper(const std::string& _data)
 {
 	std::string s = _data;
@@ -1416,6 +1662,13 @@ std::string Sexy::Upper(const std::string& _data)
 std::wstring Sexy::Upper(const std::wstring& _data)
 {
 	std::wstring s = _data;
+	std::transform(s.begin(), s.end(), s.begin(), towupper);
+	return s;
+}
+
+Sexy::WString Sexy::Upper(const Sexy::WString& _data)
+{
+	Sexy::WString s = _data;
 	std::transform(s.begin(), s.end(), s.begin(), towupper);
 	return s;
 }
@@ -1431,6 +1684,13 @@ std::wstring Sexy::Lower(const std::wstring& _data)
 {
 	std::wstring s = _data;
 	std::transform(s.begin(), s.end(), s.begin(), towlower);
+	return s;
+}
+
+Sexy::WString Sexy::Lower(const Sexy::WString& _data)
+{
+	Sexy::WString s = _data;
+	std::transform(s.begin(), s.end(), s.begin(), tolower);
 	return s;
 }
 

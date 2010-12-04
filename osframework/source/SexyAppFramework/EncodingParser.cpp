@@ -30,8 +30,8 @@ void EncodingParser::SetEncodingType(EncodingType theEncoding)
 {
 	switch (theEncoding)
 	{
-		case ASCII:		mGetCharFunc = &EncodingParser::GetAsciiChar;	mForcedEncodingType = true; break;
-		case UTF_8:		mGetCharFunc = &EncodingParser::GetUTF8Char;	mForcedEncodingType = true; break;
+		case ASCII:	mGetCharFunc = &EncodingParser::GetAsciiChar;	mForcedEncodingType = true; break;
+		case UTF_8:	mGetCharFunc = &EncodingParser::GetUTF8Char;	mForcedEncodingType = true; break;
 		case UTF_16:	mGetCharFunc = &EncodingParser::GetUTF16Char;	mForcedEncodingType = true; break;
 		case UTF_16_LE:	mGetCharFunc = &EncodingParser::GetUTF16LEChar;	mForcedEncodingType = true; break;
 		case UTF_16_BE:	mGetCharFunc = &EncodingParser::GetUTF16BEChar;	mForcedEncodingType = true; break;
@@ -40,13 +40,13 @@ void EncodingParser::SetEncodingType(EncodingType theEncoding)
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-bool EncodingParser::GetAsciiChar(wchar_t* theChar, bool* error)
+bool EncodingParser::GetAsciiChar(unichar_t* theChar, bool* error)
 {
 	unsigned char aChar = 0;
 	if (p_fread(&aChar, 1, 1, mFile) != 1)
 		return false;
 
-	*theChar = static_cast<wchar_t>(aChar);
+	*theChar = static_cast<unichar_t>(aChar);
 	if (aChar > 127)
 		;
 	return true;
@@ -54,7 +54,7 @@ bool EncodingParser::GetAsciiChar(wchar_t* theChar, bool* error)
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-bool EncodingParser::GetUTF8Char(wchar_t* theChar, bool* error)
+bool EncodingParser::GetUTF8Char(unichar_t* theChar, bool* error)
 {
 	static const unsigned short aMaskData[] = {
 		0xC0,		// 1 extra byte
@@ -135,7 +135,7 @@ bool EncodingParser::GetUTF8Char(wchar_t* theChar, bool* error)
 			return GetUTF8Char(theChar, error);
 		}
 
-		*theChar = (wchar_t)aTempChar;
+		*theChar = (unichar_t)aTempChar;
 		*error = false;
 		return true;
 	}
@@ -146,9 +146,9 @@ bool EncodingParser::GetUTF8Char(wchar_t* theChar, bool* error)
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-bool EncodingParser::GetUTF16Char(wchar_t* theChar, bool* error)
+bool EncodingParser::GetUTF16Char(unichar_t* theChar, bool* error)
 {
-	wchar_t aTempChar = 0;
+	unichar_t aTempChar = 0;
 	if (p_fread(&aTempChar, 2, 1, mFile) != 1)
 		return false;
 
@@ -166,20 +166,20 @@ bool EncodingParser::GetUTF16Char(wchar_t* theChar, bool* error)
 			return GetUTF16Char(theChar, error);
 		}
 	}
-	if (mByteSwap) aTempChar = (wchar_t)(((aTempChar << 8) & 0xFF00) | ((aTempChar >> 8) & 0xFF)); // ands remove assumption that wchar_t = 16 bits.
+	if (mByteSwap) aTempChar = (unichar_t)(((aTempChar << 8) & 0xFF00) | ((aTempChar >> 8) & 0xFF)); // ands remove assumption that unichar_t = 16 bits.
 
 	if ((aTempChar & 0xFC00) == 0xD800)
 	{
 		*error = true;
 
-		wchar_t aNextChar = 0;
+		unichar_t aNextChar = 0;
 		if (p_fread(&aNextChar, 2, 1, mFile) != 1)
 			return false;
 
-		if (mByteSwap) aNextChar = (wchar_t)(((aNextChar << 8) & 0xFF00) | ((aNextChar >> 8) & 0xFF));
+		if (mByteSwap) aNextChar = (unichar_t)(((aNextChar << 8) & 0xFF00) | ((aNextChar >> 8) & 0xFF));
 		if ((aNextChar & 0xFC00) == 0xDC00)
 		{
-			*theChar = (wchar_t)((((aTempChar & 0x3FF) << 10) | (aNextChar & 0x3FF)) + 0x10000);
+			*theChar = (unichar_t)((((aTempChar & 0x3FF) << 10) | (aNextChar & 0x3FF)) + 0x10000);
 		}
 		else return false;
 	}
@@ -191,9 +191,9 @@ bool EncodingParser::GetUTF16Char(wchar_t* theChar, bool* error)
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-bool EncodingParser::GetUTF16LEChar(wchar_t* theChar, bool* error)
+bool EncodingParser::GetUTF16LEChar(unichar_t* theChar, bool* error)
 {
-	wchar_t aTempChar = 0;
+	unichar_t aTempChar = 0;
 	if (p_fread(&aTempChar, 2, 1, mFile) != 1)
 		return false;
 
@@ -203,14 +203,14 @@ bool EncodingParser::GetUTF16LEChar(wchar_t* theChar, bool* error)
 	{
 		*error = true;
 
-		wchar_t aNextChar = 0;
+		unichar_t aNextChar = 0;
 		if (p_fread(&aNextChar, 2, 1, mFile) != 1)
 			return false;
 
 		aNextChar = WORD_LITTLEE_TO_NATIVE(aTempChar);
 		if ((aNextChar & 0xFC00) == 0xDC00)
 		{
-			*theChar = (wchar_t)((((aTempChar & 0x3FF) << 10) | (aNextChar & 0x3FF)) + 0x10000);
+			*theChar = (unichar_t)((((aTempChar & 0x3FF) << 10) | (aNextChar & 0x3FF)) + 0x10000);
 		}
 		else return false;
 	}
@@ -221,9 +221,9 @@ bool EncodingParser::GetUTF16LEChar(wchar_t* theChar, bool* error)
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-bool EncodingParser::GetUTF16BEChar(wchar_t* theChar, bool* error)
+bool EncodingParser::GetUTF16BEChar(unichar_t* theChar, bool* error)
 {
-	wchar_t aTempChar = 0;
+	unichar_t aTempChar = 0;
 	if (p_fread(&aTempChar, 2, 1, mFile) != 1)
 		return false;
 
@@ -233,14 +233,14 @@ bool EncodingParser::GetUTF16BEChar(wchar_t* theChar, bool* error)
 	{
 		*error = true;
 
-		wchar_t aNextChar = 0;
+		unichar_t aNextChar = 0;
 		if (p_fread(&aNextChar, 2, 1, mFile) != 1)
 			return false;
 
 		aNextChar = WORD_BIGE_TO_NATIVE(aTempChar);
 		if ((aNextChar & 0xFC00) == 0xDC00)
 		{
-			*theChar = (wchar_t)((((aTempChar & 0x3FF) << 10) | (aNextChar & 0x3FF)) + 0x10000);
+			*theChar = (unichar_t)((((aTempChar & 0x3FF) << 10) | (aNextChar & 0x3FF)) + 0x10000);
 		}
 		else return false;
 	}
@@ -343,7 +343,7 @@ bool EncodingParser::EndOfFile()
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-void EncodingParser::SetStringSource(const std::wstring& theString)
+void EncodingParser::SetStringSource(const Sexy::WString& theString)
 {
 	int aSize = theString.size();
 
@@ -356,12 +356,12 @@ void EncodingParser::SetStringSource(const std::wstring& theString)
 ///////////////////////////////////////////////////////
 void EncodingParser::SetStringSource(const std::string& theString)
 {
-	SetStringSource(StringToWString(theString));
+	SetStringSource(WSTR(theString.c_str()));
 }
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-EncodingParser::GetCharReturnType EncodingParser::GetChar(wchar_t* theChar)
+EncodingParser::GetCharReturnType EncodingParser::GetChar(unichar_t* theChar)
 {
 	if (theChar == NULL)
 		return FAILURE;
@@ -392,7 +392,7 @@ EncodingParser::GetCharReturnType EncodingParser::GetChar(wchar_t* theChar)
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-bool EncodingParser::PutChar(const wchar_t& theChar)
+bool EncodingParser::PutChar(const unichar_t& theChar)
 {
 	mBufferedText.push_back(theChar);
 	return true;
@@ -400,7 +400,7 @@ bool EncodingParser::PutChar(const wchar_t& theChar)
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
-bool EncodingParser::PutString(const std::wstring& theString)
+bool EncodingParser::PutString(const Sexy::WString& theString)
 {
 	WcharBuffer::size_type aCurSize = mBufferedText.size();
 	WcharBuffer::size_type anAddSize = WcharBuffer::size_type(theString.length());
