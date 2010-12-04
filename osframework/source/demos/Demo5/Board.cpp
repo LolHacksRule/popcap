@@ -242,7 +242,7 @@ void Board::Draw(Graphics* g)
 
 	// Clear the screen to black
 	g->SetColor(Color(0, 0, 0));
-	g->FillRect(0, 0, mWidth, mHeight);
+	//g->FillRect(0, 0, mWidth, mHeight);
 
 
 	for (int i = 0; i < 3; i++)
@@ -344,9 +344,9 @@ void Board::Draw(Graphics* g)
 	}
 
 	PerformanceStats& stats = mApp->mPerformanceStats;
-	std::wstring str;
+	std::string str;
 
-	str = StrFormat(L"TheoreticalFPS: %.2f\nFPS: %.2f\nDirtyRate: %d\n",
+	str = StrFormat("TheoreticalFPS: %.2f\nFPS: %.2f\nDirtyRate: %d\n",
 			stats.mTheoreticalFPS, stats.mFPS, stats.mDirtyRate);
 
 	g->SetFont(FONT_DEFAULT);
