@@ -336,7 +336,12 @@ void Widget::LostFocus()
 	if (mFocus)
 		mFocus->LostFocus();
 	mFocus = 0;
-
+	if (mParent && mParent != mWidgetManager)
+	{
+		Widget* aWidget = (Widget*)mParent;
+		if (aWidget && aWidget->mFocus == this)
+			aWidget->mFocus = 0;
+	}
 	if (dirty)
 		MarkDirty();
 }

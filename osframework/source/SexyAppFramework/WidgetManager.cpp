@@ -64,7 +64,7 @@ void WidgetManager::DisableWidget(Widget* theWidget)
 		MouseLeave(aOverWidget);
 	}
 
-	if (mLastDownWidget	== theWidget)
+	if (mLastDownWidget == theWidget)
 	{
 		Widget* aLastDownWidget = mLastDownWidget;
 		mLastDownWidget = NULL;
@@ -77,6 +77,10 @@ void WidgetManager::DisableWidget(Widget* theWidget)
 		Widget* aFocusWidget = mFocusWidget;
 		mFocusWidget = NULL;
 		aFocusWidget->LostFocus();
+	}
+	else if (theWidget->mHasFocus)
+	{
+		theWidget->LostFocus();
 	}
 
 	if (mBaseModalWidget == theWidget)
