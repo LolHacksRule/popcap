@@ -49,6 +49,15 @@
 
 #include "memmgr.h"
 
+#if defined(ANDROID) || defined(__ANDROID__)
+#include <android/log.h>
+
+#define  LOG_TAG    "SexyAppBase"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define printf LOGI
+#endif
+
 using namespace Sexy;
 
 const int DEMO_FILE_ID = 0x42BEEF78;
@@ -1171,7 +1180,6 @@ bool SexyAppBase::DrawDirtyStuff()
 
 	mIsDrawing = true;
 	mLastDrawnTime = Sexy::GetTickCount();
-	mWidgetManager->MarkDirtyFull();
 	bool drewScreen = mWidgetManager->DrawScreen();
 	mIsDrawing = false;
 
@@ -1182,7 +1190,10 @@ bool SexyAppBase::DrawDirtyStuff()
 	{
 		mLastDrawWasEmpty = false;
 
-		mDrawCount++;
+		if (drewScreen)
+			mDrawCount++;
+		else
+			mWidgetManager->MarkDirtyFull();
 
 		DWORD aMidTime = GetTickCount();
 
@@ -1364,7 +1375,7 @@ void SexyAppBase::Popup(const std::string& theString)
 {
 	BeginPopup();
 	if (!mShutdown)
-		std::cout<<"popup:"<<theString<<std::endl;
+		printf("Popup: %s\n", theString.c_str());
 	EndPopup();
 }
 
@@ -1372,7 +1383,9 @@ void SexyAppBase::Popup(const Sexy::WString& theString)
 {
 	BeginPopup();
 	if (!mShutdown)
-		std::cout<<"popup:"<<std::string(theString.begin(), theString.end())<<std::endl;
+		printf("Popup: %s\n",
+		       std::string(theString.begin(),
+				   theString.end()).c_str());
 	EndPopup();
 }
 
@@ -1742,20 +1755,20 @@ void SexyAppBase::InitVideoDriver()
 		(VideoDriverFactory::GetVideoDriverFactory ()->Find (driver));
 	if (aVideoDriver == NULL && driver != "auto")
 	{
-		std::cout<<"Video driver \'"<<driver<<"\'"<<" doesn't available."<<std::endl;
+		printf("Video driver \'%s\' isn't available.\n", driver.c_str());
 		aVideoDriver = dynamic_cast<VideoDriver*>
 			(VideoDriverFactory::GetVideoDriverFactory ()->Find ());
 	}
 	if (!aVideoDriver)
 	{
-		std::cout<<"Video driver doesn't available."<<std::endl;
+		printf("Video driver isn't available.\n");
 		DoExit (1);
 	}
 	DBG_ASSERT (aVideoDriver != NULL);
 	mDDInterface = aVideoDriver->Create(this);
 	if (!mDDInterface)
 	{
-		std::cout<<"Couldn't initialize video driver."<<std::endl;
+		printf("Couldn't initialize video driver.\n");
 		DoExit (1);
 	}
 	mDDInterface->mApp = this;
@@ -1912,8 +1925,8 @@ void SexyAppBase::LoadingThreadProcStub(void *theArg)
 	aSexyApp->LoadingThreadProc();
 
 #if defined(SEXY_DEBUG) || defined(DEBUG)
-	fprintf(stderr, "Resource Loading Time: %u\r\n",
-		(GetTickCount() - aSexyApp->mTimeLoaded));
+	printf("Resource Loading Time: %u\n",
+	       (GetTickCount() - aSexyApp->mTimeLoaded));
 #endif
 
 	aSexyApp->mLoadingThreadCompleted = true;
@@ -2651,13 +2664,13 @@ int SexyAppBase::InitDDInterface()
 	{
 		if (!mDDInterface->Reinit())
 		{
-			std::cout<<"Reinitializing video driver failed."<<std::endl;
+			printf("Reinitializing video driver failed.\n");
 			DoExit (1);
 		}
 	}
 	else if (mDDInterface->Init())
 	{
-		std::cout<<"Initializing video driver failed."<<std::endl;
+		printf("Initializing video driver failed.\n");
 		DoExit (1);
 	}
 
