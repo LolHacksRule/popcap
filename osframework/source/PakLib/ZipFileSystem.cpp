@@ -171,7 +171,11 @@ File* ZipFileSystem::open(const char* theFileName,
 
 	std::string filename;
 
-	filename = mPrefix + std::string(PATH_SEP) + std::string(theFileName);
+	if (mPrefix.empty())
+		filename = std::string(theFileName);
+	else
+		filename = mPrefix + std::string(PATH_SEP) +
+			std::string(theFileName);
 	ZZIP_FILE* zzipFile =
 		zzip_file_open(mZZipDir,
 			       filename.c_str(),
