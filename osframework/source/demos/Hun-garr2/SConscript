@@ -22,14 +22,17 @@ env.PrependUnique(CPPPATH = ['#', '#SexyAppFramework'],
                              os.path.join ('$top_builddir', 'ImageLib'),
                              os.path.join ('$top_builddir', 'audiere', 'lib')],
                   LIBS = ['SexyAppFramework'])
-hungarr = env.Program('hungarr2', ['Board.cpp',
-                                   'GameApp.cpp',
-                                   'GameOverEffect.cpp',
-                                   'LevelupEffect.cpp',
-                                   'OptionsDialog.cpp',
-                                   'TitleScreen.cpp',
-                                   'Res.cpp',
-                                   'main.cpp'])
+srcs = ['Board.cpp', 'GameApp.cpp', 'GameOverEffect.cpp',
+        'LevelupEffect.cpp', 'OptionsDialog.cpp', 'TitleScreen.cpp',
+        'Res.cpp']
+if env['TARGET_PLATFORM'] == 'android':
+    srcs += ['AndroidMain.cpp']
+    configs.EnablePackage(env, 'android')
+    env.AppendUnique(LIBS = ['log'])
+    hungarr = env.SharedLibrary('GameMain', srcs)
+else:
+    srcs += ['main.cpp']
+    hungarr = env.Program('hungarr2', srcs)
 
 ### install game hungarr
 game_name = 'Hun-garr2'
@@ -65,6 +68,11 @@ targets += stripFonts(env, '.',
                       'po', os.path.join(destdir, 'fonts'), language)
 
 targets = game.InstallGame(env, game_name, hungarr, destdir, files, targets)
+
+### build apk
+if env['TARGET_PLATFORM'] == 'android':
+    targets += game.APK(env, '', srcdir, destdir, targets,
+                        'android', 'android-build')
 
 env.Alias('hungarr2_install', targets)
 
