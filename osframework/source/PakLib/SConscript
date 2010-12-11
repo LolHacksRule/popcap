@@ -16,6 +16,10 @@ srcs = ['PakInterface.cpp', 'Find.cpp', 'FileSystem.cpp',
 
 configs.EnablePackage(paklib_env, 'zziplib')
 
+if env['TARGET_PLATFORM'] == 'android':
+    srcs += ['AndroidFileSystem.cpp']
+    configs.EnablePackage(paklib_env, 'android')
+
 if not env['static']:
     paklib_env.AppendUnique(CPPDEFINES = ['BUILDING_PAKLIB'],
                             LIBS = ['$STDCXX_LIBS'])

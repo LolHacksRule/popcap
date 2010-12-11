@@ -2,6 +2,16 @@
 #include "NativeFileSystem.h"
 #include "ZipFileSystem.h"
 
+#if defined(ANDROID) || defined(__ANDROID__)
+#include "AndroidFileSystem.h"
+
+#include <android/log.h>
+
+#define  LOG_TAG    "PakLib"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
+
 using namespace PakLib;
 
 FileSystemManager::FileSystemManager() :
@@ -13,8 +23,13 @@ FileSystemManager::FileSystemManager() :
 	// Native/posix file system
 	mFactory.AddDriver(new NativeFileSystemDriver());
 
+#if defined(ANDROID) || defined(__ANDROID__)
+	mFactory.AddDriver(new AndroidFileSystemDriver());
+#endif
+
 	// zip file system
 	mFactory.AddDriver(new ZipFileSystemDriver());
+
 }
 
 void FileSystemManager::addDefaultLocations()
@@ -28,6 +43,13 @@ void FileSystemManager::addDefaultLocations()
 
 	// zip file system
 	addResource("main.pak", "zip", 10);
+
+#if defined(ANDROID) || defined(__ANDROID__)
+	const char* pkg = getenv("ANDROID_SOURCE_DIR");
+	if (pkg)
+	    addResource(std::string(pkg) + std::string("::assets/files"),
+			"zip", 20);
+#endif
 }
 
 FileSystemManager::~FileSystemManager()
