@@ -40,6 +40,7 @@ extern VideoDriver* GetDFBVideoDriver();
 extern VideoDriver* GetWGLVideoDriver();
 extern VideoDriver* GetCEGLESVideoDriver();
 extern VideoDriver* GetXGLESVideoDriver();
+extern VideoDriver* GetAndroidVideoDriver();
 typedef VideoDriver* (* VideoDriverGetter)();
 VideoDriverGetter VideoDriverGetters []= {
 #ifdef SEXY_AGL_DRIVER
@@ -62,6 +63,9 @@ VideoDriverGetter VideoDriverGetters []= {
 #endif
 #ifdef SEXY_XGLES_DRIVER
 	GetXGLESVideoDriver,
+#endif
+#ifdef SEXY_ANDROIDGLES_DRIVER
+	GetAndroidVideoDriver,
 #endif
 	NULL
 };

@@ -100,6 +100,11 @@ if 'XGLES' in env['DRIVERS']:
     env['XGLES']['ENABLE'](env)
     env.AppendUnique(CPPDEFINES = ['SEXY_XGLES_DRIVER'])
 
+if 'ANDROIDGLES' in env['DRIVERS']:
+    srcs += ["GLImage.cpp", 'GLDisplay.cpp', "AndroidDisplay.cpp"]
+    env['ANDROIDGLES']['ENABLE'](env)
+    env.AppendUnique(CPPDEFINES = ['SEXY_ANDROIDGLES_DRIVER'])
+
 if 'LINUXINPUT' in env['DRIVERS']:
     srcs += ["LinuxInputDriver.cpp"]
     env['LINUXINPUT']['ENABLE'](env)
@@ -190,6 +195,8 @@ if gameenv['static']:
         gameenv['CEGLES']['ENABLE'](gameenv)
     if 'XGLES' in env['DRIVERS']:
         gameenv['XGLES']['ENABLE'](gameenv)
+    if 'ANDROIDGLES' in env['DRIVERS']:
+        gameenv['ANDROIDGLES']['ENABLE'](gameenv)
     if 'LINUXINPUT' in env['DRIVERS']:
         gameenv['LINUXINPUT']['ENABLE'](gameenv)
     if 'GSTSOUND' in env['DRIVERS']:
@@ -220,7 +227,7 @@ env.AppendUnique(CPPDEFINES = ['BUILDING_SEXYFRAMEWORK'],
 if gameenv['static']:
     env.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_SEXYFRAMEWORK'])
     gameenv.AppendUnique(CPPDEFINES = ['BUILDING_STATIC_SEXYFRAMEWORK'])
-    sexy_lib = env.Library('SexyAppFramework', srcs)
+    sexy_lib = env.ConvenienceLibrary('SexyAppFramework', srcs)
 else:
     sexy_lib = env.SharedLibrary('SexyAppFramework', srcs)
     game.AddExtraInstallableObject(gameenv, sexy_lib)
