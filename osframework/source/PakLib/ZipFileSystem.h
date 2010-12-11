@@ -15,6 +15,7 @@ namespace PakLib {
 	public:
 		ZipFileSystem(FileSystemDriver  *driver,
 			      const std::string &location,
+			      const std::string &prefix,
 			      int                priority,
 			      ZZIP_DIR*          dir);
 		virtual ~ZipFileSystem();
@@ -28,6 +29,7 @@ namespace PakLib {
 
 	 public:
 		ZZIP_DIR*                       mZZipDir;
+		std::string                     mPrefix;
 	};
 
 	class ZipFileSystemDriver: public FileSystemDriver

@@ -4,6 +4,12 @@
 
 #include <zzip/zzip.h>
 
+#if defined(WIN32) || defined(_WIN32)
+#define PATH_SEP "\\"
+#else
+#define PATH_SEP "/"
+#endif
+
 using namespace PakLib;
 
 class ZipFile: public File
@@ -100,9 +106,11 @@ private:
 
 ZipFileSystem::ZipFileSystem(FileSystemDriver  * driver,
 			     const std::string & location,
-			     int                  priority,
-			     ZZIP_DIR*            dir)
-	: FileSystem(driver, location, priority), mZZipDir(dir)
+			     const std::string & prefix,
+			     int                 priority,
+			     ZZIP_DIR*           dir)
+	: FileSystem(driver, location, priority), mZZipDir(dir),
+	  mPrefix(prefix)
 {
 }
 
@@ -161,16 +169,19 @@ File* ZipFileSystem::open(const char* theFileName,
 		return 0;
 #endif
 
+	std::string filename;
+
+	filename = mPrefix + std::string(PATH_SEP) + std::string(theFileName);
 	ZZIP_FILE* zzipFile =
 		zzip_file_open(mZZipDir,
-			       theFileName,
+			       filename.c_str(),
 			       ZZIP_ONLYZIP | ZZIP_CASELESS);
 	if (zzipFile)
 	{
 		// Get uncompressed size too
 		ZZIP_STAT zstat;
 
-		zzip_dir_stat(mZZipDir, theFileName,
+		zzip_dir_stat(mZZipDir, filename.c_str(),
 			      &zstat, ZZIP_CASEINSENSITIVE);
 		return new ZipFile(zzipFile, zstat.st_size);
 	}
@@ -210,11 +221,23 @@ FileSystem* ZipFileSystemDriver::Create(const std::string &location,
 		return false;
 
 	AutoCrit autoCrit(mCritSect);
+	std::string path;
+	std::string prefix;
+	size_t pos = location.find("::");
 
+	if (pos > 0)
+	{
+	    path = location.substr(0, pos);
+	    prefix = location.substr(pos + 2, location.length() - pos - 2);
+	}
+	else
+	{
+	    path = location;
+	}
 	zzip_error_t zzipError;
-	ZZIP_DIR *dir = zzip_dir_open(location.c_str(), &zzipError);
+	ZZIP_DIR *dir = zzip_dir_open(path.c_str(), &zzipError);
 	if (!dir)
 		return false;
 
-	return new ZipFileSystem(this, location, priority, dir);
+	return new ZipFileSystem(this, path, prefix, priority, dir);
 }
