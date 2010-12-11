@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+# -*- python -*-
+# Author: Luo Jinghua
+
+import os
+import sys
+import configs
+
+srcdir = Dir('.')
+origsrcdir = srcdir.srcnode().abspath
+
+Import(['env', 'gameenv'])
+
+if env['TARGET_PLATFORM'] != 'android':
+    Return()
+
+gl_env = env.Clone()
+srcs = ['ACPManager.cpp', 'GameFile.cpp', 'GameJni.cpp',
+        'GameInfo.cpp', 'GameLauncher.cpp', 'GameView.cpp']
+srcs = map(lambda f: os.path.join('jni', f), srcs)
+
+gl_env.AppendUnique(CPPPATH = ['jni'],
+                    LIBS = ['log', 'dl'])
+launcher = gl_env.SharedLibrary('GameLauncher', srcs)
+
+env['ANDROID_LAUNCHER'] = origsrcdir
+gameenv['ANDROID_LAUNCHER'] = origsrcdir
+
+### setup package info
+linkflags = []
+libs = ['GameLauncher']
+objects = launcher
+configs.SetPackageInfo([env, gameenv], 'android',
+                       LIBS = libs,
+                       CPPPATH = [os.path.join(Dir('.').abspath, 'jni')],
+                       LIBPATH = [Dir('.').abspath],
+                       LINKFLAGS = linkflags,
+                       OBJECTS = objects, TARGETS = launcher)
+
