@@ -439,6 +439,9 @@ bool WidgetManager::DrawScreen()
 	bool hasTransients = false;
 	bool hasDirtyTransients = false;
 
+	if (mDirty)
+		aDirtyCount++;
+
 	// Survey
 	WidgetList::iterator anItr = mWidgets.begin();
 	while (anItr != mWidgets.end())
@@ -549,6 +552,7 @@ bool WidgetManager::DrawScreen()
 	//anImage->UnlockSurface();
 
 	mCurG = NULL;
+	mDirty = false;
 
 	return drewStuff;
 }
