@@ -33,10 +33,10 @@ static GameLauncher* launcher = 0;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 JNIEXPORT void JNICALL Java_org_jinghua_GameJni_init(JNIEnv * env, jclass obj,
-						     jstring sourcedir,
-						     jstring datadir,
-						     jstring filesdir,
-						     jint width, jint height)
+                                                     jstring sourcedir,
+                                                     jstring datadir,
+                                                     jstring filesdir,
+                                                     jint width, jint height)
 {
     const char *sdir = env->GetStringUTFChars(sourcedir, 0);
     const char *ddir = env->GetStringUTFChars(datadir, 0);
@@ -62,7 +62,7 @@ JNIEXPORT jboolean JNICALL Java_org_jinghua_GameJni_render(JNIEnv * env, jclass 
     pthread_mutex_lock(&mutex);
 
     if (launcher)
-	ret = launcher->render();
+        ret = launcher->render();
 
     pthread_mutex_unlock(&mutex);
 
@@ -72,13 +72,19 @@ JNIEXPORT jboolean JNICALL Java_org_jinghua_GameJni_render(JNIEnv * env, jclass 
 JNIEXPORT void JNICALL Java_org_jinghua_GameJni_pause(JNIEnv * env, jclass obj)
 {
     if (launcher)
-	launcher->pause();
+        launcher->pause();
 }
 
 JNIEXPORT void JNICALL Java_org_jinghua_GameJni_resume(JNIEnv * env, jclass obj)
 {
     if (launcher)
-	launcher->resume();
+        launcher->resume();
+}
+
+JNIEXPORT void JNICALL Java_org_jinghua_GameJni_readAudioData(JNIEnv * env, jclass obj)
+{
+    if (launcher)
+        launcher->readAudioData();
 }
 
 JNIEXPORT void JNICALL Java_org_jinghua_GameJni_uninit(JNIEnv * env, jclass obj)
@@ -86,7 +92,7 @@ JNIEXPORT void JNICALL Java_org_jinghua_GameJni_uninit(JNIEnv * env, jclass obj)
     pthread_mutex_lock(&mutex);
 
     if (launcher)
-	launcher->release();
+        launcher->release();
     launcher = 0;
 
     pthread_mutex_unlock(&mutex);

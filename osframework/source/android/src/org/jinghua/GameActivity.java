@@ -19,11 +19,11 @@ public class GameActivity extends Activity
 
     /** Called when the activity is first created. */
     @Override protected void onCreate(Bundle icicle) {
-	ACPManager.getInstance().setAssets(getAssets(), "files/");
+        ACPManager.getInstance().setAssets(getAssets(), "files/");
 
-	getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-			     WindowManager.LayoutParams.FLAG_FULLSCREEN);
-	requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                             WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         super.onCreate(icicle);
         mView = new GameView(getApplication(), this);
@@ -32,7 +32,7 @@ public class GameActivity extends Activity
 
     public void shutdown()
     {
-	this.finish();
+        this.finish();
     }
 
     @Override protected void onPause() {
@@ -47,8 +47,8 @@ public class GameActivity extends Activity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-	super.onActivityResult(requestCode, resultCode, data);
-	if (requestCode == 123)
-	    this.finish();
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 123)
+            this.finish();
     }
 }

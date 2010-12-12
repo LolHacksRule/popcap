@@ -11,6 +11,7 @@ extern "C" {
   typedef int (*GamePauseProc)(void);
   typedef int (*GameResumeProc)(void);
   typedef int (*GameUninitProc)(void);
+  typedef void (*GameAudioReadCallback)(void*);
 };
 
 enum GameState {
@@ -30,16 +31,17 @@ class GameLauncher {
 
  public:
   bool init(JNIEnv*     env,
-	    const char *sourcedir,
-	    const char *datadir,
-	    const char *filesdir,
-	    int         width,
-	    int         height);
+            const char *sourcedir,
+            const char *datadir,
+            const char *filesdir,
+            int         width,
+            int         height);
 
   void pause();
   void resume();
   bool render();
   void uninit();
+  void readAudioData();
 
   void release();
 
@@ -51,6 +53,15 @@ class GameLauncher {
   int         getViewHeight() const;
   bool        gameLoaded() const;
   JNIEnv*     getJNIEnv();
+
+  int         audioInit(int sampleRate,
+                        int channels,
+                        int bits);
+  int         audioUninit();
+
+  int         audioSetReadCallback(GameAudioReadCallback callback,
+                                   void* data = 0);
+  void        audioWriteData(void* data, size_t size);
 
  private:
   void        setupEnv();
@@ -72,6 +83,8 @@ class GameLauncher {
   GamePauseProc    mPauseProc;
   GameResumeProc   mResumeProc;
   GameUninitProc   mUninitProc;
+  GameAudioReadCallback mAudioReadCallback;
+  void*                 mAudioReadCallbackData;
 };
 
 #endif

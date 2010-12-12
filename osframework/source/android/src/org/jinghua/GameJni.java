@@ -25,12 +25,14 @@ public class GameJni {
      }
 
     public static native void    init(String sourcedir,
-				      String datadir,
-				      String filesdir,
-				      int    width,
-				      int    height);
+                                      String datadir,
+                                      String filesdir,
+                                      int    width,
+                                      int    height);
     public static native boolean render();
     public static native void    uninit();
     public static native void    pause();
     public static native void    resume();
+
+    public static native void    readAudioData();
 }

@@ -79,14 +79,14 @@ public class GameView extends GLSurfaceView {
 
     public GameView(Context context, GameActivity activity) {
         super(context);
-	gameActivity = activity;
+        gameActivity = activity;
         init(context, false, 0, 0);
     }
 
     public GameView(Context context, GameActivity activity,
-		    boolean translucent, int depth, int stencil) {
+                    boolean translucent, int depth, int stencil) {
         super(context);
-	gameActivity = activity;
+        gameActivity = activity;
         init(context, translucent, depth, stencil);
     }
 
@@ -113,18 +113,18 @@ public class GameView extends GLSurfaceView {
          * below.
          */
         setEGLConfigChooser(translucent ?
-			    new ConfigChooser(8, 8, 8, 8, depth, stencil) :
-			    new ConfigChooser(5, 6, 5, 0, depth, stencil));
+                            new ConfigChooser(8, 8, 8, 8, depth, stencil) :
+                            new ConfigChooser(5, 6, 5, 0, depth, stencil));
 
         /* Set the renderer responsible for frame rendering */
-	renderer = new Renderer(context, gameActivity);
+        renderer = new Renderer(context, gameActivity);
         setRenderer(renderer);
         Log.w(TAG, "GameView initialized.");
     }
 
     @Override public void onPause() {
         super.onPause();
-	GameJni.uninit();
+        GameJni.uninit();
     }
 
     @Override public void onResume() {
@@ -198,7 +198,7 @@ public class GameView extends GLSurfaceView {
             egl.eglChooseConfig(display, s_configAttribs2, configs, numConfigs, num_config);
 
             if (DEBUG) {
-		printConfigs(egl, display, configs);
+                printConfigs(egl, display, configs);
             }
             /* Now return the "best" one
              */
@@ -206,12 +206,12 @@ public class GameView extends GLSurfaceView {
         }
 
         public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display,
-				      EGLConfig[] configs) {
+                                      EGLConfig[] configs) {
             for(EGLConfig config : configs) {
                 int d = findConfigAttrib(egl, display, config,
-					 EGL10.EGL_DEPTH_SIZE, 0);
+                                         EGL10.EGL_DEPTH_SIZE, 0);
                 int s = findConfigAttrib(egl, display, config,
-					 EGL10.EGL_STENCIL_SIZE, 0);
+                                         EGL10.EGL_STENCIL_SIZE, 0);
 
                 // We need at least mDepthSize and mStencilSize bits
                 if (d < mDepthSize || s < mStencilSize)
@@ -219,13 +219,13 @@ public class GameView extends GLSurfaceView {
 
                 // We want an *exact* match for red/green/blue/alpha
                 int r = findConfigAttrib(egl, display, config,
-					 EGL10.EGL_RED_SIZE, 0);
+                                         EGL10.EGL_RED_SIZE, 0);
                 int g = findConfigAttrib(egl, display, config,
-					 EGL10.EGL_GREEN_SIZE, 0);
+                                         EGL10.EGL_GREEN_SIZE, 0);
                 int b = findConfigAttrib(egl, display, config,
-					 EGL10.EGL_BLUE_SIZE, 0);
+                                         EGL10.EGL_BLUE_SIZE, 0);
                 int a = findConfigAttrib(egl, display, config,
-					 EGL10.EGL_ALPHA_SIZE, 0);
+                                         EGL10.EGL_ALPHA_SIZE, 0);
 
                 if (r == mRedSize && g == mGreenSize && b == mBlueSize && a == mAlphaSize)
                     return config;
@@ -234,7 +234,7 @@ public class GameView extends GLSurfaceView {
         }
 
         private int findConfigAttrib(EGL10 egl, EGLDisplay display,
-				     EGLConfig config, int attribute, int defaultValue) {
+                                     EGLConfig config, int attribute, int defaultValue) {
 
             if (egl.eglGetConfigAttrib(display, config, attribute, mValue)) {
                 return mValue[0];
@@ -243,7 +243,7 @@ public class GameView extends GLSurfaceView {
         }
 
         private void printConfigs(EGL10 egl, EGLDisplay display,
-				  EGLConfig[] configs) {
+                                  EGLConfig[] configs) {
             int numConfigs = configs.length;
             Log.w(TAG, String.format("%d configurations", numConfigs));
             for (int i = 0; i < numConfigs; i++) {
@@ -253,76 +253,76 @@ public class GameView extends GLSurfaceView {
         }
 
         private void printConfig(EGL10 egl, EGLDisplay display,
-				 EGLConfig config) {
+                                 EGLConfig config) {
             int[] attributes = {
-		EGL10.EGL_BUFFER_SIZE,
-		EGL10.EGL_ALPHA_SIZE,
-		EGL10.EGL_BLUE_SIZE,
-		EGL10.EGL_GREEN_SIZE,
-		EGL10.EGL_RED_SIZE,
-		EGL10.EGL_DEPTH_SIZE,
-		EGL10.EGL_STENCIL_SIZE,
-		EGL10.EGL_CONFIG_CAVEAT,
-		EGL10.EGL_CONFIG_ID,
-		EGL10.EGL_LEVEL,
-		EGL10.EGL_MAX_PBUFFER_HEIGHT,
-		EGL10.EGL_MAX_PBUFFER_PIXELS,
-		EGL10.EGL_MAX_PBUFFER_WIDTH,
-		EGL10.EGL_NATIVE_RENDERABLE,
-		EGL10.EGL_NATIVE_VISUAL_ID,
-		EGL10.EGL_NATIVE_VISUAL_TYPE,
-		0x3030, // EGL10.EGL_PRESERVED_RESOURCES,
-		EGL10.EGL_SAMPLES,
-		EGL10.EGL_SAMPLE_BUFFERS,
-		EGL10.EGL_SURFACE_TYPE,
-		EGL10.EGL_TRANSPARENT_TYPE,
-		EGL10.EGL_TRANSPARENT_RED_VALUE,
-		EGL10.EGL_TRANSPARENT_GREEN_VALUE,
-		EGL10.EGL_TRANSPARENT_BLUE_VALUE,
-		0x3039, // EGL10.EGL_BIND_TO_TEXTURE_RGB,
-		0x303A, // EGL10.EGL_BIND_TO_TEXTURE_RGBA,
-		0x303B, // EGL10.EGL_MIN_SWAP_INTERVAL,
-		0x303C, // EGL10.EGL_MAX_SWAP_INTERVAL,
-		EGL10.EGL_LUMINANCE_SIZE,
-		EGL10.EGL_ALPHA_MASK_SIZE,
-		EGL10.EGL_COLOR_BUFFER_TYPE,
-		EGL10.EGL_RENDERABLE_TYPE,
-		0x3042 // EGL10.EGL_CONFORMANT
+                EGL10.EGL_BUFFER_SIZE,
+                EGL10.EGL_ALPHA_SIZE,
+                EGL10.EGL_BLUE_SIZE,
+                EGL10.EGL_GREEN_SIZE,
+                EGL10.EGL_RED_SIZE,
+                EGL10.EGL_DEPTH_SIZE,
+                EGL10.EGL_STENCIL_SIZE,
+                EGL10.EGL_CONFIG_CAVEAT,
+                EGL10.EGL_CONFIG_ID,
+                EGL10.EGL_LEVEL,
+                EGL10.EGL_MAX_PBUFFER_HEIGHT,
+                EGL10.EGL_MAX_PBUFFER_PIXELS,
+                EGL10.EGL_MAX_PBUFFER_WIDTH,
+                EGL10.EGL_NATIVE_RENDERABLE,
+                EGL10.EGL_NATIVE_VISUAL_ID,
+                EGL10.EGL_NATIVE_VISUAL_TYPE,
+                0x3030, // EGL10.EGL_PRESERVED_RESOURCES,
+                EGL10.EGL_SAMPLES,
+                EGL10.EGL_SAMPLE_BUFFERS,
+                EGL10.EGL_SURFACE_TYPE,
+                EGL10.EGL_TRANSPARENT_TYPE,
+                EGL10.EGL_TRANSPARENT_RED_VALUE,
+                EGL10.EGL_TRANSPARENT_GREEN_VALUE,
+                EGL10.EGL_TRANSPARENT_BLUE_VALUE,
+                0x3039, // EGL10.EGL_BIND_TO_TEXTURE_RGB,
+                0x303A, // EGL10.EGL_BIND_TO_TEXTURE_RGBA,
+                0x303B, // EGL10.EGL_MIN_SWAP_INTERVAL,
+                0x303C, // EGL10.EGL_MAX_SWAP_INTERVAL,
+                EGL10.EGL_LUMINANCE_SIZE,
+                EGL10.EGL_ALPHA_MASK_SIZE,
+                EGL10.EGL_COLOR_BUFFER_TYPE,
+                EGL10.EGL_RENDERABLE_TYPE,
+                0x3042 // EGL10.EGL_CONFORMANT
             };
             String[] names = {
-		"EGL_BUFFER_SIZE",
-		"EGL_ALPHA_SIZE",
-		"EGL_BLUE_SIZE",
-		"EGL_GREEN_SIZE",
-		"EGL_RED_SIZE",
-		"EGL_DEPTH_SIZE",
-		"EGL_STENCIL_SIZE",
-		"EGL_CONFIG_CAVEAT",
-		"EGL_CONFIG_ID",
-		"EGL_LEVEL",
-		"EGL_MAX_PBUFFER_HEIGHT",
-		"EGL_MAX_PBUFFER_PIXELS",
-		"EGL_MAX_PBUFFER_WIDTH",
-		"EGL_NATIVE_RENDERABLE",
-		"EGL_NATIVE_VISUAL_ID",
-		"EGL_NATIVE_VISUAL_TYPE",
-		"EGL_PRESERVED_RESOURCES",
-		"EGL_SAMPLES",
-		"EGL_SAMPLE_BUFFERS",
-		"EGL_SURFACE_TYPE",
-		"EGL_TRANSPARENT_TYPE",
-		"EGL_TRANSPARENT_RED_VALUE",
-		"EGL_TRANSPARENT_GREEN_VALUE",
-		"EGL_TRANSPARENT_BLUE_VALUE",
-		"EGL_BIND_TO_TEXTURE_RGB",
-		"EGL_BIND_TO_TEXTURE_RGBA",
-		"EGL_MIN_SWAP_INTERVAL",
-		"EGL_MAX_SWAP_INTERVAL",
-		"EGL_LUMINANCE_SIZE",
-		"EGL_ALPHA_MASK_SIZE",
-		"EGL_COLOR_BUFFER_TYPE",
-		"EGL_RENDERABLE_TYPE",
-		"EGL_CONFORMANT"
+                "EGL_BUFFER_SIZE",
+                "EGL_ALPHA_SIZE",
+                "EGL_BLUE_SIZE",
+                "EGL_GREEN_SIZE",
+                "EGL_RED_SIZE",
+                "EGL_DEPTH_SIZE",
+                "EGL_STENCIL_SIZE",
+                "EGL_CONFIG_CAVEAT",
+                "EGL_CONFIG_ID",
+                "EGL_LEVEL",
+                "EGL_MAX_PBUFFER_HEIGHT",
+                "EGL_MAX_PBUFFER_PIXELS",
+                "EGL_MAX_PBUFFER_WIDTH",
+                "EGL_NATIVE_RENDERABLE",
+                "EGL_NATIVE_VISUAL_ID",
+                "EGL_NATIVE_VISUAL_TYPE",
+                "EGL_PRESERVED_RESOURCES",
+                "EGL_SAMPLES",
+                "EGL_SAMPLE_BUFFERS",
+                "EGL_SURFACE_TYPE",
+                "EGL_TRANSPARENT_TYPE",
+                "EGL_TRANSPARENT_RED_VALUE",
+                "EGL_TRANSPARENT_GREEN_VALUE",
+                "EGL_TRANSPARENT_BLUE_VALUE",
+                "EGL_BIND_TO_TEXTURE_RGB",
+                "EGL_BIND_TO_TEXTURE_RGBA",
+                "EGL_MIN_SWAP_INTERVAL",
+                "EGL_MAX_SWAP_INTERVAL",
+                "EGL_LUMINANCE_SIZE",
+                "EGL_ALPHA_MASK_SIZE",
+                "EGL_COLOR_BUFFER_TYPE",
+                "EGL_RENDERABLE_TYPE",
+                "EGL_CONFORMANT"
             };
             int[] value = new int[1];
             for (int i = 0; i < attributes.length; i++) {
@@ -348,83 +348,83 @@ public class GameView extends GLSurfaceView {
     }
 
     private static class Renderer implements GLSurfaceView.Renderer {
-	Context ctx;
-	boolean shutdown;
-	GameActivity activity;
+        Context ctx;
+        boolean shutdown;
+        GameActivity activity;
 
-	public Renderer(Context context, GameActivity gameActivity)
-	{
-	    super();
-	    ctx = context;
-	    activity = gameActivity;
-	    shutdown = false;
-	}
+        public Renderer(Context context, GameActivity gameActivity)
+        {
+            super();
+            ctx = context;
+            activity = gameActivity;
+            shutdown = false;
+        }
 
         public void onDrawFrame(GL10 gl) {
-	    if (shutdown) {
-		SystemClock.sleep(10);
-		return;
-	    }
+            if (shutdown) {
+                SystemClock.sleep(10);
+                return;
+            }
 
-	    if (!GameJni.render()) {
-		GameJni.uninit();
-		activity.finish();
-		shutdown = true;
-	    }
+            if (!GameJni.render()) {
+                GameJni.uninit();
+                activity.finish();
+                shutdown = true;
+            }
         }
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
-	    ApplicationInfo appInfo = ctx.getApplicationInfo();
+            ApplicationInfo appInfo = ctx.getApplicationInfo();
 
-	    File file = ctx.getFilesDir();
-	    String path = file.getAbsolutePath();
+            File file = ctx.getFilesDir();
+            String path = file.getAbsolutePath();
 
-	    Log.w(TAG, String.format("Init(%s, %s, %s, %d, %d)",
-				     appInfo.sourceDir,
-				     appInfo.dataDir,
-				     path, width, height));
+            Log.w(TAG, String.format("Init(%s, %s, %s, %d, %d)",
+                                     appInfo.sourceDir,
+                                     appInfo.dataDir,
+                                     path, width, height));
 
             GameJni.init(appInfo.sourceDir, appInfo.dataDir, path,
-			 width, height);
+                         width, height);
 
-	    Log.w(TAG, "onSurfaceChanged()");
+            Log.w(TAG, "onSurfaceChanged()");
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
             // Do nothing.
-	    Log.w(TAG, "onSurfaceCreated()");
+            Log.w(TAG, "onSurfaceCreated()");
         }
 
-	public void handleKeyDown(int keyCode, KeyEvent event)
-	{
-	}
+        public void handleKeyDown(int keyCode, KeyEvent event)
+        {
+        }
 
-	public void handleKeyUp(int keyCode, KeyEvent event)
-	{
-	}
+        public void handleKeyUp(int keyCode, KeyEvent event)
+        {
+        }
     }
 
     public boolean onKeyDown(final int keyCode, final KeyEvent event) {
-	queueEvent(new Runnable() {
-		// This method will be called on the rendering
-		// thread:
-		public void run() {
-		    renderer.handleKeyDown(keyCode, event);
-		}
-	    }
-	);
-	return true;
+        queueEvent(new Runnable() {
+                // This method will be called on the rendering
+                // thread:
+                public void run() {
+                    renderer.handleKeyDown(keyCode, event);
+                }
+            }
+        );
+        return true;
     }
 
     public boolean onKeyUp(final int keyCode, final KeyEvent event) {
-	queueEvent(new Runnable() {
-		// This method will be called on the rendering
-		// thread:
-		public void run() {
-		    renderer.handleKeyUp(keyCode, event);
-		}
-	    }
-	);
-	return true;
+        queueEvent(new Runnable() {
+                // This method will be called on the rendering
+                // thread:
+                public void run() {
+                    renderer.handleKeyUp(keyCode, event);
+                }
+            }
+        );
+        return true;
     }
 }
