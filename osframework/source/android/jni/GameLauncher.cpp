@@ -453,16 +453,23 @@ void GameLauncher::queuePointerEvent(int     id,
 {
     awEvent evt;
 
-    if (action == 0)
+    switch (action)
+    {
+    case 0:
 	evt.type = AW_POINTER_DOWN_EVENT;
-    else if (action == 1)
+	break;
+    case 1:
 	evt.type = AW_POINTER_UP_EVENT;
-    else if (action == 2)
+	break;
+    case 2:
 	evt.type = AW_POINTER_MOVE_EVENT;
-    else if (action == 3)
+	break;
+    case 3:
 	evt.type = AW_POINTER_CANCEL_EVENT;
-    else
+	break;
+    default:
 	return;
+    }
 
     evt.flags = 0;
     evt.timestamp = time;
