@@ -15,6 +15,15 @@
 #include <cstdio>
 #include <cstdlib>
 
+#if defined(ANDROID) || defined(__ANDROID__)
+#include <android/log.h>
+
+#define  LOG_TAG    "AndroidDisplay"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define printf LOGI
+#endif
+
 using namespace Sexy;
 
 AndroidDisplay::AndroidDisplay (SexyAppBase* theApp)
@@ -178,7 +187,7 @@ void AndroidDisplay::HandlePointerEvent(const awEvent*event)
 	int y = event->u.pointer.y * mHeight / mWindowHeight;
 
 	Event evt;
-	switch(event->type)
+	switch (event->type)
 	{
 	case AW_POINTER_DOWN_EVENT:
 		evt.u.touch.state = TOUCH_DOWN;
@@ -194,18 +203,33 @@ void AndroidDisplay::HandlePointerEvent(const awEvent*event)
 		break;
 	}
 
+	printf("MotionEvent: type = %d id = %d x = %f y = %f\n",
+	       event->type, event->u.pointer.id,
+	       event->u.pointer.x, event->u.pointer.y);
+
 	evt.type = EVENT_TOUCH;
 	evt.flags = 0;
 	evt.id = 0;
 	evt.subid = 0;
-	if (event->flags & 1)
-		evt.flags |= EVENT_FLAGS_INCOMPLETE;
+
 	evt.u.touch.id = event->u.pointer.id;
 	evt.u.touch.x = x;
 	evt.u.touch.y = y;
 	evt.u.touch.pressure = event->u.pointer.pressure * 100;
 	if (evt.u.touch.pressure > 100)
 		evt.u.touch.pressure = 100;
+	if (event->type == AW_POINTER_DOWN_EVENT ||
+	    event->type == AW_POINTER_UP_EVENT)
+	{
+		// ignore some events...
+		if (!(event->flags & AW_EVENT_STATE_CHANGED))
+		    return;
+	}
+	else
+	{
+		if (event->flags & AW_EVENT_FOLLOW)
+			evt.flags |= EVENT_FLAGS_INCOMPLETE;
+	}
 
 	events.push_back(evt);
 	if (!(evt.flags & EVENT_FLAGS_INCOMPLETE))
