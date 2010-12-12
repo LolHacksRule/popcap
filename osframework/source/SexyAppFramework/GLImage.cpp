@@ -10,6 +10,15 @@
 #include "Debug.h"
 #include "PerfTimer.h"
 
+#if defined(ANDROID) || defined(__ANDROID__)
+#include <android/log.h>
+
+#define  LOG_TAG    "libGameLauncher/File"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define printf LOGI
+#endif
+
 using namespace Sexy;
 
 #if 0
@@ -373,6 +382,7 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 	}
 	else
 	{
+#if 0
 		if (!theImage->mHasTrans && !theImage->mHasAlpha)
 		{
 			intlformat = GL_RGB;
@@ -390,6 +400,7 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 #endif
 		}
 		else
+#endif
 		{
 			intlformat = GL_RGBA;
 			format = GL_RGBA;
@@ -408,6 +419,7 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 		}
 	};
 	pixmul = pixelMulTab[theImage->mHasTrans][theImage->mHasAlpha][format == GL_BGRA];
+#if 0
 	if (!theImage->mHasTrans && !theImage->mHasAlpha)
 		printf("GLImage: %s is a solid image(%dx%d).\n",
 		       theImage->mFilePath.c_str(),
@@ -416,6 +428,7 @@ static GLuint CreateTexture (GLDisplay * theInterface, MemoryImage* theImage,
 		printf("GLImage: %s is a transparency image(%dx%d).\n",
 		       theImage->mFilePath.c_str(),
 		       theImage->mWidth, theImage->mHeight);
+#endif
 
 	int imageWidth = theImage->GetWidth();
 	int bpp = compressed ? 1 : (type != GL_UNSIGNED_BYTE ? sizeof (ushort) :sizeof(uint32));
