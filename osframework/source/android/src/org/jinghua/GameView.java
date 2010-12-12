@@ -397,11 +397,56 @@ public class GameView extends GLSurfaceView {
 
         public void handleKeyDown(int keyCode, KeyEvent event)
         {
+	    long time = event.getEventTime();
+	    int keycode = event.getKeyCode();
+	    int keychar = event.getUnicodeChar();
+	    GameJni.queueKeyEvent(1, time, keycode, keychar);
         }
 
         public void handleKeyUp(int keyCode, KeyEvent event)
         {
+	    long time = event.getEventTime();
+	    int keycode = event.getKeyCode();
+	    int keychar = event.getUnicodeChar();
+	    GameJni.queueKeyEvent(0, time, keycode, keychar);
         }
+
+	public void handleTouch(final MotionEvent event)
+	{
+	    final int action = event.getAction();
+	    final int historySize = event.getHistorySize();
+	    final int pointerCount = event.getPointerCount();
+
+	    if (action != MotionEvent.ACTION_DOWN &&
+		action != MotionEvent.ACTION_UP &&
+		action != MotionEvent.ACTION_MOVE &&
+		action != MotionEvent.ACTION_CANCEL)
+		return;
+
+	    for (int h = 0; h < historySize; h++) {
+		long time = event.getHistoricalEventTime(h);
+		for (int p = 0; p < pointerCount; p++) {
+		    int id = event.getPointerId(p);
+		    float x = event.getHistoricalX(p, h);
+		    float y = event.getHistoricalY(p, h);
+		    float pressure = event.getHistoricalPressure(p, h);
+		    GameJni.queuePointerEvent(id, action, time,
+					      p < pointerCount - 1 ? 1 : 0,
+					      x, y, pressure);
+		}
+	    }
+
+	    long time = event.getEventTime();
+	    for (int p = 0; p < pointerCount; p++) {
+		int id = event.getPointerId(p);
+		float x = event.getX(p);
+		float y = event.getY(p);
+		float pressure = event.getPressure(p);
+		GameJni.queuePointerEvent(id, action, time,
+					  p < pointerCount - 1 ? 1 : 0,
+					  x, y, pressure);
+	    }
+	}
     }
 
     public boolean onKeyDown(final int keyCode, final KeyEvent event) {
@@ -422,6 +467,19 @@ public class GameView extends GLSurfaceView {
                 // thread:
                 public void run() {
                     renderer.handleKeyUp(keyCode, event);
+                }
+            }
+        );
+        return true;
+    }
+
+    @Override
+    public boolean onTouchEvent(final MotionEvent event) {
+        queueEvent(new Runnable() {
+                // This method will be called on the rendering
+                // thread:
+                public void run() {
+                    renderer.handleTouch(event);
                 }
             }
         );

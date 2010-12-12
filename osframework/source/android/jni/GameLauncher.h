@@ -2,6 +2,8 @@
 #define __GAME_LAUNCHER_H__
 
 #include <string>
+#include <vector>
+#include <list>
 
 #include <jni.h>
 
@@ -12,6 +14,9 @@ extern "C" {
   typedef int (*GameResumeProc)(void);
   typedef int (*GameUninitProc)(void);
   typedef void (*GameAudioReadCallback)(void*);
+  struct awEvent;
+  typedef void (*awEventListener)(const struct awEvent* event,
+				  void*                 data);
 };
 
 enum GameState {
@@ -63,10 +68,27 @@ class GameLauncher {
                                    void* data = 0);
   void        audioWriteData(void* data, size_t size);
 
+  void        queueKeyEvent(int     down,
+			    long    time,
+			    int     keycode,
+			    int     keychar);
+
+  void        queuePointerEvent(int     id,
+				int     action,
+				long    time,
+				int     flags,
+				float   x,
+				float   y,
+				float   pressure);
+
+  void        addEventListener(awEventListener listener,
+			       void* data);
+
  private:
   void        setupEnv();
   bool        loadGame();
   void        unloadGame();
+  void        dispatchEvent(awEvent &event);
 
  private:
   void*            mHandler;
@@ -85,6 +107,12 @@ class GameLauncher {
   GameUninitProc   mUninitProc;
   GameAudioReadCallback mAudioReadCallback;
   void*                 mAudioReadCallbackData;
+
+  struct EventListener {
+    awEventListener callback;
+    void*           data;
+  };
+  std::list<EventListener> mListeners;
 };
 
 #endif

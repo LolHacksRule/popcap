@@ -87,6 +87,31 @@ JNIEXPORT void JNICALL Java_org_jinghua_GameJni_readAudioData(JNIEnv * env, jcla
         launcher->readAudioData();
 }
 
+JNIEXPORT void JNICALL Java_org_jinghua_GameJni_queueKeyEvent(JNIEnv * env,
+							      jclass   obj,
+							      jint     down,
+							      jlong    time,
+							      jint     keycode,
+							      jint     keychar)
+{
+    if (launcher)
+	launcher->queueKeyEvent(down, time, keycode, keychar);
+}
+
+JNIEXPORT void JNICALL Java_org_jinghua_GameJni_queuePointerEvent(JNIEnv * env,
+								  jclass   obj,
+								  jint     id,
+								  jint     action,
+								  jlong    time,
+								  jint     flags,
+								  jfloat   x,
+								  jfloat   y,
+								  jfloat   pressure)
+{
+    if (launcher)
+	launcher->queuePointerEvent(id, action, time, flags, x, y, pressure);
+}
+
 JNIEXPORT void JNICALL Java_org_jinghua_GameJni_uninit(JNIEnv * env, jclass obj)
 {
     pthread_mutex_lock(&mutex);

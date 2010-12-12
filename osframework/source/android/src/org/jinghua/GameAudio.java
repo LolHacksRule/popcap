@@ -68,7 +68,7 @@ public class GameAudio {
                     GameJni.readAudioData();
                 }
             });
-        mAudioTrack.setPositionNotificationPeriod(2048);
+        mAudioTrack.setPositionNotificationPeriod(1024);
 
         return true;
     }

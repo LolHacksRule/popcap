@@ -1,4 +1,5 @@
 #include "GameLauncher.h"
+#include "GameView.h"
 
 #include <algorithm>
 #include <vector>
@@ -419,11 +420,75 @@ void GameLauncher::readAudioData()
     mAudioReadCallback(mAudioReadCallbackData);
 }
 
+void GameLauncher::dispatchEvent(awEvent &event)
+{
+    std::list<EventListener>::iterator it = mListeners.begin();
+
+    for (; it != mListeners.end(); ++it)
+	it->callback(&event, it->data);
+}
+
+void GameLauncher::queueKeyEvent(int     down,
+				 long    time,
+				 int     keycode,
+				 int     keychar)
+{
+    awEvent evt;
+
+    evt.type = down ? AW_KEY_DOWN_EVENT :AW_KEY_UP_EVENT;
+    evt.flags = 0;
+    evt.timestamp = time;
+    evt.u.key.keyCode = keycode;
+    evt.u.key.keyChar = keychar;
+    dispatchEvent(evt);
+}
+
+void GameLauncher::queuePointerEvent(int     id,
+				     int     action,
+				     long    time,
+				     int     flags,
+				     float   x,
+				     float   y,
+				     float   pressure)
+{
+    awEvent evt;
+
+    if (action == 0)
+	evt.type = AW_POINTER_DOWN_EVENT;
+    else if (action == 1)
+	evt.type = AW_POINTER_UP_EVENT;
+    else if (action == 2)
+	evt.type = AW_POINTER_MOVE_EVENT;
+    else if (action == 3)
+	evt.type = AW_POINTER_CANCEL_EVENT;
+    else
+	return;
+
+    evt.flags = 0;
+    evt.timestamp = time;
+    evt.u.pointer.id = id;
+    evt.u.pointer.x = x;
+    evt.u.pointer.y = y;
+    evt.u.pointer.pressure = pressure;
+    dispatchEvent(evt);
+}
+
+void GameLauncher::addEventListener(awEventListener listener,
+				    void* data)
+{
+    mListeners.push_back(EventListener());
+
+    EventListener& back = mListeners.back();
+    back.callback = listener;
+    back.data = data;
+}
+
 void GameLauncher::release()
 {
     if (gameLoaded())
     {
         mAudioReadCallback = 0;
+	mListeners.clear();
         audioUninit();
         uninit();
         unloadGame();

@@ -34,5 +34,16 @@ public class GameJni {
     public static native void    pause();
     public static native void    resume();
 
+    public static native void    queueKeyEvent(int down,
+					       long time,
+					       int keycode,
+					       int keychar);
+    public static native void    queuePointerEvent(int   id,
+						   int   action,
+						   long  time,
+						   int   flags,
+						   float x,
+						   float y,
+						   float pressure);
     public static native void    readAudioData();
 }
