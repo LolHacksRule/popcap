@@ -103,6 +103,7 @@ if 'XGLES' in env['DRIVERS']:
 if 'ANDROIDGLES' in env['DRIVERS']:
     srcs += ["GLImage.cpp", 'GLDisplay.cpp', "AndroidDisplay.cpp"]
     env['ANDROIDGLES']['ENABLE'](env)
+    configs.EnablePackage(env, 'android')
     env.AppendUnique(CPPDEFINES = ['SEXY_ANDROIDGLES_DRIVER'])
 
 if 'LINUXINPUT' in env['DRIVERS']:

@@ -8,6 +8,9 @@
 #include "MemoryImage.h"
 #include "KeyCodes.h"
 #include "VideoDriverFactory.h"
+#include "InputManager.h"
+
+#include "GameView.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -76,6 +79,8 @@ int AndroidDisplay::Init (void)
 
 	InitGL ();
 
+	awAddViewEventListener(HandleEvents, this);
+
 	mInitCount++;
 	mInitialized = true;
 
@@ -89,11 +94,6 @@ bool AndroidDisplay::CanReinit (void)
 
 bool AndroidDisplay::Reinit (void)
 {
-	if (mApp->mIsWindowed)
-		mOverScan = 1.0f;
-	else
-		mOverScan = 0.9f;
-
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
 	mIs3D = mApp->mIs3D;
@@ -160,6 +160,84 @@ bool AndroidDisplay::GetEvent(struct Event &event)
 
 void AndroidDisplay::SwapBuffers()
 {
+}
+
+void AndroidDisplay::HandleKeyEvent(const awEvent*event)
+{
+	if (!mEvents.empty())
+		mEvents.clear();
+}
+
+void AndroidDisplay::HandlePointerEvent(const awEvent*event)
+{
+	SexyAppBase *app = mApp;
+
+	std::list<Event>& events = mEvents;
+
+	int x = event->u.pointer.x * mWidth / mWindowWidth;
+	int y = event->u.pointer.y * mHeight / mWindowHeight;
+
+	Event evt;
+	switch(event->type)
+	{
+	case AW_POINTER_DOWN_EVENT:
+		evt.u.touch.state = TOUCH_DOWN;
+		break;
+	case AW_POINTER_MOVE_EVENT:
+		evt.u.touch.state = TOUCH_MOVE;
+		break;
+	case AW_POINTER_UP_EVENT:
+		evt.u.touch.state = TOUCH_UP;
+		break;
+	case AW_POINTER_CANCEL_EVENT:
+		evt.u.touch.state = TOUCH_CANCEL;
+		break;
+	}
+
+	evt.type = EVENT_TOUCH;
+	evt.flags = 0;
+	evt.id = 0;
+	evt.subid = 0;
+	if (event->flags & 1)
+		evt.flags |= EVENT_FLAGS_INCOMPLETE;
+	evt.u.touch.id = event->u.pointer.id;
+	evt.u.touch.x = x;
+	evt.u.touch.y = y;
+	evt.u.touch.pressure = event->u.pointer.pressure * 100;
+	if (evt.u.touch.pressure > 100)
+		evt.u.touch.pressure = 100;
+
+	events.push_back(evt);
+	if (!(evt.flags & EVENT_FLAGS_INCOMPLETE))
+	{
+		app->mInputManager->PushEvents(events);
+		events.clear();
+	}
+}
+
+void AndroidDisplay::HandleEvents(const awEvent*event,
+				  void*         data)
+{
+	AndroidDisplay* dpy = (AndroidDisplay*)data;
+
+	if (!dpy)
+		return;
+
+	switch(event->type)
+	{
+	case AW_POINTER_DOWN_EVENT:
+	case AW_POINTER_MOVE_EVENT:
+	case AW_POINTER_UP_EVENT:
+	case AW_POINTER_CANCEL_EVENT:
+		dpy->HandlePointerEvent(event);
+		break;
+	case AW_KEY_UP_EVENT:
+	case AW_KEY_DOWN_EVENT:
+		dpy->HandleKeyEvent(event);
+		break;
+	default:
+		break;
+	}
 }
 
 class AndroidVideoDriver: public VideoDriver {

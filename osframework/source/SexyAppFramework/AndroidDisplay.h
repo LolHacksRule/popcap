@@ -9,6 +9,10 @@
 
 #include <GLES/gl.h>
 
+extern "C" {
+	struct awEvent;
+}
+
 namespace Sexy
 {
 
@@ -35,7 +39,12 @@ public:
 	virtual bool				HasEvent();
 	virtual bool				GetEvent(struct Event &event);
 
+	void                                    HandleKeyEvent(const awEvent*event);
+	void                                    HandlePointerEvent(const awEvent*event);
+	static void                             HandleEvents(const awEvent*, void* data);
+
 private:
+	std::list<Event>                        mEvents;
 };
 
 }
