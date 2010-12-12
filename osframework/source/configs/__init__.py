@@ -136,9 +136,7 @@ def EnableAudiereSound (env):
     env.AppendUnique (LIBS = ['audiere']);
     if env['static_audiere']:
         env.AppendUnique (LIBS = ['vorbisfile', 'vorbis', 'ogg'])
-        if 'linux' in env['config']:
-            env.AppendUnique (LIBS = ['asound'])
-        elif 'darwin' in env['config']:
+        if 'darwin' in env['config']:
             env.AppendUnique (CPPDEFINES = ['HAVE_CORE_AUDIO'],
                               FRAMEWORKS = ['CoreAudio',
                                             'AudioUnit',

@@ -6,7 +6,7 @@ import configs.linux.android
 
 def AddOptions (opts):
     configs.linux.android.AddOptions (opts)
-    #configs.AudiereSoundAddOptions (opts)
+    configs.AudiereSoundAddOptions (opts)
 
 def EnableAndroidGLES (env):
     env.PrependUnique (CPPDEFINES = ['SEXY_OPENGLES'],
@@ -19,8 +19,8 @@ def Configure (env):
     gles['ENABLE'] = EnableAndroidGLES
     env.AppendUnique(ANDROIDGLES = gles)
 
-    ### gstreamer sound manager
-    #configs.AudiereSoundConfigure (env)
+    ### audiere sound manager
+    configs.AudiereSoundConfigure (env)
 
     env.AppendUnique(BUILD_PACKAGES = ['freetype'])
     env['FREETYPECONFIG'] = None

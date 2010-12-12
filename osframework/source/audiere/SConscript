@@ -67,6 +67,7 @@ env.AppendUnique (CPPDEFINES = ['AUDIERE_EXPORTS'])
 env.PrependUnique (LIBPATH = ['lib'])
 env.AppendUnique (LIBS = ['vorbisfile', 'vorbis', 'ogg'])
 
+extern_libs = []
 if 'win32' in env['TARGET_OS']:
     env.AppendUnique (CPPDEFINES = ['WIN32_LEAN_AND_MEAN', 'NOMINMAX',
                                     'HAVE_DSOUND'],
@@ -77,9 +78,15 @@ if 'win32' in env['TARGET_OS']:
     srcs += [ 'device_ds_buffer.cpp', 'device_ds_stream.cpp',
               'device_ds.cpp', 'dxguid.cpp' ]
 elif 'linux' in env['TARGET_OS']:
-    env.AppendUnique(CPPDEFINES = ['HAVE_ALSA'],
-                     LIBS = ['asound'])
-    srcs += ['device_alsa.cpp']
+    if env['TARGET_PLATFORM'] == 'android':
+        srcs += ['device_android.cpp']
+        env.AppendUnique(CPPDEFINES = ['HAVE_GAME_LAUNCHER'])
+        configs.EnablePackage(env, 'android')
+    else:
+        env.AppendUnique(CPPDEFINES = ['HAVE_ALSA'],
+                         LIBS = ['asound'])
+        extern_libs += ['asound']
+        srcs += ['device_alsa.cpp']
     srcs += ['midi_null.cpp', 'cd_null.cpp',
              'timer_posix.cpp', 'threads_posix.cpp']
 elif 'darwin' in env['TARGET_OS']:
@@ -139,7 +146,7 @@ env.Program('audiere_play',
             LIBS = ['audiere'] + env['LIBS'])
 
 ### setup package info
-depends = []
+depends = extern_libs
 objects = []
 pkgdeps = ['ogg']
 if env['static_audiere']:
