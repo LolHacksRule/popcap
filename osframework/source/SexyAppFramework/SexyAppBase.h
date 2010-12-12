@@ -678,7 +678,9 @@ namespace Sexy
 		virtual bool				UpdateAppStep(bool* updated);
 		virtual bool				UpdateApp();
 		virtual void                            InitVideoDriver();
-		int					InitDDInterface();
+		virtual int				InitDDInterface();
+		virtual void                            InitSoundManager();
+
 		void					ClearUpdateBacklog(bool relaxForASecond = false);
 		bool					IsScreenSaver();
 		virtual bool				AppCanRestore();

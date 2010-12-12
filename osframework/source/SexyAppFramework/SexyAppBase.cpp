@@ -3093,6 +3093,36 @@ void SexyAppBase::InitHook()
 {
 }
 
+void SexyAppBase::InitSoundManager()
+{
+	if (mSoundManager == NULL)
+	{
+#ifdef _WIN32_WCE
+		char* sound_driver = NULL;
+#else
+		char* sound_driver = getenv ("SEXY_SOUND_DRIVER");
+#endif
+		std::string driver(sound_driver ? sound_driver : "auto");
+		SoundDriver* aSoundDriver = dynamic_cast<SoundDriver*>
+			(SoundDriverFactory::GetSoundDriverFactory ()->Find (driver));
+	        while (aSoundDriver)
+		{
+			mSoundManager = aSoundDriver->Create (this);
+			if (mSoundManager)
+			{
+				mMusicInterface = aSoundDriver->CreateMusicInterface (this);
+				break;
+			}
+			aSoundDriver = dynamic_cast<SoundDriver*>
+				(SoundDriverFactory::GetSoundDriverFactory ()->FindNext (aSoundDriver));
+		}
+	}
+	if (mSoundManager == NULL)
+		mSoundManager = new DummySoundManager();
+	if (mMusicInterface == NULL)
+		mMusicInterface = new MusicInterface();
+}
+
 void SexyAppBase::Init()
 {
 	if (mShutdown)
@@ -3142,33 +3172,7 @@ void SexyAppBase::Init()
 	mWidgetManager->Resize(Rect(0, 0, mWidth, mHeight), Rect(0, 0, mWidth, mHeight));
 	MakeWindow();
 
-	if (mSoundManager == NULL && 0)
-	{
-#ifdef _WIN32_WCE
-		char* sound_driver = NULL;
-#else
-		char* sound_driver = getenv ("SEXY_SOUND_DRIVER");
-#endif
-		std::string driver(sound_driver ? sound_driver : "auto");
-		SoundDriver* aSoundDriver = dynamic_cast<SoundDriver*>
-			(SoundDriverFactory::GetSoundDriverFactory ()->Find (driver));
-	        while (aSoundDriver)
-		{
-			mSoundManager = aSoundDriver->Create (this);
-			if (mSoundManager)
-			{
-				mMusicInterface = aSoundDriver->CreateMusicInterface (this);
-				break;
-			}
-			aSoundDriver = dynamic_cast<SoundDriver*>
-				(SoundDriverFactory::GetSoundDriverFactory ()->FindNext (aSoundDriver));
-		}
-	}
-	if (mSoundManager == NULL)
-		mSoundManager = new DummySoundManager();
-	if (mMusicInterface == NULL)
-		mMusicInterface = new MusicInterface();
-
+	InitSoundManager();
 	SetSfxVolume(mSfxVolume);
  	SetMusicVolume(mMusicVolume);
 
