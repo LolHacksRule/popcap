@@ -435,7 +435,7 @@ void GameLauncher::queueKeyEvent(int     down,
 {
     awEvent evt;
 
-    evt.type = down ? AW_KEY_DOWN_EVENT :AW_KEY_UP_EVENT;
+    evt.type = down ? AW_KEY_DOWN_EVENT : AW_KEY_UP_EVENT;
     evt.flags = 0;
     evt.timestamp = time;
     evt.u.key.keyCode = keycode;
@@ -456,9 +456,11 @@ void GameLauncher::queuePointerEvent(int     id,
     switch (action)
     {
     case 0:
+    case 5:
 	evt.type = AW_POINTER_DOWN_EVENT;
 	break;
     case 1:
+    case 6:
 	evt.type = AW_POINTER_UP_EVENT;
 	break;
     case 2:
@@ -471,7 +473,7 @@ void GameLauncher::queuePointerEvent(int     id,
 	return;
     }
 
-    evt.flags = 0;
+    evt.flags = flags;
     evt.timestamp = time;
     evt.u.pointer.id = id;
     evt.u.pointer.x = x;

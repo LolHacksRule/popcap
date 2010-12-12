@@ -116,7 +116,8 @@ extern "C" {
 
   enum awEventFlags {
     AW_EVENT_FLAG_NONE       = 0,
-    AW_EVENT_FOLLOW          = 1 << 0
+    AW_EVENT_FOLLOW          = 1 << 0,
+    AW_EVENT_STATE_CHANGED   = 1 << 1
   };
 
   struct awKeyEvent {
@@ -126,6 +127,7 @@ extern "C" {
 
   struct awPointerEvent {
     int id;
+    int flags;
     float x;
     float y;
     float pressure;

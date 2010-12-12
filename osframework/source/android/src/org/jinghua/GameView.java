@@ -80,7 +80,10 @@ public class GameView extends GLSurfaceView {
     public GameView(Context context, GameActivity activity) {
         super(context);
         gameActivity = activity;
-        init(context, false, 0, 0);
+        init(context, false, 16, 0);
+
+        setFocusable(true);
+        setFocusableInTouchMode(true);
     }
 
     public GameView(Context context, GameActivity activity,
@@ -88,6 +91,9 @@ public class GameView extends GLSurfaceView {
         super(context);
         gameActivity = activity;
         init(context, translucent, depth, stencil);
+
+        setFocusable(true);
+        setFocusableInTouchMode(true);
     }
 
     private void init(Context context, boolean translucent, int depth, int stencil) {
@@ -379,11 +385,6 @@ public class GameView extends GLSurfaceView {
             File file = ctx.getFilesDir();
             String path = file.getAbsolutePath();
 
-            Log.w(TAG, String.format("Init(%s, %s, %s, %d, %d)",
-                                     appInfo.sourceDir,
-                                     appInfo.dataDir,
-                                     path, width, height));
-
             GameJni.init(appInfo.sourceDir, appInfo.dataDir, path,
                          width, height);
 
@@ -397,56 +398,63 @@ public class GameView extends GLSurfaceView {
 
         public void handleKeyDown(int keyCode, KeyEvent event)
         {
-	    long time = event.getEventTime();
-	    int keycode = event.getKeyCode();
-	    int keychar = event.getUnicodeChar();
-	    GameJni.queueKeyEvent(1, time, keycode, keychar);
+            long time = event.getEventTime();
+            int keycode = event.getKeyCode();
+            int keychar = event.getUnicodeChar();
+            GameJni.queueKeyEvent(1, time, keycode, keychar);
         }
 
         public void handleKeyUp(int keyCode, KeyEvent event)
         {
-	    long time = event.getEventTime();
-	    int keycode = event.getKeyCode();
-	    int keychar = event.getUnicodeChar();
-	    GameJni.queueKeyEvent(0, time, keycode, keychar);
+            long time = event.getEventTime();
+            int keycode = event.getKeyCode();
+            int keychar = event.getUnicodeChar();
+            GameJni.queueKeyEvent(0, time, keycode, keychar);
         }
 
-	public void handleTouch(final MotionEvent event)
-	{
-	    final int action = event.getAction();
-	    final int historySize = event.getHistorySize();
-	    final int pointerCount = event.getPointerCount();
+        public void handleTouch(final MotionEvent event)
+        {
+            final int action = event.getAction() & MotionEvent.ACTION_MASK;
+            final int historySize = event.getHistorySize();
+            final int pointerCount = event.getPointerCount();
 
-	    if (action != MotionEvent.ACTION_DOWN &&
-		action != MotionEvent.ACTION_UP &&
-		action != MotionEvent.ACTION_MOVE &&
-		action != MotionEvent.ACTION_CANCEL)
-		return;
+            if (action != MotionEvent.ACTION_DOWN &&
+                action != MotionEvent.ACTION_UP &&
+                action != MotionEvent.ACTION_MOVE &&
+                action != MotionEvent.ACTION_CANCEL &&
+                action != MotionEvent.ACTION_POINTER_UP &&
+                action != MotionEvent.ACTION_POINTER_DOWN)
+                return;
 
-	    for (int h = 0; h < historySize; h++) {
-		long time = event.getHistoricalEventTime(h);
-		for (int p = 0; p < pointerCount; p++) {
-		    int id = event.getPointerId(p);
-		    float x = event.getHistoricalX(p, h);
-		    float y = event.getHistoricalY(p, h);
-		    float pressure = event.getHistoricalPressure(p, h);
-		    GameJni.queuePointerEvent(id, action, time,
-					      p < pointerCount - 1 ? 1 : 0,
-					      x, y, pressure);
-		}
-	    }
+            for (int h = 0; h < historySize; h++) {
+                long time = event.getHistoricalEventTime(h);
+                for (int p = 0; p < pointerCount; p++) {
+                    int id = event.getPointerId(p);
+                    float x = event.getHistoricalX(p, h);
+                    float y = event.getHistoricalY(p, h);
+                    float pressure = event.getHistoricalPressure(p, h);
+                    int flags = p < pointerCount - 1 ? 1 : 0;
+                    GameJni.queuePointerEvent(id, action, time, flags,
+                                              x, y, pressure);
+                }
+            }
 
-	    long time = event.getEventTime();
-	    for (int p = 0; p < pointerCount; p++) {
-		int id = event.getPointerId(p);
-		float x = event.getX(p);
-		float y = event.getY(p);
-		float pressure = event.getPressure(p);
-		GameJni.queuePointerEvent(id, action, time,
-					  p < pointerCount - 1 ? 1 : 0,
-					  x, y, pressure);
-	    }
-	}
+            long time = event.getEventTime();
+            //int actionindex = event.getActionIndex();
+            int actionIndex = (action & 0xff00) >> 8;
+            int actionId = event.getPointerId(actionIndex);
+            for (int p = 0; p < pointerCount; p++) {
+                int id = event.getPointerId(p);
+                float x = event.getX(p);
+                float y = event.getY(p);
+                float pressure = event.getPressure(p);
+                int flags = p < pointerCount - 1 ? 1 : 0;
+                if (actionIndex == p)
+                    flags |= 1 << 1;
+                GameJni.queuePointerEvent(id, action, time,
+                                          flags, x, y, pressure);
+            }
+        }
     }
 
     public boolean onKeyDown(final int keyCode, final KeyEvent event) {
