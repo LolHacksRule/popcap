@@ -48,12 +48,7 @@ int AndroidDisplay::Init (void)
 
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
-	mOverScan = 0.9;
-
-	if (mApp->mIsWindowed)
-		mOverScan = 1.0f;
-	else
-		mOverScan = 0.9f;
+	mOverScan = 1.0f;
 
 	int width = GetEnvInt("ANDROID_GLVIEW_WIDTH", 480);
 	int height = GetEnvInt("ANDROID_GLVIEW_HEIGHT", 320);
