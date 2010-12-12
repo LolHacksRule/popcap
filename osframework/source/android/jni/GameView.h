@@ -155,7 +155,7 @@ int
 awGetViewSize(int *width, int *height);
 
 void
-awSetViewEventListener(awEventListener listener,
+awAddViewEventListener(awEventListener listener,
 		       void* data);
 
 #ifdef __cplusplus
