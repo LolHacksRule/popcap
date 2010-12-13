@@ -8,13 +8,10 @@ extern "C" {
     {
         GameLauncher* launcher = GameLauncher::getInstance();
 
-        if (launcher->getState() < GAME_STATE_INITED)
-            return -1;
-
         if (width)
             *width = launcher->getViewWidth();
         if (height)
-            *width = launcher->getViewHeight();
+            *height = launcher->getViewHeight();
 
         return 0;
     }
