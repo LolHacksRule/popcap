@@ -67,6 +67,8 @@ bool GameLauncher::init(JNIEnv*     env,
     LOGI("Application data directory: %s\n", datadir);
     LOGI("OpenGLView size: %dx%d\n", width, height);
 
+    chdir(filesdir);
+
     mainThread = pthread_self();
     mEnv = env;
     env->GetJavaVM(&mVM);
@@ -99,8 +101,6 @@ bool GameLauncher::init(JNIEnv*     env,
 
     path = std::string("ANDROID_FILES_DIR=") + mFilesDir;
     putenv(path.c_str());
-
-    chdir(filesdir);
 
     mInitProc();
     mState = GAME_STATE_INITED;
