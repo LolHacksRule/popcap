@@ -393,10 +393,34 @@ def APK(env, srcdir, origsrcdir, destdir, targets, android_dir = 'android',
         target = 'release'
         build = 'unsigned'
     dest = '%s-%s.apk' % (name, build)
-    apk = env.Command(os.path.join(androidbuild, 'bin', dest), [],
+    apk = env.Command([os.path.join(androidbuild, 'bin', dest),
+                       os.path.join(androidbuild, 'bin', name + '.ap_')], [],
                       'ant -f %s %s' % (build_xml, target))
     env.Depends(apk, srcs)
 
     pkgdir = os.path.join(env['distdir'], env['language'], 'packages')
-    apk = env.Install(pkgdir, apk)
-    return apk
+    result = env.Install(pkgdir, apk[0])
+
+    keystore = env.File(env['apk_sign_keystore'])
+    if not os.path.exists(keystore.abspath):
+        return result
+
+    orig_apk = os.path.join(androidbuild, 'bin', name + '.ap_')
+    ### signed the apk with our key
+    if env['debug']:
+        command = 'jarsigner -verbose'
+    else:
+        command = 'jarsigner'
+    command += ' -keystore %s' % keystore.path
+    command += ' -storepass %s -keypass %s' % (env['apk_sign_keystore_pass'], env['apk_sign_key_pass'])
+    command += ' -signedjar $TARGET $SOURCE %s' % env['apk_sign_key']
+    signed_apk = env.Command(name + '-signed.apk', orig_apk, command)
+
+    ### align the signed apk
+    command = os.path.join(env['android_sdk_path'], 'tools', 'zipalign')
+    if env['debug']:
+        command += ' -v'
+    command += ' 4 $SOURCE $TARGET'
+    aligned_apk = env.Command(name + '-aligned.apk', signed_apk, command)
+    result += env.InstallAs(os.path.join(pkgdir, name + '-signed.apk'), aligned_apk)
+    return result
