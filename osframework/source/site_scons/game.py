@@ -401,11 +401,14 @@ def APK(env, srcdir, origsrcdir, destdir, targets, android_dir = 'android',
     pkgdir = os.path.join(env['distdir'], env['language'], 'packages')
     result = env.Install(pkgdir, apk[0])
 
+    if target == 'debug':
+        return result
+
     keystore = env.File(env['apk_sign_keystore'])
     if not os.path.exists(keystore.abspath):
         return result
 
-    orig_apk = os.path.join(androidbuild, 'bin', name + '.ap_')
+    orig_apk = result
     ### signed the apk with our key
     if env['debug']:
         command = 'jarsigner -verbose'
