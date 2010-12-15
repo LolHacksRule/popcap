@@ -27,6 +27,14 @@ def AddOptions (opts):
     opts.Add (EnumVariable('android_platform', 'Build binary for specified android platform',
                            '5', ('4', '5', '8')))
 
+    opts.Add (PathVariable ('apk_sign_keystore',
+                            'keystore to sign apks',
+                            os.path.join('#android', 'keystore', 'apk.jinghua.org'),
+                            PathVariable.PathAccept))
+    opts.Add (('apk_sign_key', 'key to sign apks', 'apk.jinghua.org'))
+    opts.Add (('apk_sign_keystore_pass', 'keystore password', 'apk.jinghua.org'))
+    opts.Add (('apk_sign_key_pass', 'key password', 'apk.jinghua.org'))
+
 def AndroidProgram(env, target, source, **kwargs):
     archdir = env['archdir']
     linkflags = [#"-Bdynamic",
