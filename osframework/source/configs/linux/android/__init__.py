@@ -23,9 +23,14 @@ def AddOptions (opts):
                             'Path to android native sdk installed directory',
                             '',
                             PathVariable.PathAccept))
-    opts.Add (('android_abi', 'Build binary with specified abi', 'arm-eabi-4.2.1'))
+    opts.Add (('android_abi', 'Build binary for specified abi', 'arm-eabi-4.4.0'))
     opts.Add (EnumVariable('android_platform', 'Build binary for specified android platform',
                            '5', ('4', '5', '8')))
+    opts.Add (EnumVariable('android_fpu', 'Build binary for specified float point unit',
+                           'default', ('default', 'softfloat', 'vfp', 'vfpv3',
+                                       'vfpv3-16', 'neon')))
+    opts.Add (EnumVariable('android_cpu', 'Build binary for specified cpu',
+                           'generic', ('generic', 'cortex-a9')))
 
     opts.Add (PathVariable ('apk_sign_keystore',
                             'keystore to sign apks',
@@ -128,6 +133,40 @@ def Configure (env):
                       LIBPATH = [os.path.join(archdir, 'usr', 'lib')],
                       LIBS = ['stdc++'])
 
+    fpumap = {
+        'cortex-a9' : 'vfpv3-d16',
+    }
+    fpumodemap = {
+        'vfpv3-d16' : ['-mfpu=vfpv3-d16', '-mfloat-abi=softfp'],
+        'vfpv3' : ['-mfpu=vfpv3', '-mfloat-abi=softfp'],
+        'neon' : ['-mfpu=neon', '-mfloat-abi=softfp'],
+        'vfp' : ['-mfpu=vfp', '-mfloat-abi=softfp'],
+    }
+    cpumap = {
+        'cortex-a9' : 'cortex-a9',
+    }
+    cpu = env['android_cpu']
+    cpuflags = []
+    if cpu in cpumap:
+        cpuflags += ['-mcpu=%s' % cpumap['cortex-a9'],
+                     '-mtune=%s' % cpumap['cortex-a9']]
+    else:
+        cpuflags += ["-march=armv5te", "-mtune=xscale"]
+    env['android_cpu_flags'] = cpuflags
+
+    fpu = env['android_fpu']
+    if fpu == 'default' and cpu in fpumap:
+        fpu = fpumap[cpu]
+    fpuflags = []
+    if fpu in fpumodemap:
+        fpuflags += fpumodemap[fpu]
+    if not fpuflags:
+        fpuflags += ["-msoft-float"]
+    env['android_fpu_flags'] = fpuflags
+
+    env.AppendUnique(CCFLAGS = cpuflags + fpuflags,
+                     LINKFLAGS = cpuflags + fpuflags)
+
     ### replace the Program()
     env['BUILDERS']['OldSharedLibrary'] = env['BUILDERS']['SharedLibrary']
     env['BUILDERS']['SharedLibrary'] = AndroidSharedLibrary
@@ -144,5 +183,3 @@ def Configure (env):
         for flag in bad_flags[var]:
             if flag in env[var]:
                 env[var].remove(flag)
-    if True:
-        env.AppendUnique(CCFLAGS = ["-march=armv5te", "-mtune=xscale", "-msoft-float"])
