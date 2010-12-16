@@ -167,6 +167,8 @@ def Configure (env):
     env.AppendUnique(CCFLAGS = cpuflags + fpuflags,
                      LINKFLAGS = cpuflags + fpuflags)
 
+    env.AppendUnique(CCFLAGS = ['-fno-short-enums'])
+
     ### replace the Program()
     env['BUILDERS']['OldSharedLibrary'] = env['BUILDERS']['SharedLibrary']
     env['BUILDERS']['SharedLibrary'] = AndroidSharedLibrary
