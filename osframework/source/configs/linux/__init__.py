@@ -19,11 +19,11 @@ def Configure (env):
     configs.Configure (env)
     env['TARGET_OS'] = 'linux'
     if env['build_32bit']:
-        env.AppendUnique (CCFLAGS = ['-m32'],
+        env.AppendUnique (CCCFLAGS = ['-m32'],
                           LINKFLAGS = ['-m32'])
-    env.AppendUnique (CFLAGS = ['-pthread'],
+    env.AppendUnique (CCFLAGS = ['-pthread'],
                       LINKFLAGS = ['-pthread'])
-    env.AppendUnique (CFLAGS = ['-g', '-fno-unit-at-a-time', '-Wall'],
+    env.AppendUnique (CCFLAGS = ['-g', '-fno-unit-at-a-time', '-Wall'],
                       CXXFLAGS = ['-g', '-Wall'],
                       LINKFLAGS = ['-g', '-fno-unit-at-a-time', '-export-dynamic'],
                       LIBS = ['rt', 'm'])
