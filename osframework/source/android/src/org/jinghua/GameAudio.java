@@ -25,6 +25,8 @@ import android.media.AudioTrack;
 import android.util.Log;
 
 public class GameAudio {
+    static String TAG = "GameAudio";
+
     private static GameAudio mInst = new GameAudio();
 
     public static GameAudio getInstance() {
@@ -44,17 +46,19 @@ public class GameAudio {
         if (bits != 16)
             return false;
 
-        int channelCfg = AudioFormat.CHANNEL_CONFIGURATION_STEREO;;
+        int channelCfg = AudioFormat.CHANNEL_CONFIGURATION_STEREO;
         int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
         int bufferSize = AudioTrack.getMinBufferSize(sampleRate,
                                                      channelCfg,
                                                      audioFormat);
 
+	Log.d(TAG, String.format("sampleRate %d channels %d bits %d bufferSize %d",
+				 sampleRate, channels, bits, bufferSize));
         mAudioTrack = new GameAudioTrack(AudioManager.STREAM_MUSIC,
                                          sampleRate,
                                          channelCfg,
                                          audioFormat,
-                                         bufferSize * 2,
+                                         bufferSize,
                                          AudioTrack.MODE_STREAM);
         mAudioTrack.play();
         mAudioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener()
