@@ -229,7 +229,7 @@ FileSystem* ZipFileSystemDriver::Create(const std::string &location,
 	std::string prefix;
 	size_t pos = location.find("::");
 
-	if (pos > 0)
+	if (pos != std::string::npos)
 	{
 	    path = location.substr(0, pos);
 	    prefix = location.substr(pos + 2, location.length() - pos - 2);
