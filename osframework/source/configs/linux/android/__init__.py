@@ -50,17 +50,26 @@ def AndroidProgram(env, target, source, **kwargs):
                  '-L' + os.path.join(archdir, 'usr', 'lib'),
                  '-L' + os.path.join(env['gccdir'], env['gccabi'], 'lib', 'interwork'),
                  '-L' + os.path.join(env['gccdir'], env['gccabi'], 'lib'),
+                 '-L' + os.path.join(env['gccdir'], 'lib', 'gcc', env['gccabi'],
+                                     env['gccver'], 'interwork'),
                  os.path.join(archdir, 'usr', 'lib', "crtend_android.o"),
                  os.path.join(archdir, 'usr', 'lib', "crtbegin_dynamic.o"),
                  "-lc", '-ldl']
-    source += [os.path.join(env['gccdir'], 'lib', 'gcc', env['gccabi'],
-                            env['gccver'], 'interwork', 'libgcc.a'),
-               os.path.join(archdir, 'usr', 'lib', 'libc.a')]
+    libc = os.path.join(archdir, 'usr', 'lib', 'libc.a')
+    source += [libc]
     if 'LINKFLAGS' in kwargs:
         linkflags += kwargs['LINKFLAGS']
     else:
         linkflags += env['LINKFLAGS']
     kwargs['LINKFLAGS'] = linkflags
+
+    libs = []
+    if 'LIBS' in kwargs:
+        libs += kwargs['LIBS']
+    else:
+        libs += env['LIBS']
+    libs += ['gcc']
+    kwargs['LIBS'] = libs
     return env.OldProgram(target, source, **kwargs)
 
 def AndroidSharedLibrary(env, target, source, **kwargs):
