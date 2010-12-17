@@ -28,7 +28,7 @@ gameenv['ANDROID_LAUNCHER'] = origsrcdir
 
 ### setup package info
 linkflags = []
-libs = ['GameLauncher']
+libs = ['GameLauncher', 'log']
 objects = launcher
 configs.SetPackageInfo([env, gameenv], 'android',
                        LIBS = libs,
