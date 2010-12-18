@@ -28,6 +28,7 @@ GameInit()
     LOGI("current working directory: %s\n", path);
     LOGI("starting Hungarr2...\n");
     app = new GameApp();
+    app->mAllowSleep = false;
     LOGI("Initalizing Hungarr2...\n");
     app->Init();
     LOGI("Hungarr2 intialized.\n");

@@ -715,6 +715,10 @@ class Board :	public Widget, public ButtonListener
 		//////////////////////////////////////////////////////////////////////////
 		virtual void	MouseDrag(int x, int y);
 
+
+		virtual void    TouchDown(int id, int x, int y, int tapCount);
+		virtual void    TouchMove(int id, int x, int y);
+
 		//////////////////////////////////////////////////////////////////////////
 		//	Function: Pause
 		//	Parameters:
