@@ -357,7 +357,7 @@ void GameLauncher::audioWriteData(void* data, size_t size)
 {
     JNIEnv* env = 0;
 
-    LOGI("Writing audio data...");
+    //LOGI("Writing audio data...");
     if (!mVM)
         return;
 
@@ -401,7 +401,7 @@ void GameLauncher::audioWriteData(void* data, size_t size)
     env->DeleteLocalRef(buf);
     env->DeleteLocalRef(cls);
 
-    LOGI("Writed audio data %p size %zd...", data, size);
+    //LOGI("Writed audio data %p size %zd...", data, size);
 }
 
 int GameLauncher::audioSetReadCallback(GameAudioReadCallback callback,
