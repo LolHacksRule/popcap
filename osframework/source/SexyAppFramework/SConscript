@@ -197,6 +197,7 @@ if gameenv['static']:
     if 'XGLES' in env['DRIVERS']:
         gameenv['XGLES']['ENABLE'](gameenv)
     if 'ANDROIDGLES' in env['DRIVERS']:
+        configs.EnablePackage(gameenv, 'android')
         gameenv['ANDROIDGLES']['ENABLE'](gameenv)
     if 'LINUXINPUT' in env['DRIVERS']:
         gameenv['LINUXINPUT']['ENABLE'](gameenv)
