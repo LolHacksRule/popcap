@@ -458,11 +458,13 @@ public class GameView extends GLSurfaceView {
     }
 
     public boolean onKeyDown(final int keyCode, final KeyEvent event) {
+	final KeyEvent evt = new KeyEvent(event);
+
         queueEvent(new Runnable() {
                 // This method will be called on the rendering
                 // thread:
                 public void run() {
-                    renderer.handleKeyDown(keyCode, event);
+                    renderer.handleKeyDown(keyCode, evt);
                 }
             }
         );
@@ -470,11 +472,13 @@ public class GameView extends GLSurfaceView {
     }
 
     public boolean onKeyUp(final int keyCode, final KeyEvent event) {
+	final KeyEvent evt = new KeyEvent(event);
+
         queueEvent(new Runnable() {
                 // This method will be called on the rendering
                 // thread:
                 public void run() {
-                    renderer.handleKeyUp(keyCode, event);
+                    renderer.handleKeyUp(keyCode, evt);
                 }
             }
         );
@@ -483,11 +487,13 @@ public class GameView extends GLSurfaceView {
 
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
+	final MotionEvent evt = MotionEvent.obtain(event);
+
         queueEvent(new Runnable() {
                 // This method will be called on the rendering
                 // thread:
                 public void run() {
-                    renderer.handleTouch(event);
+                    renderer.handleTouch(evt);
                 }
             }
         );
