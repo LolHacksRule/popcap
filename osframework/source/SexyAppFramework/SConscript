@@ -59,83 +59,122 @@ else:
 #dummy sound manager
 srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
 
-if 'DIRECTFB' in env['DRIVERS']:
-    srcs += ["DFBImage.cpp", "DFBDisplay.cpp"]
-    env['DIRECTFB']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_DFB_DRIVER'])
+dfb_driver = {
+    'src' : ["DFBImage.cpp", "DFBDisplay.cpp"],
+    'CPPDEFINES' : ['SEXY_DFB_DRIVER'],
+    'PACKAGES' : []
+}
 
-if 'AGL' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
-    srcs += ["AGLDisplay.mm"]
-    env['AGL']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_AGL_DRIVER'])
+agl_driver = {
+    'src' : ["GLImage.cpp", "GLDisplay.cpp", "AGLDisplay.mm"],
+    'CPPDEFINES' : ['SEXY_AGL_DRIVER']
+}
 
-if 'EAGL' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
-    srcs += ["EAGLDisplay.mm", "EAGLView.m"]
-    env['EAGL']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_EAGL_DRIVER', 'SEXY_OPENGLES'])
+eagl_driver = {
+    'src' : ["GLImage.cpp", "GLDisplay.cpp", "EAGLDisplay.mm", "EAGLView.m"],
+    'CPPDEFINES' : ['SEXY_EAGL_DRIVER', 'SEXY_OPENGLES']
+}
 
-if 'GLX' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
-    srcs += ["GLXDisplay.cpp"]
-    env['GLX']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_GLX_DRIVER'])
+glx_driver = {
+    'src' : ["GLImage.cpp", "GLDisplay.cpp", "GLXDisplay.cpp"],
+    'CPPDEFINES' : ['SEXY_GLX_DRIVER']
+}
 
-if 'WGL' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
-    srcs += ["WGLDisplay.cpp"]
-    env['WGL']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_WGL_DRIVER'])
+wgl_driver = {
+    'src' : ["GLImage.cpp", "GLDisplay.cpp", "WGLDisplay.cpp"],
+    'CPPDEFINES' : ['SEXY_WGL_DRIVER']
+}
 
-if 'CEGLES' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLDislay.cpp"]
-    srcs += ["CEGLESDisplay.cpp"]
-    env['CEGLES']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_CEGLES_DRIVER'])
+cegles_driver = {
+    'src' : ["GLImage.cpp", "GLDislay.cpp", "CEGLESDisplay.cpp"],
+    'CPPDEFINES' : ['SEXY_CEGLES_DRIVER']
+}
 
-if 'XGLES' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", "GLDisplay.cpp"]
-    srcs += ["XGLESDisplay.cpp"]
-    env['XGLES']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_XGLES_DRIVER'])
+xgles_driver = {
+    'src' : ["GLImage.cpp", "GLDisplay.cpp", "XGLESDisplay.cpp"],
+    'CPPDEFINES' : ['SEXY_XGLES_DRIVER']
+}
 
-if 'ANDROIDGLES' in env['DRIVERS']:
-    srcs += ["GLImage.cpp", 'GLDisplay.cpp', "AndroidDisplay.cpp"]
-    env['ANDROIDGLES']['ENABLE'](env)
-    configs.EnablePackage(env, 'android')
-    env.AppendUnique(CPPDEFINES = ['SEXY_ANDROIDGLES_DRIVER'])
+androidgles_driver = {
+    'src' : ["GLImage.cpp", 'GLDisplay.cpp', "AndroidDisplay.cpp"],
+    'PACKAGES' : ['android'],
+    'CPPDEFINES' : ['SEXY_ANDROIDGLES_DRIVER']
+}
 
-if 'LINUXINPUT' in env['DRIVERS']:
-    srcs += ["LinuxInputDriver.cpp"]
-    env['LINUXINPUT']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_LINUX_INPUT_DRIVER'])
+linuxinput_driver = {
+    'src' : ["LinuxInputDriver.cpp"],
+    'CPPDEFINES' : ['SEXY_LINUX_INPUT_DRIVER']
+}
 
-if 'UDPINPUT' in env['DRIVERS']:
-    srcs += ["UdpInputDriver.cpp"]
-    env['UDPINPUT']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_UDP_INPUT_DRIVER'])
+udpinput_driver = {
+    'src' : ["UdpInputDriver.cpp"],
+    'CPPDEFINES' : ['SEXY_UDP_INPUT_DRIVER']
+}
 
-if 'GSTSOUND' in env['DRIVERS']:
-    srcs += ["GstSoundManager.cpp", 'GstSoundInstance.cpp',
-             'GstMusicInterface.cpp', 'GstPakSrc.cpp']
-    env['GSTSOUND']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_GST_SOUND_DRIVER'])
+gstsound_driver = {
+    'src' : ["GstSoundManager.cpp", 'GstSoundInstance.cpp',
+             'GstMusicInterface.cpp', 'GstPakSrc.cpp'],
+    'CPPDEFINES' : ['SEXY_GST_SOUND_DRIVER']
+}
 
-if 'AUDIERESOUND' in env['DRIVERS']:
-    srcs += ["AudiereSoundManager.cpp", 'AudiereSoundInstance.cpp',
+audieresound_driver = {
+    'src' : ["AudiereSoundManager.cpp", 'AudiereSoundInstance.cpp',
              'AudiereMusicInterface.cpp', 'AudiereLoader.cpp',
-             'AudierePakFile.cpp']
-    env['AUDIERESOUND']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_AUDIERE_SOUND_DRIVER'])
-    configs.EnablePackage(env, 'audiere')
+             'AudierePakFile.cpp'],
+    'CPPDEFINES' : ['SEXY_AUDIERE_SOUND_DRIVER'],
+    'PACKAGES' : ['audiere']
+}
 
-if 'OPENALSOUND' in env['DRIVERS']:
-    srcs += ["OpenALSoundManager.cpp", 'OpenALSoundInstance.cpp',
-             'OpenALManager.cpp']
-    env['OPENALSOUND']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_OPENAL_SOUND_DRIVER'])
-    configs.EnablePackage(env, 'ogg')
+openalsound_driver = {
+    'src' : ["OpenALSoundManager.cpp", 'OpenALSoundInstance.cpp',
+             'OpenALManager.cpp'],
+    'CPPDEFINES' : ['SEXY_OPENAL_SOUND_DRIVER'],
+    'PACKAGES' : ['ogg']
+}
+
+freetypefont_driver = {
+    'src' : ["FreeTypeFontMap.cpp", 'FreeTypeBaseFont.cpp',
+             'FreeTypeScaledFont.cpp', 'FreeTypeFont.cpp'],
+    'CPPDEFINES' : ['SEXY_FREETYPE_FONT'],
+    'PACKAGES' : ['freetype']
+}
+
+drivers = {
+    'DIRECTFB' : dfb_driver,
+    'AGL' : agl_driver,
+    'EAGL' : eagl_driver,
+    'GLX' : glx_driver,
+    'WGL' : wgl_driver,
+    'CEGLES' : cegles_driver,
+    'XGLES' : xgles_driver,
+    'ANDROIDGLES' : androidgles_driver,
+    'LINUXINPUT' : linuxinput_driver,
+    'UDPINPUT' : udpinput_driver,
+    'AUDIERESOUND' : audieresound_driver,
+    'GSTSOUND' : gstsound_driver,
+    'OPENALSOUND' : openalsound_driver,
+    'FREETYPEFONT' : freetypefont_driver
+}
+
+def EnableDrivers(env):
+    global srcs
+    for driver in env['DRIVERS']:
+        if driver not in drivers:
+            print "Warnings: %s isn't handled." % driver
+            continue
+        drivercfg = drivers[driver]
+        srcs += drivercfg['src']
+        env[driver]['ENABLE'](env)
+        flags = {}
+        for flag in ['CCFLAGS', 'CPPFLAGS', 'LIBS']:
+            if flag in drivercfg:
+                flags[flag] = drivercfg[flag]
+        env.AppendUnique(**flags)
+        packages = drivercfg.get('PACKAGES', [])
+        if packages:
+            configs.EnablePackages(env, packages)
+
+EnableDrivers(env)
 
 if env['TARGET_OS'] == 'win32':
     srcs += ["DSoundManager.cpp", 'DSoundInstance.cpp',
@@ -159,14 +198,6 @@ if 'WIN32_MODULE_LOADER' in env['LOADERS']:
 #c module input driver
 # srcs += ['ModuleInputDriver.cpp']
 
-if 'FREETYPEFONT' in env['DRIVERS']:
-    freetype_srcs = ["FreeTypeFontMap.cpp", 'FreeTypeBaseFont.cpp',
-                     'FreeTypeScaledFont.cpp', 'FreeTypeFont.cpp']
-    srcs += freetype_srcs
-    env['FREETYPEFONT']['ENABLE'](env)
-    env.AppendUnique(CPPDEFINES = ['SEXY_FREETYPE_FONT'])
-    configs.EnablePackage(env, 'freetype')
-
 if not env['keyboard']:
     env.AppendUnique(CPPDEFINES = ['SEXY_NO_KEYBOARD'])
 
@@ -182,39 +213,20 @@ if env['TARGET_OS'] == 'win32':
 configs.EnablePackages([env, gameenv], ['zziplib', 'zlib'])
 
 if gameenv['static']:
-    if 'DIRECTFB' in env['DRIVERS']:
-        gameenv['DIRECTFB']['ENABLE'](gameenv)
-    if 'AGL' in env['DRIVERS']:
-        gameenv['AGL']['ENABLE'](gameenv)
-    if 'EAGL' in env['DRIVERS']:
-        gameenv['EAGL']['ENABLE'](gameenv)
-    if 'GLX' in env['DRIVERS']:
-        gameenv['GLX']['ENABLE'](gameenv)
-    if 'WGL' in env['DRIVERS']:
-        gameenv['WGL']['ENABLE'](gameenv)
-    if 'CEGLES' in env['DRIVERS']:
-        gameenv['CEGLES']['ENABLE'](gameenv)
-    if 'XGLES' in env['DRIVERS']:
-        gameenv['XGLES']['ENABLE'](gameenv)
+    for driver in env['DRIVERS']:
+        gameenv[driver]['ENABLE'](gameenv)
+
     if 'ANDROIDGLES' in env['DRIVERS']:
         configs.EnablePackage(gameenv, 'android')
-        gameenv['ANDROIDGLES']['ENABLE'](gameenv)
-    if 'LINUXINPUT' in env['DRIVERS']:
-        gameenv['LINUXINPUT']['ENABLE'](gameenv)
-    if 'GSTSOUND' in env['DRIVERS']:
-        gameenv['GSTSOUND']['ENABLE'](gameenv)
     if 'AUDIERESOUND' in env['DRIVERS']:
-        gameenv['AUDIERESOUND']['ENABLE'](gameenv)
         configs.EnablePackage(gameenv, 'audiere')
     if 'OPENALSOUND' in env['DRIVERS']:
-        gameenv['OPENALSOUND']['ENABLE'](gameenv)
         configs.EnablePackage(gameenv, 'ogg', append = False)
 
     if 'POSIXMODULELOADER' in env['LOADERS']:
         gameenv['POSIXMODULELOADER']['ENABLE'](gameenv)
 
     if 'FREETYPEFONT' in env['DRIVERS']:
-        gameenv['FREETYPEFONT']['ENABLE'](gameenv)
         configs.EnablePackage(gameenv, 'freetype')
 
     gameenv.PrependUnique(LIBS = ['ImageLib', 'PakLib'],
