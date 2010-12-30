@@ -61,49 +61,67 @@ srcs += ["DummySoundManager.cpp", "DummySoundInstance.cpp"]
 
 dfb_driver = {
     'src' : ["DFBImage.cpp", "DFBDisplay.cpp"],
-    'CPPDEFINES' : ['SEXY_DFB_DRIVER'],
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_DFB_DRIVER'],
+    },
     'PACKAGES' : []
 }
 
 agl_driver = {
     'src' : ["GLImage.cpp", "GLDisplay.cpp", "AGLDisplay.mm"],
-    'CPPDEFINES' : ['SEXY_AGL_DRIVER']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_AGL_DRIVER']
+    }
 }
 
 eagl_driver = {
     'src' : ["GLImage.cpp", "GLDisplay.cpp", "EAGLDisplay.mm", "EAGLView.m"],
-    'CPPDEFINES' : ['SEXY_EAGL_DRIVER', 'SEXY_OPENGLES']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_EAGL_DRIVER', 'SEXY_OPENGLES']
+    }
 }
 
 glx_driver = {
     'src' : ["GLImage.cpp", "GLDisplay.cpp", "GLXDisplay.cpp"],
-    'CPPDEFINES' : ['SEXY_GLX_DRIVER']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_GLX_DRIVER']
+    }
 }
 
 wgl_driver = {
     'src' : ["GLImage.cpp", "GLDisplay.cpp", "WGLDisplay.cpp"],
-    'CPPDEFINES' : ['SEXY_WGL_DRIVER']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_WGL_DRIVER']
+    }
 }
 
 cegles_driver = {
     'src' : ["GLImage.cpp", "GLDislay.cpp", "CEGLESDisplay.cpp"],
-    'CPPDEFINES' : ['SEXY_CEGLES_DRIVER']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_CEGLES_DRIVER']
+     }
 }
 
 xgles_driver = {
     'src' : ["GLImage.cpp", "GLDisplay.cpp", "XGLESDisplay.cpp"],
-    'CPPDEFINES' : ['SEXY_XGLES_DRIVER']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_XGLES_DRIVER']
+    }
 }
 
 androidgles_driver = {
     'src' : ["GLImage.cpp", 'GLDisplay.cpp', "AndroidDisplay.cpp"],
     'PACKAGES' : ['android'],
-    'CPPDEFINES' : ['SEXY_ANDROIDGLES_DRIVER']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_ANDROIDGLES_DRIVER']
+    }
 }
 
 linuxinput_driver = {
     'src' : ["LinuxInputDriver.cpp"],
-    'CPPDEFINES' : ['SEXY_LINUX_INPUT_DRIVER']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_LINUX_INPUT_DRIVER']
+    }
 }
 
 udpinput_driver = {
@@ -114,28 +132,36 @@ udpinput_driver = {
 gstsound_driver = {
     'src' : ["GstSoundManager.cpp", 'GstSoundInstance.cpp',
              'GstMusicInterface.cpp', 'GstPakSrc.cpp'],
-    'CPPDEFINES' : ['SEXY_GST_SOUND_DRIVER']
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_GST_SOUND_DRIVER']
+    }
 }
 
 audieresound_driver = {
     'src' : ["AudiereSoundManager.cpp", 'AudiereSoundInstance.cpp',
              'AudiereMusicInterface.cpp', 'AudiereLoader.cpp',
              'AudierePakFile.cpp'],
-    'CPPDEFINES' : ['SEXY_AUDIERE_SOUND_DRIVER'],
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_AUDIERE_SOUND_DRIVER'],
+     },
     'PACKAGES' : ['audiere']
 }
 
 openalsound_driver = {
     'src' : ["OpenALSoundManager.cpp", 'OpenALSoundInstance.cpp',
              'OpenALManager.cpp'],
-    'CPPDEFINES' : ['SEXY_OPENAL_SOUND_DRIVER'],
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_OPENAL_SOUND_DRIVER'],
+    },
     'PACKAGES' : ['ogg']
 }
 
 freetypefont_driver = {
     'src' : ["FreeTypeFontMap.cpp", 'FreeTypeBaseFont.cpp',
              'FreeTypeScaledFont.cpp', 'FreeTypeFont.cpp'],
-    'CPPDEFINES' : ['SEXY_FREETYPE_FONT'],
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_FREETYPE_FONT'],
+    },
     'PACKAGES' : ['freetype']
 }
 
@@ -165,11 +191,9 @@ def EnableDrivers(env):
         drivercfg = drivers[driver]
         srcs += drivercfg['src']
         env[driver]['ENABLE'](env)
-        flags = {}
-        for flag in ['CCFLAGS', 'CPPFLAGS', 'LIBS']:
-            if flag in drivercfg:
-                flags[flag] = drivercfg[flag]
-        env.AppendUnique(**flags)
+        flags = drivercfg.get('flags', {})
+        if flags:
+            env.AppendUnique(**flags)
         packages = drivercfg.get('PACKAGES', [])
         if packages:
             configs.EnablePackages(env, packages)
