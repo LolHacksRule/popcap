@@ -477,7 +477,6 @@ bool XMLParser::NextElement(XMLElement* theElement)
 							}
 							else
 							{
-								printf ("theElement->mType %d %s\n", theElement->mType, theElement->mValue.c_str());
 								Fail(_S("Unexpected '<'"));
 								return false;
 							}
@@ -598,7 +597,6 @@ bool XMLParser::NextElement(XMLElement* theElement)
 							}
 							else if (theElement->mType != XMLElement::TYPE_CDATA)
 							{
-								printf ("theElement->mType %d\n", theElement->mType);
 								Fail(_S("Unexpected '>'"));
 								return false;
 							}
