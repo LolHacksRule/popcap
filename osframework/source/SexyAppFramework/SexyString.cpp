@@ -125,7 +125,7 @@ unichar_t* Sexy::ustrpbrk(const unichar_t *s, const unichar_t *accept)
 
 	for (s2 = accept; *s2; s2++)
 	    if (*s1 == *s2)
-		return (unichar_t*)(s1 - 1);
+		return (unichar_t*)s1;
     }
 
     return 0;
