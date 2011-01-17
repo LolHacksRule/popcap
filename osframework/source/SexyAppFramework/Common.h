@@ -257,6 +257,8 @@ namespace Sexy
 						    const std::string& theDir);
 	bool				AllowAllAccess(const std::string& theFileName);
 
+	bool                            GetEnvOption(const char *option,  bool value = false);
+	int                             GetEnvIntOption(const char *option, int value = 0);
 
 	inline void			inlineUpper(std::string &theData)
 	{

@@ -1742,3 +1742,31 @@ bool Sexy::StrPrefixNoCase(const char *theStr, const char *thePrefix, int maxLen
 
 	return c2==0 || i==maxLength;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+bool Sexy::GetEnvOption(const char *option,  bool value)
+{
+	const char *s;
+
+	s = getenv (option);
+	if (s && (!strcmp(s, "1") || !strcmp(s, "yes") ||
+		  !strcmp(s, "true") || !strcmp(s, "True")))
+		value = true;
+	else if (s && (!strcmp(s, "0") || !strcmp(s, "no") ||
+		       !strcmp(s, "false") || !strcmp(s, "False")))
+		value = false;
+	return value;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+int Sexy::GetEnvIntOption(const char *option, int value)
+{
+	const char *s;
+
+	s = getenv (option);
+	if (s)
+		return atoi(s);
+	return value;
+}
