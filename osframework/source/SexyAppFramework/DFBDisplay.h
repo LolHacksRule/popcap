@@ -28,6 +28,8 @@ public:
 
 	IDirectFB			      * mDFB;
 	IDirectFBSurface		      * mPrimarySurface;
+	IDirectFBSurface                      * mBackSurface;
+	DFBRectangle                            mViewport;
 
 	bool					mIs3D;
 
@@ -53,6 +55,7 @@ public:
 	Image*					GetScreenImage();
 	int					Init();
 	bool					Redraw(Rect* theClipRect = NULL);
+	void                                    SwapBuffers();
 	void					SetVideoOnlyDraw(bool videoOnly);
 	void					RemapMouse(int& theX, int& theY);
 

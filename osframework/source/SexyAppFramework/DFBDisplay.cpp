@@ -62,10 +62,12 @@ int DFBDisplay::Init(void)
 	DFBResult ret;
 	mInitialized = false;
 
-	if (!mDFB) {
+	if (!mDFB)
+	{
 		DirectFBInit(NULL, NULL);
 		ret = DirectFBCreate(&mDFB);
-		DBG_ASSERT(ret == DFB_OK);
+		if (ret != DFB_OK)
+			return -1;
 		//mDFB->SetCooperativeLevel(mDFB, DFSCL_FULLSCREEN);
 		//mDFB->SetCooperativeLevel(mDFB, DFSCL_EXCLUSIVE);
 	}
@@ -74,16 +76,16 @@ int DFBDisplay::Init(void)
 	mHeight = mApp->mHeight;
 
 	ret = mDFB->GetDisplayLayer (mDFB, DLID_PRIMARY, &mLayer);
-	DBG_ASSERT (ret == DFB_OK);
+	if (ret != DFB_OK)
+		return -1;
 
 	DFBDisplayLayerConfig layer_config;
 	mLayer->GetConfiguration (mLayer, &layer_config);
 
 	DFBDisplayLayerDescription layer_desc;
 	mLayer->GetDescription (mLayer, &layer_desc);
-	printf ("Display layer name: %s\n", layer_desc.name);
-	printf ("\t width = %d\n", layer_config.width);
-	printf ("\t height = %d\n", layer_config.height);
+	printf ("DFB: Display layer: %s[%dx%d]\n",
+		layer_desc.name, layer_config.width, layer_config.height);
 
 #if 0
 	layer_config.flags = (DFBDisplayLayerConfigFlags)
@@ -99,17 +101,15 @@ int DFBDisplay::Init(void)
 	DBG_ASSERT (ret == DFB_OK);
 
 	IDirectFBSurface * surface = 0;
-	bool perferWindow = true;
+	bool preferWindow = true;
 
 #if defined(SEXY_INTEL_CANMORE) || defined(SEXY_INTEL_OLO) || defined(SEXY_ST_SH4)
-	perferWindow = false;
-	if (getenv ("SEXY_DFB_PERFER_WINDOW"))
-		perferWindow = true;
+	preferWindow = false;
 #endif
-	if (getenv ("SEXY_DFB_NO_WINDOW"))
-		perferWindow = false;
+	preferWindow = GetEnvOption ("SEXY_DFB_PREFER_WINDOW", preferWindow);
+	printf("DFB: Using a DirectFBWindow ? %s\n", preferWindow ? "true" : "false");
 
-	if (perferWindow)
+	if (preferWindow)
 	{
 		DFBWindowDescription window_desc;
 
@@ -287,6 +287,23 @@ bool DFBDisplay::Redraw(Rect* theClipRect)
 				       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
 
 	return true;
+}
+
+void DFBDisplay::SwapBuffers()
+{
+	if (!mPrimarySurface)
+		return;
+
+	if (mBackSurface)
+	{
+		DFBSurfaceBlittingFlags flags = DSBLIT_NOFX;
+
+		mPrimarySurface->SetBlittingFlags(mPrimarySurface, flags);
+		mPrimarySurface->SetColor(mPrimarySurface, 0xff, 0xff, 0xff, 0xff);
+		mPrimarySurface->StretchBlit(mPrimarySurface, mBackSurface, 0, &mViewport);
+	}
+
+	mPrimarySurface->Flip (mPrimarySurface, NULL, DSFLIP_WAIT);
 }
 
 bool DFBDisplay::EnableCursor(bool enable)
