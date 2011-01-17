@@ -817,8 +817,6 @@ void DFBImage::Flip(enum FlipFlags flags)
 	if (!mSurface)
 		return;
 
-	if ((mCaps & DSCAPS_PRIMARY) || mSurface == mInterface->mPrimarySurface)
-		flags = (FlipFlags)(flags | FLIP_BLIT);
 	DFBSurfaceFlipFlags  dfbflags = DSFLIP_NONE;
 	if (flags & FLIP_BLIT)
 		dfbflags = (DFBSurfaceFlipFlags)(dfbflags | DSFLIP_BLIT);

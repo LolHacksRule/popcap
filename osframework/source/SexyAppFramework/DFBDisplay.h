@@ -32,6 +32,7 @@ public:
 	DFBRectangle                            mViewport;
 
 	bool					mIs3D;
+	bool                                    mIsWindowed;
 
 	bool					mInRedraw;
 
@@ -58,6 +59,7 @@ public:
 	void                                    SwapBuffers();
 	void					SetVideoOnlyDraw(bool videoOnly);
 	void					RemapMouse(int& theX, int& theY);
+	void					UnmapMouse(int& theX, int& theY);
 
 	virtual bool				EnableCursor(bool enable);
 	virtual bool				SetCursorImage(Image* theImage, int theHotX = 0, int theHotY = 0);

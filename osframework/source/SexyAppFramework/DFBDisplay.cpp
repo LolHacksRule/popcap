@@ -18,6 +18,7 @@ DFBDisplay::DFBDisplay(SexyAppBase* theApp)
 	mApp = theApp;
 	mDFB = NULL;
 	mPrimarySurface = NULL;
+	mBackSurface = NULL;
 	mScreenImage = NULL;
 	mInitialized = false;
 	mVideoOnlyDraw = false;
@@ -87,18 +88,7 @@ int DFBDisplay::Init(void)
 	printf ("DFB: Display layer: %s[%dx%d]\n",
 		layer_desc.name, layer_config.width, layer_config.height);
 
-#if 0
-	layer_config.flags = (DFBDisplayLayerConfigFlags)
-		(DLCONF_BUFFERMODE | DLCONF_OPTIONS);
-	layer_config.buffermode = DLBM_BACKVIDEO;
-	layer_config.options = DLOP_ALPHACHANNEL;
-
-	ret = mLayer->SetConfiguration (mLayer, &layer_config);
-	/* DBG_ASSERT (ret == DFB_OK); */
-#endif
-
 	ret = mLayer->SetCooperativeLevel (mLayer, DLSCL_ADMINISTRATIVE);
-	DBG_ASSERT (ret == DFB_OK);
 
 	IDirectFBSurface * surface = 0;
 	bool preferWindow = true;
@@ -107,10 +97,12 @@ int DFBDisplay::Init(void)
 	preferWindow = false;
 #endif
 	preferWindow = GetEnvOption ("SEXY_DFB_PREFER_WINDOW", preferWindow);
-	printf("DFB: Using a DirectFBWindow ? %s\n", preferWindow ? "true" : "false");
 
+	mIsWindowed = mApp->mIsWindowed;
 	if (preferWindow)
 	{
+		printf("DFB: Creating an IDirectFBWindow...\n");
+
 		DFBWindowDescription window_desc;
 
 		window_desc.flags =
@@ -118,7 +110,7 @@ int DFBDisplay::Init(void)
 						    DWDESC_POSX | DWDESC_POSY);
 		window_desc.caps = (DFBWindowCapabilities)(DWCAPS_ALPHACHANNEL | DWCAPS_DOUBLEBUFFER |
 							   DWCAPS_NODECORATION);
-		if (mApp->mIsWindowed)
+		if (mIsWindowed)
 		{
 			window_desc.width = mWidth;
 			window_desc.height = mHeight;
@@ -132,14 +124,18 @@ int DFBDisplay::Init(void)
 			window_desc.posx = 0;
 			window_desc.posy = 0;
 		}
-
+		printf("DFB: Window geometry: %dx%d@%dx%d\n",
+		       window_desc.width, window_desc.height,
+		       window_desc.posx, window_desc.posy);
 		ret = mLayer->CreateWindow (mLayer, &window_desc, &mWindow);
-		DBG_ASSERT (ret == DFB_OK);
+		if (ret != DFB_OK)
+			return -1;
 		mWindow->SetOpacity (mWindow, 255);
 		mWindow->RaiseToTop (mWindow);
 
 		ret = mWindow->GetSurface (mWindow, &surface);
-		DBG_ASSERT (ret == DFB_OK);
+		if (ret != DFB_OK)
+			return -1;
 	}
 	else
 	{
@@ -147,61 +143,72 @@ int DFBDisplay::Init(void)
 		mSoftCursor = true;
 	}
 
-#if 0
-	DFBSurfaceDescription surface_desc;
-#endif
-	int width, height;
-
-#if 0
-	surface_desc.flags = DSDESC_CAPS;
-	surface_desc.caps =
-		(DFBSurfaceCapabilities)(DSCAPS_PRIMARY | DSCAPS_VIDEOONLY | DSCAPS_DOUBLE);
-	ret = mDFB->CreateSurface(mDFB, &surface_desc, &surface);
-	if (ret != DFB_OK) {
-		surface_desc.caps =
-			(DFBSurfaceCapabilities)(surface_desc.caps  & ~DSCAPS_DOUBLE);
-		ret = mDFB->CreateSurface(mDFB, &surface_desc, &surface);
-		DBG_ASSERT (ret == DFB_OK);
-	}
-#else
 	if (!surface)
 		ret = mLayer->GetSurface (mLayer, &surface);
-	DBG_ASSERT(surface != NULL);
-#endif
+
+	if (!surface)
+		return -1;
+
+	int width, height;
+
 	surface->GetSize (surface, &width, &height);
-	surface->Clear (surface, 0, 0, 0, 0);
-	surface->Flip (surface, 0,
-		       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
-	surface->Clear (surface, 0, 0, 0, 0);
-	surface->Flip (surface, 0,
-		       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
+
+	IDirectFBSurface *backSurface = 0;
+	DFBSurfacePixelFormat format;
+	if (surface->GetPixelFormat(surface, &format) != DFB_OK ||
+	    format != DSPF_ARGB || width != mWidth || height != mHeight)
+	{
+		DFBSurfaceDescription desc;
+
+		desc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_WIDTH |
+							  DSDESC_HEIGHT |
+							  DSDESC_PIXELFORMAT);
+		desc.width = mWidth;
+		desc.height = mHeight;
+		desc.pixelformat = DSPF_ARGB;
+		ret = mDFB->CreateSurface(mDFB, &desc, &backSurface);
+		if (ret != DFB_OK)
+			return -1;
+		printf("DFB: Created a back surface(%dx%d).\n", mWidth, mHeight);
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		surface->Clear (surface, 0, 0, 0, 0);
+		surface->Flip (surface, 0,
+			       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
+	}
+
+	IDirectFBSurface *drawSurface = backSurface ? backSurface : surface;
+
+	int drawWidth, drawHeight;
+	drawSurface->GetSize (drawSurface, &drawWidth, &drawHeight);
 
 	mPrimarySurface = surface;
-	mWidth = width;
-	mHeight = height;
-	mDisplayWidth = mWidth;
-	mDisplayHeight = mHeight;
+	mBackSurface = backSurface;
+	mWidth = drawWidth;
+	mHeight = drawHeight;
+	mDisplayWidth = drawWidth;
+	mDisplayHeight = drawHeight;
 	mPresentationRect.mX = 0;
 	mPresentationRect.mY = 0;
 	mPresentationRect.mWidth = mDisplayWidth;
 	mPresentationRect.mHeight = mDisplayHeight;
 
-	mScreenImage = new DFBImage(surface, this);
+	mViewport.x = 0;
+	mViewport.y = 0;
+	mViewport.w = width;
+	mViewport.h = height;
+
+	drawSurface->AddRef(drawSurface);
+	mScreenImage = new DFBImage(drawSurface, this);
 	mScreenImage->mFlags = (ImageFlags)IMAGE_FLAGS_DOUBLE_BUFFER;
 
-#if 0
-	DFBInputDeviceID id = (DFBInputDeviceID)0xffffffff;
-	ret = mDFB->GetInputDevice (mDFB, id, &mInput);
-	DBG_ASSERT (ret == DFB_OK);
-	ret = mInput->CreateEventBuffer (mInput, &mBuffer);
-	DBG_ASSERT (ret == DFB_OK);
-#endif
 	if (mWindow)
 		ret = mWindow->CreateEventBuffer (mWindow, &mBuffer);
 	else
 		ret = mDFB->CreateInputEventBuffer (mDFB, DICAPS_ALL, DFB_TRUE,
 						    &mBuffer);
-	DBG_ASSERT (ret == DFB_OK);
 
 	mInitCount++;
 	mInitialized = true;
@@ -214,8 +221,22 @@ void DFBDisplay::SetVideoOnlyDraw(bool videoOnlyDraw)
 	mVideoOnlyDraw = videoOnlyDraw;
 }
 
+void DFBDisplay::UnmapMouse(int& theX, int& theY)
+{
+	if (mInitialized && mBackSurface)
+	{
+		theX = theX * mViewport.w / mWidth + mViewport.x;
+		theY = theY * mViewport.h / mHeight + mViewport.y;
+	}
+}
+
 void DFBDisplay::RemapMouse(int& theX, int& theY)
 {
+	if (mInitialized && mBackSurface)
+	{
+		theX = (theX - mViewport.x) * mWidth / mViewport.w;
+		theY = (theY - mViewport.y) * mHeight / mViewport.h;
+	}
 }
 
 ulong DFBDisplay::GetColorRef(ulong theRGB)
@@ -257,8 +278,9 @@ void DFBDisplay::Cleanup()
 		mScreenImage = NULL;
 	}
 
-	if (mPrimarySurface)
-		mPrimarySurface = NULL;
+	if (mBackSurface)
+		mBackSurface->Release (mBackSurface);
+	mBackSurface = NULL;
 
 	if (mWindow)
 		mWindow->Release (mWindow);
@@ -267,6 +289,10 @@ void DFBDisplay::Cleanup()
 	if (mLayer)
 		mLayer->Release (mLayer);
 	mLayer = NULL;
+
+	if (mPrimarySurface)
+		mPrimarySurface->Release(mPrimarySurface);
+	mPrimarySurface = NULL;
 
 	mCursorX = 0;
 	mCursorY = 0;
@@ -282,10 +308,7 @@ bool DFBDisplay::Redraw(Rect* theClipRect)
 	if (!mInitialized)
 		return false;
 
-	if (mPrimarySurface)
-		mPrimarySurface->Flip (mPrimarySurface, 0,
-				       (DFBSurfaceFlipFlags)(DSFLIP_BLIT));
-
+	SwapBuffers();
 	return true;
 }
 
@@ -366,6 +389,9 @@ void DFBDisplay::SetCursorPos(int theCursorX, int theCursorY)
 			theCursorX += x;
 			theCursorY += y;
 		}
+
+		// convert back to window coords
+		UnmapMouse(theCursorX, theCursorY);
 		mLayer->WarpCursor (mLayer, theCursorX, theCursorY);
 	}
 }
@@ -398,27 +424,24 @@ IDirectFBSurface* DFBDisplay::CreateDFBSurface(int width, int height)
 {
 	IDirectFBSurface * aSurface;
 
-	if (!mInitialized)
-	{
+	if (!mDFB)
 		return 0;
-	}
-	else if (width && height)
-	{
-		DFBSurfaceDescription desc;
 
-		desc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_WIDTH |
-							  DSDESC_HEIGHT |
-							  DSDESC_PIXELFORMAT |
-							  DSDESC_CAPS);
-		desc.width = width;
-		desc.height = height;
-		desc.pixelformat = DSPF_ARGB;
-		desc.caps = DSCAPS_PREMULTIPLIED;
-		if (mDFB->CreateSurface(mDFB, &desc, &aSurface))
-			return 0;
-	} else {
-		aSurface = 0;
-	}
+	if (!width || !height)
+		return 0;
+
+	DFBSurfaceDescription desc;
+
+	desc.flags = (DFBSurfaceDescriptionFlags)(DSDESC_WIDTH |
+						  DSDESC_HEIGHT |
+						  DSDESC_PIXELFORMAT |
+						  DSDESC_CAPS);
+	desc.width = width;
+	desc.height = height;
+	desc.pixelformat = DSPF_ARGB;
+	desc.caps = DSCAPS_PREMULTIPLIED;
+	if (mDFB->CreateSurface(mDFB, &desc, &aSurface))
+		return 0;
 	return aSurface;
 }
 
@@ -432,7 +455,7 @@ Image* DFBDisplay::CreateImage(SexyAppBase * theApp,
 	{
 		return 0;
 	}
-	else if (width && height && IsMainThread())
+	else if (width && height)
 	{
 		DFBSurfaceDescription desc;
 
@@ -740,6 +763,12 @@ bool DFBDisplay::GetEvent(struct Event &event)
 		event.type = EVENT_NONE;
 		break;
 	}
+
+	if (event.type == EVENT_MOUSE_MOTION ||
+	    event.type == EVENT_MOUSE_BUTTON_RELEASE ||
+	    event.type == EVENT_MOUSE_BUTTON_PRESS)
+		RemapMouse(event.u.mouse.x, event.u.mouse.y);
+
 	return true;
 }
 
