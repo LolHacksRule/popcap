@@ -1099,8 +1099,8 @@ void SexyAppBase::Redraw(Rect* theClipRect)
 	if (gScreenSaverActive)
 		return;
 
-	if (mWidgetManager && mWidgetManager->mImage)
-		mWidgetManager->mImage->Flip(FLIP_WAIT_SYNC);
+	if (mDDInterface)
+		mDDInterface->Redraw();
 	mFPSFlipCount++;
 }
 

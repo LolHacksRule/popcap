@@ -121,7 +121,14 @@ void GLDisplay::Cleanup()
 
 bool GLDisplay::Redraw(Rect* theClipRect)
 {
-    return false;
+	if (!mInitialized)
+		return false;
+
+	if (!mScreenImage)
+		return false;
+
+	SwapBuffers ();
+	return false;
 }
 
 void GLDisplay::SwapBuffers()
