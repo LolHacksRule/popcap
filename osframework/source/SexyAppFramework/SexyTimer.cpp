@@ -12,9 +12,9 @@
 
 DWORD Sexy::GetTickCount()
 {
-#ifdef WIN32
+#if defined(WIN32) || defined(_WIN32)
 	return ::GetTickCount();
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(ANDROID) || defined(__ANDROID__)
 	struct timespec now;
 	DWORD ticks;
 
