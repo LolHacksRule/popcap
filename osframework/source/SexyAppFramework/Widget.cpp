@@ -21,10 +21,9 @@ Widget::Widget()
 	mMouseVisible = true;
 	mHasFocus = false;
 	mHasTransparencies = false;
-	mWantsFocus = false;
+	mWantsFocus = true;
 	mIsSelected = false;
-	mFocusable = true;
-	mFocusColor = Color(255, 255, 0);
+	mFocusColor = Color(80, 80, 80, 80);
 	mFocusRect = Rect(0, 0, -1, -1);
 	mDrawFocusRect = true;
 	mAddToManager = false;
@@ -100,21 +99,26 @@ void Widget::Draw(Graphics* g) // Already translated
 {
 }
 
-void Widget::DrawOther(Graphics* g) // Already translated
+void Widget::DrawFocused(Graphics* g) // Already translated
 {
 #ifndef SEXY_NO_KEYBOARD
-	if (mFocusable && mHasFocus && mDrawFocusRect)
+	if (mWantsFocus && mHasFocus && mDrawFocusRect)
 	{
 		if (mParent && mParent == mWidgetManager)
 			return;
 
 		g->SetColor(mFocusColor);
 		if (mFocusRect.mWidth > 0 && mFocusRect.mWidth)
-			g->DrawRect(mFocusRect);
+			g->FillRect(mFocusRect);
 		else if (mWidth > 0 && mHeight > 0)
-			g->DrawRect(0, 0, mWidth - 1, mHeight - 1);
+			g->FillRect(0, 0, mWidth, mHeight);
 	}
 #endif
+}
+
+void Widget::DrawOther(Graphics* g) // Already translated
+{
+	DrawFocused(g);
 }
 
 void Widget::DrawOverlay(Graphics* g)
@@ -368,7 +372,7 @@ void Widget::UpdateF(float theFrac)
 
 bool Widget::IsFocusable()
 {
-	return mVisible && mFocusable && !mDisabled;
+	return mVisible && mWantsFocus && !mDisabled;
 }
 
 bool Widget::DoKeyChar(SexyChar theChar)

@@ -746,14 +746,9 @@ bool WidgetManager::MouseDown(int x, int y, int theClickCount)
 	mLastDownWidget = aWidget;
 	if (aWidget != NULL)
 	{
-#if 0
 		if (aWidget->WantsFocus())
 			SetFocus(aWidget);
-#else
-		// always update focus
-		if (true)
-			SetFocus(aWidget);
-#endif
+
 		aWidget->mIsDown = true;
 		aWidget->MouseDown(aWidgetX, aWidgetY, theClickCount);
 	}
