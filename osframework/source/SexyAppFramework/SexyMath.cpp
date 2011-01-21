@@ -140,7 +140,12 @@ float fastatan2f(float y, float x)
 			return F_ISPINF(y) ? pi / 4 : -pi / 4;
 	}
 
-	return fasttanf(y / x);
+	float r = fasttanf(y / x);
+	if (y < 0 && r > 0)
+		r -= pi;
+	else if (y > 0 && r < 0)
+		r += pi;
+	return r;
 }
 
 }
