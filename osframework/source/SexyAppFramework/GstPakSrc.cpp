@@ -508,6 +508,9 @@ void gst_pak_src_plugin_register (void)
 			(gchar *)"",
 			(gchar *)"paksrc",
 			(gchar *)"",
+#if (GST_VERSION_MAJOR > 0) || (GST_VERSION_MINOR > 10) || (GST_VERSION_MICRO >= 32)
+			NULL,
+#endif
 			GST_PADDING_INIT
 		};
 
