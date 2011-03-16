@@ -15,29 +15,41 @@ using namespace PakLib;
 class ZipFile: public File
 {
 public:
-	ZipFile(ZZIP_FILE *fp, size_t size) : mFp(fp), mSize(size)
+	ZipFile(ZipFileSystem *filesystem, ZZIP_FILE *fp,
+		size_t size) :
+		mFileSystem(filesystem), mFp(fp), mSize(size)
 	{
 	}
 
 	~ZipFile()
 	{
+		AutoCrit autoCrit(mFileSystem->mCritSect);
 		if (mFp)
 			zzip_close(mFp);
 	}
 
 	int seek(long theOffset, int theOrigin)
 	{
-		return zzip_seek(mFp, theOffset, theOrigin);
+		AutoCrit autoCrit(mFileSystem->mCritSect);
+		if (zzip_seek(mFp, theOffset, theOrigin) < 0)
+			return -1;
+		return 0;
 	}
 
 	int tell()
 	{
+		AutoCrit autoCrit(mFileSystem->mCritSect);
 		return zzip_tell(mFp);
 	}
 
 	size_t read(void* thePtr, int theElemSize, int theCount)
 	{
-		return zzip_fread(thePtr, theElemSize, theCount, mFp);
+		AutoCrit autoCrit(mFileSystem->mCritSect);
+		zzip_ssize_t ret = zzip_fread(thePtr, theElemSize,
+					      theCount, mFp);
+		if (ret < 0)
+			return 0;
+		return ret;
 	}
 
 	size_t write(const void* thePtr, int theElemSize, int theCount)
@@ -91,6 +103,7 @@ public:
 
 	int eof()
 	{
+		AutoCrit autoCrit(mFileSystem->mCritSect);
 		return (size_t)tell() == mSize;
 	}
 
@@ -100,6 +113,7 @@ public:
 	}
 
 private:
+	ZipFileSystem *mFileSystem;
 	ZZIP_FILE *mFp;
 	size_t mSize;
 };
@@ -168,6 +182,8 @@ File* ZipFileSystem::open(const char* theFileName,
 	    theFileName[1] == ':')
 		return 0;
 #endif
+	if (theFileName[0] == '.' && theFileName[1] == '/')
+		theFileName += 2;
 
 	std::string filename;
 
@@ -187,7 +203,7 @@ File* ZipFileSystem::open(const char* theFileName,
 
 		zzip_dir_stat(mZZipDir, filename.c_str(),
 			      &zstat, ZZIP_CASEINSENSITIVE);
-		return new ZipFile(zzipFile, zstat.st_size);
+		return new ZipFile(this, zzipFile, zstat.st_size);
 	}
 
 	return 0;

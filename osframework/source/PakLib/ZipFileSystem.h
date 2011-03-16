@@ -30,6 +30,7 @@ namespace PakLib {
 	 public:
 		ZZIP_DIR*                       mZZipDir;
 		std::string                     mPrefix;
+		CritSect                        mCritSect;
 	};
 
 	class ZipFileSystemDriver: public FileSystemDriver
