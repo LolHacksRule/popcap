@@ -4,7 +4,7 @@
 extern "C" {
 
     int
-    awGetViewSize(int *width, int *height)
+    AGViewGetSize(int *width, int *height)
     {
         GameLauncher* launcher = GameLauncher::getInstance();
 
@@ -17,7 +17,7 @@ extern "C" {
     }
 
     void
-    awAddViewEventListener(awEventListener listener,
+    AGViewAddEventListener(AGEventListener listener,
 			   void* data)
     {
         GameLauncher* launcher = GameLauncher::getInstance();

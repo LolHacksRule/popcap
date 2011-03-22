@@ -6,16 +6,16 @@ extern "C" {
 #endif
 
 int
-awAudioInit(int sampleRate, int channels, int bits);
+AGAudioInit(int sampleRate, int channels, int bits);
 
 int
-awAudioSetReadCallback(void (*callback)(void*), void* data);
+AGAudioSetReadCallback(void (*callback)(void*), void* data);
 
 int
-awAudioWrite(const void* data, int len);
+AGAudioWrite(const void* data, int len);
 
 int
-awAudioUninit(void);
+AGAudioUninit(void);
 
 #ifdef __cplusplus
 }

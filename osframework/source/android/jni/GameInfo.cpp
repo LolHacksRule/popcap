@@ -2,7 +2,7 @@
 #include "GameLauncher.h"
 
 extern "C" const char*
-awGetSourceDir(void)
+AGGetSourceDir(void)
 {
 	GameLauncher* launcher = GameLauncher::getInstance();
 
@@ -13,7 +13,7 @@ awGetSourceDir(void)
 }
 
 extern "C" const char*
-awGetDataDir(void)
+AGGetDataDir(void)
 {
 	GameLauncher* launcher = GameLauncher::getInstance();
 
@@ -24,7 +24,7 @@ awGetDataDir(void)
 }
 
 extern "C" const char*
-awGetFilesDir(void)
+AGGetFilesDir(void)
 {
 	GameLauncher* launcher = GameLauncher::getInstance();
 

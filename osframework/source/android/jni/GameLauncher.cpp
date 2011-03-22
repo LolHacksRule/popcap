@@ -420,7 +420,7 @@ void GameLauncher::readAudioData()
     mAudioReadCallback(mAudioReadCallbackData);
 }
 
-void GameLauncher::dispatchEvent(awEvent &event)
+void GameLauncher::dispatchEvent(AGEvent &event)
 {
     std::list<EventListener>::iterator it = mListeners.begin();
 
@@ -433,9 +433,9 @@ void GameLauncher::queueKeyEvent(int     down,
 				 int     keycode,
 				 int     keychar)
 {
-    awEvent evt;
+    AGEvent evt;
 
-    evt.type = down ? AW_KEY_DOWN_EVENT : AW_KEY_UP_EVENT;
+    evt.type = down ? AG_KEY_DOWN_EVENT : AG_KEY_UP_EVENT;
     evt.flags = 0;
     evt.timestamp = time;
     evt.u.key.keyCode = keycode;
@@ -451,23 +451,23 @@ void GameLauncher::queuePointerEvent(int     id,
 				     float   y,
 				     float   pressure)
 {
-    awEvent evt;
+    AGEvent evt;
 
     switch (action)
     {
     case 0:
     case 5:
-	evt.type = AW_POINTER_DOWN_EVENT;
+	evt.type = AG_POINTER_DOWN_EVENT;
 	break;
     case 1:
     case 6:
-	evt.type = AW_POINTER_UP_EVENT;
+	evt.type = AG_POINTER_UP_EVENT;
 	break;
     case 2:
-	evt.type = AW_POINTER_MOVE_EVENT;
+	evt.type = AG_POINTER_MOVE_EVENT;
 	break;
     case 3:
-	evt.type = AW_POINTER_CANCEL_EVENT;
+	evt.type = AG_POINTER_CANCEL_EVENT;
 	break;
     default:
 	return;
@@ -482,7 +482,7 @@ void GameLauncher::queuePointerEvent(int     id,
     dispatchEvent(evt);
 }
 
-void GameLauncher::addEventListener(awEventListener listener,
+void GameLauncher::addEventListener(AGEventListener listener,
 				    void* data)
 {
     mListeners.push_back(EventListener());

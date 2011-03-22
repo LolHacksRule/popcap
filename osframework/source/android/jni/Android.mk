@@ -18,7 +18,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := libGameLauncher
 LOCAL_CFLAGS    := -Werror
-LOCAL_SRC_FILES := ACPManager.cpp GameFile.cpp GameJni.cpp \
+LOCAL_SRC_FILES := GameFile.cpp GameJni.cpp \
 		   GameInfo.cpp GameLauncher.cpp GameView.cpp
 LOCAL_LDLIBS    := -Wl,-z,defs -llog -lGLESv1_CM -ldl
 

@@ -23,13 +23,8 @@ FileSystemManager::FileSystemManager() :
 	// Native/posix file system
 	mFactory.AddDriver(new NativeFileSystemDriver());
 
-#if defined(ANDROID) || defined(__ANDROID__)
-	mFactory.AddDriver(new AndroidFileSystemDriver());
-#endif
-
 	// zip file system
 	mFactory.AddDriver(new ZipFileSystemDriver());
-
 }
 
 void FileSystemManager::addDefaultLocations()

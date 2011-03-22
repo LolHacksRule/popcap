@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-  enum awKeyCode {
+  enum AGKeyCode {
     // key codes
     KEYCODE_UNKNOWN         = 0,
     KEYCODE_SOFT_LEFT       = 1,
@@ -105,27 +105,27 @@ extern "C" {
     KEYCODE_SWITCH_CHARSET  = 95   // switch char-sets (Kanji,Katakana)
   };
 
-  enum awEventType {
-    AW_KEY_DOWN_EVENT        = 0,
-    AW_KEY_UP_EVENT          = 1,
-    AW_POINTER_DOWN_EVENT    = 2,
-    AW_POINTER_MOVE_EVENT    = 3,
-    AW_POINTER_UP_EVENT      = 4,
-    AW_POINTER_CANCEL_EVENT  = 5
+  enum AGEventType {
+    AG_KEY_DOWN_EVENT        = 0,
+    AG_KEY_UP_EVENT          = 1,
+    AG_POINTER_DOWN_EVENT    = 2,
+    AG_POINTER_MOVE_EVENT    = 3,
+    AG_POINTER_UP_EVENT      = 4,
+    AG_POINTER_CANCEL_EVENT  = 5
   };
 
-  enum awEventFlags {
-    AW_EVENT_FLAG_NONE       = 0,
-    AW_EVENT_FOLLOW          = 1 << 0,
-    AW_EVENT_STATE_CHANGED   = 1 << 1
+  enum AGEventFlags {
+    AG_EVENT_FLAG_NONE       = 0,
+    AG_EVENT_FOLLOW          = 1 << 0,
+    AG_EVENT_STATE_CHANGED   = 1 << 1
   };
 
-  struct awKeyEvent {
+  struct AGKeyEvent {
     int keyCode;
     int keyChar;
   };
 
-  struct awPointerEvent {
+  struct AGPointerEvent {
     int id;
     int flags;
     float x;
@@ -133,31 +133,31 @@ extern "C" {
     float pressure;
   };
 
-  struct awSensorEvent {
+  struct AGSensorEvent {
     int   id;
     int   nvaluse;
     float values[10];
   };
 
-  struct awEvent {
+  struct AGEvent {
     int type;
     int flags;
     int timestamp;
     union {
-      struct awKeyEvent key;
-      struct awPointerEvent pointer;
-      struct awSensorEvent sensor;
+      struct AGKeyEvent key;
+      struct AGPointerEvent pointer;
+      struct AGSensorEvent sensor;
     } u;
   };
 
-  typedef void (*awEventListener)(const struct awEvent* event,
+  typedef void (*AGEventListener)(const struct AGEvent* event,
 				  void*                 data);
 
 int
-awGetViewSize(int *width, int *height);
+AGViewGetSize(int *width, int *height);
 
 void
-awAddViewEventListener(awEventListener listener,
+AGViewAddEventListener(AGEventListener listener,
 		       void* data);
 
 #ifdef __cplusplus

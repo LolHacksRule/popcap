@@ -88,7 +88,7 @@ int AndroidDisplay::Init (void)
 
 	InitGL ();
 
-	awAddViewEventListener(HandleEvents, this);
+	AGViewAddEventListener(HandleEvents, this);
 
 	mInitCount++;
 	mInitialized = true;
@@ -171,13 +171,13 @@ void AndroidDisplay::SwapBuffers()
 {
 }
 
-void AndroidDisplay::HandleKeyEvent(const awEvent*event)
+void AndroidDisplay::HandleKeyEvent(const AGEvent*event)
 {
 	if (!mEvents.empty())
 		mEvents.clear();
 }
 
-void AndroidDisplay::HandlePointerEvent(const awEvent*event)
+void AndroidDisplay::HandlePointerEvent(const AGEvent*event)
 {
 	SexyAppBase *app = mApp;
 
@@ -189,16 +189,16 @@ void AndroidDisplay::HandlePointerEvent(const awEvent*event)
 	Event evt;
 	switch (event->type)
 	{
-	case AW_POINTER_DOWN_EVENT:
+	case AG_POINTER_DOWN_EVENT:
 		evt.u.touch.state = TOUCH_DOWN;
 		break;
-	case AW_POINTER_MOVE_EVENT:
+	case AG_POINTER_MOVE_EVENT:
 		evt.u.touch.state = TOUCH_MOVE;
 		break;
-	case AW_POINTER_UP_EVENT:
+	case AG_POINTER_UP_EVENT:
 		evt.u.touch.state = TOUCH_UP;
 		break;
-	case AW_POINTER_CANCEL_EVENT:
+	case AG_POINTER_CANCEL_EVENT:
 		evt.u.touch.state = TOUCH_CANCEL;
 		break;
 	}
@@ -218,16 +218,16 @@ void AndroidDisplay::HandlePointerEvent(const awEvent*event)
 	evt.u.touch.pressure = event->u.pointer.pressure * 100;
 	if (evt.u.touch.pressure > 100)
 		evt.u.touch.pressure = 100;
-	if (event->type == AW_POINTER_DOWN_EVENT ||
-	    event->type == AW_POINTER_UP_EVENT)
+	if (event->type == AG_POINTER_DOWN_EVENT ||
+	    event->type == AG_POINTER_UP_EVENT)
 	{
 		// ignore some events...
-		if (!(event->flags & AW_EVENT_STATE_CHANGED))
+		if (!(event->flags & AG_EVENT_STATE_CHANGED))
 		    return;
 	}
 	else
 	{
-		if (event->flags & AW_EVENT_FOLLOW)
+		if (event->flags & AG_EVENT_FOLLOW)
 			evt.flags |= EVENT_FLAGS_INCOMPLETE;
 	}
 
@@ -239,7 +239,7 @@ void AndroidDisplay::HandlePointerEvent(const awEvent*event)
 	}
 }
 
-void AndroidDisplay::HandleEvents(const awEvent*event,
+void AndroidDisplay::HandleEvents(const AGEvent*event,
 				  void*         data)
 {
 	AndroidDisplay* dpy = (AndroidDisplay*)data;
@@ -249,14 +249,14 @@ void AndroidDisplay::HandleEvents(const awEvent*event,
 
 	switch(event->type)
 	{
-	case AW_POINTER_DOWN_EVENT:
-	case AW_POINTER_MOVE_EVENT:
-	case AW_POINTER_UP_EVENT:
-	case AW_POINTER_CANCEL_EVENT:
+	case AG_POINTER_DOWN_EVENT:
+	case AG_POINTER_MOVE_EVENT:
+	case AG_POINTER_UP_EVENT:
+	case AG_POINTER_CANCEL_EVENT:
 		dpy->HandlePointerEvent(event);
 		break;
-	case AW_KEY_UP_EVENT:
-	case AW_KEY_DOWN_EVENT:
+	case AG_KEY_UP_EVENT:
+	case AG_KEY_DOWN_EVENT:
 		dpy->HandleKeyEvent(event);
 		break;
 	default:

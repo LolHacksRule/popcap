@@ -15,8 +15,8 @@ if env['TARGET_PLATFORM'] != 'android':
     Return()
 
 gl_env = env.Clone()
-srcs = ['ACPManager.cpp', 'GameAudio.cpp', 'GameFile.cpp', 'GameJni.cpp',
-        'GameInfo.cpp', 'GameLauncher.cpp', 'GameView.cpp']
+srcs = ['GameAudio.cpp', 'GameJni.cpp', 'GameInfo.cpp',
+        'GameLauncher.cpp', 'GameView.cpp']
 srcs = map(lambda f: os.path.join('jni', f), srcs)
 
 gl_env.AppendUnique(CPPPATH = ['jni'],

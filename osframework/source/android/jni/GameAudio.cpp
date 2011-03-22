@@ -2,7 +2,7 @@
 #include "GameLauncher.h"
 
 extern "C" int
-awAudioInit(int sampleRate, int channels, int bits)
+AGAudioInit(int sampleRate, int channels, int bits)
 {
         GameLauncher* launcher = GameLauncher::getInstance();
 
@@ -10,7 +10,7 @@ awAudioInit(int sampleRate, int channels, int bits)
 }
 
 extern "C" int
-awAudioUninit(void)
+AGAudioUninit(void)
 {
         GameLauncher* launcher = GameLauncher::getInstance();
 
@@ -18,7 +18,7 @@ awAudioUninit(void)
 }
 
 extern "C" int
-awAudioSetReadCallback(void (*callback)(void*), void* data)
+AGAudioSetReadCallback(void (*callback)(void*), void* data)
 {
         GameLauncher* launcher = GameLauncher::getInstance();
 
@@ -26,7 +26,7 @@ awAudioSetReadCallback(void (*callback)(void*), void* data)
 }
 
 extern "C" int
-awAudioWrite(const void* data, int len)
+AGAudioWrite(const void* data, int len)
 {
         GameLauncher* launcher = GameLauncher::getInstance();
 

@@ -14,8 +14,8 @@ extern "C" {
   typedef int (*GameResumeProc)(void);
   typedef int (*GameUninitProc)(void);
   typedef void (*GameAudioReadCallback)(void*);
-  struct awEvent;
-  typedef void (*awEventListener)(const struct awEvent* event,
+  struct AGEvent;
+  typedef void (*AGEventListener)(const struct AGEvent* event,
 				  void*                 data);
 };
 
@@ -81,14 +81,14 @@ class GameLauncher {
 				float   y,
 				float   pressure);
 
-  void        addEventListener(awEventListener listener,
+  void        addEventListener(AGEventListener listener,
 			       void* data);
 
  private:
   void        setupEnv();
   bool        loadGame();
   void        unloadGame();
-  void        dispatchEvent(awEvent &event);
+  void        dispatchEvent(AGEvent &event);
 
  private:
   void*            mHandler;
@@ -109,7 +109,7 @@ class GameLauncher {
   void*                 mAudioReadCallbackData;
 
   struct EventListener {
-    awEventListener callback;
+    AGEventListener callback;
     void*           data;
   };
   std::list<EventListener> mListeners;

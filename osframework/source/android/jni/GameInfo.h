@@ -6,13 +6,13 @@ extern "C" {
 #endif
 
 const char*
-awGetSourceDir(void);
+AGGetSourceDir(void);
 
 const char*
-awGetDataDir(void);
+AGGetDataDir(void);
 
 const char*
-awGetFilesDir(void);
+AGGetFilesDir(void);
 
 #ifdef __cplusplus
 }
