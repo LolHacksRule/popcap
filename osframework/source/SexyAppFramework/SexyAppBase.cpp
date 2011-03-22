@@ -3923,3 +3923,20 @@ void SexyAppBase::CheckControllerStatus()
 void SexyAppBase::InputStatusChanged(const InputStatusInfo *theInfo)
 {
 }
+
+bool SexyAppBase::DrawOneFrame()
+{
+    int count;
+
+    while (true)
+    {
+        count = mDrawCount;
+        UpdateApp();
+        if (mShutdown)
+            return false;
+        if (mDrawCount != count)
+            break;
+    }
+
+    return true;
+}

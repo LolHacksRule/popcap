@@ -680,6 +680,7 @@ namespace Sexy
 		virtual void                            InitVideoDriver();
 		virtual int				InitDDInterface();
 		virtual void                            InitSoundManager();
+		virtual bool                            DrawOneFrame();
 
 		void					ClearUpdateBacklog(bool relaxForASecond = false);
 		bool					IsScreenSaver();
