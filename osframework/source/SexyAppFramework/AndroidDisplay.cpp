@@ -169,6 +169,11 @@ bool AndroidDisplay::GetEvent(struct Event &event)
 
 void AndroidDisplay::SwapBuffers()
 {
+       if (mApp->mUpdateAppDepth > 1)
+       {
+               AGViewSwapBuffers();
+               AGViewUpdate();
+       }
 }
 
 void AndroidDisplay::HandleKeyEvent(const AGEvent*event)
