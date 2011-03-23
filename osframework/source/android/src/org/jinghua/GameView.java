@@ -32,6 +32,7 @@ package org.jinghua;
  */
 
 import org.jinghua.GameActivity;
+import org.jinghua.GLSurfaceView;
 
 import java.io.File;
 
@@ -40,12 +41,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.graphics.PixelFormat;
-import android.opengl.GLSurfaceView;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -135,6 +138,14 @@ public class GameView extends GLSurfaceView {
 
     @Override public void onResume() {
         super.onResume();
+    }
+
+    public void swapBuffers() {
+	super.swapBuffers();
+    }
+
+    public void update() {
+	super.handleEvents();
     }
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
@@ -386,7 +397,7 @@ public class GameView extends GLSurfaceView {
             String path = file.getAbsolutePath();
 
             GameJni.init(appInfo.sourceDir, appInfo.dataDir, path,
-                         width, height);
+                         activity.getView(), width, height);
 
             Log.w(TAG, "onSurfaceChanged()");
         }
@@ -498,5 +509,23 @@ public class GameView extends GLSurfaceView {
             }
         );
         return true;
+    }
+
+    @Override
+    public boolean onCheckIsTextEditor() {
+	return true;
+    }
+
+    @Override
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        outAttrs.imeOptions |=
+	    EditorInfo.IME_FLAG_NO_EXTRACT_UI |
+	    EditorInfo.IME_ACTION_NONE;
+        outAttrs.actionLabel = null;
+        outAttrs.hintText = "";
+        outAttrs.initialCapsMode = 0;
+        outAttrs.initialSelEnd = outAttrs.initialSelStart = -1;
+        outAttrs.label = "";
+        return new BaseInputConnection(this, false);
     }
 }

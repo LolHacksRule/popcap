@@ -39,6 +39,7 @@ class GameLauncher {
             const char *sourcedir,
             const char *datadir,
             const char *filesdir,
+	    jobject     view,
             int         width,
             int         height);
 
@@ -84,6 +85,9 @@ class GameLauncher {
   void        addEventListener(AGEventListener listener,
 			       void* data);
 
+  void        viewSwapBuffers();
+  void        viewUpdate();
+
  private:
   void        setupEnv();
   bool        loadGame();
@@ -92,6 +96,7 @@ class GameLauncher {
 
  private:
   void*            mHandler;
+  jobject          mView;
   int              mWidth;
   int              mHeight;
   GameState        mState;

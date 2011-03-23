@@ -33,10 +33,11 @@ static GameLauncher* launcher = 0;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 JNIEXPORT void JNICALL Java_org_jinghua_GameJni_init(JNIEnv * env, jclass obj,
-                                                     jstring sourcedir,
-                                                     jstring datadir,
-                                                     jstring filesdir,
-                                                     jint width, jint height)
+						   jstring sourcedir,
+						   jstring datadir,
+						   jstring filesdir,
+						   jobject view,
+						   jint width, jint height)
 {
     const char *sdir = env->GetStringUTFChars(sourcedir, 0);
     const char *ddir = env->GetStringUTFChars(datadir, 0);
@@ -46,7 +47,7 @@ JNIEXPORT void JNICALL Java_org_jinghua_GameJni_init(JNIEnv * env, jclass obj,
 
     launcher = GameLauncher::getInstance();
     LOGI("Init(%s, %s, %s, %d, %d)", sdir, ddir, fdir, width, height);
-    launcher->init(env, sdir, ddir, fdir, width, height);
+    launcher->init(env, sdir, ddir, fdir, view, width, height);
 
     pthread_mutex_unlock(&mutex);
 

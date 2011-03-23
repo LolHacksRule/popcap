@@ -27,6 +27,7 @@ public class GameJni {
     public static native void    init(String sourcedir,
                                       String datadir,
                                       String filesdir,
+				      GameView view,
                                       int    width,
                                       int    height);
     public static native boolean render();

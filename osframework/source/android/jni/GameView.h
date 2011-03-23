@@ -160,6 +160,12 @@ void
 AGViewAddEventListener(AGEventListener listener,
 		       void* data);
 
+void
+AGViewSwapBuffers(void);
+
+void
+AGViewUpdate(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -43,7 +43,7 @@ GameLauncher* GameLauncher::getInstance()
 }
 
 GameLauncher::GameLauncher() :
-    mHandler(0), mWidth(0), mHeight(0),
+    mHandler(0), mView(0), mWidth(0), mHeight(0),
     mState(GAME_STATE_INVALID), mEnv(0), mVM(0)
 {
     mAudioReadCallback = 0;
@@ -58,6 +58,7 @@ bool GameLauncher::init(JNIEnv*     env,
                         const char *sourcedir,
                         const char *datadir,
                         const char *filesdir,
+			jobject     view,
                         int         width,
                         int         height)
 {
@@ -78,6 +79,7 @@ bool GameLauncher::init(JNIEnv*     env,
     mSourceDir = std::string(sourcedir);
     mDataDir = std::string(datadir);
     mFilesDir = std::string(filesdir);
+    mView = (jobject)env->NewGlobalRef(view);
     mWidth = width;
     mHeight = height;
     mAudioReadCallback = 0;
@@ -492,6 +494,79 @@ void GameLauncher::addEventListener(AGEventListener listener,
     back.data = data;
 }
 
+void GameLauncher::viewSwapBuffers()
+{
+    LOGI("view swapBuffers...");
+
+    JNIEnv* env = 0;
+
+    if (!mVM || !mView)
+        return;
+
+    mVM->GetEnv((void**)&env, JNI_VERSION_1_4);
+    if (!env)
+        return;
+
+    if (env->ExceptionOccurred())
+        return;
+
+    // Get the asset manager
+    jclass cls = env->FindClass("org/jinghua/GameView");
+    if (cls == NULL)
+        return;
+
+    // Find methods to be called
+    jmethodID swapBuffers_method = env->GetMethodID(cls, "swapBuffers", "()V");
+    if (swapBuffers_method == NULL)
+    {
+        env->DeleteLocalRef(cls);
+        return;
+    }
+
+    // Call class method
+    env->CallVoidMethod(mView, swapBuffers_method);
+    env->DeleteLocalRef(cls);
+
+    LOGI("done");
+}
+
+void GameLauncher::viewUpdate()
+{
+    JNIEnv* env = 0;
+
+    LOGI("updating view...");
+
+    if (!mVM || !mView)
+        return;
+
+    mVM->GetEnv((void**)&env, JNI_VERSION_1_4);
+    if (!env)
+        return;
+
+    if (env->ExceptionOccurred())
+        return;
+
+    // Get the asset manager
+    jclass cls = env->FindClass("org/jinghua/GameView");
+    if (cls == NULL)
+        return;
+
+    // Find methods to be called
+    jmethodID update_method =  env->GetMethodID(cls, "update", "()V");
+    if (update_method == NULL)
+    {
+        env->DeleteLocalRef(cls);
+        return;
+    }
+
+    // Call class method
+    env->CallVoidMethod(mView, update_method);
+
+    env->DeleteLocalRef(cls);
+
+    LOGI("done");
+}
+
 void GameLauncher::release()
 {
     if (gameLoaded())
@@ -501,9 +576,12 @@ void GameLauncher::release()
         audioUninit();
         uninit();
         unloadGame();
+	if (mEnv && mView)
+	    mEnv->DeleteLocalRef(mView);
         mVM = 0;
         mEnv = 0;
         mainVM = 0;
+	mView = 0;
     }
 
     if (gameLauncher == this)

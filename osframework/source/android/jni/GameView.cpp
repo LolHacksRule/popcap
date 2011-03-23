@@ -24,4 +24,18 @@ extern "C" {
 
 	return launcher->addEventListener(listener, data);
     }
+
+    void AGViewSwapBuffers(void)
+    {
+        GameLauncher* launcher = GameLauncher::getInstance();
+
+	return launcher->viewSwapBuffers();
+    }
+
+    void AGViewUpdate(void)
+    {
+        GameLauncher* launcher = GameLauncher::getInstance();
+
+	return launcher->viewUpdate();
+    }
 }

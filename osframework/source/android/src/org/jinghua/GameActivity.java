@@ -30,6 +30,11 @@ public class GameActivity extends Activity
         setContentView(mView);
     }
 
+    public GameView getView()
+    {
+	return mView;
+    }
+
     public void shutdown()
     {
         this.finish();
