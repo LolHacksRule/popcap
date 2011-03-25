@@ -3,8 +3,6 @@
 #include "ZipFileSystem.h"
 
 #if defined(ANDROID) || defined(__ANDROID__)
-#include "AndroidFileSystem.h"
-
 #include <android/log.h>
 
 #define  LOG_TAG    "PakLib"
