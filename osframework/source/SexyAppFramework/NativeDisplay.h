@@ -31,6 +31,13 @@ public:
 	virtual void Work(void) = 0;
 };
 
+enum KeyboardMode {
+	KEYBOARD_NORMAL,
+	KEYBOARD_PASSWORD,
+	KEYBOARD_URL,
+	KEYBOARD_EMAIL
+};
+
 class NativeDisplay
 {
  public:
@@ -124,7 +131,11 @@ class NativeDisplay
         virtual bool                                GetEvent(struct Event & event);
 	virtual bool                                GetInputInfo(InputInfo &anInfo);
 
-	virtual bool                                ShowKeyboard(Widget* theWidget);
+	virtual bool                                ShowKeyboard(Widget* theWidget,
+								 KeyboardMode mode,
+								 const std::string &title,
+								 const std::string &hint,
+								 const std::string &initial);
 	virtual void                                HideKeyboard();
 
  public:

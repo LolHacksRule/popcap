@@ -1170,9 +1170,14 @@ bool WidgetManager::TouchDown(int id, int x, int y, int tapCount)
 	return true;
 }
 
-bool WidgetManager::ShowKeyboard(Widget *theWidget)
+bool WidgetManager::ShowKeyboard(Widget *theWidget,
+				 KeyboardMode mode,
+				 const std::string &title,
+				 const std::string &hint,
+				 const std::string &initial)
 {
-	if (mApp->mDDInterface->ShowKeyboard(theWidget))
+	if (mApp->mDDInterface->ShowKeyboard(theWidget, mode, title,
+					     hint, initial))
 	    return true;
 	return true;
 }

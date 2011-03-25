@@ -130,7 +130,11 @@ bool NativeDisplay::GetInputInfo(InputInfo &anInfo)
 	return false;
 }
 
-bool NativeDisplay::ShowKeyboard(Widget* theWidget)
+bool NativeDisplay::ShowKeyboard(Widget* theWidget,
+				 KeyboardMode mode,
+				 const std::string &title,
+				 const std::string &hint,
+				 const std::string &initial)
 {
 	return false;
 }

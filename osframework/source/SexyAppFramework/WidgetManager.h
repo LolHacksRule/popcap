@@ -5,6 +5,7 @@
 #include "KeyCodes.h"
 #include "Event.h"
 #include "Widget.h"
+#include "NativeDisplay.h"
 
 namespace Sexy
 {
@@ -166,7 +167,11 @@ public:
 	bool					IsMiddleButtonDown();
 	bool					IsRightButtonDown();
 
-	bool                                    ShowKeyboard(Widget* theWidget);
+	bool                                    ShowKeyboard(Widget* theWidget,
+							     KeyboardMode mode = KEYBOARD_NORMAL,
+							     const std::string &title = "",
+							     const std::string &hint = "",
+							     const std::string &initial = "");
 	void                                    HideKeyboard();
 
 private:
