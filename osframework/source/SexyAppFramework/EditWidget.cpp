@@ -198,7 +198,10 @@ void EditWidget::GotFocus()
 #endif
 	}
 	if (mWidgetManager)
-		mWidgetManager->ShowKeyboard(this);
+	{
+		KeyboardMode mode = mPasswordChar ? KEYBOARD_PASSWORD : KEYBOARD_NORMAL;
+		mWidgetManager->ShowKeyboard(this, mode, "", "", mString);
+	}
 
 	mShowingCursor = true;
 	mBlinkAcc = 0;
@@ -477,6 +480,10 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 	else if (theKey == KEYCODE_RETURN)
 	{
 		mEditListener->EditWidgetText(mId, mString);
+	}
+	else if (theKey == KEYCODE_CLEAR)
+	{
+		SetText("", true);
 	}
 	else
 	{
