@@ -244,6 +244,45 @@ void AndroidDisplay::HandlePointerEvent(const AGEvent*event)
 	}
 }
 
+void AndroidDisplay::InjectKeyEvent(int keycode, int keychar)
+{
+	Event evt;
+
+	evt.type = EVENT_KEY_DOWN;
+	evt.flags = EVENT_FLAGS_KEY_CODE;
+	evt.id = 0;
+	evt.subid = 0;
+	evt.u.key.keyCode = keycode;
+
+	if (keychar > 0 && keychar <= 127)
+	{
+		evt.flags |= EVENT_FLAGS_KEY_CHAR;
+		evt.u.key.keyChar = keychar;
+	}
+	mApp->mInputManager->PushEvent(evt);
+
+	evt.type = EVENT_KEY_UP;
+	evt.flags &= ~EVENT_FLAGS_KEY_CHAR;
+	mApp->mInputManager->PushEvent(evt);
+}
+
+void AndroidDisplay::HandleInputEvents(const AGEvent *event)
+{
+	const char *s = AGViewGetTextInput();
+
+	InjectKeyEvent(KEYCODE_CLEAR, 0);
+	for (; *s; s++)
+	{
+		int c = (*s) & 0xff;
+		int kc = c;
+
+		if (isalpha(c))
+			kc = toupper(c);
+		InjectKeyEvent(kc, c);
+	}
+	InjectKeyEvent(KEYCODE_RETURN, 0);
+}
+
 void AndroidDisplay::HandleEvents(const AGEvent*event,
 				  void*         data)
 {
@@ -267,6 +306,22 @@ void AndroidDisplay::HandleEvents(const AGEvent*event,
 	default:
 		break;
 	}
+}
+
+bool AndroidDisplay::ShowKeyboard(Widget* theWidget,
+				 KeyboardMode mode,
+				 const std::string &title,
+				 const std::string &hint,
+				 const std::string &initial)
+{
+	AGViewShowKeyboard((AGKeyboardMode)mode, title.c_str(),
+			   hint.c_str(), initial.c_str());
+	return true;
+}
+
+void AndroidDisplay::HideKeyboard()
+{
+	AGViewHideKeyboard();
 }
 
 class AndroidVideoDriver: public VideoDriver {

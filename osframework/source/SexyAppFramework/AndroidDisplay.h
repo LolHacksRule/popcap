@@ -41,7 +41,16 @@ public:
 
 	void                                    HandleKeyEvent(const AGEvent*event);
 	void                                    HandlePointerEvent(const AGEvent*event);
+	void                                    HandleInputEvents(const AGEvent *event);
 	static void                             HandleEvents(const AGEvent*, void* data);
+
+	bool                                    ShowKeyboard(Widget* theWidget,
+							     KeyboardMode mode,
+							     const std::string &title,
+							     const std::string &hint,
+							     const std::string &initial);
+	void                                    HideKeyboard();
+	void                                    InjectKeyEvent(int keycode, int keychar);
 
 private:
 	std::list<Event>                        mEvents;
