@@ -32,8 +32,8 @@ public class GameJni {
                                       int    height);
     public static native boolean render();
     public static native void    uninit();
-    public static native void    pause();
-    public static native void    resume();
+    public static native boolean pause();
+    public static native boolean resume();
 
     public static native void    queueKeyEvent(int down,
 					       long time,

@@ -165,11 +165,22 @@ public class GameView extends GLSurfaceView {
 
     @Override public void onPause() {
         super.onPause();
-        GameJni.uninit();
+        queueEvent(new Runnable() {
+                public void run() {
+                    renderer.handlePause();
+                }
+            }
+        );
     }
 
     @Override public void onResume() {
         super.onResume();
+        queueEvent(new Runnable() {
+                public void run() {
+                    renderer.handleResume();
+                }
+            }
+        );
     }
 
     public void swapBuffers() {
@@ -476,12 +487,19 @@ public class GameView extends GLSurfaceView {
                 return;
             }
 
-            if (!GameJni.render()) {
-                GameJni.uninit();
-                activity.finish();
-                shutdown = true;
-            }
+            if (!GameJni.render())
+		stopGame();
         }
+
+	public void stopGame()
+	{
+	    if (shutdown)
+		return;
+
+	    GameJni.uninit();
+	    activity.finish();
+	    shutdown = true;
+	}
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
             ApplicationInfo appInfo = ctx.getApplicationInfo();
@@ -563,6 +581,17 @@ public class GameView extends GLSurfaceView {
 	public void handleTextInput(String text)
 	{
 	    GameJni.textInput(text);
+	}
+
+	public void handlePause()
+	{
+	    if (!GameJni.pause())
+		stopGame();
+	}
+
+	public void handleResume()
+	{
+	    GameJni.resume();
 	}
     }
 

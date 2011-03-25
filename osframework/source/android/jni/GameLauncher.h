@@ -43,8 +43,8 @@ class GameLauncher {
             int         width,
             int         height);
 
-  void pause();
-  void resume();
+  bool pause();
+  bool resume();
   bool render();
   void uninit();
   void readAudioData();
@@ -114,6 +114,7 @@ class GameLauncher {
   std::string      mDataDir;
   std::string      mFilesDir;
   std::string      mTextInput;
+  bool             mDirty;
   GameInitProc     mInitProc;
   GameRenderProc   mRenderProc;
   GamePauseProc    mPauseProc;

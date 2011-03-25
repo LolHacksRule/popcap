@@ -112,7 +112,8 @@ extern "C" {
     AG_POINTER_MOVE_EVENT    = 3,
     AG_POINTER_UP_EVENT      = 4,
     AG_POINTER_CANCEL_EVENT  = 5,
-    AG_TEXT_INPUT_EVENT      = 6
+    AG_TEXT_INPUT_EVENT      = 6,
+    AG_VIEW_CHANGED_EVENT    = 7
   };
 
   enum AGEventFlags {
@@ -140,6 +141,11 @@ extern "C" {
     float values[10];
   };
 
+  struct AGViewChangedEvent {
+    int width;
+    int height;
+  };
+
   struct AGEvent {
     int type;
     int flags;
@@ -148,6 +154,7 @@ extern "C" {
       struct AGKeyEvent key;
       struct AGPointerEvent pointer;
       struct AGSensorEvent sensor;
+      struct AGViewChangedEvent view;
     } u;
   };
 

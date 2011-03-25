@@ -46,6 +46,7 @@ GameLauncher::GameLauncher() :
     mHandler(0), mView(0), mWidth(0), mHeight(0),
     mState(GAME_STATE_INVALID), mEnv(0), mVM(0)
 {
+    mDirty = false;
     mAudioReadCallback = 0;
 }
 
@@ -63,7 +64,11 @@ bool GameLauncher::init(JNIEnv*     env,
                         int         height)
 {
     if (gameLoaded())
+    {
+	mWidth = width;
+	mHeight = height;
         return false;
+    }
 
     LOGI("Application data directory: %s\n", datadir);
     LOGI("OpenGLView size: %dx%d\n", width, height);
@@ -190,7 +195,7 @@ bool GameLauncher::loadGame()
 
     mInitProc = (GameInitProc)dlsym(mHandler, "GameInit");
     mRenderProc = (GameRenderProc)dlsym(mHandler, "GameRender");
-    mPauseProc = (GamePauseProc)dlsym(mHandler, "GameResume");
+    mPauseProc = (GamePauseProc)dlsym(mHandler, "GamePause");
     mResumeProc = (GameResumeProc)dlsym(mHandler, "GameResume");
     mUninitProc = (GameUninitProc)dlsym(mHandler, "GameUninit");
     if (!mInitProc || !mUninitProc || !mRenderProc)
@@ -212,24 +217,37 @@ void GameLauncher::unloadGame()
     mHandler = 0;
 }
 
-void GameLauncher::pause()
+bool GameLauncher::pause()
 {
-    if (!gameLoaded() || mState < GAME_STATE_INITED)
-        return;
+    LOGI("Pausing game module.");
 
-    if (mPauseProc)
-        mPauseProc();
+    if (!gameLoaded() || mState < GAME_STATE_INITED)
+        return false;
+
+    if (!mPauseProc)
+	return false;
+
+    if (mPauseProc())
+	return false;
+
     mState = GAME_STATE_PAUSED;
+    LOGI("Paused");
+    return true;
 }
 
-void GameLauncher::resume()
+bool GameLauncher::resume()
 {
+    LOGI("Resuming game module.");
+
     if (!gameLoaded() || mState < GAME_STATE_INITED)
-        return;
+        return false;
 
     if (mResumeProc)
         mResumeProc();
     mState = GAME_STATE_RUNNING;
+    mDirty = true;
+    LOGI("Resumed");
+    return true;
 }
 
 bool GameLauncher::render()
@@ -238,6 +256,19 @@ bool GameLauncher::render()
         return false;
 
     mState = GAME_STATE_RUNNING;
+    if (mDirty)
+    {
+	mDirty = false;
+
+	AGEvent evt;
+
+	evt.type = AG_VIEW_CHANGED_EVENT;
+	evt.flags = 0;
+	evt.timestamp = 0;
+	evt.u.view.width = mWidth;
+	evt.u.view.height = mHeight;
+	dispatchEvent(evt);
+    }
     if (mRenderProc())
         return true;
     return false;

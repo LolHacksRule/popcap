@@ -70,16 +70,18 @@ JNIEXPORT jboolean JNICALL Java_org_jinghua_GameJni_render(JNIEnv * env, jclass 
     return ret;
 }
 
-JNIEXPORT void JNICALL Java_org_jinghua_GameJni_pause(JNIEnv * env, jclass obj)
+JNIEXPORT jboolean JNICALL Java_org_jinghua_GameJni_pause(JNIEnv * env, jclass obj)
 {
     if (launcher)
-        launcher->pause();
+        return launcher->pause();
+    return false;
 }
 
-JNIEXPORT void JNICALL Java_org_jinghua_GameJni_resume(JNIEnv * env, jclass obj)
+JNIEXPORT jboolean JNICALL Java_org_jinghua_GameJni_resume(JNIEnv * env, jclass obj)
 {
     if (launcher)
-        launcher->resume();
+        return launcher->resume();
+    return false;
 }
 
 JNIEXPORT void JNICALL Java_org_jinghua_GameJni_readAudioData(JNIEnv * env, jclass obj)

@@ -1,7 +1,6 @@
 package org.jinghua;
 
 import org.jinghua.GameView;
-import org.jinghua.ACPManager;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -19,8 +18,6 @@ public class GameActivity extends Activity
 
     /** Called when the activity is first created. */
     @Override protected void onCreate(Bundle icicle) {
-        ACPManager.getInstance().setAssets(getAssets(), "files/");
-
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                              WindowManager.LayoutParams.FLAG_FULLSCREEN);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -41,8 +38,8 @@ public class GameActivity extends Activity
     }
 
     @Override protected void onPause() {
-        super.onPause();
         mView.onPause();
+        super.onPause();
     }
 
     @Override protected void onResume() {
@@ -53,7 +50,7 @@ public class GameActivity extends Activity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 123)
+        if (requestCode == 123 && false)
             this.finish();
     }
 }
