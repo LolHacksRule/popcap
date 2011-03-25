@@ -3940,3 +3940,45 @@ bool SexyAppBase::DrawOneFrame()
 
     return true;
 }
+
+void SexyAppBase::PauseApp()
+{
+	if (!mDDInterface)
+		return;
+
+	Event event;
+
+	event.type = EVENT_ACTIVE;
+	event.flags = 0;
+	event.id = 0;
+	event.subid = 0;
+	event.u.active.active = 0;
+	ProcessMessage(event);
+
+	AutoCrit anAutoCrit(mCritSect);
+
+	// be smart
+	MemoryImageSet::iterator anItr = mMemoryImageSet.begin();
+	while (anItr != mMemoryImageSet.end())
+	{
+		MemoryImage* aMemoryImage = *anItr;
+		if (mDDInterface)
+			mDDInterface->RemoveImageData(aMemoryImage);
+		++anItr;
+	}
+}
+
+void SexyAppBase::ResumeApp()
+{
+	if (!mDDInterface)
+		return;
+
+	Event event;
+
+	event.type = EVENT_ACTIVE;
+	event.flags = 0;
+	event.id = 0;
+	event.subid = 0;
+	event.u.active.active = 1;
+	ProcessMessage(event);
+}

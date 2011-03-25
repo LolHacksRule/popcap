@@ -1118,6 +1118,9 @@ uchar* MemoryImage::GetRLAdditiveData(NativeDisplay *theNative)
 
 void MemoryImage::PurgeBits()
 {
+	if (mApp && mApp->mDDInterface && mApp->mDDInterface->mPreserveBits)
+		return;
+
 	mPurgeBits = true;
 
 

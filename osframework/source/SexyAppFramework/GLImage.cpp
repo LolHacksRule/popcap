@@ -1728,6 +1728,9 @@ void GLImage::PurgeBits()
 	if (mSurfaceSet)
 		return;
 
+	if (mDpy->mPreserveBits)
+		return;
+
 	mPurgeBits = true;
 
 	CommitBits();

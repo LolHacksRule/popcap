@@ -43,6 +43,7 @@ class NativeDisplay
  public:
 	CritSect				mCritSect;
 
+	bool                                    mPreserveBits;
 	int					mRGBBits;
 	ulong					mRedMask;
 	ulong					mGreenMask;

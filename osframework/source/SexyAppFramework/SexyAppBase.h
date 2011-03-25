@@ -492,6 +492,8 @@ namespace Sexy
 		// for HWND_BROADCAST of mNotifyGameMessage (0-1000 are reserved for SexyAppBase for theType)
 		virtual void			        HandleGameAlreadyRunning();
 
+		virtual void                            PauseApp();
+		virtual void                            ResumeApp();
 		virtual void                            Startup();
 		virtual void			        Start();
 		virtual void                            Terminate();

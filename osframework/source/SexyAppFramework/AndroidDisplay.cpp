@@ -29,6 +29,7 @@ using namespace Sexy;
 AndroidDisplay::AndroidDisplay (SexyAppBase* theApp)
 	: GLDisplay (theApp)
 {
+	mPreserveBits = true;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
 }

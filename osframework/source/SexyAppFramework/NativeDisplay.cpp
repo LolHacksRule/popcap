@@ -17,6 +17,7 @@ using namespace Sexy;
 ///////////////////////////////////////////////////////////////////////////////
 NativeDisplay::NativeDisplay()
 {
+	mPreserveBits = false;
 	mRGBBits = 0;
 
 	mRedMask = 0;
