@@ -59,6 +59,7 @@ class GameLauncher {
   int         getViewHeight() const;
   bool        gameLoaded() const;
   JNIEnv*     getJNIEnv();
+  const char* getTextInput() const;
 
   int         audioInit(int sampleRate,
                         int channels,
@@ -85,8 +86,15 @@ class GameLauncher {
   void        addEventListener(AGEventListener listener,
 			       void* data);
 
+  void        textInput(const char *s);
+
   void        viewSwapBuffers();
   void        viewUpdate();
+  void        viewShowKeyboard(int mode,
+			       const char *title,
+			       const char *hint,
+			       const char *initial);
+  void        viewHideKeyboard();
 
  private:
   void        setupEnv();
@@ -105,6 +113,7 @@ class GameLauncher {
   std::string      mSourceDir;
   std::string      mDataDir;
   std::string      mFilesDir;
+  std::string      mTextInput;
   GameInitProc     mInitProc;
   GameRenderProc   mRenderProc;
   GamePauseProc    mPauseProc;

@@ -111,7 +111,8 @@ extern "C" {
     AG_POINTER_DOWN_EVENT    = 2,
     AG_POINTER_MOVE_EVENT    = 3,
     AG_POINTER_UP_EVENT      = 4,
-    AG_POINTER_CANCEL_EVENT  = 5
+    AG_POINTER_CANCEL_EVENT  = 5,
+    AG_TEXT_INPUT_EVENT      = 6
   };
 
   enum AGEventFlags {
@@ -153,6 +154,13 @@ extern "C" {
   typedef void (*AGEventListener)(const struct AGEvent* event,
 				  void*                 data);
 
+  enum AGKeyboardMode {
+    AG_KEYBOARD_NORMAL,
+    AG_KEYBOARD_PASSWORD,
+    AG_KEYBOARD_URL,
+    AG_KEYBOARD_EMAIL
+  };
+
 int
 AGViewGetSize(int *width, int *height);
 
@@ -165,6 +173,19 @@ AGViewSwapBuffers(void);
 
 void
 AGViewUpdate(void);
+
+void
+AGViewShowKeyboard(enum AGKeyboardMode mode,
+		   const char *title,
+		   const char *hint,
+		   const char *initial);
+
+void
+AGViewHideKeyboard(void);
+
+const char*
+AGViewGetTextInput(void);
+
 
 #ifdef __cplusplus
 }

@@ -113,6 +113,18 @@ JNIEXPORT void JNICALL Java_org_jinghua_GameJni_queuePointerEvent(JNIEnv * env,
 	launcher->queuePointerEvent(id, action, time, flags, x, y, pressure);
 }
 
+JNIEXPORT void JNICALL Java_org_jinghua_GameJni_textInput(JNIEnv * env,
+							  jclass cls,
+							  jstring text)
+{
+    const char *str = env->GetStringUTFChars(text, 0);
+
+    if (launcher)
+	launcher->textInput(str);
+
+    env->ReleaseStringUTFChars(text, str);
+}
+
 JNIEXPORT void JNICALL Java_org_jinghua_GameJni_uninit(JNIEnv * env, jclass obj)
 {
     pthread_mutex_lock(&mutex);

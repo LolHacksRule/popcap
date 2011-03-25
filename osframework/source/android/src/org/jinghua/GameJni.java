@@ -47,4 +47,6 @@ public class GameJni {
 						   float y,
 						   float pressure);
     public static native void    readAudioData();
+
+    public static native void    textInput(String text);
 }

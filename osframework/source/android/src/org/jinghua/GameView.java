@@ -37,13 +37,19 @@ import org.jinghua.GLSurfaceView;
 import java.io.File;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
 import android.graphics.PixelFormat;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.widget.EditText;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.inputmethod.BaseInputConnection;
@@ -79,6 +85,30 @@ public class GameView extends GLSurfaceView {
     private static final boolean DEBUG = false;
     private Renderer renderer;
     private GameActivity gameActivity;
+    private EditText mTextInputWidget = null;
+    private AlertDialog mTextInputDialog = null;
+
+    protected static final int SHOW_KEYBOARD = 0x101;
+    protected static final int HIDE_KEYBOARD = 0x102;
+    Handler mHandler = new Handler() {
+	    public void handleMessage(Message msg) {
+		GameView view = gameActivity.getView();
+
+		switch (msg.what) {
+		case GameView.SHOW_KEYBOARD:
+		    Bundle bundle = msg.getData();
+		    view._showKeyboard(bundle.getInt("mode"),
+				       bundle.getString("title"),
+				       bundle.getString("hint"),
+				       bundle.getString("initial"));
+		    break;
+		case GameView.HIDE_KEYBOARD:
+		    view._hideKeyboard();
+		    break;
+		}
+		super.handleMessage(msg);
+	    }
+	};
 
     public GameView(Context context, GameActivity activity) {
         super(context);
@@ -128,6 +158,8 @@ public class GameView extends GLSurfaceView {
         /* Set the renderer responsible for frame rendering */
         renderer = new Renderer(context, gameActivity);
         setRenderer(renderer);
+
+	mTextInputWidget = new EditText(gameActivity);
         Log.w(TAG, "GameView initialized.");
     }
 
@@ -146,6 +178,67 @@ public class GameView extends GLSurfaceView {
 
     public void update() {
 	super.handleEvents();
+    }
+
+    public void showKeyboard(int mode, String title, String hint, String initial) {
+	Bundle bundle = new Bundle();
+	bundle.putInt("mode", mode);
+	bundle.putString("title", title);
+	bundle.putString("hint", hint);
+	bundle.putString("initial", initial);
+
+	Message m = mHandler.obtainMessage(SHOW_KEYBOARD);
+	m.setData(bundle);
+	mHandler.sendMessage(m);
+    }
+
+    public void _showKeyboard(int mode, String title, String hint, String initial) {
+	if (mTextInputDialog != null) {
+	    mTextInputWidget.setHint(hint);
+	    mTextInputWidget.setText(initial);
+	    mTextInputDialog.show();
+	    return;
+	}
+
+	mTextInputWidget = new EditText(gameActivity);
+	AlertDialog.Builder builder = new AlertDialog.Builder(gameActivity);
+	mTextInputWidget.setHint(hint);
+	mTextInputWidget.setText(initial);
+	builder.setTitle(title);
+	builder.setPositiveButton("done", null);
+	builder.setNegativeButton("cancel", null);
+
+	builder.setView(mTextInputWidget);
+	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+		public void onClick(DialogInterface dialog, int whichButton)
+		{
+		    textInput(mTextInputWidget.getText().toString());
+		}
+	    });
+
+	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+		public void onClick(DialogInterface dialog, int whichButton) {
+		    _hideKeyboard();
+		}
+	    });
+	mTextInputDialog = builder.create();
+	mTextInputDialog.show();
+    }
+
+    public void hideKeyboard() {
+	Message m = mHandler.obtainMessage(HIDE_KEYBOARD);
+	mHandler.sendMessage(m);
+    }
+
+    public void _hideKeyboard() {
+	if (mTextInputDialog == null)
+	    return;
+
+	mTextInputDialog.cancel();
+	mTextInputDialog.dismiss();
+
+	mTextInputDialog = null;
+	mTextInputWidget = null;
     }
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
@@ -466,6 +559,11 @@ public class GameView extends GLSurfaceView {
                                           flags, x, y, pressure);
             }
         }
+
+	public void handleTextInput(String text)
+	{
+	    GameJni.textInput(text);
+	}
     }
 
     public boolean onKeyDown(final int keyCode, final KeyEvent event) {
@@ -527,5 +625,17 @@ public class GameView extends GLSurfaceView {
         outAttrs.initialSelEnd = outAttrs.initialSelStart = -1;
         outAttrs.label = "";
         return new BaseInputConnection(this, false);
+    }
+
+    public void textInput(final String text)
+    {
+        queueEvent(new Runnable() {
+                // This method will be called on the rendering
+                // thread:
+                public void run() {
+                    renderer.handleTextInput(text);
+                }
+            }
+        );
     }
 }

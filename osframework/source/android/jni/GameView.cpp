@@ -38,4 +38,29 @@ extern "C" {
 
 	return launcher->viewUpdate();
     }
+
+    void AGViewShowKeyboard(enum AGKeyboardMode mode,
+			    const char *title,
+			    const char *hint,
+			    const char *initial)
+    {
+        GameLauncher* launcher = GameLauncher::getInstance();
+
+	return launcher->viewShowKeyboard((int)mode, title, hint, initial);
+    }
+
+    void AGViewHideKeyboard(void)
+    {
+        GameLauncher* launcher = GameLauncher::getInstance();
+
+	return launcher->viewHideKeyboard();
+    }
+
+    const char*
+    AGViewGetTextInput(void)
+    {
+        GameLauncher* launcher = GameLauncher::getInstance();
+
+	return launcher->getTextInput();
+    }
 }

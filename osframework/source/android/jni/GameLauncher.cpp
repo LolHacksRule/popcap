@@ -567,6 +567,91 @@ void GameLauncher::viewUpdate()
     LOGI("done");
 }
 
+void GameLauncher::viewShowKeyboard(int mode,
+				    const char *title,
+				    const char *hint,
+				    const char *initial)
+{
+    JNIEnv* env = 0;
+
+    LOGI("show keyboard...");
+    if (!mVM || !mView)
+        return;
+
+    mVM->GetEnv((void**)&env, JNI_VERSION_1_4);
+    if (!env)
+        return;
+
+    if (env->ExceptionOccurred())
+        return;
+
+    jclass cls = env->FindClass("org/jinghua/GameView");
+    if (cls == NULL)
+        return;
+
+    jmethodID method =
+	env->GetMethodID(cls, "showKeyboard",
+			 "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    if (method == NULL)
+    {
+        env->DeleteLocalRef(cls);
+        return;
+    }
+
+    env->CallVoidMethod(mView, method, mode,
+			env->NewStringUTF(title ? title : ""),
+			env->NewStringUTF(hint ? hint : ""),
+			env->NewStringUTF(initial ? initial : ""));
+
+    env->DeleteLocalRef(cls);
+}
+
+void GameLauncher::viewHideKeyboard()
+{
+    LOGI("hide keyboard");
+    JNIEnv* env = 0;
+
+    if (!mVM || !mView)
+        return;
+
+    mVM->GetEnv((void**)&env, JNI_VERSION_1_4);
+    if (!env)
+        return;
+
+    if (env->ExceptionOccurred())
+        return;
+
+    jclass cls = env->FindClass("org/jinghua/GameView");
+    if (cls == NULL)
+        return;
+
+    jmethodID method = env->GetMethodID(cls, "hideKeyboard", "()V");
+    if (method == NULL)
+    {
+        env->DeleteLocalRef(cls);
+        return;
+    }
+
+    env->CallVoidMethod(mView, method);
+
+    env->DeleteLocalRef(cls);
+}
+
+void GameLauncher::textInput(const char *str)
+{
+    if (!str)
+	mTextInput.clear();
+    else
+	mTextInput = str;
+
+    AGEvent evt;
+
+    evt.type = AG_TEXT_INPUT_EVENT;
+    evt.flags = 0;
+    evt.timestamp = 0;
+    dispatchEvent(evt);
+}
+
 void GameLauncher::release()
 {
     if (gameLoaded())
@@ -605,6 +690,11 @@ const char* GameLauncher::getDataDir() const
 const char* GameLauncher::getFilesDir() const
 {
     return mFilesDir.c_str();
+}
+
+const char* GameLauncher::getTextInput() const
+{
+    return mTextInput.c_str();
 }
 
 int GameLauncher::getViewWidth() const
