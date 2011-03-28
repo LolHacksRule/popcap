@@ -693,7 +693,7 @@ void GameLauncher::release()
         uninit();
         unloadGame();
 	if (mEnv && mView)
-	    mEnv->DeleteLocalRef(mView);
+	    mEnv->DeleteGlobalRef(mView);
         mVM = 0;
         mEnv = 0;
         mainVM = 0;
