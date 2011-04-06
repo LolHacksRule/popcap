@@ -30,9 +30,6 @@ AGAudioWrite(const void* data, int len)
 {
         GameLauncher* launcher = GameLauncher::getInstance();
 
-        if (launcher->getState() < GAME_STATE_INITED)
-            return -1;
-
         launcher->audioWriteData((void*)data, len);
         return len;
 }
