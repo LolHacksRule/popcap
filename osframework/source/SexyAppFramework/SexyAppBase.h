@@ -376,6 +376,8 @@ namespace Sexy
 
 		EventVector                             mAccuEvents;
 		std::string                             mCmdLine;
+		int                                     mArgc;
+		char**                                  mArgv;
 
 		PerformanceStats                        mPerformanceStats;
 
@@ -484,6 +486,7 @@ namespace Sexy
 		virtual void                            Cleanup(bool force = false);
 
 		virtual void			        DoParseCmdLine();
+		virtual void                            ParseCmdLine(int argc, char **argv);
 		virtual void			        ParseCmdLine(const std::string& theCmdLine);
 		virtual void			        HandleCmdLineParam(const std::string& theParamName,
 									   const std::string& theParamValue);
@@ -497,6 +500,7 @@ namespace Sexy
 		virtual void                            Startup();
 		virtual void			        Start();
 		virtual void                            Terminate();
+		virtual void                            SetCmdline(int argc, char **argv);
 		virtual void			        Init();
 		virtual void			        PreDDInterfaceInitHook();
 		virtual void			        PostDDInterfaceInitHook();

@@ -168,6 +168,8 @@ SexyAppBase::SexyAppBase()
 	mChangeDirTo = GetResourcesFolder();
 	mResourceManifest = "properties/resources.xml";
 
+	mArgc = 0;
+	mArgv = 0;
 	mNoDefer = false;
 	mFullScreenPageFlip = true; // should we page flip in fullscreen?
 	mTimeLoaded = GetTickCount();
@@ -2989,24 +2991,68 @@ char* SexyAppBase::GetCmdLine()
 
 void SexyAppBase::DoParseCmdLine()
 {
-	char* aCmdLine = GetCmdLine();
-
-	char* aCmdLinePtr = aCmdLine;
-	if (aCmdLinePtr[0] == '"')
+	if (mArgc > 1 && mArgv)
 	{
-		aCmdLinePtr = strchr(aCmdLinePtr + 1, '"');
-		if (aCmdLinePtr != NULL)
-			aCmdLinePtr++;
+		ParseCmdLine(mArgc, mArgv);
 	}
-
-	if (aCmdLinePtr != NULL)
+	else
 	{
-		aCmdLinePtr = strchr(aCmdLinePtr, ' ');
+		char* aCmdLine = GetCmdLine();
+
+		char* aCmdLinePtr = aCmdLine;
+		if (aCmdLinePtr[0] == '"')
+		{
+			aCmdLinePtr = strchr(aCmdLinePtr + 1, '"');
+			if (aCmdLinePtr != NULL)
+				aCmdLinePtr++;
+		}
+
 		if (aCmdLinePtr != NULL)
-			ParseCmdLine(aCmdLinePtr+1);
+		{
+			aCmdLinePtr = strchr(aCmdLinePtr, ' ');
+			if (aCmdLinePtr != NULL)
+				ParseCmdLine(aCmdLinePtr+1);
+		}
 	}
 
 	mCmdLineParsed = true;
+}
+
+void SexyAppBase::ParseCmdLine(int argc, char **argv)
+{
+	std::string aCurParamName;
+	std::string aCurParamValue;
+
+	for (int i = 1; i < argc; i++)
+	{
+		bool onValue = false;
+
+		if (argv[i][0] == '-')
+		{
+			int j = 0;
+
+			aCurParamName = "-";
+			for (j = 1; argv[i][j]; j++)
+			{
+				char c = argv[i][j];
+				if (c == '=')
+					onValue = true;
+				else if (onValue)
+					aCurParamValue += c;
+
+				else
+					aCurParamName += c;
+			}
+		}
+		if (!aCurParamName.empty() && (onValue || i < argc - 1))
+		{
+			if (!onValue && i < argc - 1)
+				aCurParamValue = argv[++i];
+			HandleCmdLineParam(aCurParamName, aCurParamValue);
+		}
+		aCurParamName.clear();
+		aCurParamValue.clear();
+	}
 }
 
 void SexyAppBase::ParseCmdLine(const std::string& theCmdLine)
@@ -3121,6 +3167,12 @@ void SexyAppBase::InitSoundManager()
 		mSoundManager = new DummySoundManager();
 	if (mMusicInterface == NULL)
 		mMusicInterface = new MusicInterface();
+}
+
+void SexyAppBase::SetCmdline(int argc, char **argv)
+{
+	mArgc = argc;
+	mArgv = argv;
 }
 
 void SexyAppBase::Init()
