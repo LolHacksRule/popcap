@@ -362,7 +362,7 @@ def APK(env, srcdir, origsrcdir, destdir, targets, android_dir = 'android',
     ### copy resources files to asserts/files
     destdirabs = env.Dir(destdir).abspath
     filesdir = os.path.join(android_build_dir, 'assets', 'files')
-    for f in targets:
+    for f in env.Flatten(targets):
         if not env.fs.isfile(f.abspath):
             continue
         if os.path.splitext(f.name)[1] == '.so':
