@@ -25,6 +25,7 @@ enum EventType {
 	EVENT_ANGLE                  = 15,
 	EVENT_TOUCH                  = 16,
 	EVENT_MINIMIZED              = 17,
+	EVENT_GYRO                   = 18,
 	EVENT_USER		     = 65535
 };
 
@@ -68,6 +69,12 @@ struct AccEvent {
 	float          x;
 	float          y;
 	float          z;
+};
+
+struct GyroEvent {
+	float          pitch;
+	float          yaw;
+	float          roll;
 };
 
 struct AngleEvent {
@@ -115,6 +122,7 @@ struct Event {
 		struct AngleEvent     angle;
 		struct TouchEvent     touch;
 		struct MinimizedEvent minimized;
+		struct GyroEvent      gyro;
 	}			      u;
 };
 
