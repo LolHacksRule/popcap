@@ -24,7 +24,7 @@ def AddOptions (opts):
                             'Path to android native sdk installed directory',
                             '',
                             PathVariable.PathAccept))
-    opts.Add (('android_compiler', 'Build binary for specified abi', 'arm-eabi-4.4.0'))
+    opts.Add (('android_compiler', 'Build binary for specified compiler', 'default'))
     opts.Add (('android_libabi',
                'Install native libraries into the lib/$android_libabi directory of apk',
                'default'))
@@ -115,6 +115,40 @@ def AndroidSharedLibrary(env, target, source, **kwargs):
         kwargs['POSTSHLINKFLAGS'] = postlinkflags
     return env.OldSharedLibrary(target, source, **kwargs)
 
+def GetCompilerVersion(c):
+    import re
+    api = re.sub('-[0-9.]*$', '', c)
+    version = c.replace(api + '-', '')
+    vers = version.split('.')
+    vers = map(lambda v: int(v), vers)
+    if len(vers) < 3:
+        vers += [0]
+    if len(vers) < 4:
+        vers += [0]
+    v = vers[0] * 1000000 + vers[1] * 10000 + vers[2] * 100 + vers[3]
+    return v
+
+def CompilerCompare(c1, c2):
+    v1 = GetCompilerVersion(c1)
+    v2 = GetCompilerVersion(c2)
+    if v1 < v2:
+        return -1
+    elif v1 > v2:
+        return 1
+    return 0
+
+def DetectCompilers(ndkroot, host):
+    toolchain = os.path.join(ndkroot, 'build', 'prebuilt')
+    result = []
+    if os.path.exists(toolchain):
+        toolchain = os.path.join(toolchain, host)
+    else:
+        toolchain = os.path.join(ndkroot, 'toolchains')
+    result = os.listdir(toolchain)
+    result = filter(lambda f: os.path.isdir(os.path.join(toolchain, f)), result)
+    result.sort(CompilerCompare)
+    return result
+
 def Configure (env):
     import re
     configs.linux.Configure (env)
@@ -136,6 +170,23 @@ def Configure (env):
     ndkroot = os.path.expanduser (env ['android_ndk_path'])
     env ['android_sdk_root'] = sdkroot
     env ['android_ndk_root'] = ndkroot
+
+    compilers = DetectCompilers(ndkroot, tcarch)
+    print 'android: Available compilers:', compilers
+
+    compiler = env['android_compiler']
+    if not env['android_compiler'] or env['android_compiler'] == 'default':
+        env['android_compiler'] = compilers[-1]
+        compiler = env['android_compiler']
+
+    if compiler and compilers and compiler not in compilers:
+        compilers = filter(lambda c: compiler in c, compilers)
+        if compilers:
+            env['android_compiler'] = compilers[-1]
+            compiler = env['android_compiler']
+
+    print 'android: Using compiler:', compiler
+
     api = re.sub('-[0-9.]*$', '', env['android_compiler'])
     arch = api[:api.find('-')]
     postshlinkflags = ['-lstdc++', '-llog']
