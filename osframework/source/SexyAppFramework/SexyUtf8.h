@@ -24,7 +24,6 @@ namespace Sexy
 
 	int SexyUtf8FromLocaleString(const std::string& string, std::string& utf8);
 
-	bool SexyUtf8ToWString(const std::string& utf8, std::wstring& str);
 	bool SexyUtf8ToWString(const std::string& utf8, Sexy::WString& str);
 	std::string SexyUtf8FromWString(const Sexy::WString& str);
 }

@@ -22,11 +22,6 @@ Sexy::WString Sexy::WStringFrom(const char *s)
     return str;
 }
 
-std::wstring Sexy::SexyWStringToWString(const Sexy::WString& s)
-{
-    return std::wstring(s.begin(), s.end());
-}
-
 std::string Sexy::SexyWStringToString(const Sexy::WString &s)
 {
     return std::string(s.begin(), s.end());

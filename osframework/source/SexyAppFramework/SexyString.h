@@ -17,7 +17,6 @@ namespace Sexy {
 	WString WStringFrom(const wchar_t *s);
 	WString WStringFrom(const char *s);
 
-	std::wstring SexyWStringToWString(const Sexy::WString &s);
 	std::string SexyWStringToString(const Sexy::WString &s);
 	Sexy::WString SexyWStringFromString(const std::string &s);
 
