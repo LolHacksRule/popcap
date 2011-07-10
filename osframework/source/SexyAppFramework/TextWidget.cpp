@@ -42,7 +42,7 @@ void TextWidget::DrawColorString(Graphics* g, const SexyString& theString, int x
 	if (useColors)
 		g->SetColor(Color(0, 0, 0));				
 	
-	SexyString aCurString = _S("");
+	SexyString aCurString = "";
 	for (int i = 0; i < (int)theString.length(); i++)
 	{
 		if (theString[i] == 0x100)
@@ -51,7 +51,7 @@ void TextWidget::DrawColorString(Graphics* g, const SexyString& theString, int x
 				g->DrawString(aCurString, x + aWidth, y);
 			
 			aWidth += g->GetFont()->StringWidth(aCurString);
-			aCurString = _S("");
+			aCurString = "";
 			if (useColors)
 				g->SetColor(Color(theString[i+1], theString[i+2], theString[i+3]));
 			i += 3;
@@ -113,7 +113,7 @@ int TextWidget::GetColorStringWidth(const SexyString& theString)
 		if (theString[i] == 0x100)
 		{
 			aWidth += mFont->StringWidth(aTempString);
-			aTempString = _S("");
+			aTempString = "";
 
 			i += 3;
 		}
@@ -178,7 +178,7 @@ Color TextWidget::GetLastColor(const SexyString& theString)
 //UNICODE
 void TextWidget::AddToPhysicalLines(int theIdx, const SexyString& theLine)
 {		
-	SexyString aCurString = _S("");
+	SexyString aCurString = "";
 		
 	if (GetColorStringWidth(theLine) <= mWidth - 8)
 	{
@@ -193,7 +193,7 @@ void TextWidget::AddToPhysicalLines(int theIdx, const SexyString& theLine)
 			while ((aNextCheckPos < (int)theLine.length()) && (theLine[aNextCheckPos] == ' '))
 				aNextCheckPos++;
 			
-			int aSpacePos = theLine.find(_S(" "), aNextCheckPos);
+			int aSpacePos = theLine.find(" ", aNextCheckPos);
 			if (aSpacePos == -1)
 				aSpacePos = theLine.length();
 			
@@ -203,7 +203,7 @@ void TextWidget::AddToPhysicalLines(int theIdx, const SexyString& theLine)
 				mPhysicalLines.push_back(aCurString);					
 				mLineMap.push_back(theIdx);
 				Color aColor = GetLastColor(aCurString);
-				aCurString = _S("  ") + SexyChar(0xFF) + (SexyChar) aColor.mRed + (SexyChar) aColor.mGreen + (SexyChar) aColor.mBlue +
+				aCurString = "  " + SexyChar(0xFF) + (SexyChar) aColor.mRed + (SexyChar) aColor.mGreen + (SexyChar) aColor.mBlue +
 					theLine.substr(aNextCheckPos, aSpacePos - aNextCheckPos);
 			}
 			else
@@ -213,7 +213,7 @@ void TextWidget::AddToPhysicalLines(int theIdx, const SexyString& theLine)
 		}
 	}	
 	
-	if ((aCurString.compare(_S("")) != 0) || (theLine.compare(_S("")) == 0))
+	if ((aCurString.compare("") != 0) || (theLine.compare("") == 0))
 	{
 		mPhysicalLines.push_back(aCurString);
 		mLineMap.push_back(theIdx);
@@ -225,8 +225,8 @@ void TextWidget::AddLine(const SexyString& theLine)
 {
 	SexyString aLine = theLine;
 
-	if (aLine.compare(_S("")) == 0)
-		aLine = _S(" ");
+	if (aLine.compare("") == 0)
+		aLine = " ";
 	
 	bool atBottom = mScrollbar->AtBottom();
 	
@@ -381,7 +381,7 @@ void TextWidget::MouseDrag(int x, int y)
 
 SexyString TextWidget::GetSelection()
 {
-	SexyString aSelString = _S("");
+	SexyString aSelString = "";
 	int aSelIndices[2];	
 	bool first = true;
 	
@@ -393,7 +393,7 @@ SexyString TextWidget::GetSelection()
 		GetSelectedIndices(aLineNum, aSelIndices);
 		
 		if (!first)
-			aSelString += _S("\r\n");
+			aSelString += "\r\n";
 		
 		for (int aStrIdx = aSelIndices[0]; aStrIdx < aSelIndices[1]; aStrIdx++)
 		{

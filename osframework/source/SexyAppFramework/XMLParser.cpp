@@ -39,10 +39,10 @@ void XMLParser::Fail(const SexyString& theErrorText)
 
 void XMLParser::Init()
 {
-	mSection = _S("");
+	mSection = "";
 	mLineNum = 1;
 	mHasFailed = false;
-	mErrorText = _S("");
+	mErrorText = "";
 	mFirstChar = true;
 	mByteSwap = false;
 }
@@ -62,7 +62,7 @@ bool XMLParser::AddAttribute(XMLElement* theElement, const SexyString& theAttrib
 	if (!aRet.second)
 		aRet.first->second = theAttributeValue;
 
-	if (theAttributeKey != _S("/"))
+	if (theAttributeKey != "/")
 		theElement->mAttributeIteratorList.push_back(aRet.first);
 
 	return aRet.second;
@@ -336,7 +336,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 	{
 		theElement->mType = XMLElement::TYPE_NONE;
 		theElement->mSection = mSection;
-		theElement->mValue = _S("");
+		theElement->mValue = "";
 		theElement->mAttributes.clear();
 		theElement->mInstruction.erase();
 
@@ -376,7 +376,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 					}
 					else
 					{
-						if (error) Fail(_S("Illegal Character"));
+						if (error) Fail("Illegal Character");
 						aVal = 0;
 					}
 				}
@@ -477,7 +477,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 							}
 							else
 							{
-								Fail(_S("Unexpected '<'"));
+								Fail("Unexpected '<'");
 								return false;
 							}
 						}
@@ -546,7 +546,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 								// Do we want to fake an ending section?
 								if (insertEnd)
 								{
-									SexyString anAddString = _S("</") + theElement->mValue + _S(">");
+									SexyString anAddString = "</" + theElement->mValue + ">";
 
 									int anOldSize = mBufferedText.size();
 									int anAddLength = anAddString.length();
@@ -565,7 +565,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 								}
 
 								if (mSection.length() != 0)
-									mSection += _S("/");
+									mSection += "/";
 
 								mSection += theElement->mValue;
 
@@ -573,10 +573,10 @@ bool XMLParser::NextElement(XMLElement* theElement)
 							}
 							else if (theElement->mType == XMLElement::TYPE_END)
 							{
-								int aLastSlash = mSection.rfind(_S('/'));
+								int aLastSlash = mSection.rfind('/');
 								if ((aLastSlash == -1) && (mSection.length() == 0))
 								{
-									Fail(_S("Unexpected End"));
+									Fail("Unexpected End");
 									return false;
 								}
 
@@ -584,7 +584,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 
 								if (aLastSectionName != theElement->mValue)
 								{
-									Fail(_S("End '") + theElement->mValue + _S("' Doesn't Match Start '") + aLastSectionName + _S("'"));
+									Fail("End '" + theElement->mValue + "' Doesn't Match Start '" + aLastSectionName + "'");
 									return false;
 								}
 
@@ -597,31 +597,31 @@ bool XMLParser::NextElement(XMLElement* theElement)
 							}
 							else if (theElement->mType != XMLElement::TYPE_CDATA)
 							{
-								Fail(_S("Unexpected '>'"));
+								Fail("Unexpected '>'");
 								return false;
 							}
 						}
-						else if ((c == L'/') && (theElement->mType == XMLElement::TYPE_START) && (theElement->mValue == _S("")))
+						else if ((c == L'/') && (theElement->mType == XMLElement::TYPE_START) && (theElement->mValue == ""))
 						{
 							theElement->mType = XMLElement::TYPE_END;
 						}
-						else if ((c == L'?') && (theElement->mType == XMLElement::TYPE_START) && (theElement->mValue == _S("")))
+						else if ((c == L'?') && (theElement->mType == XMLElement::TYPE_START) && (theElement->mValue == ""))
 						{
 							theElement->mType = XMLElement::TYPE_INSTRUCTION;
 						}
 						else if (::isspace((uchar) c))
 						{
-							if (theElement->mValue != _S(""))
+							if (theElement->mValue != "")
 								hasSpace = true;
 
 							// It's a comment!
 							if ((theElement->mType == XMLElement::TYPE_START) &&
-							    (theElement->mValue == _S("!--")))
+							    (theElement->mValue == "!--"))
 							{
 								theElement->mType = XMLElement::TYPE_COMMENT;
 							}
 							else if ((theElement->mType == XMLElement::TYPE_START) &&
-								 (theElement->mValue == _S("![CDATA[")))
+								 (theElement->mValue == "![CDATA["))
 							{
 								theElement->mType = XMLElement::TYPE_CDATA;
 								theElement->mInstruction += c;
@@ -630,7 +630,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 						else if (c > 32)
 						{
 							if ((theElement->mType == XMLElement::TYPE_START) &&
-							    (theElement->mValue == _S("![CDATA[")))
+							    (theElement->mValue == "![CDATA["))
 							{
 								theElement->mType = XMLElement::TYPE_CDATA;
 								theElement->mInstruction += c;
@@ -642,7 +642,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 						}
 						else
 						{
-							Fail(_S("Illegal Character"));
+							Fail("Illegal Character");
 							return false;
 						}
 					}
@@ -660,7 +660,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 						{
 							if (hasSpace)
 							{
-								if ((!doingAttribute) || ((!AttributeVal) && (c != _S('='))) ||
+								if ((!doingAttribute) || ((!AttributeVal) && (c != '=')) ||
 									((AttributeVal) && ((aAttributeValue.length() > 0) || gotEndQuote)))
 								{
 									if (doingAttribute)
@@ -721,7 +721,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 						{
 							if (hasSpace)
 							{
-								theElement->mValue += _S(" ");
+								theElement->mValue += " ";
 								hasSpace = false;
 							}
 
@@ -733,7 +733,7 @@ bool XMLParser::NextElement(XMLElement* theElement)
 			else
 			{
 				if (theElement->mType != XMLElement::TYPE_NONE)
-					Fail(_S("Unexpected End of File"));
+					Fail("Unexpected End of File");
 
 				return false;
 			}

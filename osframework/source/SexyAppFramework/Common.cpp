@@ -563,7 +563,7 @@ bool Sexy::StringToDouble(const Sexy::WString theString, double* theDoubleVal)
 SexyString Sexy::CommaSeperate(int theValue)
 {
 	if (theValue == 0)
-		return _S("0");
+		return "0";
 
 	SexyString aCurString;
 
@@ -573,8 +573,8 @@ SexyString Sexy::CommaSeperate(int theValue)
 	while (aCurValue > 0)
 	{
 		if ((aPlace != 0) && (aPlace % 3 == 0))
-			aCurString = _S(',') + aCurString;
-		aCurString = (SexyChar) (_S('0') + (aCurValue % 10)) + aCurString;
+			aCurString = ',' + aCurString;
+		aCurString = (SexyChar) ('0' + (aCurValue % 10)) + aCurString;
 		aCurValue /= 10;
 		aPlace++;
 	}

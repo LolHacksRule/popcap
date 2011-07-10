@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#if defined(__linux__) && defined(__ELF__) && !defined(__UCLIBC__)
+#if defined(__linux__) && defined(__ELF__) && !defined(__UCLIBC__) && !defined(ANDROID)
 #define HAVE_BACKTRACE
 #include <execinfo.h>
 #ifndef _GNU_SOURCE

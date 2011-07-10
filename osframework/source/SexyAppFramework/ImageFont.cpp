@@ -1539,7 +1539,7 @@ void ImageFont::DrawStringEx(Graphics* g, int theX, int theY, const SexyString& 
 			ActiveFontLayer* anActiveFontLayer = &*anItr;
 			FontLayer* aBaseFontLayer = anActiveFontLayer->mBaseFontLayer;
 			if (false && !aBaseFontLayer->isGlyph(aChar))
-				aChar = _S('?');
+				aChar = '?';
 			CharData* aCharData = aBaseFontLayer->GetCharData(aChar);
 
 			int aLayerXPos = aCurXPos;
@@ -1793,7 +1793,7 @@ void ImageFont::DrawStringEx(Graphics* g, int theX, int theY, const Sexy::WStrin
 			ActiveFontLayer* anActiveFontLayer = &*anItr;
 			FontLayer* aBaseFontLayer = anActiveFontLayer->mBaseFontLayer;
 			if (false && !aBaseFontLayer->isGlyph(aChar))
-				aChar = _S('?');
+				aChar = '?';
 			CharData* aCharData = aBaseFontLayer->GetCharData(aChar);
 
 			int aLayerXPos = aCurXPos;

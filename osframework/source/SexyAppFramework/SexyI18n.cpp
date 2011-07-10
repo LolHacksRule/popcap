@@ -137,9 +137,9 @@ static bool parseMessage(XMLParser &parser,
 	std::string obsolete;
 
 	XMLParamMap::iterator anItr;
-	anItr = theXMLElement.mAttributes.find(_S("obsolete"));
+	anItr = theXMLElement.mAttributes.find("obsolete");
 	if (anItr != theXMLElement.mAttributes.end())
-		obsolete = theXMLElement.mAttributes[_S("obsolete")];
+		obsolete = theXMLElement.mAttributes["obsolete"];
 
 	for (;;)
 	{
@@ -149,7 +149,7 @@ static bool parseMessage(XMLParser &parser,
 
 		if (aXMLElement.mType == XMLElement::TYPE_START)
 		{
-			if (aXMLElement.mValue == _S("occurrence"))
+			if (aXMLElement.mValue == "occurrence")
 			{
 				// ELEMENT
 				if (!parser.NextElement(&aXMLElement))
@@ -162,7 +162,7 @@ static bool parseMessage(XMLParser &parser,
 				if (aXMLElement.mType != XMLElement::TYPE_END)
 					return false;
 			}
-			else if (aXMLElement.mValue == _S("flag"))
+			else if (aXMLElement.mValue == "flag")
 			{
 				// ELEMENT
 				if (!parser.NextElement(&aXMLElement))
@@ -175,7 +175,7 @@ static bool parseMessage(XMLParser &parser,
 				if (aXMLElement.mType != XMLElement::TYPE_END)
 					return false;
 			}
-			else if (aXMLElement.mValue == _S("msgid"))
+			else if (aXMLElement.mValue == "msgid")
 			{
 				// CDATA
 				if (!parser.NextElement(&aXMLElement))
@@ -191,7 +191,7 @@ static bool parseMessage(XMLParser &parser,
 				if (aXMLElement.mType != XMLElement::TYPE_END)
 					return false;
 			}
-			else if (aXMLElement.mValue == _S("msgctxt"))
+			else if (aXMLElement.mValue == "msgctxt")
 			{
 				// CDATA
 				if (!parser.NextElement(&aXMLElement))
@@ -207,7 +207,7 @@ static bool parseMessage(XMLParser &parser,
 				if (aXMLElement.mType != XMLElement::TYPE_END)
 					return false;
 			}
-			else if (aXMLElement.mValue == _S("msgstr_plural"))
+			else if (aXMLElement.mValue == "msgstr_plural")
 			{
 				// CDATA
 				if (!parser.NextElement(&aXMLElement))
@@ -220,7 +220,7 @@ static bool parseMessage(XMLParser &parser,
 				if (aXMLElement.mType != XMLElement::TYPE_END)
 					return false;
 			}
-			else if (aXMLElement.mValue == _S("msgstr"))
+			else if (aXMLElement.mValue == "msgstr")
 			{
 				// CDATA
 				if (!parser.NextElement(&aXMLElement))
@@ -264,12 +264,12 @@ static bool parseMessages(XMLParser &parser,
 
 		if (aXMLElement.mType == XMLElement::TYPE_START)
 		{
-			if (aXMLElement.mValue == _S("message"))
+			if (aXMLElement.mValue == "message")
 			{
 				if (!parseMessage(parser, aXMLElement, map))
 					return false;
 			}
-			else if (aXMLElement.mValue == _S("header"))
+			else if (aXMLElement.mValue == "header")
 			{
 				if (!parser.NextElement(&aXMLElement))
 					return false;
@@ -286,7 +286,7 @@ static bool parseMessages(XMLParser &parser,
 		}
 		else if (aXMLElement.mType == XMLElement::TYPE_END)
 		{
-			if (aXMLElement.mValue == _S("po"))
+			if (aXMLElement.mValue == "po")
 				return true;
 		}
 	}
@@ -309,7 +309,7 @@ static bool parseXml(const std::string &path, MsgStrMap &map)
 
 		if (aXMLElement.mType == XMLElement::TYPE_START)
 		{
-			if (aXMLElement.mValue == _S("po"))
+			if (aXMLElement.mValue == "po")
 				if (parseMessages(parser, aXMLElement, map))
 					return true;
 		}

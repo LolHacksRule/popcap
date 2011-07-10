@@ -61,7 +61,6 @@ typedef int BOOL;
 #include "SexyString.h"
 
 typedef std::string			SexyString;
-#define _S(x)				x
 
 
 #define sexystrncmp			strncmp

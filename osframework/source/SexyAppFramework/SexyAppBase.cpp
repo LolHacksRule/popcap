@@ -175,7 +175,7 @@ SexyAppBase::SexyAppBase()
 	mTimeLoaded = GetTickCount();
 	mSEHOccured = false;
 	mProdName = "Product";
-	mTitle = _S("SexyApp");
+	mTitle = "SexyApp";
 	mShutdown = false;
 	mExitToTop = false;
 	mWidth = 640;
@@ -2115,7 +2115,7 @@ bool SexyAppBase::Process(bool allowSleep)
 	/*DWORD aTimeNow = GetTickCount();
 	if (aTimeNow - aLastCheck >= 10000)
 	{
-		OutputDebugString(StrFormat(_S("FUpdates: %d\n"), aNumCalls).c_str());
+		OutputDebugString(StrFormat("FUpdates: %d\n", aNumCalls).c_str());
 		aLastCheck = aTimeNow;
 		aNumCalls = 0;
 	}*/
@@ -2775,7 +2775,7 @@ bool SexyAppBase::LoadProperties(const std::string& theFileName, bool required, 
 			return true;
 		else
 		{
-			Popup(GetString("UNABLE_OPEN_PROPERTIES", _S("Unable to open properties file ")) + StringToSexyString(theFileName));
+			Popup(GetString("UNABLE_OPEN_PROPERTIES", "Unable to open properties file ") + StringToSexyString(theFileName));
 			return false;
 		}
 	}
@@ -2783,7 +2783,7 @@ bool SexyAppBase::LoadProperties(const std::string& theFileName, bool required, 
 	{
 		if (!CheckSignature(aBuffer, theFileName))
 		{
-			Popup(GetString("PROPERTIES_SIG_FAILED", _S("Signature check failed on ")) + StringToSexyString(theFileName + "'"));
+			Popup(GetString("PROPERTIES_SIG_FAILED", "Signature check failed on ") + StringToSexyString(theFileName + "'"));
 			return false;
 		}
 	}
@@ -2890,7 +2890,7 @@ SexyString SexyAppBase::GetString(const std::string& theId)
 	if (anItr != mStringProperties.end())
 		return std::string(anItr->second.begin(), anItr->second.end());
 	else
-		return _S("");
+		return "";
 }
 
 SexyString SexyAppBase::GetString(const std::string& theId, const SexyString& theDefault)

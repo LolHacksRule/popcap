@@ -299,14 +299,14 @@ int DDInterface::Init(HWND theWindow, bool IsWindowed)
 	mIsWindowed = IsWindowed;
 	mHasOldCursorArea = false;
 
-	OutputDebug(_S("Application requests %4lu x %4lu [%2d:%2d]\n"), mWidth, mHeight, mAspect.mNumerator, mAspect.mDenominator);
+	OutputDebug("Application requests %4lu x %4lu [%2d:%2d]\n", mWidth, mHeight, mAspect.mNumerator, mAspect.mDenominator);
 
 	if (GotDXError(aResult, "DirectDrawCreate"))
 		return RESULT_DD_CREATE_FAIL;	
 	
 	if (IsWindowed)
 	{
-		OutputDebug(_S("Hack aspect is                   [%2d:%2d]\n"), mApp->mWindowAspect.mNumerator, mApp->mWindowAspect.mDenominator);
+		OutputDebug("Hack aspect is                   [%2d:%2d]\n", mApp->mWindowAspect.mNumerator, mApp->mWindowAspect.mDenominator);
 
 		if ( mApp->mEnableWindowAspect && mAspect < mApp->mWindowAspect )
 		{
@@ -356,7 +356,7 @@ int DDInterface::Init(HWND theWindow, bool IsWindowed)
 			}
 		}
 
-		OutputDebug(_S("Window is            %4lu x %4lu [%2d:%2d]\n"), mDisplayWidth, mDisplayHeight, mDisplayAspect.mNumerator, mDisplayAspect.mDenominator);
+		OutputDebug("Window is            %4lu x %4lu [%2d:%2d]\n", mDisplayWidth, mDisplayHeight, mDisplayAspect.mNumerator, mDisplayAspect.mDenominator);
 
 		aResult = mDD->SetCooperativeLevel(theWindow, DDSCL_NORMAL);
 
@@ -402,7 +402,7 @@ int DDInterface::Init(HWND theWindow, bool IsWindowed)
 	}
 	else
 	{
-		OutputDebug(_S("Desktop is           %4lu x %4lu [%2d:%2d]\n"), mDesktopWidth, mDesktopHeight, mDesktopAspect.mNumerator, mDesktopAspect.mDenominator);
+		OutputDebug("Desktop is           %4lu x %4lu [%2d:%2d]\n", mDesktopWidth, mDesktopHeight, mDesktopAspect.mNumerator, mDesktopAspect.mDenominator);
 
 		if ( mIs3D && mAspect < mDesktopAspect )
 		{
@@ -436,7 +436,7 @@ int DDInterface::Init(HWND theWindow, bool IsWindowed)
 			}
 		}
 
-		OutputDebug(_S("Display is           %4lu x %4lu [%2d:%2d]\n"), mDisplayWidth, mDisplayHeight, mDisplayAspect.mNumerator, mDisplayAspect.mDenominator);
+		OutputDebug("Display is           %4lu x %4lu [%2d:%2d]\n", mDisplayWidth, mDisplayHeight, mDisplayAspect.mNumerator, mDisplayAspect.mDenominator);
 
 		aResult = mDD->SetCooperativeLevel(theWindow, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN);
 		if (GotDXError(aResult,"SetCooperativeLevel FullScreen"))
@@ -507,7 +507,7 @@ int DDInterface::Init(HWND theWindow, bool IsWindowed)
 			mDD->FlipToGDISurface();
 	}
 	
-	OutputDebug(_S("Draw buffer is       %4lu x %4lu [%2d:%2d]\n"), mWidth, mHeight, mAspect.mNumerator, mAspect.mDenominator);
+	OutputDebug("Draw buffer is       %4lu x %4lu [%2d:%2d]\n", mWidth, mHeight, mAspect.mNumerator, mAspect.mDenominator);
 
 	if (FAILED(mDD->GetMonitorFrequency(&mRefreshRate)) || mRefreshRate<60)
 	{

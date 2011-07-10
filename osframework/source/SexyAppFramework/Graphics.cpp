@@ -1194,12 +1194,12 @@ int Graphics::WriteString(const std::string& theString, int theX, int theY, int 
 						SexyChar aChar = theString[i+aDigitNum+1];
 						int aVal = 0;
 
-						if ((aChar >= _S('0')) && (aChar <= _S('9')))
-							aVal = aChar - _S('0');
-						else if ((aChar >= _S('A')) && (aChar <= _S('F')))
-							aVal = (aChar - _S('A')) + 10;
-						else if ((aChar >= _S('a')) && (aChar <= _S('f')))
-							aVal = (aChar - _S('a')) + 10;
+						if ((aChar >= '0') && (aChar <= '9'))
+							aVal = aChar - '0';
+						else if ((aChar >= 'A') && (aChar <= 'F'))
+							aVal = (aChar - 'A') + 10;
+						else if ((aChar >= 'a') && (aChar <= 'f'))
+							aVal = (aChar - 'a') + 10;
 
 						aColor += (aVal << ((5 - aDigitNum) * 4));
 					}
@@ -1215,7 +1215,7 @@ int Graphics::WriteString(const std::string& theString, int theX, int theY, int 
 
 				aXOffset += GetFont()->StringWidth(aString);
 
-				aString = _S("");
+				aString = "";
 			}
 		}
 		else
@@ -1292,7 +1292,7 @@ int Graphics::WriteString(const Sexy::WString& theString, int theX, int theY, in
 						int aVal = 0;
 
 						if ((aChar >= L'0') && (aChar <= L'9'))
-							aVal = aChar - _S('0');
+							aVal = aChar - '0';
 						else if ((aChar >= L'A') && (aChar <= 'F'))
 							aVal = (aChar - L'A') + 10;
 						else if ((aChar >= L'a') && (aChar <= L'f'))
@@ -1410,11 +1410,11 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const std::string& theLine,
 	{
 		aCurChar = theLine[aCurPos];
 		aNextChar = theLine[aCurPos + 1];
-		if (aCurChar==_S('^') && mWriteColoredString) // Handle special color modifier
+		if (aCurChar=='^' && mWriteColoredString) // Handle special color modifier
 		{
 			if(aCurPos + 1 < aStrLen)
 			{
-				if(aNextChar==_S('^'))
+				if(aNextChar=='^')
 				{
 					aCurPos += aCurCharLen; // literal '^' -> just skip the extra '^'
 				}
@@ -1425,11 +1425,11 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const std::string& theLine,
 				}
 			}
 		}
-		else if(aCurChar==_S(' '))
+		else if(aCurChar==' ')
 		{
 			aSpacePos = aCurPos;
 		}
-		else if(aCurChar==_S('\n'))
+		else if(aCurChar=='\n')
 		{
 			aCurWidth = theRect.mWidth+1; // force word wrap
 			aSpacePos = aCurPos;
@@ -1474,11 +1474,11 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const std::string& theLine,
 					aLineStartPos = aCurPos;
 					break;
 				}
-				if (aCurChar != _S('\n') && aCurChar == _S(' '))
+				if (aCurChar != '\n' && aCurChar == ' ')
 				{
 					while (aCurPos < aStrLen)
 					{
-						if (theLine[aCurPos] != _S(' '))
+						if (theLine[aCurPos] != ' ')
 							break;
 						aCurPos++;
 					}
@@ -1678,7 +1678,7 @@ int	Graphics::WriteWordWrapped(const Rect& theRect, const Sexy::WString& theLine
 				{
 					while (aCurPos < aStrLen)
 					{
-						if (theLine[aCurPos] != _S(' '))
+						if (theLine[aCurPos] != ' ')
 							break;
 						aCurPos++;
 					}
