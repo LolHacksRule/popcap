@@ -24,7 +24,7 @@ def AddOptions (opts):
                             'Path to android native sdk installed directory',
                             '',
                             PathVariable.PathAccept))
-    opts.Add (('android_abi', 'Build binary for specified abi', 'arm-eabi-4.4.0'))
+    opts.Add (('android_compiler', 'Build binary for specified abi', 'arm-eabi-4.4.0'))
     opts.Add (('android_libabi',
                'Install native libraries into the lib/$android_libabi directory of apk',
                'default'))
@@ -83,7 +83,7 @@ def AndroidSharedLibrary(env, target, source, **kwargs):
                  '-L' + os.path.join(archdir, 'usr', 'lib'),
                  "-lc", '-ldl']
 
-    if 'mips' in env['android_abi']:
+    if 'mips' in env['android_compiler']:
         linkflags.insert(0, '-Wl,-T,ldscripts/mipself_android.xsc')
 
     if 'SHLINKFLAGS' in kwargs:
@@ -108,7 +108,7 @@ def AndroidSharedLibrary(env, target, source, **kwargs):
     libs += ['c', 'm', 'dl', 'gcc']
     kwargs['LIBS'] = libs
 
-    if 'mips' in env['android_abi'] and 'GameLauncher' in libs:
+    if 'mips' in env['android_compiler'] and 'GameLauncher' in libs:
         while 'GameLauncher' in libs:
             libs.remove('GameLauncher')
         postlinkflags.insert(-3, '-lGameLauncher')
@@ -136,7 +136,7 @@ def Configure (env):
     ndkroot = os.path.expanduser (env ['android_ndk_path'])
     env ['android_sdk_root'] = sdkroot
     env ['android_ndk_root'] = ndkroot
-    api = re.sub('-[0-9.]*$', '', env['android_abi'])
+    api = re.sub('-[0-9.]*$', '', env['android_compiler'])
     arch = api[:api.find('-')]
     postshlinkflags = ['-lstdc++', '-llog']
     postlinkflags =  ['-nostdlib', "-Wl,--gc-sections", "-Wl,-z,nocopyreloc",
@@ -158,16 +158,16 @@ def Configure (env):
     ### ndk r4
     if os.path.exists(toolchain):
         toolchain = os.path.join(toolchain, tcarch)
-        gccdir = os.path.join (toolchain, env['android_abi'])
-        tcdir = os.path.join (toolchain, env['android_abi'], 'bin')
+        gccdir = os.path.join (toolchain, env['android_compiler'])
+        tcdir = os.path.join (toolchain, env['android_compiler'], 'bin')
         archdir = os.path.join(ndkroot, 'build', 'platforms',
                                'android-' + env['android_platform'],
                                'arch-' + arch)
-        sysroot = os.path.join (toolchain, env['android_abi'])
+        sysroot = os.path.join (toolchain, env['android_compiler'])
     else:
         ### ndk-r5
         toolchain = os.path.join(ndkroot, 'toolchains')
-        gccdir = os.path.join (toolchain, env['android_abi'],
+        gccdir = os.path.join (toolchain, env['android_compiler'],
                                'prebuilt', tcarch)
         tcdir = os.path.join (gccdir, 'bin')
         archdir = os.path.join(ndkroot, 'platforms',
@@ -184,7 +184,7 @@ def Configure (env):
         postshlinkflags.insert(0, stdcpplib)
         sysroot = archdir
     env['gccdir'] = gccdir
-    env['gccver'] = env['android_abi'].replace(api + '-', '')
+    env['gccver'] = env['android_compiler'].replace(api + '-', '')
     env['gccabi'] = 'arm' in api and 'armeabi' or api
     env['toolchain'] = toolchain
     env['archdir'] = archdir
