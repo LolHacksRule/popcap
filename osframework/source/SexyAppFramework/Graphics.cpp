@@ -1821,14 +1821,8 @@ int Graphics::WStringFromString(const std::string& string, Sexy::WString& wstr)
 		return len;
 	}
 
-	len = SexyUtf8FromLocale(string.c_str(), -1, &result);
-	if (len >= 0)
-	{
-		SexyUtf8ToWString(std::string(result), wstr);
-		delete [] result;
-		return len;
-	}
-
+	if (SexyLocaleToWString(wstr, string))
+		return wstr.size();
 	return -1;
 }
 
