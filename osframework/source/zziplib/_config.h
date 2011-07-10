@@ -23,8 +23,10 @@
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
+#if !defined(ANDROID) && !defined(__ANDROID__)
 #ifndef ZZIP_HAVE_DIRENT_H 
 #define ZZIP_HAVE_DIRENT_H  1 
+#endif
 #endif
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
