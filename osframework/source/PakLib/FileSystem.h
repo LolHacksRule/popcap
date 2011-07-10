@@ -25,18 +25,23 @@
 #include <time.h>
 
 namespace PakLib {
+	class FileSystemManager;
 	class File
 	{
+		friend class FileSystemManager;
 	public:
-		File() {}
-		virtual ~File() {}
+		File() { mId = -1; }
+		virtual ~File();
+
+		int getId() const { return mId; }
 
 	private:
 		File(const File &other);
+		void setId(int id) { mId = id; }
 
 	public:
 		virtual int			seek(long theOffset, int theOrigin) = 0;
-		virtual int			tell() = 0;
+		virtual long			tell() = 0;
 		virtual size_t			read(void* thePtr, int theElemSize, int theCount) = 0;
 		virtual size_t			write(const void* thePtr, int theElemSize, int theCount) = 0;
 		virtual int			getc() = 0;
@@ -45,6 +50,10 @@ namespace PakLib {
 		virtual wchar_t*		gets(wchar_t* thePtr, int theSize) = 0;
 		virtual int			eof() = 0;
 		virtual void                    close() = 0;
+		virtual long                    getSize() = 0;
+
+	protected:
+		int                             mId;
 	};
 
 	enum FileType

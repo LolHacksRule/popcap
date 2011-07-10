@@ -17,6 +17,10 @@ class NativeFile: public File
 public:
 	NativeFile(FILE *fp) : mFp(fp)
 	{
+		size_t pos = ftell(fp);
+		fseek(mFp, 0, SEEK_END);
+		mSize = ftell(fp);
+		fseek(mFp, pos, SEEK_SET);
 	}
 
 	~NativeFile()
@@ -30,7 +34,7 @@ public:
 		return fseek(mFp, theOffset, theOrigin);
 	}
 
-	int tell()
+	long tell()
 	{
 		return ftell(mFp);
 	}
@@ -75,8 +79,14 @@ public:
 		delete this;
 	}
 
+	long getSize()
+	{
+		return mSize;
+	}
+
 private:
 	FILE *mFp;
+	size_t mSize;
 };
 
 NativeFileSystem::NativeFileSystem(FileSystemDriver  *driver,

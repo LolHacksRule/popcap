@@ -2,11 +2,13 @@
 #define __PAKLIB_FILESYSTEM_MANAGER_H__
 
 #include "FileSystemDriverFactory.h"
+#include "CritSect.h"
 
 namespace PakLib {
 
 	class FileSystemManager: FileSystem
 	{
+		friend class File;
 	private:
 		FileSystemManager();
 		~FileSystemManager();
@@ -18,6 +20,8 @@ namespace PakLib {
 		bool                            addResource(const std::string &location,
 							    const std::string &type,
 							    int priority);
+
+		File*                           getFile(int id);
 
 	public:
 		virtual File*			open(const char* theFileName,
@@ -31,6 +35,9 @@ namespace PakLib {
 
 		void                            addDefaultLocations();
 
+		int                             addFile(File* theFile);
+		void                            removeFile(File* theFile);
+
 		struct FileSystemCompare
 		{
 			bool operator() (FileSystem* const & lhs,
@@ -40,11 +47,16 @@ namespace PakLib {
 			}
 		};
 		typedef std::multiset<FileSystem*, FileSystemCompare> FileSystemList;
+		typedef std::map<int, File*>    FileIdMap;
 
 		bool                            mInitialized;
 		bool                            mLoaded;
 		FileSystemDriverFactory         mFactory;
 		FileSystemList                  mFileSystems;
+		int                             mFileNextId;
+		FileIdMap                       mFileIdMap;
+		CritSect                        mCritSect;
+		CritSect                        mInitCritSect;
 	};
 
 }

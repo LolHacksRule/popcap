@@ -1,8 +1,10 @@
 #include "ZipFileSystem.h"
+#include "FileSystemManager.h"
 #include "Find.h"
 #include "AutoCrit.h"
 
 #include <zzip/zzip.h>
+#include <zzip/plugin.h>
 
 #if defined(WIN32) || defined(_WIN32)
 #define PATH_SEP "\\"
@@ -16,8 +18,7 @@ class ZipFile: public File
 {
 public:
 	ZipFile(ZipFileSystem *filesystem, ZZIP_FILE *fp,
-		size_t size) :
-		mFileSystem(filesystem), mFp(fp), mSize(size)
+			zzip_off_t size) : mFileSystem(filesystem), mFp(fp), mSize(size)
 	{
 	}
 
@@ -36,7 +37,7 @@ public:
 		return 0;
 	}
 
-	int tell()
+	long tell()
 	{
 		AutoCrit autoCrit(mFileSystem->mCritSect);
 		return zzip_tell(mFp);
@@ -45,8 +46,7 @@ public:
 	size_t read(void* thePtr, int theElemSize, int theCount)
 	{
 		AutoCrit autoCrit(mFileSystem->mCritSect);
-		zzip_ssize_t ret = zzip_fread(thePtr, theElemSize,
-					      theCount, mFp);
+		zzip_ssize_t ret = zzip_fread(thePtr, theElemSize, theCount, mFp);
 		if (ret < 0)
 			return 0;
 		return ret;
@@ -104,7 +104,7 @@ public:
 	int eof()
 	{
 		AutoCrit autoCrit(mFileSystem->mCritSect);
-		return (size_t)tell() == mSize;
+		return zzip_tell(mFp) == mSize;
 	}
 
 	void close()
@@ -112,10 +112,15 @@ public:
 		delete this;
 	}
 
+	long getSize()
+	{
+		return mSize;
+	}
+
 private:
 	ZipFileSystem *mFileSystem;
 	ZZIP_FILE *mFp;
-	size_t mSize;
+	zzip_off_t mSize;
 };
 
 ZipFileSystem::ZipFileSystem(FileSystemDriver  * driver,
@@ -182,9 +187,12 @@ File* ZipFileSystem::open(const char* theFileName,
 	    theFileName[1] == ':')
 		return 0;
 #endif
-	if (theFileName[0] == '.' && theFileName[1] == '/')
-		theFileName += 2;
+       if (theFileName[0] == '.' && theFileName[1] == '/')
+               theFileName += 2;
 
+	std::string theFileNameS = std::string(theFileName);
+	if(theFileNameS.size() >= 3 &&theFileNameS[0] == '.' && theFileNameS[1] == '/')
+		theFileNameS = theFileNameS.substr(2, theFileNameS.size() -2);
 	std::string filename;
 
 	if (mPrefix.empty())
@@ -192,6 +200,8 @@ File* ZipFileSystem::open(const char* theFileName,
 	else
 		filename = mPrefix + std::string(PATH_SEP) +
 			std::string(theFileName);
+
+	AutoCrit autoCrit(mCritSect);
 	ZZIP_FILE* zzipFile =
 		zzip_file_open(mZZipDir,
 			       filename.c_str(),
@@ -233,6 +243,54 @@ ZipFileSystemDriver::ZipFileSystemDriver(int priority)
 {
 }
 
+static int pak_open(zzip_char_t* name, int flags, ...)
+{
+    File* file = FileSystemManager::getManager()->open(name, "rb");
+    if (!file)
+	    return -1;
+    return file->getId();
+}
+
+static int pak_close(int fd)
+{
+    File* file = FileSystemManager::getManager()->getFile(fd);
+    if (file)
+	file->close();
+    return 0;
+}
+
+static zzip_ssize_t pak_read(int fd, void* buf, zzip_size_t len)
+{
+    File* file = FileSystemManager::getManager()->getFile(fd);
+    if (!file)
+	return -1;
+    return file->read(buf, 1, len);
+}
+
+static zzip_off_t pak_seeks(int fd, zzip_off_t offset, int whence)
+{
+    File* file = FileSystemManager::getManager()->getFile(fd);
+    if (!file)
+	return -1;
+
+    int ret = file->seek(offset, whence);
+    if (ret == 0)
+	return file->tell();
+    return ret;
+}
+
+static zzip_off_t pak_filesize(int fd)
+{
+    File* file = FileSystemManager::getManager()->getFile(fd);
+    if (!file)
+	return -1;
+    return file->getSize();
+}
+
+static zzip_plugin_io_handlers pak_plugin_io = {
+    { pak_open, pak_close, pak_read, pak_seeks, pak_filesize }
+};
+
 FileSystem* ZipFileSystemDriver::Create(const std::string &location,
 				 const std::string &type,
 				 int                priority)
@@ -240,7 +298,6 @@ FileSystem* ZipFileSystemDriver::Create(const std::string &location,
 	if (type != "zip" || location.empty())
 		return false;
 
-	AutoCrit autoCrit(mCritSect);
 	std::string path;
 	std::string prefix;
 	size_t pos = location.find("::");
@@ -254,10 +311,19 @@ FileSystem* ZipFileSystemDriver::Create(const std::string &location,
 	{
 	    path = location;
 	}
+
+	AutoCrit autoCrit(mCritSect);
 	zzip_error_t zzipError;
 	ZZIP_DIR *dir = zzip_dir_open(path.c_str(), &zzipError);
 	if (!dir)
-		return false;
+	{
+		mCritSect.Leave();
+		dir = zzip_opendir_ext_io(path.c_str(), ZZIP_ONLYZIP | ZZIP_CASELESS,
+					  0, &pak_plugin_io);
+		mCritSect.Enter();
+		if (!dir)
+			return false;
+	}
 
 	return new ZipFileSystem(this, path, prefix, priority, dir);
 }

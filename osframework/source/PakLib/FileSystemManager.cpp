@@ -1,14 +1,7 @@
 #include "FileSystemManager.h"
 #include "NativeFileSystem.h"
 #include "ZipFileSystem.h"
-
-#if defined(ANDROID) || defined(__ANDROID__)
-#include <android/log.h>
-
-#define  LOG_TAG    "PakLib"
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-#endif
+#include "AutoCrit.h"
 
 using namespace PakLib;
 
@@ -17,6 +10,7 @@ FileSystemManager::FileSystemManager() :
 {
 	mInitialized = true;
 	mLoaded = false;
+	mFileNextId = 65535;
 
 	// Native/posix file system
 	mFactory.AddDriver(new NativeFileSystemDriver());
@@ -30,18 +24,22 @@ void FileSystemManager::addDefaultLocations()
 	if (mLoaded)
 		return;
 
+	AutoCrit anAutoCrit(mInitCritSect);
+
 	mLoaded = true;
 	// native/posix file system
 	addResource(".", "native", 0);
+
+	addResource("", "android", 0);
 
 	// zip file system
 	addResource("main.pak", "zip", 10);
 
 #if defined(ANDROID) || defined(__ANDROID__)
-	const char* pkg = getenv("ANDROID_SOURCE_DIR");
-	if (pkg)
-	    addResource(std::string(pkg) + std::string("::assets/files"),
-			"zip", 20);
+        const char* pkg = getenv("ANDROID_SOURCE_DIR");
+        if (pkg)
+            addResource(std::string(pkg) + std::string("::assets/files"),
+                        "zip", 20);
 #endif
 }
 
@@ -99,6 +97,8 @@ File* FileSystemManager::open(const char* theFileName,
 		fp = (*it)->open(theFileName, theAccess);
 		if (fp)
 		{
+			addFile(fp);
+
 #if 0
 			printf("PakLib: file %s successfully opened(driver: %s device: %s).\n",
 			       theFileName,
@@ -128,7 +128,10 @@ File* FileSystemManager::open(const wchar_t* theFileName,
 	{
 		fp = (*it)->open(theFileName, theAccess);
 		if (fp)
+		{
+			addFile(fp);
 			return fp;
+		}
 	}
 	return 0;
 }
@@ -142,3 +145,33 @@ Dir* FileSystemManager::openDir(const char *theDir)
 
 	return 0;
 }
+
+int FileSystemManager::addFile(File* theFile)
+{
+	AutoCrit anAutoCrit(mCritSect);
+
+	theFile->setId(mFileNextId++);
+	mFileIdMap.insert(FileIdMap::value_type(theFile->getId(), theFile));
+
+	return theFile->getId();
+}
+
+void FileSystemManager::removeFile(File* theFile)
+{
+	AutoCrit anAutoCrit(mCritSect);
+
+	FileIdMap::iterator it = mFileIdMap.find(theFile->getId());
+	if (it != mFileIdMap.end())
+		mFileIdMap.erase(it);
+}
+
+File* FileSystemManager::getFile(int id)
+{
+	AutoCrit anAutoCrit(mCritSect);
+
+	FileIdMap::iterator it = mFileIdMap.find(id);
+	if (it != mFileIdMap.end())
+	    return it->second;
+	return 0;
+}
+
