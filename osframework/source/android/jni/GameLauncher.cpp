@@ -11,8 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
-#define  LOG_TAG    "libGameLauncher"
+#define  LOG_TAG    "Sexy"
+#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
@@ -26,7 +28,7 @@ DettachJavaVM(void* arg)
 {
     JavaVM* vm = (JavaVM*)arg;
 
-    LOGI("Detaching thread %ld from JavaVM", (long)pthread_self());
+    LOGD("Detaching thread %ld from JavaVM", (long)pthread_self());
 
     if (vm)
         vm->DetachCurrentThread();
@@ -527,7 +529,7 @@ void GameLauncher::addEventListener(AGEventListener listener,
 
 void GameLauncher::viewSwapBuffers()
 {
-    LOGI("view swapBuffers...");
+    LOGD("view swapBuffers...");
 
     JNIEnv* env = 0;
 
@@ -558,14 +560,14 @@ void GameLauncher::viewSwapBuffers()
     env->CallVoidMethod(mView, swapBuffers_method);
     env->DeleteLocalRef(cls);
 
-    LOGI("done");
+    LOGD("done");
 }
 
 void GameLauncher::viewUpdate()
 {
     JNIEnv* env = 0;
 
-    LOGI("updating view...");
+    LOGD("updating view...");
 
     if (!mVM || !mView)
         return;
@@ -595,7 +597,7 @@ void GameLauncher::viewUpdate()
 
     env->DeleteLocalRef(cls);
 
-    LOGI("done");
+    LOGD("done");
 }
 
 void GameLauncher::viewShowKeyboard(int mode,
@@ -605,7 +607,7 @@ void GameLauncher::viewShowKeyboard(int mode,
 {
     JNIEnv* env = 0;
 
-    LOGI("show keyboard...");
+    LOGD("show keyboard...");
     if (!mVM || !mView)
         return;
 
@@ -639,7 +641,7 @@ void GameLauncher::viewShowKeyboard(int mode,
 
 void GameLauncher::viewHideKeyboard()
 {
-    LOGI("hide keyboard");
+    LOGD("hide keyboard");
     JNIEnv* env = 0;
 
     if (!mVM || !mView)
@@ -758,7 +760,7 @@ JNIEnv* GameLauncher::getJNIEnv()
 
     mVM->AttachCurrentThread(&env, NULL);
     pthread_setspecific(vmTlsKey, env);
-    LOGI("Attached thread %ld to JavaVM, evn %p", (long)pthread_self(), env);
+    LOGD("Attached thread %ld to JavaVM, evn %p", (long)pthread_self(), env);
     return env;
 }
 
