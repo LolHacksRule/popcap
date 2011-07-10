@@ -356,7 +356,7 @@ def APK(env, srcdir, origsrcdir, destdir, targets, android_dir = 'android',
     ### copy *.so to 'android-build'
     jnis = env.Glob(os.path.join(destdir, '*.so'))
     srcs += env.Install(os.path.join(android_build_dir, 'libs',
-                                     env['gccabi'].replace('-', '')),
+                                     env['android_libabi']),
                         jnis)
 
     ### copy resources files to asserts/files
