@@ -24,6 +24,8 @@
 #include "MTRand.h"
 #include "ModVal.h"
 #include "SexyDebug.h"
+#include "SexyI18n.h"
+#include "SexyUtf8.h"
 
 #include <iostream>
 #include <fstream>
@@ -52,7 +54,7 @@
 #if defined(ANDROID) || defined(__ANDROID__)
 #include <android/log.h>
 
-#define  LOG_TAG    "SexyAppBase"
+#define  LOG_TAG    "Sexy"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define printf LOGI
@@ -4033,4 +4035,30 @@ void SexyAppBase::ResumeApp()
 	event.subid = 0;
 	event.u.active.active = 1;
 	ProcessMessage(event);
+}
+
+void SexyAppBase::SetLocale(const std::string& locale,
+			    const std::string& encoding)
+{
+	Sexy::setLocale(locale.c_str());
+	SexySetLocaleEncoding(encoding);
+
+	std::string lenc = SexyGetLocaleEncoding();
+	if (lenc == "UTF-8")
+		Graphics::SetPreferedEncoding("UTF-8");
+	else
+		Graphics::SetPreferedEncoding("");
+}
+
+std::string SexyAppBase::GetLocale()
+{
+	const char* locale = Sexy::setLocale(0);
+	if (!locale)
+		return "";
+	return locale;
+}
+
+std::string SexyAppBase::GetLocaleEncoding()
+{
+	return SexyGetLocaleEncoding();
 }

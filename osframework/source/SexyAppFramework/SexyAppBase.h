@@ -695,6 +695,11 @@ namespace Sexy
 		char*                                   GetCmdLine();
 		void                                    CheckControllerStatus();
 		virtual void                            InputStatusChanged(const InputStatusInfo *theInfo);
+
+		static void                             SetLocale(const std::string& locale,
+								  const std::string& encoding = "");
+		static std::string                      GetLocale();
+		static std::string                      GetLocaleEncoding();
 	};
 
 	extern SexyAppBase* gSexyAppBase;
