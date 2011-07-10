@@ -22,10 +22,15 @@ namespace Sexy
 
 	int SexyUtf8FromLocale (const char * str, int len, char** result);
 
+	int SexyUnicodeFromLocale (const char * str, int len, unichar_t ** result);
+
 	int SexyUtf8FromLocaleString(const std::string& string, std::string& utf8);
 
 	bool SexyUtf8ToWString(const std::string& utf8, Sexy::WString& str);
 	std::string SexyUtf8FromWString(const Sexy::WString& str);
+
+	bool SexyLocaleToWString(Sexy::WString& str, const std::string& locale);
+	bool SexyLocaleFromWString(std::string& locale, const Sexy::WString& str);
 }
 
 #endif

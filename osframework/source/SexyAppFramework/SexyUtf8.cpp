@@ -1,5 +1,6 @@
 #include "SexyUtf8.h"
 #include "SexyLang.h"
+#include "SexyI18n.h"
 
 #include "AutoCrit.h"
 
@@ -16,13 +17,93 @@
 
 namespace Sexy
 {
+	class CharConverter {
+	 public:
+		CharConverter() : cd(0)
+		{
+		}
+
+		CharConverter(const CharConverter& other) : cd(0),
+			to(other.to), from(other.from)
+		{
+		}
+
+		CharConverter(const std::string& _to, const std::string& _from) :
+			cd(0), to(_to), from(_from)
+		{
+		}
+
+		~CharConverter()
+		{
+			if (cd)
+				uniconv_close(cd);
+		}
+
+		void Reset(const std::string& _to, const std::string& _from)
+		{
+			if (cd)
+			{
+				uniconv_close(cd);
+				cd = 0;
+			}
+			from = _from;
+			to = _to;
+		}
+
+		uniconv_t* GetCD()
+		{
+			if (!cd)
+				uniconv_open(to.c_str(), from.c_str());
+			return cd;
+		}
+
+		std::string GetSrcEncoding()
+		{
+			return from;
+		}
+
+		std::string GetDstEncoding()
+		{
+			return to;
+		}
+
+	private:
+		uniconv_t * cd;
+		std::string to;
+		std::string from;
+	};
+
 	static std::string localeEncoding;
 
 	std::string
 	SexyGetLocaleEncoding()
 	{
 		if (localeEncoding.empty())
+		{
+			std::string charset;
+			std::string locale = setLocale(0) ? setLocale(0) : "C";
+			if (locale.find('.') != std::string::npos)
+			{
+				charset = locale.substr(locale.find('.'), locale.size());
+				if (charset.find('@') != std::string::npos)
+					charset = charset.substr(0, charset.find('@'));
+				return charset;
+			}
+			else if (locale != "C")
+			{
+				static const std::string charsets[][2] = {
+					{ "zh_CN", "GBK" },
+					{ "zh_TW", "BIG5" },
+					{ "", "" }
+				};
+
+				for (size_t i = 0; !charsets[i][0].empty(); i++)
+					if (charsets[i][0] == locale)
+						return charsets[i][1];;
+			};
+
 			return SexyGetCharset();
+		}
 		return localeEncoding;
 	}
 
@@ -315,25 +396,25 @@ namespace Sexy
 	static int Utf8FromLocale (const char * str, int len, char** result)
 	{
 		static CritSect aCritSect;
-		static uniconv_t *cd = 0;
-		static std::string encoding;
+		static CharConverter converter;
+
+		uniconv_t *cd = converter.GetCD();
+		std::string encoding = converter.GetSrcEncoding();
 
 		AutoCrit aAutoCrit(aCritSect);
 		const std::string charset = SexyGetLocaleEncoding();
 
-		if (!cd|| encoding != charset)
+		if (!cd || encoding != charset)
 		{
 			const std::string charset = SexyGetLocaleEncoding();
 			if (charset.empty() || !stricmp (charset.c_str(), "UTF-8") ||
 			    !stricmp (charset.c_str(), "utf8"))
 				return -1;
 
-			if (cd)
-				uniconv_close(cd);
-			cd = uniconv_open("UTF-8", charset.c_str());
+			converter.Reset("UTF-8", charset);
+			cd = converter.GetCD();
 			if (!cd)
 				return -1;
-			encoding = charset;
 		}
 
 		char* outbuf;
@@ -351,32 +432,22 @@ namespace Sexy
 		static CritSect aCritSect;
 		AutoCrit aAutoCrit(aCritSect);
 		const unsigned int MAX_CHARSETS = 6;
-		static const char* charsets[MAX_CHARSETS] =
+		static CharConverter converters[MAX_CHARSETS] =
 		{
-			"GB18030",
-			"GBK",
-			"GB2312",
-			"BIG5",
-			"CP950",
-			"ISO8859-1"
+			CharConverter("UTF-8", "GB18030"),
+			CharConverter("UTF-8", "GBK"),
+			CharConverter("UTF-8", "GB2312"),
+			CharConverter("UTF-8", "BIG5"),
+			CharConverter("UTF-8", "CP950"),
+			CharConverter("UTF-8", "ISO8859-1")
 		};
-		static uniconv_t *cds[MAX_CHARSETS] =
-		{
-			0, 0, 0, 0, 0, 0
-		};
-
 		for (unsigned i = 0; i < MAX_CHARSETS; i++)
 		{
-			if (!cds[i])
-			{
-				cds[i] = uniconv_open("UTF-8", charsets[i]);
-				if (!cds[i])
-					continue;
-			}
+			uniconv_t *cd = converters[i].GetCD();
 
 			char* outbuf;
 			size_t outlen;
-			int ret = EncodingConvert(cds[i], str, len, &outbuf, &outlen);
+			int ret = EncodingConvert(cd, str, len, &outbuf, &outlen);
 			if (ret < 0)
 				continue;
 			ret = SexyUtf8Strlen(outbuf, outlen);
@@ -384,6 +455,138 @@ namespace Sexy
 				delete [] outbuf;
 			else
 				*result = outbuf;
+			return ret;
+		}
+
+		return -1;
+	}
+
+	static int UnicodeFromLocale (const char * str, int len, unichar_t** result)
+	{
+		static CritSect aCritSect;
+		static CharConverter converter;
+
+		uniconv_t *cd = converter.GetCD();
+		std::string encoding = converter.GetSrcEncoding();
+
+		AutoCrit aAutoCrit(aCritSect);
+		const std::string charset = SexyGetLocaleEncoding();
+
+		if (!cd || encoding != charset)
+		{
+			const std::string charset = SexyGetLocaleEncoding();
+			std::string dst = sizeof(unichar_t) == 2 ? "utf_16" : "utf_32";
+
+			converter.Reset(dst, charset);
+			cd = converter.GetCD();
+			if (!cd)
+				return -1;
+		}
+
+		char* outbuf;
+		size_t outlen;
+		int ret = EncodingConvert(cd, str, len, &outbuf, &outlen);
+		if (ret < 0)
+			return -1;
+		ret = outlen / sizeof(unichar_t);
+		*result = (unichar_t*)outbuf;
+		return ret;
+	}
+
+	static int UnicodeFallbackConvert (const char * str, int len, unichar_t ** result)
+	{
+		static CritSect aCritSect;
+		AutoCrit aAutoCrit(aCritSect);
+		const unsigned int MAX_CHARSETS = 6;
+		static std::string dst = sizeof(unichar_t) == 2 ? "utf_16" : "utf_32";
+		static CharConverter converters[MAX_CHARSETS] =
+		{
+			CharConverter(dst, "GB18030"),
+			CharConverter(dst, "GBK"),
+			CharConverter(dst, "GB2312"),
+			CharConverter(dst, "BIG5"),
+			CharConverter(dst, "CP950"),
+			CharConverter(dst, "ISO8859-1")
+		};
+
+		for (unsigned i = 0; i < MAX_CHARSETS; i++)
+		{
+			uniconv_t *cd = converters[i].GetCD();
+
+			char* outbuf;
+			size_t outlen;
+			int ret = EncodingConvert(cd, str, len, &outbuf, &outlen);
+			if (ret < 0)
+				continue;
+			ret = outlen / sizeof(unichar_t);
+			*result = (unichar_t*)outbuf;
+			return ret;
+		}
+
+		return -1;
+	}
+
+	static int UnicodeToLocale (const unichar_t * str, int len, char** result)
+	{
+		static CritSect aCritSect;
+		static CharConverter converter;
+
+		uniconv_t *cd = converter.GetCD();
+		std::string encoding = converter.GetSrcEncoding();
+
+		AutoCrit aAutoCrit(aCritSect);
+		const std::string charset = SexyGetLocaleEncoding();
+
+		if (!cd || encoding != charset)
+		{
+			const std::string charset = SexyGetLocaleEncoding();
+			std::string src = sizeof(unichar_t) == 2 ? "utf_16" : "utf_32";
+
+			converter.Reset(charset, src);
+			cd = converter.GetCD();
+			if (!cd)
+				return -1;
+		}
+
+		char* outbuf;
+		size_t outlen;
+		int ret = EncodingConvert(cd, (char*)str, len * sizeof(unichar_t), &outbuf, &outlen);
+		if (ret < 0)
+			return -1;
+		ret = len;
+		*result = outbuf;
+		return ret;
+	}
+
+	static int UnicodeToLocaleFallbackConvert (const unichar_t * str, int len, char ** result)
+	{
+		static CritSect aCritSect;
+		const unsigned int MAX_CHARSETS = 7;
+		static std::string src = sizeof(unichar_t) == 2 ? "utf_16" : "utf_32";
+		static CharConverter converters[MAX_CHARSETS] =
+		{
+			CharConverter("GB18030", src),
+			CharConverter("GBK", src),
+			CharConverter("GB2312", src),
+			CharConverter("BIG5", src),
+			CharConverter("CP950", src),
+			CharConverter("ISO8859-1", src),
+			CharConverter("UTF-8", src)
+		};
+
+		AutoCrit aAutoCrit(aCritSect);
+
+		for (unsigned i = 0; i < MAX_CHARSETS; i++)
+		{
+			uniconv_t *cd = converters[i].GetCD();
+
+			char* outbuf;
+			size_t outlen;
+			int ret = EncodingConvert(cd, (char*)str, sizeof(unichar_t) * len, &outbuf, &outlen);
+			if (ret < 0)
+				continue;
+			ret = len;
+			*result = outbuf;
 			return ret;
 		}
 
@@ -433,6 +636,42 @@ namespace Sexy
 			return ret;
 
 		ret = Utf8FallbackConvert(str, len, result);
+		if (ret >= 0)
+			return ret;
+
+		return -1;
+	}
+
+	int SexyUnicodeFromLocale (const char * str, int len, unichar_t ** result)
+	{
+		int ret;
+
+		if (len < 0)
+			len = strlen(str);
+
+		ret = UnicodeFromLocale(str, len, result);
+		if (ret >= 0)
+			return ret;
+
+		ret = UnicodeFallbackConvert(str, len, result);
+		if (ret >= 0)
+			return ret;
+
+		return -1;
+	}
+
+	int SexyUnicodeToLocale (const unichar_t * str, int len, char ** result)
+	{
+		int ret;
+
+		if (len < 0)
+			len = ustrlen(str);
+
+		ret = UnicodeToLocale(str, len, result);
+		if (ret >= 0)
+			return ret;
+
+		ret = UnicodeToLocaleFallbackConvert(str, len, result);
 		if (ret >= 0)
 			return ret;
 
@@ -591,6 +830,44 @@ namespace Sexy
 			}
 			return r;
 		}
+	}
+
+	bool SexyLocaleToWString(Sexy::WString& str, const std::string& locale)
+	{
+		unichar_t* result;
+
+		if (locale.empty())
+		{
+			str.clear();
+			return true;
+		}
+
+		int len = SexyUnicodeFromLocale(locale.c_str(), locale.size(), &result);
+		if (len < 0)
+			return false;
+
+		str = Sexy::WString(result);
+		delete [] result;
+		return len;
+	}
+
+	bool SexyLocaleFromWString(std::string& locale, const Sexy::WString& str)
+	{
+		char* result;
+
+		if (str.empty())
+		{
+			locale.clear();
+			return true;
+		}
+
+		int len = SexyUnicodeToLocale(str.c_str(), str.size(), &result);
+		if (len < 0)
+			return false;
+
+		locale = std::string(result);
+		delete [] result;
+		return true;
 	}
 }
 
