@@ -54,7 +54,7 @@ Sexy::SexyGetCharset()
 #if defined(ANDROID) || defined(__android__)
 	charset = "UTF-8";
 #else
-	charset = nl_langinfo(CODESET) || "ASCII";
+	charset = nl_langinfo(CODESET);
 #endif
 #else
 	char buf[64];
