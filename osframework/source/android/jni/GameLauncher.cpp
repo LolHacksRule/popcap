@@ -334,7 +334,7 @@ int GameLauncher::audioInit(int sampleRate,
 
     env->DeleteLocalRef(cls);
 
-    LOGI("Audio Playre initialized.");
+    LOGI("Audio Player initialized.");
 
     return result == JNI_TRUE ? 0 : -1;
 }
