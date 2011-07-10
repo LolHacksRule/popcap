@@ -13,7 +13,7 @@ using namespace Sexy;
 
 
 OptionsDialog::OptionsDialog(Board* b) :
-    Dialog(IMAGE_DIALOG_BOX, IMAGE_DIALOG_BUTTON, OptionsDialog::DIALOG_ID, true, _S(tr("OPTIONS")), _S(""), _S(tr("CLOSE")), Dialog::BUTTONS_FOOTER)
+    Dialog(IMAGE_DIALOG_BOX, IMAGE_DIALOG_BUTTON, OptionsDialog::DIALOG_ID, true, tr("OPTIONS"), "", tr("CLOSE"), Dialog::BUTTONS_FOOTER)
 {
 	mAddToManager = false;
 
@@ -36,7 +36,7 @@ OptionsDialog::OptionsDialog(Board* b) :
 	mSfxVolumeSlider->SetValue(gSexyAppBase->GetSfxVolume());
 	
 	mQuitBtn = new DialogButton(IMAGE_DIALOG_BUTTON, OptionsDialog::QUIT_BTN_ID, this);
-	mQuitBtn->mLabel = _S(tr("QUIT GAME"));
+	mQuitBtn->mLabel = tr("QUIT GAME");
 	mQuitBtn->SetFont(FONT_DEFAULT);
 
 	m3DCheckbox = new Checkbox(IMAGE_CHECKBOX, IMAGE_CHECKBOX, OptionsDialog::HARDWARE_CHECKBOX_ID, this);
@@ -86,16 +86,16 @@ void OptionsDialog::Draw(Graphics* g)
 		x = 0;
 		y = 0;
 	}
-	g->DrawString(_S(tr("Music volume:")), mMusicVolumeSlider->mX - x, 
+	g->DrawString(tr("Music volume:"), mMusicVolumeSlider->mX - x, 
 		      mMusicVolumeSlider->mY - y - mMusicVolumeSlider->mHeight);
 
-	g->DrawString(_S(tr("Sound volume:")), mSfxVolumeSlider->mX - x, 
+	g->DrawString(tr("Sound volume:"), mSfxVolumeSlider->mX - x, 
 		      mSfxVolumeSlider->mY - y - mSfxVolumeSlider->mHeight);
 
 	// Do the same for the checkboxes:
-	g->DrawString(_S(tr("3D Mode:")), m3DCheckbox->mX - x - 25, m3DCheckbox->mY - y - m3DCheckbox->mHeight + 20);
-	g->DrawString(_S(tr("Full Screen:")), mFSCheckbox->mX - x - 25, mFSCheckbox->mY - y - mFSCheckbox->mHeight + 20);
-	g->DrawString(_S(tr("Custom Cursors:")), mCustomCursorsCheckbox->mX - x - 25, 
+	g->DrawString(tr("3D Mode:"), m3DCheckbox->mX - x - 25, m3DCheckbox->mY - y - m3DCheckbox->mHeight + 20);
+	g->DrawString(tr("Full Screen:"), mFSCheckbox->mX - x - 25, mFSCheckbox->mY - y - mFSCheckbox->mHeight + 20);
+	g->DrawString(tr("Custom Cursors:"), mCustomCursorsCheckbox->mX - x - 25, 
 		      mCustomCursorsCheckbox->mY - y - mCustomCursorsCheckbox->mHeight + 20);
 }
 
@@ -280,10 +280,10 @@ void OptionsDialog::CheckboxChecked(int theId, bool checked)
 				// if the user was in full screen mode, they might not see the error message. Using
 				// a game dialog box is the safest way to warn them.
 				m3DCheckbox->SetChecked(false);
-				gSexyAppBase->DoDialog(OptionsDialog::MESSAGE_BOX_ID, true, _S("Not Supported"), 
-					_S("Hardware acceleration can not be enabled on this computer. \nYour \
-					video card does not meet the minimum requirements for this game."),
-					_S("OK"), Dialog::BUTTONS_FOOTER);
+				gSexyAppBase->DoDialog(OptionsDialog::MESSAGE_BOX_ID, true, "Not Supported", 
+					"Hardware acceleration can not be enabled on this computer. \nYour \
+					video card does not meet the minimum requirements for this game.",
+					"OK", Dialog::BUTTONS_FOOTER);
 			}
 			else if(!gSexyAppBase->Is3DAccelerationRecommended())
 			{
@@ -291,10 +291,10 @@ void OptionsDialog::CheckboxChecked(int theId, bool checked)
 				// with a call to Is3DAccelerationRecommended. This allows the user to override
 				// the default setting, but with a warning that it might not work or might cause
 				// problems. Some cards fail the detection process but wind up being OK to use.
-				gSexyAppBase->DoDialog(OptionsDialog::MESSAGE_BOX_ID, true, _S("Warning"), 
-					_S("Your video card may not fully support this feature.\n\
-					If you experience slower performance, please disable Hardware Acceleration."),
-					_S("OK"), Dialog::BUTTONS_FOOTER);
+				gSexyAppBase->DoDialog(OptionsDialog::MESSAGE_BOX_ID, true, "Warning", 
+					"Your video card may not fully support this feature.\n\
+					If you experience slower performance, please disable Hardware Acceleration.",
+					"OK", Dialog::BUTTONS_FOOTER);
 			}
 
 		}
@@ -310,9 +310,9 @@ void OptionsDialog::CheckboxChecked(int theId, bool checked)
 		// checking the value of SexyAppBase's mForceFullScreen variable.
 		if (gSexyAppBase->mForceFullscreen && !checked)
 		{
-			gSexyAppBase->DoDialog(OptionsDialog::MESSAGE_BOX_ID, true, _S("No Windowed Mode"),
-				_S("Windowed mode is only available if your desktop is running in\n\
-				either 16 bit or 32 bit color mode, which it is not."), _S("OK"), Dialog::BUTTONS_FOOTER);
+			gSexyAppBase->DoDialog(OptionsDialog::MESSAGE_BOX_ID, true, "No Windowed Mode",
+				"Windowed mode is only available if your desktop is running in\n\
+				either 16 bit or 32 bit color mode, which it is not.", "OK", Dialog::BUTTONS_FOOTER);
 
 			// re-check the box to indicate that fullscreen is still the selected mode:
 			mFSCheckbox->SetChecked(true);

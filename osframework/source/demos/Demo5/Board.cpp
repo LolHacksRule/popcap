@@ -375,7 +375,7 @@ void Board::AddedToManager(WidgetManager* theWidgetManager)
 	// go back and review.
 	mButton = new ButtonWidget(Board::OPTIONS_BUTTON_ID, this);	
 	mButton->SetFont(FONT_DEFAULT);
-	mButton->mLabel = _S("Click Me!");
+	mButton->mLabel = "Click Me!";
 
 	// This time, let's use some images for our button.
 	// mOverImage is the image to use when the mouse cursor is over the button.
@@ -392,7 +392,7 @@ void Board::AddedToManager(WidgetManager* theWidgetManager)
 
 	mTextButton = new ButtonWidget(Board::TEXT_BUTTON_ID, this);
 	mTextButton->SetFont(FONT_DEFAULT);
-	mTextButton->mLabel = _S("Disable TextLayout!");
+	mTextButton->mLabel = "Disable TextLayout!";
 
 	// This time, let's use some images for our button.
 	// mOverImage is the image to use when the mouse cursor is over the button.
@@ -407,7 +407,7 @@ void Board::AddedToManager(WidgetManager* theWidgetManager)
 
 	mTestButton = new ButtonWidget(Board::TEST_BUTTON_ID, this);
 	mTestButton->SetFont(FONT_DEFAULT);
-	mTestButton->mLabel = _S("Disable test!");
+	mTestButton->mLabel = "Disable test!";
 
 	// This time, let's use some images for our button.
 	// mOverImage is the image to use when the mouse cursor is over the button.

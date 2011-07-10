@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 #endif
 
 	GameApp* anApp = new GameApp();
+	anApp->SetCmdline(argc, argv);
 	anApp->Init();
 	anApp->Start();
 
