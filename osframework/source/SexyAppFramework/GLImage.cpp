@@ -102,6 +102,9 @@ struct SexyGLVertex {
 
 #ifdef SEXY_OPENGLES
 #define ftofix(f) (GLfixed)(f * 65536.0f)
+#if defined(ANDROID) || defined(__ANDROID__)
+#define glColor4ub(r, g, b, a) glColor4f(r / 255.0f, g / 255.0f, b / 255.f, a / 255.f)
+#endif
 #endif
 
 namespace Sexy {
