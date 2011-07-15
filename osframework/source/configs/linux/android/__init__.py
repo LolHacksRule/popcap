@@ -302,8 +302,8 @@ def Configure (env):
             'mips' : '-mhard-float'
         }
         android_fpu = env['android_fpu']
-        if android_fpu == 'default' and android_fpu in default_fpuflags:
-            fpuflags = default_fpuflags[android_fpu]
+        if android_fpu == 'default' and arch in default_fpuflags:
+            fpuflags += [default_fpuflags[arch]]
         elif android_fpu == 'hardfloat':
             fpuflags += ['-mhard-float']
         else:
