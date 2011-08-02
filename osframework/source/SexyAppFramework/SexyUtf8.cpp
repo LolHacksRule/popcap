@@ -53,7 +53,7 @@ namespace Sexy
 		uniconv_t* GetCD()
 		{
 			if (!cd)
-				uniconv_open(to.c_str(), from.c_str());
+				cd = uniconv_open(to.c_str(), from.c_str());
 			return cd;
 		}
 
@@ -553,7 +553,7 @@ namespace Sexy
 		int ret = EncodingConvert(cd, (char*)str, len * sizeof(unichar_t), &outbuf, &outlen);
 		if (ret < 0)
 			return -1;
-		ret = len;
+		ret = outlen;
 		*result = outbuf;
 		return ret;
 	}
@@ -585,7 +585,7 @@ namespace Sexy
 			int ret = EncodingConvert(cd, (char*)str, sizeof(unichar_t) * len, &outbuf, &outlen);
 			if (ret < 0)
 				continue;
-			ret = len;
+			ret = outlen;
 			*result = outbuf;
 			return ret;
 		}
@@ -846,7 +846,7 @@ namespace Sexy
 		if (len < 0)
 			return false;
 
-		str = Sexy::WString(result);
+		str = Sexy::WString(result, len);
 		delete [] result;
 		return len;
 	}
@@ -865,7 +865,7 @@ namespace Sexy
 		if (len < 0)
 			return false;
 
-		locale = std::string(result);
+		locale = std::string(result, len);
 		delete [] result;
 		return true;
 	}
