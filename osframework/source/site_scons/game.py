@@ -321,19 +321,11 @@ def APK(env, srcdir, origsrcdir, destdir, targets, android_dir = 'android',
     ### combine android project
     srcs = []
     androidabs = os.path.join(origsrcdir, android)
-    for root, dirs, files in os.walk(os.path.join(launcher, 'src')):
-        for f in files:
-            if '.java' in f:
-                src = os.path.join(root, f)
-                reldir = root.replace(launcher + os.path.sep, '')
-                dest = os.path.join(androidbuild, reldir, f)
-                #print src, '->', dest
-                srcs += env.Command(dest, src,
-                                    SCons.Defaults.Copy ('$TARGET', '$SOURCE'))
 
     files = env.Glob(os.path.join(origsrcdir, android, '*'))
     for f in files:
-        if f.name in ['local.properties', 'libs', 'bin']:
+        if f.name in ['local.properties', 'default.properties.in',
+                      'default.properties', 'libs', 'bin']:
             continue
         srcs += InstallDir(env, androidbuild, f)
 
@@ -352,6 +344,25 @@ def APK(env, srcdir, origsrcdir, destdir, targets, android_dir = 'android',
     sdk_path = os.path.expanduser(env['android_sdk_path'])
     srcs += env.Command(lp, env.Value(sdk_path),
                         GenerateLocalProp)
+    ### generate/copy default.properties
+    def_props_temp = os.path.join(origsrcdir, android, 'default.properties.in')
+    def_props = os.path.join(androidbuild, 'default.properties')
+    gl_rel_path = RelPath(launcher, env.Dir(androidbuild).abspath)
+    if os.path.exists(def_props_temp):
+        d = env.Dictionary()
+        d['game_launcher'] = gl_rel_path
+        srcs += env.ScanReplace(target = def_props,
+                                source = [def_props_temp, env.Value(d)])
+    else:
+        def AddLibraryProject(env, target, source):
+            f = file(target[0].abspath, 'a')
+            f.seek(0, os.SEEK_END)
+            f.write("android.library.reference.1=" + gl_rel_path + "\n")
+            f.close()
+            return 0
+        srcs += env.Command(def_props, os.path.join(origsrcdir, android, 'default.properties'),
+                            [SCons.Defaults.Copy ('$TARGET', '$SOURCE'),
+                             AddLibraryProject])
 
     ### copy *.so to 'android-build'
     jnis = env.Glob(os.path.join(destdir, '*.so'))
