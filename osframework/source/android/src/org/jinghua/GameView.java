@@ -220,14 +220,14 @@ public class GameView extends GLSurfaceView {
 	builder.setNegativeButton("cancel", null);
 
 	builder.setView(mTextInputWidget);
-	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 		public void onClick(DialogInterface dialog, int whichButton)
 		{
 		    textInput(mTextInputWidget.getText().toString());
 		}
 	    });
 
-	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 		public void onClick(DialogInterface dialog, int whichButton) {
 		    _hideKeyboard();
 		}
