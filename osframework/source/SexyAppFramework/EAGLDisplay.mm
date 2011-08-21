@@ -606,6 +606,17 @@ void EAGLDisplay::SwapBuffers()
 		EAGLView* view = (EAGLView*)mView;
 		[view swapBuffers];
 		Reshape();
+		
+		if (mApp->mUpdateAppDepth > 1)
+		{
+			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+			NSDate *now = [NSDate date];
+			NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+			[runLoop runUntilDate:now];
+			
+			[pool release];
+		}
 	}
 }
 
