@@ -278,6 +278,11 @@ def Configure (env):
         tcarch = 'darwin-x86'
     else:
         tcarch = 'linux-x86'
+    
+    ### replace -dynamiclib with -shared
+    env['SHLINKFLAGS'] = SCons.Util.CLVar('$LINKFLAGS -shared')
+    if tcarch == 'darwin-x86':
+        env.AppendUnique(LINKFLAGS = ['-Wl,-z,muldefs'])
 
     ### expand ~ in path
     sdkroot = os.path.expanduser (env ['android_sdk_path'])
