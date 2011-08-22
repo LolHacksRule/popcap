@@ -257,7 +257,7 @@ def Configure (env):
 
     ### default platform map
     platformmap = {
-        'arm' : '7',
+        'arm' : '8',
         'mips' : '8',
         'x86' : '9'
     }
