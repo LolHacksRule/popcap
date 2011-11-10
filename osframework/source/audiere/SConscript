@@ -29,6 +29,7 @@ for tarball in tarballs:
 env = env.Clone()
 #env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
 configs.EnablePackage(env, 'ogg', append = False)
+configs.EnablePackage(env, 'dumb', append = False)
 
 audiere_untar = env.Untar (os.path.join (srcdir, audiere_tar))
 env.SourceCode (audiere_dir, audiere_untar)
@@ -43,6 +44,7 @@ srcs = [
   'file_ansi.cpp',
   'input.cpp',
   'input_aiff.cpp',
+  'input_mod.cpp',
   'input_mp3.cpp',
   'input_wav.cpp',
   'input_ogg.cpp',
@@ -62,7 +64,7 @@ srcs = [
 srcs += [os.path.join ('mpaudec', 'mpaudec.c'),
          os.path.join ('mpaudec', 'bits.c')]
 
-env.AppendUnique (CPPDEFINES = ['NO_FLAC', 'NO_DUMB', 'NO_SPEEX'])
+env.AppendUnique (CPPDEFINES = ['NO_FLAC', 'NO_DUMB', 'NO_SPEEX', 'HAVE_DUMB'])
 env.AppendUnique (CPPDEFINES = ['AUDIERE_EXPORTS'])
 env.PrependUnique (LIBPATH = ['lib'])
 env.AppendUnique (LIBS = ['vorbisfile', 'vorbis', 'ogg'])
