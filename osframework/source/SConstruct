@@ -120,6 +120,7 @@ sconscripts += [os.path.join ('android', 'SConscript')]
 sconscripts += [os.path.join ('PakLib', 'SConscript')]
 sconscripts += [os.path.join ('ImageLib', 'SConscript')]
 sconscripts += [os.path.join ('ogg', 'SConscript')]
+sconscripts += [os.path.join ('dumb', 'SConscript')]
 sconscripts += [os.path.join ('audiere', 'SConscript')]
 sconscripts += [os.path.join ('freetype', 'SConscript')]
 

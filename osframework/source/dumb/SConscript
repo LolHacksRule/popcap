@@ -1,0 +1,76 @@
+import os
+import game
+import configs
+
+from SCons.Defaults import *
+
+Import (['env', 'gameenv'])
+
+sexyenv = env
+srcdir = Dir('.').srcnode().abspath
+
+dumb_name = 'dumb'
+dumb_version = '0.9.3'
+dumb_suffix = '.tar.gz'
+dumb_tar = dumb_name + '-' + dumb_version + dumb_suffix
+dumb_dir = dumb_name + '-' + dumb_version
+
+#common_env.AppendUnique (CPPPATH = ['include'], LIBPATH = ['lib'])
+
+sdk_install = []
+
+### dumb
+env = env.Clone()
+dumb_untar = env.Untar (os.path.join (srcdir, dumb_tar))
+env.SourceCode (dumb_dir, dumb_untar)
+
+headers = []
+sources = map (lambda f: os.path.join(dumb_dir, 'src', 'core', f),
+               ['atexit.c', 'duhlen.c', 'duhtag.c', 'dumbfile.c',
+               'loadduh.c', 'makeduh.c', 'rawsig.c', 'readduh.c',
+               'register.c', 'rendduh.c', 'rendsig.c', 'unload.c'])
+
+sources += map (lambda f: os.path.join(dumb_dir, 'src', 'helpers', f),
+                ['clickrem.c', 'memfile.c', 'resamp2.inc',
+                'resamp3.inc', 'resample.c', 'sampbuf.c', 'silence.c',
+                'stdfile.c'])
+
+sources += map (lambda f: os.path.join(dumb_dir, 'src', 'it', f),
+                ['itload2.c', 'itmisc.c', 'itread2.c', 'itrender.c',
+                'loadmod2.c', 'loads3m2.c', 'loadxm2.c', 'readmod2.c',
+                'reads3m2.c', 'readxm2.c', 'xmeffect.c', 'itload.c',
+                'itorder.c', 'itread.c', 'itunload.c', 'loadmod.c',
+                'loads3m.c', 'loadxm.c', 'readmod.c', 'reads3m.c',
+                'readxm.c'])
+
+lib_dir = os.path.join('$top_builddir', 'lib')
+header_dir = os.path.join('$top_builddir', 'include')
+
+dumb_headers = env.Install (header_dir,
+                            os.path.join(dumb_dir, 'include', 'dumb.h'))
+
+env.PrependUnique(CPPPATH = [os.path.join (dumb_dir, 'include')])
+
+dumb_lib = env.ConvenienceLibrary ('dumb', sources)
+#Depends (sources, dumb_headers)
+
+dumb = env.Install (lib_dir, dumb_lib)
+
+sdk_install += env.Install (os.path.join("$sdkdir", 'include'),
+                            os.path.join(dumb_dir, 'include', 'dumb.h'))
+sdk_install += env.Install (os.path.join('$sdkdir', 'lib'), dumb_lib)
+
+env.Clean (dumb, [dumb_dir])
+
+env.Alias('dumb_install', dumb)
+env.Alias('dumb_sdk_install', sdk_install)
+env.Alias('sdk_install', sdk_install)
+
+### setup package info
+depends = []
+objects = []
+configs.SetPackageInfo([sexyenv, gameenv], 'dumb',
+                       LIBS = ['dumb'] + depends,
+                       CPPPATH = [os.path.join('$top_builddir', 'include')],
+                       LIBPATH = [os.path.join('$top_builddir', 'lib')],
+                       OBJECTS = objects, TARGETS = dumb)
