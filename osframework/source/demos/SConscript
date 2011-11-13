@@ -28,63 +28,90 @@ env.PrependUnique(CPPPATH = ['#', '#SexyAppFramework'],
                              os.path.join ('..', 'ImageLib'),
                              os.path.join ('..', 'audiere', 'lib')],
                   LIBS = ['SexyAppFramework'])
-env.Program('demo1', [os.path.join ('Demo1', 'Board.cpp'),
-                      os.path.join ('Demo1', 'GameApp.cpp'),
-                      os.path.join ('Demo1', 'main.cpp')])
 
-env.Program('demo2', [os.path.join ('Demo2', 'Board.cpp'),
-                      os.path.join ('Demo2', 'GameApp.cpp'),
-                      os.path.join ('Demo2', 'main.cpp')])
+android = env['TARGET_PLATFORM'] == 'android'
 
-env.Program('demo3', [os.path.join ('Demo3', 'Board.cpp'),
-                      os.path.join ('Demo3', 'GameApp.cpp'),
-                      os.path.join ('Demo3', 'main.cpp')])
-env.Program('demo4', [os.path.join ('Demo4', 'Board.cpp'),
-                      os.path.join ('Demo4', 'GameApp.cpp'),
-                      os.path.join ('Demo4', 'TitleScreen.cpp'),
-                      os.path.join ('Demo4', 'Res.cpp'),
-                      os.path.join ('Demo4', 'main.cpp')])
-env.Program('demo5', [os.path.join ('Demo5', 'Board.cpp'),
-                      os.path.join ('Demo5', 'GameApp.cpp'),
-                      os.path.join ('Demo5', 'DemoDialog.cpp'),
-                      os.path.join ('Demo5', 'TitleScreen.cpp'),
-                      os.path.join ('Demo5', 'Res.cpp'),
-                      os.path.join ('Demo5', main)])
-hungarr = env.Program('hungarr', [os.path.join ('Hun-garr', 'Board.cpp'),
-                                  os.path.join ('Hun-garr', 'GameApp.cpp'),
-                                  os.path.join ('Hun-garr', 'GameOverEffect.cpp'),
-                                  os.path.join ('Hun-garr', 'LevelupEffect.cpp'),
-                                  os.path.join ('Hun-garr', 'OptionsDialog.cpp'),
-                                  os.path.join ('Hun-garr', 'TitleScreen.cpp'),
-                                  os.path.join ('Hun-garr', 'Res.cpp'),
-                                  os.path.join ('Hun-garr', main)],
-                      CPPDEFINES = env['CPPDEFINES'] + [('SEXY_LANG', configs.QuoteStr(language))])
+progs = []
 
-### install game hungarr
-game_name = 'Hun-garr'
-destdir = game.GetGameDistDir(env, game_name)
+srcs = [os.path.join ('Demo1', 'Board.cpp'),
+        os.path.join ('Demo1', 'GameApp.cpp'),
+        os.path.join ('Demo1', 'main.cpp'),
+        os.path.join ('Demo1', 'ModuleMain.cpp')]
+if android:
+    progs += [env.SharedLibrary('Demo1', srcs)]
+else:
+    progs += [env.Program('demo1', srcs)]
 
-### install targets for hungarr
+srcs = [os.path.join ('Demo2', 'ModuleMain.cpp'),
+        os.path.join ('Demo2', 'Board.cpp'),
+        os.path.join ('Demo2', 'GameApp.cpp'),
+        os.path.join ('Demo2', 'main.cpp')]
+if android:
+    progs += [env.SharedLibrary('Demo2', srcs)]
+else:
+    progs += [env.Program('demo2', srcs)]
+
+srcs = [os.path.join ('Demo3', 'ModuleMain.cpp'),
+        os.path.join ('Demo3', 'Board.cpp'),
+        os.path.join ('Demo3', 'GameApp.cpp'),
+        os.path.join ('Demo3', 'main.cpp')]
+if android:
+    progs += [env.SharedLibrary('Demo3', srcs)]
+else:
+    progs += [env.Program('demo3', srcs)]
+
+srcs = [os.path.join ('Demo4', 'ModuleMain.cpp'),
+        os.path.join ('Demo4', 'Board.cpp'),
+        os.path.join ('Demo4', 'GameApp.cpp'),
+        os.path.join ('Demo4', 'TitleScreen.cpp'),
+        os.path.join ('Demo4', 'Res.cpp'),
+        os.path.join ('Demo4', 'main.cpp')]
+if android:
+    progs += [env.SharedLibrary('Demo4', srcs)]
+else:
+    progs += [env.Program('demo4', srcs)]
+
+srcs =  [os.path.join ('Demo5', 'ModuleMain.cpp'),
+         os.path.join ('Demo5', 'Board.cpp'),
+         os.path.join ('Demo5', 'GameApp.cpp'),
+         os.path.join ('Demo5', 'DemoDialog.cpp'),
+         os.path.join ('Demo5', 'TitleScreen.cpp'),
+         os.path.join ('Demo5', 'Res.cpp'),
+         os.path.join ('Demo5', main)]
+if android:
+    progs += [env.SharedLibrary('Demo5', srcs)]
+else:
+    progs += [env.Program('demo5', srcs)]
+
+srcs =  [os.path.join ('Hun-garr', 'ModuleMain.cpp'),
+         os.path.join ('Hun-garr', 'Board.cpp'),
+         os.path.join ('Hun-garr', 'GameApp.cpp'),
+         os.path.join ('Hun-garr', 'GameOverEffect.cpp'),
+         os.path.join ('Hun-garr', 'LevelupEffect.cpp'),
+         os.path.join ('Hun-garr', 'OptionsDialog.cpp'),
+         os.path.join ('Hun-garr', 'TitleScreen.cpp'),
+         os.path.join ('Hun-garr', 'Res.cpp'),
+         os.path.join ('Hun-garr', main),
+         ]
+if android:
+    progs += [env.SharedLibrary('Hungarr', srcs,
+                                CPPDEFINES = env['CPPDEFINES'] + \
+                                             [('SEXY_LANG', configs.QuoteStr(language))])]
+else:
+    progs += [env.Program('hungarr', srcs)]
+
+destdir = game.GetGameDistDir(env, 'Demos')
 targets = []
+files = map(lambda f: os.path.join(Dir('.').srcnode().abspath, f),
+            ['images', 'fonts', 'properties', 'music', 'sounds'])
 
-### data
-files = []
-#files.append(os.path.join(srcdir, 'fonts'))
-files.append(os.path.join(srcdir, 'images'))
-files.append(os.path.join(srcdir, 'music'))
-files.append(os.path.join(srcdir, 'sounds'))
+targets = game.InstallGame(env, 'Demos', progs, destdir, files, targets)
 
-### properties
-files.append(os.path.join(srcdir, 'properties'))
-
-### fonts
-targets += env.Install(os.path.join(destdir, 'fonts'),
-                       Glob(os.path.join(srcdir, 'fonts', '*.gif')) +
-                       Glob(os.path.join(srcdir, 'fonts', '*.png')) +
-                       Glob(os.path.join(srcdir, 'fonts', '*.txt')))
-targets = game.InstallGame(env, game_name, hungarr, destdir, files, targets)
-
-env.Alias('hungarr_install', targets)
+### build apk
+if env['TARGET_PLATFORM'] == 'android':
+    targets += game.APK(env, '', Dir('.').srcnode().abspath, destdir, targets,
+                        'android', 'android-build')
+env.Alias('demos_install', targets)
 
 SConscript(os.path.join('Hun-garr2', 'SConscript'))
 
