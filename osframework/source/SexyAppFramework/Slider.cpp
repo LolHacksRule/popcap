@@ -247,26 +247,28 @@ void Slider::MouseLeave()
 
 bool Slider::KeyDown(KeyCode theKey)
 {
-    if (theKey != KEYCODE_LEFT && theKey != KEYCODE_RIGHT)
-	    return Widget::KeyDown(theKey);
+        if ((mHorizontal && (theKey == KEYCODE_LEFT || theKey == KEYCODE_RIGHT)) ||
+            (!mHorizontal && (theKey == KEYCODE_DOWN || theKey == KEYCODE_UP)))
+        {
+                double anOldVal = mVal;
 
-    double anOldVal = mVal;
+                if (theKey == KEYCODE_LEFT || theKey == KEYCODE_UP)
+                        mVal -= 0.05f;
+                else
+                        mVal += 0.05f;
 
-    if (theKey == KEYCODE_LEFT)
-	    mVal -= 0.05;
-    else
-	    mVal += 0.05;
+                if (mVal < 0.0)
+                        mVal = 0.0;
+                if (mVal > 1.0)
+                        mVal = 1.0;
 
-    if (mVal < 0.0)
-	    mVal = 0.0;
-    if (mVal > 1.0)
-	    mVal = 1.0;
+                if (mVal != anOldVal)
+                {
+                        mListener->SliderVal(mId, mVal);
+                        MarkDirtyFull();
+                        return true;
+                }
+        }
 
-    if (mVal != anOldVal)
-    {
-	    mListener->SliderVal(mId, mVal);
-	    MarkDirtyFull();
-    }
-
-    return true;
+        return Widget::KeyDown(theKey);
 }
