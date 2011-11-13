@@ -283,13 +283,16 @@ bool EditWidget::IsPartOfWord(SexyChar theChar)
 			(theChar == '_'));
 }
 
-void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
+bool EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 {
 	bool shiftDown = mWidgetManager->mKeyDown[KEYCODE_SHIFT];
 	bool controlDown = mWidgetManager->mKeyDown[KEYCODE_CONTROL];
 
 	if ((theKey == KEYCODE_SHIFT) || (theKey == KEYCODE_CONTROL))
-		return;
+		return false;
+
+	if ((theKey == KEYCODE_DOWN) || (theKey == KEYCODE_UP))
+		return false;
 
 	bool bigChange = false;
 	bool removeHilite = !shiftDown;
@@ -559,6 +562,8 @@ void EditWidget::ProcessKey(KeyCode theKey, SexyChar theChar)
 	}
 
 	MarkDirty();
+
+	return true;
 }
 
 bool EditWidget::KeyDown(KeyCode theKey)
@@ -569,8 +574,7 @@ bool EditWidget::KeyDown(KeyCode theKey)
 	if (theKey != KEYCODE_ESCAPE && ((theKey < 'A') || (theKey >= 'Z')) &&
 	    mEditListener->AllowKey(mId, theKey))
 	{
-		ProcessKey(theKey, 0);
-		return true;
+		return ProcessKey(theKey, 0);
 	}
 
 	return Widget::KeyDown(theKey);

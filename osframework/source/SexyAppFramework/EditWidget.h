@@ -55,7 +55,7 @@ public:
 
 
 protected:
-	virtual void			ProcessKey(KeyCode theKey, SexyChar theChar);
+	virtual bool			ProcessKey(KeyCode theKey, SexyChar theChar);
 	SexyString&			GetDisplayString();
 	virtual void			HiliteWord();
 	void					UpdateCaretPos();
