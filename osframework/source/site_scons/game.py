@@ -297,11 +297,15 @@ def PackageGame(env, package_name, rootdir, targets = [], archive_format = None)
     md5sum = env.MD5SUM(target = [], source = tarball)
     return env.Install(destdir, tarball + md5sum)
 
-def InstallGame(env, name, prog, destdir, files, targets = []):
-    targets += InstallObject(env, destdir, prog)
+def InstallGame(env, name, progs, destdir, files, targets = []):
+    if progs and not is_List(progs[0]):
+        progs = [progs]
+
+    for prog in progs:
+        targets += InstallObject(env, destdir, prog)
     targets += InstallDir(env, destdir, files)
 
-    env['GAME_EXE'] = FilterInstallableObject(env, prog)[0].name
+    env['GAME_EXE'] = FilterInstallableObject(env, progs[0])[0].name
     targets += InstallGameExtras(env, name, destdir, targets)
 
     ### package all the bits
@@ -373,6 +377,7 @@ def APK(env, srcdir, origsrcdir, destdir, targets, android_dir = 'android',
     ### copy resources files to asserts/files
     destdirabs = env.Dir(destdir).abspath
     filesdir = os.path.join(android_build_dir, 'assets', 'files')
+    image_exts = ['.gif', '.png', '.jpg', '.jpeg', '.j2k', '.tiff']
     for f in env.Flatten(targets):
         if not env.fs.isfile(f.abspath):
             continue
@@ -387,6 +392,11 @@ def APK(env, srcdir, origsrcdir, destdir, targets, android_dir = 'android',
         if base[0] == '_':
             name, ext = os.path.splitext(base)
             rel = os.path.join(basedir, name[1:] + '_' + ext)
+            lower_ext = ext.lower()
+            #print os.path.join(basedir, base), rel
+            if lower_ext not in image_exts:
+                print 'APK: Warning %s renamed to %s. This may lead to unexpected behaviour.' % \
+                      (os.path.join(basedir, base), rel)
         srcs += env.InstallAs(os.path.join(filesdir, rel), f.abspath)
 
 
