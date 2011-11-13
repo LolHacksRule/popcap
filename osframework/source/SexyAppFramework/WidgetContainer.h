@@ -66,6 +66,7 @@ public:
 	virtual void			PutBehind(Widget* theWidget, Widget* theRefWidget);
 	virtual void			PutInfront(Widget* theWidget, Widget* theRefWidget);
 	virtual Point			GetAbsPos() const ; // relative to top level
+	virtual Point			GetCenter() const ;
 
 	virtual void			MarkDirty();
 	virtual void			MarkDirtyFull();

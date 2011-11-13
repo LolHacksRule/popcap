@@ -329,6 +329,11 @@ Point WidgetContainer::GetAbsPos() const // relative to top level
 		return Point(mX,mY) + mParent->GetAbsPos();
 }
 
+Point WidgetContainer::GetCenter() const // relative to top level
+{
+	return Point(mX + (mWidth / 2), mY + (mHeight / 2));
+}
+
 struct WidgetCompare
 {
 	bool operator() (Widget* const & lhs, Widget* const & rhs) const
