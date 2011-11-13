@@ -117,7 +117,7 @@ void Widget::DrawFocused(Graphics* g) // Already translated
 #endif
 }
 
-void Widget::DrawOther(Graphics* g) // Already translated
+void Widget::DrawPost(Graphics* g) // Already translated
 {
 	DrawFocused(g);
 }
