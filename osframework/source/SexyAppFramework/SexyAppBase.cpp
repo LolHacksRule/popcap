@@ -26,6 +26,7 @@
 #include "SexyDebug.h"
 #include "SexyI18n.h"
 #include "SexyUtf8.h"
+#include "SexyLogManager.h"
 
 #include <iostream>
 #include <fstream>
