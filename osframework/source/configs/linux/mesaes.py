@@ -16,7 +16,7 @@ def AddOptions (opts):
         return
     opts.Add (PathVariable ('mesaes_path',
                             'Path to mesa opengles installed directory',
-                            '',
+                            '/usr',
                             PathVariable.PathAccept))
 
 def EnableXGLES(env):
@@ -35,8 +35,6 @@ def Configure(env):
     gles['ENABLE'] = EnableXGLES
     env.AppendUnique (XGLES = gles)
 
-    ### gstreamer sound manager
-    #configs.linux.GstSoundConfigure (env)
     configs.AudiereSoundConfigure (env)
 
     env.AppendUnique(BUILD_PACKAGES = ['freetype'])
