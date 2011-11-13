@@ -9,7 +9,7 @@ using namespace Sexy;
 
 static int gButtonWidgetColors[][3] = {
 	{0, 0, 0},
-	{0, 0, 0},
+	{132, 132, 132},
 	{0, 0, 0},
 	{255, 255, 255},
 	{132, 132, 132},
@@ -36,6 +36,7 @@ ButtonWidget::ButtonWidget(int theId, ButtonListener* theButtonListener)
 
 	SetColors(gButtonWidgetColors, NUM_COLORS);
 	mDrawFocusRect = false;
+	mHasSelectedState = false;
 }
 
 ButtonWidget::~ButtonWidget()

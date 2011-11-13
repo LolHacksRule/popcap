@@ -7,7 +7,7 @@ using namespace Sexy;
 
 static int gDialogButtonColors[][3] = {
 	{255, 255, 255},
-	{255, 255, 255},
+	{220, 220, 220},
 	{0, 0, 0},
 	{255, 255, 255},
 	{132, 132, 132},
