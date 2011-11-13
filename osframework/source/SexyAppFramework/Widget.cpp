@@ -545,7 +545,9 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 	}
 	else if (direct == LAY_Right)
 	{
-		for (; it != mSortedWidgets.end(); it++)
+		WidgetVector::iterator saved = it;
+
+		for (; it != mSortedWidgets.end(); ++it)
 		{
 			if ((*it)->IsFocusable() && (*it)->Left() > current->Left())
 			{
@@ -553,9 +555,25 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 				break;
 			}
 		}
+
+		if (!widget && saved != mSortedWidgets.begin())
+		{
+			it = saved;
+			do
+			{
+				--it;
+				if ((*it)->IsFocusable() && (*it)->Left() > current->Left())
+				{
+					widget = *it;
+					break;
+				}
+			} while (it != mSortedWidgets.begin());
+		}
 	}
 	else if (direct == LAY_Left)
 	{
+		WidgetVector::iterator saved = it;
+
 		if (it != mSortedWidgets.begin())
 		{
 			do
@@ -568,6 +586,18 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 					break;
 				}
 			} while (it != mSortedWidgets.begin());
+		}
+
+		if (!widget && saved != mSortedWidgets.end())
+		{
+			for (it = saved + 1; it != mSortedWidgets.end(); ++it)
+			{
+				if ((*it)->IsFocusable() && (*it)->Left() <= current->Left())
+				{
+					widget = *it;
+					break;
+				}
+			}
 		}
 	}
 
