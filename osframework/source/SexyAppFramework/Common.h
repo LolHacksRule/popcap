@@ -276,6 +276,12 @@ namespace Sexy
 		}
 	};
 
+	inline unsigned int AlphaMod (unsigned int alpha, unsigned int color)
+	{
+		unsigned int temp = (alpha * color) + 0x80;
+		return ((temp + (temp >> 8)) >> 8);
+	}
+
 }
 
 static inline int RoundToPOT (int i)
