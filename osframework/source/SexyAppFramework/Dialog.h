@@ -109,6 +109,8 @@ public:
 	virtual void			MouseUp(int x, int y) { Widget::MouseUp(x, y); }
 	virtual void			MouseUp(int x, int y, int theClickCount) { Widget::MouseUp(x, y, theClickCount); }
 	virtual void			MouseUp(int x, int y, int theBtnNum, int theClickCount);
+	virtual bool			KeyDown(KeyCode theKey);
+	virtual bool			KeyUp(KeyCode theKey);
 	virtual void			Update();
 	virtual	bool			IsModal();
 	virtual int				WaitForResult(bool autoKill = true);

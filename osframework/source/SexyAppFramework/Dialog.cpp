@@ -429,6 +429,50 @@ int Dialog::WaitForResult(bool autoKill)
 	return mResult;
 }
 
+bool Dialog::KeyDown(KeyCode theKey)
+{
+	if (Widget::KeyDown(theKey))
+		return true;
+
+	if (theKey == KEYCODE_RETURN)
+	{
+		mResult = ID_YES;
+		mDialogListener->DialogButtonPress(mId, ID_YES);
+		return true;
+	}
+	else if (theKey == KEYCODE_ESCAPE)
+	{
+		mResult = ID_NO;
+		mDialogListener->DialogButtonPress(mId, ID_NO);
+		return true;
+	}
+
+	return false;
+
+}
+
+bool Dialog::KeyUp(KeyCode theKey)
+{
+	if (Widget::KeyUp(theKey))
+		return true;
+
+	if (mResult != 0x7FFFFFFF)
+	{
+		if (mResult == ID_YES && theKey == KEYCODE_RETURN)
+		{
+			mDialogListener->DialogButtonDepress(mId, ID_YES);
+			return true;
+		}
+		else if (mResult == ID_NO && theKey == KEYCODE_ESCAPE)
+		{
+			mDialogListener->DialogButtonDepress(mId, ID_NO);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void Dialog::ButtonPress(int theId)
 {
 	if ((theId == ID_YES) || (theId == ID_NO))
