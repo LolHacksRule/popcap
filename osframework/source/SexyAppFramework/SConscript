@@ -90,6 +90,13 @@ glx_driver = {
     }
 }
 
+xgles_driver = {
+    'src' : ["GLImage.cpp", "GLDisplay.cpp", "XGLESDisplay.cpp"],
+    'flags' : {
+        'CPPDEFINES' : ['SEXY_XGLES_DRIVER']
+    }
+}
+
 wgl_driver = {
     'src' : ["GLImage.cpp", "GLDisplay.cpp", "WGLDisplay.cpp"],
     'flags' : {
@@ -172,6 +179,7 @@ drivers = {
     'AGL' : agl_driver,
     'EAGL' : eagl_driver,
     'GLX' : glx_driver,
+    'XGLES' : xgles_driver,
     'WGL' : wgl_driver,
     'CEGLES' : cegles_driver,
     'XGLES' : xgles_driver,
