@@ -42,6 +42,7 @@ public:
 	bool                                    mDoFinger;
 	bool                                    mWantsFocus;
 	bool                                    mIsSelected;
+	bool                                    mHasSelectedState;
 	bool                                    mFocusable;
 
 	Rect                                    mFocusRect;
@@ -145,10 +146,12 @@ public:
 	bool                                    IsFocusable();
 
  protected:
-	bool                                    OnKeyUp();
-	bool                                    OnKeyDown();
-	bool                                    OnKeyReturn();
-	bool                                    OnKeyEscape();
+	virtual WidgetVector::iterator          FindFocusableWidget(int direct, // the LayoutFlags
+								    Widget* current = 0);
+
+	virtual bool                            OnArrowKeys(KeyCode theKey);
+	virtual bool                            OnKeyReturn();
+	virtual bool                            OnKeyEscape();
 	bool                                    DoKeyChar(SexyChar theChar);
 	bool                                    KeyDownUp(KeyCode theKey, bool down = true);
 };

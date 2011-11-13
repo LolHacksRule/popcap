@@ -23,6 +23,7 @@ Widget::Widget()
 	mHasTransparencies = false;
 	mWantsFocus = true;
 	mIsSelected = false;
+	mHasSelectedState = true;
 	mFocusColor = Color(80, 80, 80, 80);
 	mFocusRect = Rect(0, 0, -1, -1);
 	mDrawFocusRect = true;
@@ -372,7 +373,7 @@ void Widget::UpdateF(float theFrac)
 
 bool Widget::IsFocusable()
 {
-	return mVisible && mWantsFocus && !mDisabled;
+	return mVisible && mWantsFocus && mMouseVisible && !mDisabled;
 }
 
 bool Widget::DoKeyChar(SexyChar theChar)
@@ -429,83 +430,181 @@ bool Widget::KeyDownUp(KeyCode theKey, bool down)
 	return false;
 }
 
-bool Widget::OnKeyUp()
+WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 {
-	if (!mSortedWidgets.size())
-		return false;
+	Widget* widget = 0;
+
+	if (mSortedWidgets.empty())
+		return mSortedWidgets.end();
 
 	WidgetVector::iterator it;
-
-	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); it++)
-		if ((*it)->mHasFocus && (*it)->IsFocusable())
-			break;
-
-	Widget *cur, *next;
-	if (it == mSortedWidgets.end())
+	if (!current)
 	{
-		cur = 0;
-		next = 0;
-		for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); it++)
+		// Find the current focus
+		for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
 		{
-			if ((*it)->IsFocusable())
+			if ((*it)->mHasFocus && (*it)->IsFocusable())
 			{
-				next = *it;
+				current = *it;
 				break;
 			}
+		}
+
+		if (!current)
+		{
+			for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
+				if ((*it)->IsFocusable())
+					return it;
 		}
 	}
 	else
 	{
-		cur = *it;
-		next = 0;
+		it = std::find(mSortedWidgets.begin(), mSortedWidgets.end(), current);
+	}
+	if (it == mSortedWidgets.end())
+		return it;
+
+	Point center = current->GetCenter();
+	if (direct == LAY_Below)
+	{
+		for (it++; it != mSortedWidgets.end(); it++)
+		{
+			if ((*it)->IsFocusable() && (*it)->Top() > current->Top())
+			{
+				widget = *it;
+				break;
+			}
+		}
+
+		if (it != mSortedWidgets.end())
+		{
+			WidgetVector::iterator pit = it;
+			WidgetVector::iterator best = it;
+			Point diff = center - (*it)->GetCenter();
+			int dist = diff.mX * diff.mX + diff.mY * diff.mY;
+			int bestDist = dist;
+
+			for (++it; it != mSortedWidgets.end(); pit = it++)
+			{
+				if ((*it)->Left() < (*pit)->Left())
+					break;
+
+				Point c = (*it)->GetCenter();
+				diff = center - c;
+				dist = diff.mX * diff.mX + diff.mY * diff.mY;
+				if (dist < bestDist)
+				{
+					bestDist = dist;
+					best = it;
+					widget = *it;
+				}
+			}
+			it = best;
+		}
+	}
+	else if (direct == LAY_Above)
+	{
 		if (it != mSortedWidgets.begin())
 		{
-			do {
+			do
+			{
 				--it;
-				if ((*it)->IsFocusable())
+				if ((*it)->IsFocusable() && (*it)->Top() < current->Top())
 				{
-					next = *it;
+					widget = *it;
+					break;
+				}
+			} while (it != mSortedWidgets.begin());
+		}
+
+		if (it != mSortedWidgets.begin())
+		{
+			WidgetVector::iterator pit = it;
+			WidgetVector::iterator best = it;
+			Point diff = center - (*it)->GetCenter();
+			int dist = diff.mX * diff.mX + diff.mY * diff.mY;
+			int bestDist = dist;
+
+			for (--it; it != mSortedWidgets.begin(); pit = it--)
+			{
+				if ((*it)->Left() >= (*pit)->Left())
+					break;
+
+				Point c = (*it)->GetCenter();
+				diff = center - c;
+				dist = diff.mX * diff.mX + diff.mY * diff.mY;
+				if (dist < bestDist)
+				{
+					bestDist = dist;
+					best = it;
+					widget = *it;
+				}
+			}
+			it = best;
+		}
+	}
+	else if (direct == LAY_Right)
+	{
+		for (; it != mSortedWidgets.end(); it++)
+		{
+			if ((*it)->IsFocusable() && (*it)->Left() > current->Left())
+			{
+				widget = *it;
+				break;
+			}
+		}
+	}
+	else if (direct == LAY_Left)
+	{
+		if (it != mSortedWidgets.begin())
+		{
+			do
+			{
+				--it;
+				if ((*it)->IsFocusable() &&
+				    (*it)->Left() <= current->Left())
+				{
+					widget = *it;
 					break;
 				}
 			} while (it != mSortedWidgets.begin());
 		}
 	}
 
-	if (next && cur)
-	{
-		if (cur->KeyDownUp(KEYCODE_UP))
-			return true;
-
-		cur->mIsSelected = false;
-		cur->LostFocus();
-		cur->MarkDirty();
-		mFocus = 0;
-	}
-	if (cur && !next)
-	{
-		if (cur->KeyDownUp(KEYCODE_UP))
-			return true;
-	}
-
-	if (next)
-	{
-		next->GotFocus();
-		next->MarkDirty();
-		mFocus = next;
-	}
-
-	return next ? true : false;
+	return widget ? it : mSortedWidgets.end();
 }
 
-bool Widget::OnKeyDown()
+bool Widget::OnArrowKeys(KeyCode theKey)
 {
-	if (!mSortedWidgets.size())
+	if (mSortedWidgets.empty())
 		return false;
 
-	WidgetVector::iterator it;
-	Widget* cur, * next;
+	int flags;
+	switch (theKey)
+	{
+	case KEYCODE_DOWN:
+		flags = LAY_Below;
+		break;
 
-	cur = 0;
+	case KEYCODE_UP:
+		flags = LAY_Above;
+		break;
+
+	case KEYCODE_RIGHT:
+		flags = LAY_Right;
+		break;
+
+	case KEYCODE_LEFT:
+		flags = LAY_Left;
+		break;
+
+	default:
+		break;
+	}
+
+
+	Widget* cur = 0;
+	WidgetVector::iterator it;
 	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); it++)
 	{
 		if ((*it)->mHasFocus && (*it)->IsFocusable())
@@ -515,55 +614,35 @@ bool Widget::OnKeyDown()
 		}
 	}
 
-	next = 0;
-	if (!cur)
-	{
-		for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); it++)
-		{
-			if ((*it)->IsFocusable())
-			{
-				next = *it;
-				break;
-			}
-		}
-	}
-	else if (it != mSortedWidgets.end())
-	{
-		for (++it; it != mSortedWidgets.end(); it++)
-		{
-			if ((*it)->IsFocusable())
-			{
-				next = *it;
-				break;
-			}
-		}
-	}
+	// Prevents someone try to hijack the focus...
+	assert(!cur || (cur && mFocus == cur));
 
-	if (next && cur)
+	if (cur && cur->KeyDown(theKey))
+		return true;
+
+	while (true)
 	{
-		if (cur->KeyDownUp(KEYCODE_DOWN))
+		WidgetVector::iterator it = FindFocusableWidget(flags, cur);
+		if (it == mSortedWidgets.end())
+			return false;
+
+		cur = *it;
+		if (cur->mWidgets.empty())
+		{
+			if (cur->mHasFocus)
+				return false;
+
+			SetFocus(cur);
 			return true;
-
-		cur->mIsSelected = false;
-		cur->LostFocus();
-		cur->MarkDirty();
-		mFocus = 0;
-	}
-
-	if (cur && !next)
-	{
-		if (cur->KeyDownUp(KEYCODE_DOWN))
+		}
+		cur = *it;
+		if (!cur->mHasFocus)
+			SetFocus(cur);
+		if (cur->KeyDown(theKey))
 			return true;
 	}
 
-	if (next)
-	{
-		next->GotFocus();
-		next->MarkDirty();
-		mFocus = next;
-	}
-
-	return next ? true : false;
+	return false;
 }
 
 bool Widget::OnKeyReturn()
@@ -572,27 +651,28 @@ bool Widget::OnKeyReturn()
 		return false;
 
 	WidgetVector::iterator it;
+	Widget* cur = 0;
 
 	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); it++)
-		if ((*it)->mHasFocus && (*it)->IsFocusable())
-			break;
-
-	Widget* cur = 0;
-	if (it != mSortedWidgets.end())
-		cur = *it;
-
-	if (cur)
 	{
-		if (cur->KeyDownUp(KEYCODE_RETURN))
-			return true;
-
-		if (!cur->mIsSelected)
+		if ((*it)->mHasFocus && (*it)->IsFocusable())
 		{
-			cur->mIsSelected = true;
-			return true;
+			cur = *it;
+			break;
 		}
 	}
 
+	if (!cur)
+		return false;
+
+	if (cur->KeyDownUp(KEYCODE_RETURN))
+		return true;
+
+	if (!cur->mIsSelected)
+	{
+		cur->mIsSelected = true;
+		return true;
+	}
 	return false;
 }
 
@@ -615,7 +695,7 @@ bool Widget::OnKeyEscape()
 	if (cur->KeyDownUp(KEYCODE_ESCAPE))
 		return true;
 
-	if (cur->mIsSelected)
+	if (cur->mIsSelected && cur->mHasSelectedState)
 	{
 		cur->mIsSelected = false;
 	}
@@ -631,29 +711,10 @@ bool Widget::OnKeyEscape()
 
 bool Widget::KeyDown(KeyCode theKey)
 {
-#ifndef SEXY_NO_KEYBOARD
-	if (theKey == KEYCODE_TAB)
+	if (theKey == KEYCODE_UP || theKey == KEYCODE_DOWN ||
+	    theKey == KEYCODE_LEFT || theKey == KEYCODE_RIGHT)
 	{
-		if (mWidgetManager->mKeyDown[KEYCODE_SHIFT])
-		{
-			if (mTabPrev != NULL)
-				mWidgetManager->SetFocus(mTabPrev);
-		}
-		else
-		{
-			if (mTabNext != NULL)
-				mWidgetManager->SetFocus(mTabNext);
-		}
-
-		return true;
-	}
-	else if (theKey == KEYCODE_UP)
-	{
-		return OnKeyUp();
-	}
-	else if (theKey == KEYCODE_DOWN)
-	{
-		return OnKeyDown();
+		return OnArrowKeys(theKey);
 	}
 	else if (theKey == KEYCODE_RETURN)
 	{
@@ -663,7 +724,6 @@ bool Widget::KeyDown(KeyCode theKey)
 	{
 		return OnKeyEscape();
 	}
-#endif
 
 	WidgetVector::iterator it;
 	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
