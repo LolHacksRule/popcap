@@ -443,7 +443,7 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 		// Find the current focus
 		for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
 		{
-			if ((*it)->mHasFocus && (*it)->IsFocusable())
+			if ((*it)->IsFocusable())
 			{
 				current = *it;
 				break;
