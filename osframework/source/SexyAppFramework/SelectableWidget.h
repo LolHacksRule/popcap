@@ -13,8 +13,13 @@ namespace Sexy
 
 	 public:
 		virtual void                           Update();
+		virtual int                            GetSelectAlpha();
+		virtual Color                          GetSelectColor();
+
+		void                                   SetSelectAlphaRange(float a1, float a2);
 
 	 public:
+		Color                                   mSelectColor;
 		float                                   mSelectAlpha;
 		float                                   mSelectMinAlpha;
 		float                                   mSelectMaxAlpha;
