@@ -13,6 +13,7 @@ namespace Sexy
 
 	 public:
 		virtual void                           Update();
+		virtual void                           SetSelectColor(const Color& color);
 		virtual int                            GetSelectAlpha();
 		virtual Color                          GetSelectColor();
 

@@ -18,6 +18,11 @@ SelectableWidget::~SelectableWidget()
 {
 }
 
+void SelectableWidget::SetSelectColor(const Color& color)
+{
+	mSelectColor = color;
+}
+
 int SelectableWidget::GetSelectAlpha()
 {
 	return int(mSelectAlpha * 255);
