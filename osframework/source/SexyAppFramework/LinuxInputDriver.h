@@ -6,6 +6,7 @@
 
 #include <pthread.h>
 
+struct input_event;
 namespace Sexy
 {
 
@@ -26,6 +27,24 @@ struct LinuxDeviceInfo {
         }
 };
 
+struct LinuxAxisInfo {
+	float        factor;
+
+	float        coef[3];
+	float        fuzz;
+	float        flat;
+	float        minimum;
+	float        maximum;
+	float        resolution;
+
+	int          devFuzz;
+	int          devFlat;
+	int          devMinimum;
+	int          devMaximum;
+	int          devResolution;
+};
+
+
 class LinuxInputInterface: public InputInterface {
 public:
 	LinuxInputInterface (InputManager* theManager,
@@ -41,6 +60,22 @@ public:
         virtual bool          HasEvent ();
         virtual bool          GetEvent (Event & event);
 	virtual bool          GetInfo (InputInfo &theInfo, int subid = 0);
+	virtual bool          IsGrabbed ();
+	virtual bool          Grab (bool);
+
+	bool                  HandleKeyEvent (struct input_event & linux_event,
+					      int &modifiers, Event & event);
+
+	bool	              HandleRelEvent (struct input_event & linux_event,
+					      Event& event);
+
+	bool                  HandleAbsEvent (struct input_event & linux_event,
+					      Event & event);
+
+	bool                  HandleEvent (struct input_event& linux_event,
+					   int &modifiers, Event &event);
+
+	void                  HandleEvents(struct input_event* linux_event, int nevents);
 
 	const std::string &   GetDeviceName ()
 	{
@@ -77,8 +112,15 @@ private:
 
 	LinuxInputDriver     *mDriver;
 	LinuxDeviceInfo       mInfo;
+	typedef std::map<int, LinuxAxisInfo> AxisInfoMap;
+	AxisInfoMap           mAxisInfoMap;
+	typedef std::map<int, int> KeyCodeMap;
+	KeyCodeMap            mButtonMap; // for joystick
+
+	bool                  mHasJoystick;
 	bool                  mHasPointer;
 	bool                  mHasKey;
+	bool                  mRouton;
 };
 
 }

@@ -4,6 +4,7 @@
 #include "AutoCrit.h"
 #include "SexyAppBase.h"
 #include "KeyCodes.h"
+#include "SexyLog.h"
 
 #include <cstring>
 #include <unistd.h>
@@ -20,9 +21,10 @@
 #include <linux/input.h>
 #include <linux/keyboard.h>
 
-#ifndef SEXY_LINUX_DEVICE_NO_HOTPLUG
-//#define SEXY_LINUX_DEVICE_NO_HOTPLUG
-#endif
+#include <map>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 #ifndef EVIOCGLED
 #define EVIOCGLED(len) _IOC(_IOC_READ, 'E', 0x19, len)
@@ -53,35 +55,41 @@
 #define MODIFIERS_SHIFT	   (1 << 0)
 #define MODIFIERS_CAPSLOCK (1 << 1)
 
-/*
- * Touchpads related stuff
- */
-enum {
-	TOUCHPAD_FSM_START,
-	TOUCHPAD_FSM_MAIN,
-	TOUCHPAD_FSM_DRAG_START,
-	TOUCHPAD_FSM_DRAG_MAIN,
-};
-struct touchpad_axis {
-	int old, min, max;
-};
-struct touchpad_fsm_state {
-	int fsm_state;
-	struct touchpad_axis x;
-	struct touchpad_axis y;
-	struct timeval timeout;
+struct input_absinfo_v1 {
+	__s32 value;
+	__s32 minimum;
+	__s32 maximum;
+	__s32 fuzz;
+	__s32 flat;
 };
 
-#define MAX_ABS 6
+struct input_absinfo_v2 {
+	__s32 value;
+	__s32 minimum;
+	__s32 maximum;
+	__s32 fuzz;
+	__s32 flat;
+	__s32 resolution;
+};
+
+#define EVIOCGABSV1(abs)		_IOR('E', 0x40 + abs, struct input_absinfo_v1)	/* get abs value/limits */
+#define EVIOCGABSV2(abs)		_IOR('E', 0x40 + abs, struct input_absinfo_v2)	/* get abs value/limits */
+
+#ifndef ABS_MAX
+#define ABS_MAX ABS_MISC
+#endif
 struct input_info {
+	char name[255];
 	int num_keys;
 	int num_ext_keys;
 	int num_buttons;
+	int num_joysticks;
 	int num_rels;
 	int num_abs;
 
 	struct input_id id;
-	struct input_absinfo absinfo[MAX_ABS];
+	struct input_absinfo_v2 absinfo[ABS_MAX];
+	int axis[ABS_MAX];
 };
 
 static bool
@@ -90,6 +98,323 @@ get_device_info (int fd, struct input_info* info, bool silent = true);
 using namespace Sexy;
 
 namespace Sexy {
+
+class Value {
+public:
+	enum Type {
+		UNKNOWN = 0,
+		STRING  = 1,
+		INT     = 2,
+		FLOAT   = 3
+	};
+
+	Value()
+		: mType(UNKNOWN), mInt(0), mFloat(0) {
+	}
+
+	Value(const Value &v)
+		: mType(v.mType), mStr(v.mStr), mInt(v.mInt), mFloat(v.mFloat) {
+	}
+
+	Value(const std::string& s, Type type = UNKNOWN)
+		: mType(type), mStr(s), mInt(0), mFloat(0) {
+	}
+
+	Value(const std::string& s, int v)
+		: mType(INT), mStr(s), mInt(v), mFloat(v) {
+	}
+
+	Value(const std::string& s, float v)
+		: mType(FLOAT), mStr(s), mInt(v), mFloat(v) {
+	}
+
+	Value(int v)
+		: mType(INT), mInt(v), mFloat(v) {
+		mStr = StrFormat("%d", v);
+	}
+
+	Value(float v)
+		: mType(FLOAT), mInt(v), mFloat(v) {
+		mStr = StrFormat("%f", v);
+	}
+
+	std::string getString() const {
+		return mStr;
+	}
+
+	int getInteger () const {
+		update(INT);
+		return mInt;
+	}
+
+	int getFloat () const {
+		update(FLOAT);
+		return mFloat;
+	}
+
+	Type getType() const {
+		return mType;
+	}
+
+private:
+	void update(Type type) const {
+		if (type == INT) {
+			if (mType >= type)
+				return;
+			if (mStr.substr(0, 2) == "0x")
+				mInt = strtol(mStr.c_str(), 0, 16);
+			else
+				mInt = atoi(mStr.c_str());
+			mFloat = mInt;
+			mType = type;
+		} else if (type == FLOAT) {
+			if (mType >= type)
+				return;
+			if (mStr.substr(0, 2) == "0x")
+				mFloat = (float)strtol(mStr.c_str(), 0, 16);
+			else
+				mFloat = atof(mStr.c_str());
+			mInt = mFloat;
+			mType = type;
+		}
+	}
+
+	void update() {
+		if (mType != UNKNOWN || mType == STRING)
+			return;
+
+		if (mType == INT) {
+			if (mStr.substr(0, 2) == "0x")
+				mInt = strtol(mStr.c_str(), 0, 16);
+			else
+				mInt = atoi(mStr.c_str());
+		} else if (mType == FLOAT) {
+			if (mStr.substr(0, 2) == "0x")
+				mFloat = (float)strtol(mStr.c_str(), 0, 16);
+			else
+				mFloat = atof(mStr.c_str());
+			mInt = mFloat;
+		}
+	}
+
+private:
+	mutable Type mType;
+	std::string mStr;
+	mutable int mInt;
+	mutable float mFloat;
+};
+typedef std::map<std::string, Value> KeyValue;
+
+class Rule {
+public:
+	enum Type {
+		ACCEPT = 0,
+		REJECT = 1
+	};
+
+	enum Operator {
+		EQUAL,
+		NEQUAL
+	};
+
+	Rule() : mOperator(EQUAL) {
+	}
+
+	void setOperator(Operator op) {
+		mOperator = op;
+	}
+
+	void setLeftOperand(const Value& operand) {
+		mOperand[0] = operand;
+	}
+
+	void setRightOperand(const Value& operand) {
+		mOperand[1] = operand;
+	}
+
+	bool match(const KeyValue& kv) {
+		const std::string key = mOperand[0].getString();
+		KeyValue::const_iterator it = kv.find(key);
+		if (it == kv.end())
+			return false;
+
+		const Value& lv = it->second;
+		const Value& rv = mOperand[1];
+		Value::Type lt = lv.getType();
+		Value::Type rt = rv.getType();
+		Value::Type pt = std::max(lt, rt);
+
+		if (pt == Value::FLOAT) {
+			float lf = lv.getFloat();
+			float rf = rv.getFloat();
+
+			if (mOperator == EQUAL)
+				return lf == rf;
+			return lf != rf;
+		} else if (pt == Value::INT) {
+			int li = lv.getInteger();
+			int ri = rv.getInteger();
+
+			if (mOperator == EQUAL)
+				return li == ri;
+			return li != ri;
+		} else {
+			std::string ls = lv.getString();
+			std::string rs = rv.getString();
+
+			if (mOperator == EQUAL)
+				return ls == rs;
+			return ls != rs;
+		}
+		return false;
+	}
+
+private:
+	Operator mOperator;
+	Value mOperand[2];
+};
+typedef std::vector<Rule> RuleVector;
+
+class Match {
+public:
+	enum Operator {
+		AND = 0,
+		OR  = 1
+	};
+
+	Match() {
+	}
+
+	Match(const Match &o) : mRules(o.mRules) {
+	}
+
+	Match(const char* str) {
+		if (str)
+			parseRules(std::string(str));
+	}
+
+	Match(const std::string& str) {
+		parseRules(str);
+	}
+
+	void resetRules() {
+		mRules.clear();
+		mOperators.clear();
+	}
+
+	static void trim(std::string& str) {
+		static const char chars[] = " \t\r\n";
+
+		str.erase(0, str.find_first_not_of(chars));
+		str.resize(str.find_last_not_of(chars) + 1);
+	}
+
+	bool parseRule(std::string& str) {
+		if (str.empty())
+			return false;
+
+		Rule::Operator rOp = Rule::EQUAL;
+
+		std::string rulestr = str;
+		size_t oppos = 0;
+		oppos = rulestr.find("!=");
+		if (oppos == std::string::npos)
+			oppos = rulestr.find("=");
+		else
+			rOp = Rule::NEQUAL;
+
+		// bad operator
+		if (oppos == std::string::npos)
+			return false;
+
+		Rule rule;
+		rule.setOperator(rOp);
+		std::string lop = rulestr.substr(0, oppos);
+		std::string rop = rulestr.substr(oppos + 1 + rOp);
+
+		trim(lop);
+		trim(rop);
+		if (lop.empty())
+			return false;
+		rule.setLeftOperand(Value(lop));
+		rule.setRightOperand(Value(rop));
+		mRules.push_back(rule);
+		return true;
+	}
+
+	bool parseRules(const std::string& str) {
+		if (str.empty())
+			return true;
+
+		size_t start = 0;
+		size_t end = str.find_first_of(",;", start);
+
+		while (start < end) {
+			size_t len = end == std::string::npos ? end : end - start;
+			std::string cur = str.substr(start, len);
+
+			trim(cur);
+			if (!parseRule(cur))
+				return false;
+
+			if (end != std::string::npos) {
+				if (str[end] == ',')
+					mOperators.push_back(AND);
+				else
+					mOperators.push_back(OR);
+			} else {
+				mOperators.push_back(OR);
+			}
+
+			if (end == std::string::npos)
+				break;
+			if (end + 1 >= str.length())
+				break;
+
+			start = end + 1;
+			end = str.find_first_of(",;", start);
+
+			// empty rule
+			if (start == end)
+				return false;
+		}
+		return true;
+	}
+
+	bool parseRules(const char* str) {
+		if (!str)
+			return true;
+		return parseRules(std::string(str));
+	}
+
+	bool hasRules() {
+		return mRules.size() != 0;
+	}
+
+	bool matchRules(const KeyValue &keyvalue) {
+		for (size_t i = 0; i < mRules.size(); i++) {
+			bool result = mRules[i].match(keyvalue);
+			if (result == false &&
+			    (i == mRules.size() - 1 || mOperators[i] == AND))
+				return false;
+			if (result == true &&
+			    (i == mRules.size() - 1 || mOperators[i] == OR))
+				return true;
+		}
+
+		return true;
+	}
+
+private:
+	RuleVector mRules;
+
+	typedef std::vector<Operator> OperatorVector;
+	OperatorVector mOperators;
+};
+
+#ifndef SEXY_LINUX_INPUT
+#define SEXY_LINUX_INPUT 1
+#endif
 class LinuxInputDriver: public InputDriver {
 public:
 	LinuxInputDriver ()
@@ -97,6 +422,32 @@ public:
 	{
 		mHotplugDone = true;
 		mStopped = false;
+		mHotplug = true;
+
+		if (GetEnvOption("SEXY_NO_LINUX_INPUT", !SEXY_LINUX_INPUT))
+			mHotplug = false;
+
+		const char *s = GetEnv("SEXY_LINUX_INPUT_FILTER");
+#ifdef SEXY_LINUX_INPUT_FILTER
+		if (!s)
+			s = SEXY_LINUX_INPUT_FILTER;
+#endif
+		if (s && !mDeviceFilter.parseRules(s))
+		{
+			mDeviceFilter.resetRules();
+			logfe("LinuxInput: Bad filter rule: %s\n", s);
+		}
+
+		s = GetEnv("SEXY_LINUX_INPUT_ENABLE_FILTER");
+#ifdef SEXY_LINUX_INPUT_ENABLE_FILTER
+		if (!s)
+			s = SEXY_LINUX_INPUT_ENABLE_FILTER;
+#endif
+		if (s && !mDeviceEnableFilter.parseRules(s))
+		{
+			mDeviceEnableFilter.resetRules();
+			logfe("LinuxInput: Bad filter rule: %s\n", s);
+		}
 	}
 
 	const std::string& GetDeviceFilePath()
@@ -118,12 +469,13 @@ public:
 		if (mkdir ("/tmp/popcap/input", 0755) < 0 && errno != EEXIST)
 			return;
 
-		for (unsigned int i = 0; i < 255; i++)
+		for (unsigned int i = 0; i < 64; i++)
 		{
 			char path[2048];
 
 			snprintf (path, sizeof(path),
 				  "/tmp/popcap/input/event%d", i);
+			remove(path);
 			if (mknod (path, S_IFCHR | 0644,
 				   makedev(13, 64 + i)) < 0 && errno != EEXIST)
 				return;
@@ -162,10 +514,11 @@ public:
 			current = CheckHotplug ();
 			if (current != checksum)
 			{
-				printf ("Rescanning input devices...\n");
+				logfi ("Rescanning input devices...\n");
 				AutoCrit aAutoCrit (mScanCritSect);
 
 				checksum = current;
+                                Sleep(200);
 				ScanAndAddDevice (mApp, true);
 
 				fflush(stdout);
@@ -188,17 +541,15 @@ public:
 		mDisconDevices.clear ();
 		mStopped = false;
 		SetupDeviceFilePath();
-#ifndef SEXY_LINUX_DEVICE_NO_HOTPLUG
-		mHotplugThread = Thread::Create (HotplugLoopStub, this);
-#endif
+		if (mHotplug)
+			mHotplugThread = Thread::Create (HotplugLoopStub, this);
 	}
 
 	void OnStop ()
 	{
 		mHotplugDone = true;
-#ifndef SEXY_LINUX_DEVICE_NO_HOTPLUG
-		mHotplugThread.Join ();
-#endif
+		if (mHotplug)
+			mHotplugThread.Join ();
 		mStopped = true;
 	}
 
@@ -211,7 +562,7 @@ public:
 		{
 			LinuxInputInterface* device = mDisconDevices.front ();
 
-			printf ("Cleanuping device: %s\n",
+			logfi ("Cleanuping device: %s\n",
 				device->GetDeviceName ().c_str ());
 			mApp->mInputManager->Remove (device);
 			mDisconDevices.pop_front ();
@@ -220,21 +571,12 @@ public:
 
 	InputInterface* Create (SexyAppBase * theApp)
 	{
-		SetupDeviceFilePath();
-
-#ifdef SEXY_LINUX_DEVICE_NO_HOTPLUG
-		const char * device = getenv ("SEXY_LINUX_INPUT_DEVICE");
-		if (device)
-			return new LinuxInputInterface (theApp->mInputManager, this, device);
-
-		ScanAndAddDevice(theApp, false);
-#endif
 		return 0;
 	}
 
 	void ScanAndAddDevice (SexyAppBase * theApp, bool hotpluged)
 	{
-		for (unsigned i = 0; i < 256; i++)
+		for (unsigned i = 0; i < 64; i++)
 		{
 			struct input_info info;
 			int fd;
@@ -255,6 +597,42 @@ public:
 				continue;
 			}
 			close (fd);
+
+			if (!info.num_abs && !info.num_rels && !info.num_buttons &&
+			    !info.num_keys && !info.num_ext_keys && !info.num_joysticks)
+				continue;
+
+			KeyValue kv;
+			if (mDeviceFilter.hasRules() || mDeviceEnableFilter.hasRules())
+			{
+				kv["bustype"] = Value(info.id.bustype);
+				kv["vendor"] = Value(info.id.vendor);
+				kv["product"] = Value(info.id.product);
+				kv["version"] = Value(info.id.version);
+				kv["name"] = Value(info.name);
+				kv["nabs"] = Value(info.num_abs);
+				kv["nrel"] = Value(info.num_rels);
+				kv["nkey"] = Value(info.num_keys + info.num_ext_keys);
+				kv["nbtn"] = Value(info.num_buttons);
+			}
+
+			if (mDeviceFilter.hasRules() && !mDeviceFilter.matchRules(kv))
+			{
+				logfd("LinuxInput: ignoring %s\n", info.name);
+				continue;
+			}
+
+			// Ignore the compass input device
+			if (info.id.bustype == 0 && info.id.vendor == 0 &&
+			    info.id.product == 0 && info.id.version == 0 &&
+			    !strcmp(info.name, "compass"))
+				continue;
+
+#if 0
+			if (GetEnvOption("SEXY_LINUX_INPUT_IGNORE_ABS_POINTER", false) &&
+			    info.num_abs > 0)
+				continue;
+#endif
 
 			LinuxInputInterface * anInput;
 			anInput = new LinuxInputInterface (theApp->mInputManager, this,
@@ -285,7 +663,7 @@ public:
 
 		mDeviceMap.insert (std::pair<std::string, LinuxDeviceInfo>(device, info));
 
-		printf ("Added device: %s.\n", device.c_str ());
+		logfi ("Added device: %s.\n", device.c_str ());
 		return device;
 	}
 
@@ -297,7 +675,7 @@ public:
 		if (it != mDeviceMap.end())
 			mDeviceMap.erase (it);
 
-		printf ("Removed device: %s.\n", device.c_str ());
+		logfi ("Removed device: %s.\n", device.c_str ());
 	}
 
 	bool FindDevice (std::string device)
@@ -325,7 +703,7 @@ public:
 	int DoReprobe (LinuxDeviceInfo *dinfo,
 		       std::string &theDeviceName)
 	{
-		for (unsigned i = 0; i < 256; i++)
+		for (unsigned i = 0; i < 64; i++)
 		{
 			struct input_info info;
 			int fd;
@@ -392,11 +770,14 @@ private:
 
 	Thread		      mHotplugThread;
 	bool		      mHotplugDone;
+	bool                  mHotplug;
 	bool		      mStopped;
 
 	SexyAppBase*	      mApp;
 
 	std::string           mDevicePattern;
+	Match                 mDeviceFilter;
+	Match                 mDeviceEnableFilter;
 };
 
 }
@@ -474,11 +855,12 @@ void LinuxInputInterface::Cleanup()
 static bool
 get_device_info (int fd, struct input_info* info, bool silent)
 {
-	unsigned int  num_keys	   = 0;
-	unsigned int  num_ext_keys = 0;
-	unsigned int  num_buttons  = 0;
-	unsigned int  num_rels	   = 0;
-	unsigned int  num_abs	   = 0;
+	unsigned int  num_keys	    = 0;
+	unsigned int  num_ext_keys  = 0;
+	unsigned int  num_buttons   = 0;
+	unsigned int  num_rels	    = 0;
+	unsigned int  num_abs	    = 0;
+	unsigned int  num_joysticks = 0;
 	unsigned int i;
 	int ret;
 
@@ -494,7 +876,7 @@ get_device_info (int fd, struct input_info* info, bool silent)
 		return false;
 
 	if (!silent)
-		printf ("** Device name: %s\n", name);
+		logfi ("** Device name: %s\n", name);
 
 	/* get event type bits */
 	ret = ioctl (fd, EVIOCGBIT(0, sizeof(eventbit)), eventbit);
@@ -520,6 +902,10 @@ get_device_info (int fd, struct input_info* info, bool silent)
 		for (i = BTN_MOUSE; i < BTN_JOYSTICK; i++)
 			if (test_bit (i, keybit))
 				num_buttons++;
+
+		for (i = BTN_JOYSTICK; i < BTN_DIGI; i++)
+			if (test_bit (i, keybit))
+				num_joysticks++;
 	}
 
 	if (test_bit (EV_REL, eventbit))
@@ -543,50 +929,64 @@ get_device_info (int fd, struct input_info* info, bool silent)
 		if (ret < 0)
 			return false;
 
-		for (i = 0; i < ABS_PRESSURE; i++)
+		for (i = 0; i < ABS_MISC; i++)
+		{
 			if (test_bit (i, absbit))
+			{
+				info->axis[num_abs] = i;
 				num_abs++;
+			}
+		}
+		if (num_abs > ABS_MAX)
+			num_abs = ABS_MAX;
 	}
 
 	if (ioctl (fd, EVIOCGID, &info->id) < 0)
 	{
-		perror ("Failed to get device id");
+		logfe ("Failed to get device id");
 		return false;
 	}
 
+	memset(info->absinfo, 0, sizeof(info->absinfo));
 	for (i = 0; i < num_abs; i++)
 	{
-		if (ioctl (fd, EVIOCGABS(i), &info->absinfo[i]) < 0)
+		if (ioctl (fd, EVIOCGABSV2(info->axis[i]), &info->absinfo[i]) < 0 &&
+		    ioctl (fd, EVIOCGABSV1(info->axis[i]), &info->absinfo[i]) < 0)
 		{
-			perror ("Failed to get absinfo");
+			logfe ("Failed to get absinfo");
 			return false;
 		}
 	}
 
 	if (!silent)
 	{
-		printf ("** keys: %d\n", num_keys);
-		printf ("** extend keys: %d\n", num_ext_keys);
-		printf ("** buttons: %d\n", num_buttons);
-		printf ("** relative events: %d\n", num_rels);
-		printf ("** absolute events: %d\n", num_abs);
+		logfi ("** keys: %d\n", num_keys);
+		logfi ("** extend keys: %d\n", num_ext_keys);
+		logfi ("** buttons: %d\n", num_buttons);
+		logfi ("** joystick buttons: %d\n", num_joysticks);
+		logfi ("** relative events: %d\n", num_rels);
+		logfi ("** absolute events: %d\n", num_abs);
 		for (i = 0; i < num_abs; i++)
 		{
-			printf ("** \taxes %d: value %d min %d max %d flatness %d fuzz %d\n",
-				i,
-				info->absinfo[i].value,
-				info->absinfo[i].minimum,
-				info->absinfo[i].maximum,
-				info->absinfo[i].fuzz,
-				info->absinfo[i].flat);
+			logfi ("** \taxes %02d:0x%02x: value %d min %d max %d "
+			       "flatness %d fuzz %d resolution %d\n",
+			       i, info->axis[i],
+			       info->absinfo[i].value,
+			       info->absinfo[i].minimum,
+			       info->absinfo[i].maximum,
+			       info->absinfo[i].fuzz,
+			       info->absinfo[i].flat,
+			       info->absinfo[i].resolution);
 		}
 	}
 
 	if (info)
 	{
+		strcpy (info->name, name);
 		info->num_keys = num_keys;
 		info->num_ext_keys = num_ext_keys;
 		info->num_buttons = num_buttons;
+		info->num_joysticks = num_joysticks;
 		info->num_rels = num_rels;
 		info->num_abs = num_abs;
 	}
@@ -595,20 +995,23 @@ get_device_info (int fd, struct input_info* info, bool silent)
 	return true;
 }
 
+static bool IsRoutonKeyboard(const char *name)
+{
+	if (!GetEnvOption("SEXY_LINUX_INPUT_ROUTON_FILTER", false))
+		return false;
+
+	return !strcmp(name, "Routon H2        Keyboard");
+}
+
 bool LinuxInputInterface::OpenDevice ()
 {
 	const char * device = 0;
 
-	if (mDeviceName.length ())
-		device = mDeviceName.c_str();
-	if (!device)
-		device = getenv ("SEXY_LINUX_INPUT_DEVICE");
-	if (!device)
-		device = "/dev/input/event0";
+	device = mDeviceName.c_str();
 	mFd = open (device, O_RDWR);
 	if (mFd < 0) {
 #if defined(SEXY_DEBUG) || defined(DEBUG)
-		printf ("Failed to open '%s'.\n", device);
+		logfe ("Failed to open '%s'.\n", device);
 #endif
 		goto open_failed;
 	}
@@ -618,22 +1021,24 @@ bool LinuxInputInterface::OpenDevice ()
 	mGrabed = false;
 	bool wantGrab;
 #ifdef SEXY_LINUX_INPUT_GRAB_DEVICE
-	wantGrab = getenv ("SEXY_LINUX_INPUT_NO_GRAB") == 0;
+	wantGrab = true;
 #else
-	wantGrab = getenv ("SEXY_LINUX_INPUT_GRAB_DEVICE") != 0;
+	wantGrab = false;
 #endif
+	wantGrab = GetEnvOption ("SEXY_LINUX_INPUT_GRAB_DEVICE", wantGrab);
 	if (wantGrab)
 	{
 		ret = ioctl (mFd, EVIOCGRAB, 1);
 		if (ret)
-			printf ("Couldn't grab device: %s.\n", device);
+			logfe ("Couldn't grab device: %s.\n", device);
 		else
 			mGrabed = true;
 	}
 	if (mGrabed)
-		printf ("Graded device: %s.\n", device);
+		logfi ("Graded device: %s.\n", device);
 	mModifiers = 0;
 
+	// Update device info
 	struct input_info info;
 	get_device_info (mFd, &info, false);
 	mInfo.pid = info.id.product;
@@ -641,10 +1046,77 @@ bool LinuxInputInterface::OpenDevice ()
 	mInfo.version = info.id.version;
 	mInfo.bustype = info.id.bustype;
 
-	mHasPointer = info.num_rels || info.num_abs;
+	mHasPointer = info.num_rels && info.num_buttons;
 	mHasKey = info.num_keys || info.num_ext_keys;
-
+	mHasJoystick = info.num_abs && info.num_joysticks;
 	mDeviceName = std::string (device);
+	mRouton = IsRoutonKeyboard(info.name);
+
+	for (int i = 0; i < info.num_abs; i++)
+	{
+		LinuxAxisInfo axis;
+
+		axis.devFlat = info.absinfo[i].flat;
+		axis.devFuzz = info.absinfo[i].fuzz;
+		axis.devMinimum = info.absinfo[i].minimum;
+		axis.devMaximum = info.absinfo[i].maximum;
+		axis.devResolution = info.absinfo[i].resolution;
+
+		float range;
+		if (axis.devMaximum != axis.devMinimum)
+		{
+			range = axis.devMaximum - axis.devMinimum;
+		}
+		else
+		{
+			range = 1.0f;
+		}
+		//rescaled = (value + coef[0]) * coef[1] + coef[2]
+		axis.coef[0] = -axis.devMinimum;
+		axis.coef[1] = 2.0f / range;
+		axis.coef[2] = -1.0f;
+		axis.flat = axis.devFlat / range;
+		axis.fuzz = axis.devFuzz / range;
+		axis.minimum = -1.0f;
+		axis.maximum = 1.0f;
+		axis.resolution = axis.devResolution / range;
+		mAxisInfoMap.insert(AxisInfoMap::value_type(info.axis[i], axis));
+	}
+	if (info.num_joysticks)
+	{
+		mButtonMap[BTN_TRIGGER] = KEYCODE_GAMEPAD_A;
+		mButtonMap[BTN_THUMB]	= KEYCODE_GAMEPAD_B;
+		mButtonMap[BTN_THUMB2]	= KEYCODE_GAMEPAD_C;
+		mButtonMap[BTN_TOP]	= KEYCODE_GAMEPAD_X;
+		mButtonMap[BTN_TOP2]	= KEYCODE_GAMEPAD_Y;
+		mButtonMap[BTN_PINKIE]	= KEYCODE_GAMEPAD_Z;
+		mButtonMap[BTN_BASE]	= KEYCODE_GAMEPAD_TL;
+		mButtonMap[BTN_BASE2]	= KEYCODE_GAMEPAD_TR;
+		mButtonMap[BTN_BASE3]	= KEYCODE_GAMEPAD_TL2;
+		mButtonMap[BTN_BASE4]	= KEYCODE_GAMEPAD_TR2;
+		mButtonMap[BTN_BASE5]	= KEYCODE_GAMEPAD_THUMBL;
+		mButtonMap[BTN_BASE6]	= KEYCODE_GAMEPAD_THUMBR;
+		mButtonMap[BTN_A]	= KEYCODE_GAMEPAD_A;
+		mButtonMap[BTN_B]	= KEYCODE_GAMEPAD_B;
+		mButtonMap[BTN_C]	= KEYCODE_GAMEPAD_C;
+		mButtonMap[BTN_X]	= KEYCODE_GAMEPAD_X;
+		mButtonMap[BTN_Y]	= KEYCODE_GAMEPAD_Y;
+		mButtonMap[BTN_Z]	= KEYCODE_GAMEPAD_Z;
+		mButtonMap[BTN_TL]	= KEYCODE_GAMEPAD_TL;
+		mButtonMap[BTN_TR]	= KEYCODE_GAMEPAD_TR;
+		mButtonMap[BTN_TL2]	= KEYCODE_GAMEPAD_TL2;
+		mButtonMap[BTN_TR2]	= KEYCODE_GAMEPAD_TR2;
+		mButtonMap[BTN_SELECT]	= KEYCODE_GAMEPAD_SELECT;
+		mButtonMap[BTN_START]	= KEYCODE_GAMEPAD_START;
+		mButtonMap[BTN_MODE]	= KEYCODE_GAMEPAD_MODE;
+		mButtonMap[BTN_THUMBL]	= KEYCODE_GAMEPAD_THUMBL;
+		mButtonMap[BTN_THUMBR]	= KEYCODE_GAMEPAD_THUMBR;
+	}
+	mMinX = 0;
+	mMaxX = 0;
+	mMinY = 0;
+	mMaxY = 0;
+
 	mDriver->AddDevice (mDeviceName, mInfo);
 
 	return true;
@@ -668,7 +1140,7 @@ bool LinuxInputInterface::ReopenDevice ()
 		ret = ioctl (mFd, EVIOCGRAB, 1);
 		if (ret)
 		{
-			printf ("Couldn't grab %s.\n", mDeviceName.c_str ());
+			logfe ("Couldn't grab %s.\n", mDeviceName.c_str ());
 			mGrabed = false;
 		}
 		else
@@ -678,6 +1150,7 @@ bool LinuxInputInterface::ReopenDevice ()
 	}
 	mModifiers = 0;
 
+	// Update device info
 	struct input_info info;
 	get_device_info (mFd, &info, false);
 	mInfo.pid = info.id.product;
@@ -685,9 +1158,15 @@ bool LinuxInputInterface::ReopenDevice ()
 	mInfo.version = info.id.version;
 	mInfo.bustype = info.id.bustype;
 
+	mRouton = IsRoutonKeyboard(info.name);
+	mHasPointer = info.num_rels || info.num_abs;
+	mHasKey = info.num_keys || info.num_ext_keys;
+
 	mDriver->AddDevice (mDeviceName, mInfo);
 
-	printf ("Device %s reopened.\n", mDeviceName.c_str ());
+	logfi ("Device %s reopened.\n", mDeviceName.c_str ());
+
+
 	return true;
 }
 
@@ -763,12 +1242,14 @@ static int translate_key(int keysym)
 		return '1' + keysym - KEY_1;
 	if (keysym == KEY_0)
 		return '0';
+	if (keysym >= KEY_F1 && keysym <= KEY_F10)
+		return KEYCODE_F1 + keysym - KEY_F1;
+
 	return 0;
 }
 
-static bool
-handle_key_event (struct input_event & linux_event,
-		  int &modifiers, Event & event)
+bool LinuxInputInterface::HandleKeyEvent (struct input_event & linux_event,
+					  int &modifiers, Event & event)
 {
      if (linux_event.code == BTN_TOUCH || linux_event.code == BTN_TOOL_FINGER)
 	  linux_event.code = BTN_MOUSE;
@@ -776,10 +1257,6 @@ handle_key_event (struct input_event & linux_event,
 	if ((linux_event.code >= BTN_MOUSE && linux_event.code < BTN_JOYSTICK) ||
 	    linux_event.code == BTN_TOUCH)
 	{
-#if 0
-		printf ("button: %d(%x) %d\n", linux_event.code, linux_event.code,
-			linux_event.value);
-#endif
 		if (linux_event.code == BTN_MOUSE)
 			event.u.mouse.button = 1;
 		else if (linux_event.code == (BTN_MOUSE + 1))
@@ -797,6 +1274,11 @@ handle_key_event (struct input_event & linux_event,
 	else
 	{
 		int keycode = translate_key(linux_event.code);
+		if (!keycode && mButtonMap.find(linux_event.code) != mButtonMap.end())
+			keycode = mButtonMap[linux_event.code];
+
+		if (GetEnvOption("SEXY_LINUX_INPUT_DEBUG", false))
+			logfd("keyCode: 0x%x => 0x%x", linux_event.code, keycode);
 
 		if (!keycode)
 			return false;
@@ -814,7 +1296,8 @@ handle_key_event (struct input_event & linux_event,
 		event.flags |= EVENT_FLAGS_KEY_CODE;
 		event.u.key.keyCode = keycode;
 
-		printf ("keycode: %s\n", GetKeyNameFromCode((KeyCode)keycode).c_str());
+		if (GetEnvOption("SEXY_LINUX_INPUT_DEBUG", false))
+			logfd ("keycode: %s\n", GetKeyNameFromCode((KeyCode)keycode).c_str());
 
 		if (isalnum(keycode) && event.type == EVENT_KEY_DOWN)
 		{
@@ -866,10 +1349,8 @@ handle_key_event (struct input_event & linux_event,
 	return true;
 }
 
-
-static bool
-handle_rel_event (struct input_event & linux_event,
-		  Event & event)
+bool LinuxInputInterface::HandleRelEvent (struct input_event & linux_event,
+					    Event & event)
 {
 	switch (linux_event.code)
 	{
@@ -890,44 +1371,86 @@ handle_rel_event (struct input_event & linux_event,
 	return true;
 }
 
-static bool
-handle_abs_event (struct input_event & linux_event,
-		  Event & event)
+bool LinuxInputInterface::HandleAbsEvent (struct input_event & linux_event,
+					  Event & event)
 {
-	switch (linux_event.code)
+	if (!mHasJoystick)
+		return false;
+
+	AxisInfoMap::iterator it = mAxisInfoMap.find(linux_event.code);
+	if (it == mAxisInfoMap.end())
+		return false;
+
+	LinuxAxisInfo& info = it->second;
+	float value;
+
+	if (info.devMaximum != info.devMinimum)
 	{
-	case ABS_X:
-		event.type = EVENT_MOUSE_MOTION;
-		event.flags |= EVENT_FLAGS_AXIS;
-		event.u.mouse.x = linux_event.value;
-		break;
-	case ABS_Y:
-		event.type = EVENT_MOUSE_MOTION;
-		event.flags |= EVENT_FLAGS_AXIS;
-		event.u.mouse.y = linux_event.value;
-		break;
-	default:
-		break;
+		const float* coef = info.coef;
+		value = (linux_event.value + coef[0]) * coef[1] + coef[2];
 	}
+	else
+	{
+		if (linux_event.value < 0)
+			value = -1.0f;
+		else if (linux_event.value > 0)
+			value = 1.0f;
+		else
+			value = 0.0f;
+	}
+	event.type = EVENT_AXIS_MOVED;
+	event.flags = 0;
+	event.u.axis.axis = linux_event.code;
+	event.u.axis.value = value;
+	event.u.axis.flat = info.flat;
+	event.u.axis.fuzz = info.fuzz;
+	event.u.axis.minimum = info.minimum;
+	event.u.axis.maximum = info.maximum;
+
+	if (GetEnvOption("SEXY_LINUX_INPUT_DEBUG", false))
+		logfd("LinuxInput:%p%d: AxisMoved[0x02%x]: value: %f raw value: 0x%x(%d:%d)",
+		      this, mId, event.u.axis.axis, value, linux_event.value,
+		      info.devMinimum, info.devMaximum);
 
 	return true;
 }
 
-static bool handle_event (struct input_event& linux_event,
-			  int &modifiers, Event &event)
+bool LinuxInputInterface::HandleEvent (struct input_event& linux_event,
+				       int &modifiers, Event &event)
 {
 	switch (linux_event.type) {
 	case EV_KEY:
-		return handle_key_event (linux_event, modifiers, event);
+		return HandleKeyEvent (linux_event, modifiers, event);
 		break;
 	case EV_REL:
-		return handle_rel_event (linux_event, event);
+		return HandleRelEvent (linux_event, event);
 	case EV_ABS:
-		return handle_abs_event (linux_event, event);
+		return HandleAbsEvent (linux_event, event);
 	default:
 		break;
 	}
 	return false;
+}
+
+void  LinuxInputInterface::HandleEvents(struct input_event* linux_event, int nevents)
+{
+	Event event;
+
+	memset (&event, 0, sizeof (event));
+	for (int i = 0; i < nevents; i++)
+	{
+		if (GetEnvOption("SEXY_LINUX_INPUT_DEBUG", false))
+			logfd ("LinuxInput:%p:%d: input_event: type %d code %d value: %d\n",
+			       this, mId, linux_event[i].type, linux_event[i].code,
+			       linux_event[i].value);
+
+		HandleEvent (linux_event[i], mModifiers, event);
+		if (event.type == EVENT_NONE)
+			continue;
+
+		PostEvent (event);
+		memset (&event, 0, sizeof (event));
+	}
 }
 
 void* LinuxInputInterface::Run (void * data)
@@ -941,45 +1464,29 @@ void* LinuxInputInterface::Run (void * data)
 	while (!driver->mDone)
 	{
 		fd = driver->mFd;
-		if (driver->mFd >= 0)
+
+		FD_ZERO (&set);
+		FD_SET (fd, &set);
+
+		struct timeval timeout;
+
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 10000;
+		status = select (fd + 1, &set, NULL, NULL, &timeout);
+		if (status < 0 && errno != EINTR)
 		{
-			FD_ZERO (&set);
-			FD_SET (fd, &set);
+			logfi ("Device disconnected(hotpluged ? %s).\n",
+			       driver->mHotpluged ? "yes" : "no");
 
-			struct timeval timeout;
-
-			timeout.tv_sec = 0;
-			timeout.tv_usec = 300;
-			status = select (fd + 1, &set, NULL, NULL, &timeout);
-			if (status < 0 && errno != EINTR)
-			{
-				printf ("Device disconnected(hotpluged ? %s).\n",
-					driver->mHotpluged ? "yes" : "no");
-
-				driver->CloseDevice ();
-
-				/* don't bother, it's hotpluged */
-				if (driver->mHotpluged)
-					goto disconnected;
-				else
-					continue;
-			}
-			if (status < 0)
-				continue;
-			if (driver->mDone)
-				break;
-			if (!FD_ISSET (fd, &set))
-				continue;
+			driver->CloseDevice ();
+			goto disconnected;
 		}
-		else
-		{
-			usleep (500000);
-			if (!driver->ReopenDevice ())
-				driver->mRetry++;
-			else
-				driver->mRetry = 0;
+		if (status < 0)
 			continue;
-		}
+		if (driver->mDone)
+			break;
+		if (!FD_ISSET (fd, &set))
+			continue;
 
 		ssize_t readlen;
 		readlen = read (fd, linux_event, sizeof (linux_event));
@@ -989,64 +1496,17 @@ void* LinuxInputInterface::Run (void * data)
 
 		if (readlen < 0 && errno != EINTR)
 		{
-			printf ("Device disconnected (hotpluged? %s).\n",
+			logfi ("Device disconnected (hotpluged? %s).\n",
 				driver->mHotpluged ? "yes" : "no");
 			driver->CloseDevice ();
-			/* don't bother, it's hotpluged */
-			if (driver->mHotpluged)
-				goto disconnected;
-			else
-				continue;
+			goto disconnected;
 		}
 
 		if (readlen <= 0)
 			continue;
 
 		readlen /= sizeof (linux_event[0]);
-
-		Event event;
-		memset (&event, 0, sizeof (event));
-		for (int i = 0; i < readlen; i++) {
-			if (0)
-				printf ("linux_event: type %d code %d value: %d\n",
-					linux_event[i].type, linux_event[i].code,
-					linux_event[i].value);
-
-			handle_event (linux_event[i], driver->mModifiers, event);
-
-#if 0
-			if (linux_event[i].type != EV_SYN ||
-			    linux_event[i].code != SYN_REPORT)
-			    continue;
-#endif
-
-			if (event.type == EVENT_MOUSE_MOTION)
-			{
-				if (event.flags & EVENT_FLAGS_AXIS)
-				{
-					driver->mX = event.u.mouse.x;
-					driver->mY = event.u.mouse.y;
-				}
-			}
-			if (event.type != EVENT_NONE)
-			{
-#if 1
-				if (0)
-#else
-				if (event.type == EVENT_MOUSE_BUTTON_PRESS ||
-				    event.type == EVENT_MOUSE_BUTTON_RELEASE)
-#endif
-				{
-					printf ("event.type: %d\n", event.type);
-					printf ("event.button: %d\n", event.u.mouse.button);
-					printf ("event.x: %d\n", event.u.mouse.x);
-					printf ("event.y: %d\n", event.u.mouse.y);
-				}
-				driver->PostEvent (event);
-				memset (&event, 0, sizeof (event));
-			}
-		}
-		fflush(stdout);
+		driver->HandleEvents(linux_event, readlen);
 	}
 
 	return NULL;
@@ -1063,6 +1523,19 @@ bool LinuxInputInterface::HasEvent ()
 bool LinuxInputInterface::GetEvent (Event & event)
 {
 	return false;
+}
+
+bool LinuxInputInterface::IsGrabbed ()
+{
+	return mGrabed;
+}
+
+bool LinuxInputInterface::Grab (bool grab)
+{
+	int ret = ioctl (mFd, EVIOCGRAB, grab == true ? 1 : 0);
+	if (ret == 0)
+		mGrabed = grab;
+	return ret == 0;
 }
 
 bool LinuxInputInterface::GetInfo (InputInfo &theInfo, int subid)
