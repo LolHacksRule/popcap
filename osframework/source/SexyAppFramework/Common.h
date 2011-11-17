@@ -195,6 +195,7 @@ namespace Sexy
 						    const std::string& theDir);
 	bool				AllowAllAccess(const std::string& theFileName);
 
+	const char*                     GetEnv(const char* name);
 	bool                            GetEnvOption(const char *option,  bool value = false);
 	int                             GetEnvIntOption(const char *option, int value = 0);
 
