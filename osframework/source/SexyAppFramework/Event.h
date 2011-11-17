@@ -26,6 +26,7 @@ enum EventType {
 	EVENT_TOUCH                  = 16,
 	EVENT_MINIMIZED              = 17,
 	EVENT_GYRO                   = 18,
+	EVENT_AXIS_MOVED             = 19,
 	EVENT_USER		     = 65535
 };
 
@@ -102,6 +103,38 @@ struct MinimizedEvent {
 	int minimized;
 };
 
+enum Axis {
+        AXIS_X        = 0x00,
+        AXIS_Y        = 0x01,
+        AXIS_Z        = 0x02,
+        AXIS_RX       = 0x03,
+        AXIS_RY       = 0x04,
+        AXIS_RZ       = 0x05,
+        AXIS_THROTTLE = 0x06,
+        AXIS_RUDDER   = 0x07,
+        AXIS_WHEEL    = 0x08,
+        AXIS_GAS      = 0x09,
+        AXIS_BRAKE    = 0x0a,
+        AXIS_HAT0X    = 0x10,
+        AXIS_HAT0Y    = 0x11,
+        AXIS_HAT1X    = 0x12,
+        AXIS_HAT1Y    = 0x13,
+        AXIS_HAT2X    = 0x14,
+        AXIS_HAT2Y    = 0x15,
+        AXIS_HAT3X    = 0x16,
+        AXIS_HAT3Y    = 0x17
+};
+
+struct AxisMoved {
+        int   axis;
+        float flat;
+        float fuzz;
+        float minimum;
+        float maximum;
+        float resolution;
+        float value;
+};
+
 struct UserEvent {
 	int	       reserved[7];
 };
@@ -123,6 +156,7 @@ struct Event {
 		struct TouchEvent     touch;
 		struct MinimizedEvent minimized;
 		struct GyroEvent      gyro;
+		struct AxisMoved      axis;
 	}			      u;
 };
 
