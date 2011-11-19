@@ -26,6 +26,7 @@ GLXDisplay::GLXDisplay (SexyAppBase* theApp)
 	mContext = NULL;
 	mWidth = mApp->mWidth;
 	mHeight = mApp->mHeight;
+	mIsWindowed = false;
 }
 
 GLXDisplay::~GLXDisplay ()
@@ -145,6 +146,7 @@ int GLXDisplay::Init (void)
 	wmState = XInternAtom (mDpy, "_NET_WM_STATE", False);
 	fullScreen = XInternAtom (mDpy, "_NET_WM_STATE_FULLSCREEN", False);
 
+	mIsWindowed = mApp->mIsWindowed;
 	if (!mApp->mIsWindowed)
 	{
 		memset(&event, 0, sizeof(event));
@@ -242,18 +244,22 @@ bool GLXDisplay::Reinit (void)
 	wmState = XInternAtom (mDpy, "_NET_WM_STATE", False);
 	fullScreen = XInternAtom (mDpy, "_NET_WM_STATE_FULLSCREEN", False);
 
-	memset(&event, 0, sizeof(event));
-	event.type = ClientMessage;
-	event.xclient.window = mWindow;
-	event.xclient.message_type = wmState;
-	event.xclient.format = 32;
-	event.xclient.data.l[0] = mApp->mIsWindowed ? 0 : 1;
-	event.xclient.data.l[1] = fullScreen;
-	event.xclient.data.l[2] = 0;
+	if (mApp->mIsWindowed != mIsWindowed)
+	{
+		memset(&event, 0, sizeof(event));
+		event.type = ClientMessage;
+		event.xclient.window = mWindow;
+		event.xclient.message_type = wmState;
+		event.xclient.format = 32;
+		event.xclient.data.l[0] = mApp->mIsWindowed ? 0 : 1;
+		event.xclient.data.l[1] = fullScreen;
+		event.xclient.data.l[2] = 0;
 
-	XSendEvent (mDpy, DefaultRootWindow (mDpy), False,
-		    SubstructureNotifyMask, &event);
-	XIfEvent (mDpy,	 &event,  WaitForSubstructureNotify, (char*)this);
+		XSendEvent (mDpy, DefaultRootWindow (mDpy), False,
+			    SubstructureNotifyMask, &event);
+		XIfEvent (mDpy,	 &event,  WaitForSubstructureNotify, (char*)this);
+	}
+	mIsWindowed = mApp->mIsWindowed;
 
 	delete mScreenImage;
 	mScreenImage = static_cast<GLImage*>(CreateImage (mApp, mWidth, mHeight));

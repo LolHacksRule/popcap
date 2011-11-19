@@ -51,6 +51,7 @@ private:
 
 	Atom                                    mWMDeleteMessage;
 
+	bool                                    mIsWindowed;
 	static Bool                             WaitForSubstructureNotify(Display *d,
 									  XEvent *e, char* arg);
 };
