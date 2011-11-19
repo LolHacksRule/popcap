@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <wchar.h>
+#include <ctype.h>
 
 #ifdef WIN32
 #ifndef NOMINMAX
@@ -225,12 +226,12 @@ namespace Sexy
 
 	inline void			inlineLower(std::string &theData)
 	{
-		std::transform(theData.begin(), theData.end(), theData.begin(), tolower);
+		std::transform(theData.begin(), theData.end(), theData.begin(), ::tolower);
 	}
 
 	inline void			inlineLower(Sexy::WString &theData)
 	{
-		std::transform(theData.begin(), theData.end(), theData.begin(), tolower);
+		std::transform(theData.begin(), theData.end(), theData.begin(), ::tolower);
 	}
 
 	inline void			inlineLTrim(std::string &theData,
