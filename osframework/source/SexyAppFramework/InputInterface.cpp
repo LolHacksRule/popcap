@@ -81,9 +81,25 @@ bool InputInterface::GetInfo(InputInfo &theInfo, int subid)
 	theInfo.mName = mInputDriver->mName;
 	theInfo.mHasPointer = true;
 	theInfo.mHasKey = false;
+	theInfo.mHasJoystick = false;
 	theInfo.mHasAcc = false;
 	theInfo.mHasGyro = false;
 	theInfo.mId = mId;
 
 	return true;
+}
+
+int InputInterface::GetNumAxes(int subid)
+{
+        return 0;
+}
+
+bool InputInterface::GetAxisInfo(Axis axis, InputAxisInfo& axixInfo, int subid)
+{
+        return false;
+}
+
+bool InputInterface::GetAxisInfo(InputAxisInfoVector& axes, int subid)
+{
+        return false;
 }
