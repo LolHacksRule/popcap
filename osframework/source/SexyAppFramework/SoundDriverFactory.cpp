@@ -26,13 +26,55 @@ SoundDriverFactory::~SoundDriverFactory ()
 {
 }
 
-SoundDriverFactory*  SoundDriverFactory::GetSoundDriverFactory ()
-{
-	static SoundDriverFactory  * theSoundDriverFactory;
+namespace Sexy {
 
-	if (!theSoundDriverFactory)
-		theSoundDriverFactory = new SoundDriverFactory ();
-	return theSoundDriverFactory;
+class StaticSoundDriverFactory
+{
+public:
+	struct StaticData {
+		SoundDriverFactory* mFactory;
+		bool mDone;
+	};
+
+	StaticSoundDriverFactory(StaticData* data)
+	{
+		mData = data;
+	}
+
+	SoundDriverFactory* Get(StaticData* data)
+	{
+		if (data->mDone)
+			return 0;
+
+		if (data->mFactory)
+			return data->mFactory;
+
+		data->mFactory = new SoundDriverFactory;
+		return data->mFactory;
+	}
+
+	~StaticSoundDriverFactory()
+	{
+		if (!mData)
+			return;
+
+		mData->mDone = true;
+		if (mData->mFactory)
+			delete mData->mFactory;
+	}
+
+private:
+	StaticData* mData;
+};
+
+static StaticSoundDriverFactory::StaticData aData;
+static StaticSoundDriverFactory soundDriverFactory(&aData);
+
+}
+
+SoundDriverFactory* SoundDriverFactory::GetSoundDriverFactory ()
+{
+	return soundDriverFactory.Get(&aData);
 }
 
 /* This is a hack that preventing gcc from striping drivers out of
@@ -52,11 +94,12 @@ SoundDriverGetter SoundDriverGetters []= {
 	GetAudiereSoundDriver,
 #endif
 #ifdef SEXY_DIRECT_SOUND_DRIVER
-	GetDSoundDriver,
+       GetDSoundDriver,
 #endif
 #ifdef SEXY_OPENAL_SOUND_DRIVER
-	GetOpenALSoundDriver,
+       GetOpenALSoundDriver,
 #endif
+
 	GetDummySoundDriver,
 	NULL
 };

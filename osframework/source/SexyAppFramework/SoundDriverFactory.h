@@ -30,6 +30,8 @@ class SoundDriverFactory: public DriverFactory
 	void		     Load();
 
  private:
+	friend class StaticSoundDriverFactory;
+
 	SoundDriverFactory ();
 	~SoundDriverFactory ();
 };
@@ -43,7 +45,8 @@ class SoundDriverRegistor
 		SoundDriverFactory* factory;
 
 		factory = SoundDriverFactory::GetSoundDriverFactory ();
-		factory->AddDriver (mDriver);
+		if (factory)
+			factory->AddDriver (mDriver);
 	}
 
 	~SoundDriverRegistor()
@@ -51,7 +54,8 @@ class SoundDriverRegistor
 		SoundDriverFactory* factory;
 
 		factory = SoundDriverFactory::GetSoundDriverFactory ();
-		factory->RemoveDriver (mDriver);
+		if (factory)
+			factory->RemoveDriver (mDriver);
 	}
 
  private:
