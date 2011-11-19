@@ -118,6 +118,7 @@ public:
 	virtual bool                    AxisMoved(const Event& event);
 	virtual void                    UserEvent(const Event event);
 	virtual bool			IsPointVisible(int x, int y);
+	virtual Widget*                 GetTopLevel();
 
 	//////// Helper functions
 
@@ -147,6 +148,7 @@ public:
 	bool                                    IsFocusable();
 
  protected:
+	virtual WidgetVector::iterator          FindClosest(Widget* theWidget);
 	virtual WidgetVector::iterator          FindFocusableWidget(int direct, // the LayoutFlags
 								    Widget* current = 0);
 

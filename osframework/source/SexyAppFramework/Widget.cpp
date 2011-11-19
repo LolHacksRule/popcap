@@ -430,6 +430,49 @@ bool Widget::KeyDownUp(KeyCode theKey, bool down)
 	return false;
 }
 
+
+Widget* Widget::GetTopLevel()
+{
+	Widget* p = this;
+
+	while (p)
+	{
+		if (!p->mParent)
+			return p;
+		if (p->mParent == p->mWidgetManager)
+			return p;
+		p = (Widget*)p->mParent;
+	}
+
+	return this;
+}
+
+WidgetVector::iterator Widget::FindClosest(Widget* theWidget)
+{
+	if (!theWidget || mSortedWidgets.empty())
+		return mSortedWidgets.end();
+
+	WidgetVector::iterator it;
+	WidgetVector::iterator best = mSortedWidgets.end();
+	Point center = theWidget->GetAbsCenter();
+	int bestDist = 0x7fffffff;
+	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
+	{
+		if (!(*it)->IsFocusable())
+			continue;
+
+		Point diff = center - (*it)->GetAbsCenter();
+		int dist = diff.mX * diff.mX + diff.mY * diff.mY;
+		if (dist < bestDist)
+		{
+			bestDist = dist;
+			best = it;
+		}
+	}
+
+	return best;
+}
+
 WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 {
 	Widget* widget = 0;
@@ -443,11 +486,23 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 		// Find the current focus
 		for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
 		{
-			if ((*it)->IsFocusable())
+			if ((*it)->mHasFocus && (*it)->IsFocusable())
 			{
 				current = *it;
 				break;
 			}
+		}
+
+		if (!current)
+		{
+			// Find the current focus
+			Widget* topLevel = GetTopLevel();
+			Widget* current = topLevel->mFocus;
+
+			while (current && current->mFocus)
+				current = current->mFocus;
+			if (current)
+				return FindClosest(current);
 		}
 
 		if (!current)
@@ -461,15 +516,17 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 	{
 		it = std::find(mSortedWidgets.begin(), mSortedWidgets.end(), current);
 	}
-	if (it == mSortedWidgets.end())
-		return it;
+	if (!current)
+		return mSortedWidgets.end();
 
-	Point center = current->GetCenter();
+	Point center = current->GetAbsCenter();
+	Point leftTop = current->GetAbsPos();
 	if (direct == LAY_Below)
 	{
 		for (it++; it != mSortedWidgets.end(); it++)
 		{
-			if ((*it)->IsFocusable() && (*it)->Top() > current->Top())
+			Point pos = (*it)->GetAbsPos();
+			if ((*it)->IsFocusable() && pos.mY > leftTop.mY)
 			{
 				widget = *it;
 				break;
@@ -480,16 +537,19 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 		{
 			WidgetVector::iterator pit = it;
 			WidgetVector::iterator best = it;
-			Point diff = center - (*it)->GetCenter();
+			Point diff = center - (*it)->GetAbsCenter();
 			int dist = diff.mX * diff.mX + diff.mY * diff.mY;
 			int bestDist = dist;
 
 			for (++it; it != mSortedWidgets.end(); pit = it++)
 			{
-				if ((*it)->Left() < (*pit)->Left())
+				if ((*it)->Left() <= (*pit)->Left())
 					break;
 
-				Point c = (*it)->GetCenter();
+				if (!(*it)->IsFocusable())
+					continue;
+
+				Point c = (*it)->GetAbsCenter();
 				diff = center - c;
 				dist = diff.mX * diff.mX + diff.mY * diff.mY;
 				if (dist < bestDist)
@@ -509,7 +569,8 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 			do
 			{
 				--it;
-				if ((*it)->IsFocusable() && (*it)->Top() < current->Top())
+				Point pos = (*it)->GetAbsPos();
+				if ((*it)->IsFocusable() && pos.mY < leftTop.mY)
 				{
 					widget = *it;
 					break;
@@ -521,7 +582,7 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 		{
 			WidgetVector::iterator pit = it;
 			WidgetVector::iterator best = it;
-			Point diff = center - (*it)->GetCenter();
+			Point diff = center - (*it)->GetAbsCenter();
 			int dist = diff.mX * diff.mX + diff.mY * diff.mY;
 			int bestDist = dist;
 
@@ -530,7 +591,10 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 				if ((*it)->Left() >= (*pit)->Left())
 					break;
 
-				Point c = (*it)->GetCenter();
+				if (!(*it)->IsFocusable())
+					continue;
+
+				Point c = (*it)->GetAbsCenter();
 				diff = center - c;
 				dist = diff.mX * diff.mX + diff.mY * diff.mY;
 				if (dist < bestDist)
@@ -549,7 +613,8 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 
 		for (; it != mSortedWidgets.end(); ++it)
 		{
-			if ((*it)->IsFocusable() && (*it)->Left() > current->Left())
+			Point pos = (*it)->GetAbsPos();
+			if ((*it)->IsFocusable() && pos.mX > leftTop.mX)
 			{
 				widget = *it;
 				break;
@@ -562,7 +627,8 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 			do
 			{
 				--it;
-				if ((*it)->IsFocusable() && (*it)->Left() > current->Left())
+				Point pos = (*it)->GetAbsPos();
+				if ((*it)->IsFocusable() && pos.mX > leftTop.mX)
 				{
 					widget = *it;
 					break;
@@ -579,8 +645,8 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 			do
 			{
 				--it;
-				if ((*it)->IsFocusable() &&
-				    (*it)->Left() <= current->Left())
+				Point pos = (*it)->GetAbsPos();
+				if ((*it)->IsFocusable() && pos.mX <= leftTop.mX)
 				{
 					widget = *it;
 					break;
@@ -592,7 +658,8 @@ WidgetVector::iterator Widget::FindFocusableWidget(int direct, Widget* current)
 		{
 			for (it = saved + 1; it != mSortedWidgets.end(); ++it)
 			{
-				if ((*it)->IsFocusable() && (*it)->Left() <= current->Left())
+				Point pos = (*it)->GetAbsPos();
+				if ((*it)->IsFocusable() && pos.mX <= leftTop.mX)
 				{
 					widget = *it;
 					break;
