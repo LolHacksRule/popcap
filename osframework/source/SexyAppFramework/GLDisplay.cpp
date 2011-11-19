@@ -7,6 +7,7 @@
 #include "Debug.h"
 #include "MemoryImage.h"
 #include "KeyCodes.h"
+#include "SexyLog.h"
 
 #include <cstdio>
 
@@ -14,12 +15,6 @@ using namespace Sexy;
 
 #ifdef SEXY_OPENGLES
 #define ftofix(f) (GLfixed)(f * 65536.0f)
-#endif
-
-#if defined(DEBUG) || defined(SEXY_GL_DEBUG) 
-#define SEXY_GL_IS_DEBUG() true
-#else
-#define SEXY_GL_IS_DEBUG() getenv("SEXY_GL_DEBUG")
 #endif
 
 GLDisplay::GLDisplay(SexyAppBase* theApp)
@@ -146,8 +141,7 @@ void GLDisplay::Reshape()
 	h = mWindowHeight * mOverScan;
 	glViewport (x, y, w, h);
 
-	if (SEXY_GL_IS_DEBUG ())
-		printf ("GL viewport: (%.2f, %.2f, %.2f, %.2f)\n", x, y, w, h);
+	logfd ("GL viewport: (%.2f, %.2f, %.2f, %.2f)\n", x, y, w, h);
 }
 
 void GLDisplay::InitGL()
@@ -164,19 +158,16 @@ void GLDisplay::InitGL()
 		str = strchr (str, '.') + 1;
 		mGLMinor = atoi (str);
 	}
-	if (SEXY_GL_IS_DEBUG ())
-		printf ("GL version: %s(%d.%d)\n", version, mGLMajor, mGLMinor);
+	logfi ("GL version: %s(%d.%d)\n", version, mGLMajor, mGLMinor);
 
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureWidth);
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &mMaxTextureHeight);
 
-	if (SEXY_GL_IS_DEBUG ())
-		printf ("GL Maximium texture size: %d\n", mMaxTextureHeight);
+	logfi ("GL Maximium texture size: %d\n", mMaxTextureHeight);
 
 	mGLExtensions = (const char*)glGetString (GL_EXTENSIONS);
 
-	if (SEXY_GL_IS_DEBUG ())
-		printf ("GL extensions: %s\n", mGLExtensions);
+	logfi ("GL extensions: %s\n", mGLExtensions);
 
 	if (mGLExtensions) {
 		if (mGLMajor > 2 || (mGLMajor == 1 && mGLMinor >= 2) ||
@@ -223,8 +214,6 @@ void GLDisplay::InitGL()
 		  ftofix (mHeight), ftofix (0),
 		  ftofix (-1.0), ftofix (1.0));
 #endif
-	if (SEXY_GL_IS_DEBUG ())
-		printf ("GL Ortho: (%d, %d, %d, %d)\n", 0, 0, mWidth, mHeight);
 
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
