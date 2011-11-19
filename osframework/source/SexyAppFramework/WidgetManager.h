@@ -64,6 +64,18 @@ struct TouchInfo {
 	}
 };
 typedef std::map<int, TouchInfo> TouchInfoMap;
+typedef std::map<KeyCode, KeyCode> GamepadKeyMap;
+
+struct AxisInfo {
+        float x;
+        float y;
+        float hatx;
+        float haty;
+        DWORD timestamp;
+        DWORD lastEmit;
+        int count;
+};
+typedef std::map<int, AxisInfo> AxisInfoMap;
 
 class WidgetManager : public WidgetContainer
 {
@@ -104,6 +116,9 @@ public:
 	TouchVector                             mLastTouch;
 	int                                     mActiveTouchId;
 
+        GamepadKeyMap                           mGamepadKeyMap;
+        AxisInfoMap                             mAxisInfoMap;
+
 	int						mWidgetFlags;
 
 protected:
@@ -120,6 +135,7 @@ public:
 	WidgetManager(SexyAppBase* theApplet);
 	virtual ~WidgetManager();
 	
+	void                                    InitGamepadKeyMap();
 	void					FreeResources();		
 	void					AddBaseModal(Widget* theWidget, const FlagsMod& theBelowFlagsMod);
 	void					AddBaseModal(Widget* theWidget);
@@ -161,6 +177,7 @@ public:
 	bool                                    TouchMove(const EventVector &events);
 	bool                                    TouchUp(const EventVector &events);
 	bool                                    TouchCancel(const EventVector &events);
+	bool                                    AxisMoved(const Event& event);
 	bool                                    UserEvent(const Event event);
 
 	bool					IsLeftButtonDown();
@@ -176,6 +193,11 @@ public:
 
 private:
 	TouchInfo*                              GetTouchInfo(int id);
+
+        AxisInfo*                               GetAxisInfo(int id, int subid);
+        bool                                    DefaultAxisMoved(const Event& event);
+        bool                                    HandleAxisChanged(float from, float to,
+                                                                  float flat, bool vertical);
 };
 
 }

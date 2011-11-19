@@ -8,6 +8,8 @@
 #include "PerfTimer.h"
 #include "Debug.h"
 
+#include <math.h>
+
 using namespace Sexy;
 using namespace std;
 
@@ -48,6 +50,12 @@ WidgetManager::WidgetManager(SexyAppBase* theApp)
 WidgetManager::~WidgetManager()
 {
 	FreeResources();
+}
+
+void WidgetManager::InitGamepadKeyMap()
+{
+	mGamepadKeyMap[KEYCODE_GAMEPAD_A] = KEYCODE_RETURN;
+	mGamepadKeyMap[KEYCODE_GAMEPAD_B] = KEYCODE_ESCAPE;
 }
 
 void WidgetManager::FreeResources()
@@ -870,11 +878,14 @@ bool WidgetManager::KeyDown(KeyCode key)
 	if ((key >= 0) && (key < 0xFF))
 		mKeyDown[key] = true;
 
+	bool ret = false;
 	if (mFocusWidget != NULL)
-		mFocusWidget->KeyDown(key);
+		ret = mFocusWidget->KeyDown(key);
 	else if (mBaseModalWidget != NULL)
-		mBaseModalWidget->KeyDown(key);
-	return true;
+		ret = mBaseModalWidget->KeyDown(key);
+	if (!ret && mGamepadKeyMap.find(key) != mGamepadKeyMap.end())
+		return KeyDown(mGamepadKeyMap[key]);
+	return ret;
 }
 
 bool WidgetManager::KeyUp(KeyCode key)
@@ -887,11 +898,14 @@ bool WidgetManager::KeyUp(KeyCode key)
 	if ((key == KEYCODE_TAB) && (mKeyDown[KEYCODE_CONTROL]))
 		return true;
 
+	bool ret = false;
 	if (mFocusWidget != NULL)
-		mFocusWidget->KeyUp(key);
+		ret = mFocusWidget->KeyUp(key);
 	else if (mBaseModalWidget != NULL)
-		mBaseModalWidget->KeyUp(key);
-	return true;
+		ret = mBaseModalWidget->KeyUp(key);
+	if (!ret && mGamepadKeyMap.find(key) != mGamepadKeyMap.end())
+		return KeyUp(mGamepadKeyMap[key]);
+	return ret;
 }
 
 TouchInfo* WidgetManager::GetTouchInfo(int id)
@@ -928,7 +942,7 @@ bool WidgetManager::TouchDown(const EventVector &events)
 		info->y = touches[i].y;
 		info->down = true;
 	}
-	
+
 	if (mActiveTouchId < 0)
 		mActiveTouchId = touches[0].id;
 
@@ -1166,6 +1180,146 @@ bool WidgetManager::TouchDown(int id, int x, int y, int tapCount)
 	Widget* aWidget = GetWidgetAt(x, y, &aWidgetX, &aWidgetY);
 	if (aWidget != NULL)
 		SetFocus(aWidget);
+
+	return true;
+}
+
+bool WidgetManager::AxisMoved(const Event& event)
+{
+	mLastInputUpdateCnt = mUpdateCnt;
+
+	bool ret = false;
+	if (mFocusWidget != NULL)
+		ret = mFocusWidget->AxisMoved(event);
+	else if (mBaseModalWidget != NULL)
+		ret = mBaseModalWidget->AxisMoved(event);
+	if (!ret)
+		return DefaultAxisMoved(event);
+	return true;
+}
+
+AxisInfo* WidgetManager::GetAxisInfo(int id, int subid)
+{
+	int key = id << 16 | subid;
+
+	if (mAxisInfoMap.find(key) != mAxisInfoMap.end())
+	{
+		mAxisInfoMap.insert(AxisInfoMap::value_type(key, AxisInfo()));
+
+		AxisInfo* info = &mAxisInfoMap[key];
+		memset(info, 0, sizeof(AxisInfo));
+		return info;
+	}
+	return &mAxisInfoMap[key];
+}
+
+bool WidgetManager::HandleAxisChanged(float lx, float x, float flat,
+				      bool vertical)
+{
+	int ix = 0, ilx = 0;
+
+	if (fabs(x) <= flat)
+		ix = 0;
+	else if (x > flat)
+		ix = 1;
+	else
+		ix = -1;
+
+	if (fabs(lx) <= flat)
+		ilx = 0;
+	else if (lx > flat)
+		ilx = 1;
+	else
+		ilx = -1;
+
+	if (ix == ilx)
+		return false;
+
+	KeyCode keyCodes[2];
+	if (!vertical)
+	{
+		keyCodes[0] = KEYCODE_LEFT;
+		keyCodes[1] = KEYCODE_RIGHT;
+	}
+	else
+	{
+		keyCodes[0] = KEYCODE_UP;
+		keyCodes[1] = KEYCODE_DOWN;
+	}
+
+	KeyCode keyCode = KEYCODE_UNKNOWN;
+	if (ilx + ix == 1)
+	{
+		keyCode = keyCodes[1];
+		if (ix == 1)
+			KeyDown(keyCode);
+		else
+			KeyUp(keyCode);
+	}
+	else if (ilx + ix == -1)
+	{
+		keyCode = keyCodes[0];
+		if (ix == -1)
+			KeyDown(keyCode);
+		else
+			KeyUp(keyCode);
+	}
+	else if (ix == 1 && ilx == -1)
+	{
+		keyCode = keyCodes[1];
+		KeyUp(keyCode);
+		keyCode = keyCodes[0];
+		KeyDown(keyCode);
+	}
+	else if (ix == -1 && ilx == 1)
+	{
+		keyCode = keyCodes[0];
+		KeyUp(keyCode);
+		keyCode = keyCodes[1];
+		KeyDown(keyCode);
+	}
+
+	return true;
+}
+
+bool WidgetManager::DefaultAxisMoved(const Event& event)
+{
+	int axis = event.u.axis.axis;
+	if (axis != AXIS_X && axis != AXIS_Y &&
+	    axis != AXIS_HAT0X && axis != AXIS_HAT0Y)
+		return false;
+
+	AxisInfo* info = GetAxisInfo(event.id, event.subid);
+	float x = axis == AXIS_X ? info->x : info->hatx;
+	float y = axis == AXIS_Y ? info->y : info->haty;
+	float lx = x;
+	float ly = y;
+	float flat = event.u.axis.flat;
+
+	if (axis == AXIS_X)
+	{
+		x = event.u.axis.value;
+		if (HandleAxisChanged(lx, x, flat, false))
+			info->x = x;
+	}
+	if (axis == AXIS_HAT0X)
+	{
+		x = event.u.axis.value;
+		if (HandleAxisChanged(lx, x, flat, false))
+			info->hatx = x;
+	}
+	else if (axis == AXIS_Y)
+	{
+		y = event.u.axis.value;
+		if (HandleAxisChanged(ly, y, flat, true))
+			info->y = y;
+	}
+	else if (axis == AXIS_HAT0Y)
+	{
+		y = event.u.axis.value;
+		if (HandleAxisChanged(ly, y, flat, true))
+			info->haty = y;
+	}
 
 	return true;
 }
