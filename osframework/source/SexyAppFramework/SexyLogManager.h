@@ -34,6 +34,7 @@ namespace Sexy {
 		LogLevel mVerboseLevel;
 		std::string mDefaultTag;
 		LogFormat mDefaultFormat;
+		std::string mDefaultTarget;
 
 		static LogManager msLogManager;
 	};

@@ -1,6 +1,7 @@
 #include "SexyLogManager.h"
 #include "DefaultLogListener.h"
 #include "Common.h"
+#include "SimpleUdpLogListener.h"
 
 #if defined(ANDROID) || defined(__ANDROID__)
 #include "AndroidLogListener.h"
@@ -12,6 +13,8 @@ LogManager LogManager::msLogManager;
 
 LogManager::LogManager()
 {
+	const char* target = GetEnv("SEXY_LOG");
+	mDefaultTarget = target ? target : "";
 	mVerboseLevel = LogLevel(GetEnvIntOption("SEXY_LOG_LEVEL", LOG_INFO));
 	mDefaultTag = "default";
 	mDefaultFormat = LogFormat(LOG_FORMAT_TAG | LOG_FORMAT_PID | LOG_FORMAT_TIMESTAMP);
@@ -37,11 +40,19 @@ void LogManager::setupDefaultListener()
 	if (mListener)
 		return;
 
+	if (mDefaultTarget == "udp" ||
+	    mDefaultTarget.substr(0, 6) == "udp://")
+	{
+		mDefaultListener = new SimpleUdpLogListener(mDefaultTarget);
+	}
+	else
+	{
 #if defined(ANDROID) || defined(__ANDROID__)
-	mDefaultListener = new AndroidLogListener();
+		mDefaultListener = new AndroidLogListener();
 #else
-	mDefaultListener = new DefaultLogListener();
+		mDefaultListener = new DefaultLogListener();
 #endif
+	}
 	resetListener();
 }
 
