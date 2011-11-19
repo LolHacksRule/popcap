@@ -198,6 +198,8 @@ namespace Sexy
 	const char*                     GetEnv(const char* name);
 	bool                            GetEnvOption(const char *option,  bool value = false);
 	int                             GetEnvIntOption(const char *option, int value = 0);
+	void                            Split(const std::string& s, const std::string& delim,
+					      std::vector<std::string>& ret);
 
 	inline void			inlineUpper(std::string &theData)
 	{
