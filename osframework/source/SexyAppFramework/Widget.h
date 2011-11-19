@@ -115,6 +115,7 @@ public:
 	virtual void                    TouchUp(const TouchVector &touches);
 	virtual void                    TouchCancel(const TouchVector &touches);
 	virtual void			MouseWheel(int theDelta);
+	virtual bool                    AxisMoved(const Event& event);
 	virtual void                    UserEvent(const Event event);
 	virtual bool			IsPointVisible(int x, int y);
 

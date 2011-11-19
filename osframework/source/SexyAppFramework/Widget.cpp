@@ -739,6 +739,20 @@ bool Widget::OnKeyEscape()
 	return true;
 }
 
+bool Widget::AxisMoved(const Event& event)
+{
+	WidgetVector::iterator it;
+	for (it = mSortedWidgets.begin(); it != mSortedWidgets.end(); ++it)
+	{
+		if ((*it)->mHasFocus && (*it)->IsFocusable())
+			break;
+	}
+	if (it != mSortedWidgets.end())
+		return (*it)->AxisMoved(event);
+
+	return false;
+}
+
 bool Widget::KeyDown(KeyCode theKey)
 {
 	if (theKey == KEYCODE_UP || theKey == KEYCODE_DOWN ||
