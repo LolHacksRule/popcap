@@ -38,7 +38,12 @@ void Checkbox::Draw(Graphics* g)
 		g->DrawImage(mApp->mImages[IMAGE_CHECKBOX], 0, 0, Rect(0, 0, 31, 32));
 	else
 		g->DrawImage(mApp->mImages[IMAGE_CHECKBOX], 0, 0, Rect(31, 0, 31, 32));*/
-	
+	if (mIsSelected)
+	{
+		g->SetColorizeImages(true);
+		g->SetColor(GetSelectColor());
+	}
+
 	if ((mCheckedRect.mWidth == 0) && (mCheckedImage != NULL) && (mUncheckedImage != NULL))
 	{
 		if (mChecked)
@@ -68,6 +73,9 @@ void Checkbox::Draw(Graphics* g)
 			g->DrawLine(mWidth - 1, 1, 1, mHeight - 2);
 		}
 	}
+
+	if (mIsSelected)
+		g->SetColorizeImages(false);
 }
 
 void Checkbox::TouchDown(int id, int x, int y, int tapCount)

@@ -33,6 +33,13 @@ void HyperlinkWidget::Draw(Graphics* g)
 	else
 		g->SetColor(mColor);
 
+	if (mHasFocus && mIsSelected)
+	{
+		Color col = g->GetColor();
+		col.mAlpha = AlphaMod(col.mAlpha, mSelectAlpha * 255);
+		g->SetColor(col);
+	}
+
 	g->SetFont(mFont);
 	//g->DrawString(mLabel, aFontX, aFontY);
 	mLabelText.Draw(g, aFontX, aFontY, g->GetColor());

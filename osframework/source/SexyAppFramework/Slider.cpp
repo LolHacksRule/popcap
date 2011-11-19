@@ -42,6 +42,12 @@ void Slider::Draw(Graphics* g)
 		int cw = mHorizontal ? mTrackImage->GetWidth()/3 : mTrackImage->GetWidth();
 		int ch = mHorizontal ? mTrackImage->GetHeight() : mTrackImage->GetHeight()/3;
 
+		if (mIsSelected)
+		{
+			g->SetColorizeImages(true);
+			g->SetColor(GetSelectColor());
+		}
+
 		if (mHorizontal)
 		{
 			int ty = (mHeight - ch) / 2;
@@ -65,6 +71,9 @@ void Slider::Draw(Graphics* g)
 
 			g->DrawImage(mTrackImage, 0, mHeight-ch, Rect(0, ch*2, cw, ch));
 		}
+
+		if (mIsSelected)
+			g->SetColorizeImages(false);
 	}
 
 	if (mHorizontal && (mThumbImage != NULL))

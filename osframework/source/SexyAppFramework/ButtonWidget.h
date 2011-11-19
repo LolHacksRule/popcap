@@ -1,7 +1,7 @@
 #ifndef __BUTTONWIDGET_H__
 #define __BUTTONWIDGET_H__
 
-#include "Widget.h"
+#include "SelectableWidget.h"
 #include "TextLayout.h"
 
 namespace Sexy
@@ -10,7 +10,7 @@ namespace Sexy
 class Image;
 class ButtonListener;
 
-class ButtonWidget : public Widget
+class ButtonWidget : public SelectableWidget
 {
 public:
 	enum {

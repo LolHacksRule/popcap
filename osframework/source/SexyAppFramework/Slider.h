@@ -1,14 +1,14 @@
 #ifndef __SLIDER_H__
 #define __SLIDER_H__
 
-#include "Widget.h"
+#include "SelectableWidget.h"
 
 namespace Sexy
 {
 
 class SliderListener;
 
-class Slider : public Widget
+class Slider : public SelectableWidget
 {
 public:		
 	SliderListener*			mListener;

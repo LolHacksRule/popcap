@@ -103,6 +103,12 @@ void ButtonWidget::Draw(Graphics* g)
 		if (!mFrameNoDraw)
 		{
 			g->SetColor(mColors[COLOR_BKG]);
+			if (mIsSelected)
+			{
+				Color col = g->GetColor();
+				col.mAlpha = AlphaMod(col.mAlpha, mSelectAlpha * 255);
+				g->SetColor(col);
+			}
 			g->FillRect(0, 0, mWidth, mHeight);
 		}
 
@@ -177,7 +183,16 @@ void ButtonWidget::Draw(Graphics* g)
 			}
 			else if ((mIsOver || mIsDown || mHasFocus) && HaveButtonImage(mOverImage,mOverRect))
 			{
+				if (mIsSelected)
+				{
+					g->SetColorizeImages(true);
+					g->SetColor(Color(255, 255, 255, mSelectAlpha * 255));
+				}
+
 				DrawButtonImage(g,mOverImage,mOverRect,0,0);
+
+				if (mIsSelected)
+					g->SetColorizeImages(false);
 			}
 			else if (HaveButtonImage(mButtonImage,mNormalRect))
 				DrawButtonImage(g,mButtonImage,mNormalRect,0,0);
@@ -323,7 +338,7 @@ bool ButtonWidget::KeyUp(KeyCode theKey)
 }
 void ButtonWidget::Update()
 {
-	Widget::Update();
+	SelectableWidget::Update();
 
 	if (mLastLabel != mLabel)
 	{

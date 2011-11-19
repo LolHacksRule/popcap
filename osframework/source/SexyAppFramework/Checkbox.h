@@ -1,7 +1,7 @@
 #ifndef __CHECKBOX_H__
 #define __CHECKBOX_H__
 
-#include "Widget.h"
+#include "SelectableWidget.h"
 
 namespace Sexy
 {
@@ -9,7 +9,7 @@ namespace Sexy
 class CheckboxListener;
 class Image;
 
-class Checkbox : public Widget
+class Checkbox : public SelectableWidget
 {	
 protected:
 	CheckboxListener*		mListener;

@@ -47,7 +47,16 @@ void DialogButton::Draw(Graphics* g)
 		if (doTranslate)
 			g->Translate(mTranslateX, mTranslateY);
 
+		if (mIsSelected)
+		{
+			g->SetColorizeImages(true);
+			g->SetColor(GetSelectColor());
+		}
+
 		g->DrawImageBox(Rect(0, 0, mWidth, mHeight), mComponentImage);
+
+		if (mIsSelected)
+			g->SetColorizeImages(false);
 	}
 	else
 	{
@@ -66,7 +75,22 @@ void DialogButton::Draw(Graphics* g)
 			g->SetColorizeImages(false);
 		}
 		else if(mIsOver || mHasFocus)
-			g->DrawImageBox(mOverRect, Rect(0, 0, mWidth, mHeight), mComponentImage);
+		{
+			if (mIsSelected)
+			{
+				if (mSelectAlpha < 1.0f)
+					g->DrawImageBox(mNormalRect, Rect(0, 0, mWidth, mHeight), mComponentImage);
+
+				g->SetColorizeImages(true);
+				g->SetColor(Color(255,255,255,(int)(mSelectAlpha * 255)));
+				g->DrawImageBox(mOverRect, Rect(0, 0, mWidth, mHeight), mComponentImage);
+				g->SetColorizeImages(false);
+			}
+			else
+			{
+				g->DrawImageBox(mOverRect, Rect(0, 0, mWidth, mHeight), mComponentImage);
+			}
+		}
 		else
 			g->DrawImageBox(mNormalRect, Rect(0, 0, mWidth, mHeight), mComponentImage);
 

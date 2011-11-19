@@ -396,16 +396,10 @@ void ListWidget::Draw(Graphics *g)
 		aClipG.DrawString(aString, aFontX, aDrawY + mFont->GetAscent() + anItemOffset);
 	}
 
-	if (mDrawOutline)
+	if (mDrawOutline || mIsSelected)
 	{
 		g->SetColor(mColors[COLOR_OUTLINE]);
 		g->DrawRect(0, 0, mWidth-1, mHeight-1);
-	}
-
-	if (mHasFocus)
-	{
-		g->SetColor (Color(255, 255, 0));
-		g->DrawRect (0, 0, mWidth - 1, mHeight - 1);
 	}
 }
 
