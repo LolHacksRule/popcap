@@ -28,7 +28,7 @@ struct LinuxDeviceInfo {
 };
 
 struct LinuxAxisInfo {
-	float        factor;
+	float        value;
 
 	float        coef[3];
 	float        fuzz;
@@ -62,6 +62,14 @@ public:
 	virtual bool          GetInfo (InputInfo &theInfo, int subid = 0);
 	virtual bool          IsGrabbed ();
 	virtual bool          Grab (bool);
+
+	virtual int           GetNumAxes(int subid = 0);
+	virtual bool          GetAxisInfo(Axis which, InputAxisInfo& axix,
+					  int subid = 0);
+	virtual bool          GetAxisInfo(InputAxisInfoVector& axes,
+					  int subid = 0);
+
+	float                 RescaleAxisValue(const LinuxAxisInfo& info, int value);
 
 	bool                  HandleKeyEvent (struct input_event & linux_event,
 					      int &modifiers, Event & event);
@@ -121,6 +129,7 @@ private:
 	bool                  mHasPointer;
 	bool                  mHasKey;
 	bool                  mRouton;
+	int                   mNumAxes;
 };
 
 }

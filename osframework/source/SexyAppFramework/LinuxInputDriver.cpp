@@ -628,12 +628,6 @@ public:
 			    !strcmp(info.name, "compass"))
 				continue;
 
-#if 0
-			if (GetEnvOption("SEXY_LINUX_INPUT_IGNORE_ABS_POINTER", false) &&
-			    info.num_abs > 0)
-				continue;
-#endif
-
 			LinuxInputInterface * anInput;
 			anInput = new LinuxInputInterface (theApp->mInputManager, this,
 							   name, hotpluged);
@@ -1080,8 +1074,11 @@ bool LinuxInputInterface::OpenDevice ()
 		axis.minimum = -1.0f;
 		axis.maximum = 1.0f;
 		axis.resolution = axis.devResolution / range;
+		axis.value = RescaleAxisValue(axis, info.absinfo[i].value);
 		mAxisInfoMap.insert(AxisInfoMap::value_type(info.axis[i], axis));
 	}
+	mNumAxes = info.num_abs;
+
 	if (info.num_joysticks)
 	{
 		mButtonMap[BTN_TRIGGER] = KEYCODE_GAMEPAD_A;
@@ -1371,6 +1368,25 @@ bool LinuxInputInterface::HandleRelEvent (struct input_event & linux_event,
 	return true;
 }
 
+float LinuxInputInterface::RescaleAxisValue(const LinuxAxisInfo& info, int value)
+{
+	if (info.devMaximum != info.devMinimum)
+	{
+		const float* coef = info.coef;
+		return (value + coef[0]) * coef[1] + coef[2];
+	}
+
+	float ret;
+	if (value < 0)
+		ret = -1.0f;
+	else if (value > 0)
+		ret = 1.0f;
+	else
+		ret = 0.0f;
+
+	return ret;
+}
+
 bool LinuxInputInterface::HandleAbsEvent (struct input_event & linux_event,
 					  Event & event)
 {
@@ -1382,22 +1398,8 @@ bool LinuxInputInterface::HandleAbsEvent (struct input_event & linux_event,
 		return false;
 
 	LinuxAxisInfo& info = it->second;
-	float value;
+	float value = RescaleAxisValue(info, linux_event.value);
 
-	if (info.devMaximum != info.devMinimum)
-	{
-		const float* coef = info.coef;
-		value = (linux_event.value + coef[0]) * coef[1] + coef[2];
-	}
-	else
-	{
-		if (linux_event.value < 0)
-			value = -1.0f;
-		else if (linux_event.value > 0)
-			value = 1.0f;
-		else
-			value = 0.0f;
-	}
 	event.type = EVENT_AXIS_MOVED;
 	event.flags = 0;
 	event.u.axis.axis = linux_event.code;
@@ -1406,6 +1408,8 @@ bool LinuxInputInterface::HandleAbsEvent (struct input_event & linux_event,
 	event.u.axis.fuzz = info.fuzz;
 	event.u.axis.minimum = info.minimum;
 	event.u.axis.maximum = info.maximum;
+
+	info.value = value;
 
 	if (GetEnvOption("SEXY_LINUX_INPUT_DEBUG", false))
 		logfd("LinuxInput:%p%d: AxisMoved[0x02%x]: value: %f raw value: 0x%x(%d:%d)",
@@ -1546,6 +1550,62 @@ bool LinuxInputInterface::GetInfo (InputInfo &theInfo, int subid)
 	theInfo.mName = mDeviceName;
 	theInfo.mHasPointer = mHasPointer;
 	theInfo.mHasKey = mHasKey;
+	theInfo.mHasJoystick = mHasJoystick;
+	return true;
+}
+
+int LinuxInputInterface::GetNumAxes(int subid)
+{
+	if (subid != 0)
+		return 0;
+
+	return mNumAxes;
+}
+
+bool LinuxInputInterface::GetAxisInfo(Axis axis, InputAxisInfo& axisInfo, int subid)
+{
+	if (subid != 0)
+		return false;
+
+	AxisInfoMap::iterator it = mAxisInfoMap.find(axis);
+	if (it == mAxisInfoMap.end())
+		return false;
+
+	LinuxAxisInfo& info = it->second;
+	axisInfo.axis = axis;
+	axisInfo.value = info.value;
+	axisInfo.minimum = info.minimum;
+	axisInfo.maximum = info.maximum;
+	axisInfo.flat = info.flat;
+	axisInfo.fuzz = info.fuzz;
+	axisInfo.resolution = info.resolution;
+
+	return true;
+}
+
+bool LinuxInputInterface::GetAxisInfo(InputAxisInfoVector& axes, int subid)
+{
+	if (subid != 0)
+		return false;
+
+	if (!mNumAxes)
+		return false;
+
+	axes.resize(mNumAxes);
+	AxisInfoMap::iterator it = mAxisInfoMap.begin();
+	for (int i = 0; it != mAxisInfoMap.end(); ++it, ++i)
+	{
+		InputAxisInfo& axisInfo = axes[i];
+		LinuxAxisInfo& info = it->second;
+
+		axisInfo.axis = (Axis)it->first;
+		axisInfo.value = info.value;
+		axisInfo.minimum = info.minimum;
+		axisInfo.maximum = info.maximum;
+		axisInfo.flat = info.flat;
+		axisInfo.fuzz = info.fuzz;
+		axisInfo.resolution = info.resolution;
+	}
 	return true;
 }
 
