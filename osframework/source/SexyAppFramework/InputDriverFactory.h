@@ -29,9 +29,11 @@ class InputDriverFactory: public DriverFactory
 	static InputDriverFactory*  GetInputDriverFactory ();
 
  private:
-	void		     Load();
+	void		            Load();
 
  private:
+	friend class StaticInputDriverFactory;
+
 	InputDriverFactory ();
 	~InputDriverFactory ();
 };
@@ -45,7 +47,8 @@ class InputDriverRegistor
 		InputDriverFactory* factory;
 
 		factory = InputDriverFactory::GetInputDriverFactory ();
-		factory->AddDriver (mDriver);
+		if (factory)
+			factory->AddDriver (mDriver);
 	}
 
 	~InputDriverRegistor()
@@ -53,7 +56,8 @@ class InputDriverRegistor
 		InputDriverFactory* factory;
 
 		factory = InputDriverFactory::GetInputDriverFactory ();
-		factory->RemoveDriver (mDriver);
+		if (factory)
+			factory->RemoveDriver (mDriver);
 	}
 
  private:

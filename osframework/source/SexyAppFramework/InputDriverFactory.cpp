@@ -21,13 +21,55 @@ InputDriverFactory::~InputDriverFactory ()
 {
 }
 
-InputDriverFactory*  InputDriverFactory::GetInputDriverFactory ()
-{
-	static InputDriverFactory  * theInputDriverFactory;
+namespace Sexy {
 
-	if (!theInputDriverFactory)
-		theInputDriverFactory = new InputDriverFactory ();
-	return theInputDriverFactory;
+class StaticInputDriverFactory
+{
+public:
+	struct StaticData {
+		InputDriverFactory* mFactory;
+		bool mDone;
+	};
+
+	StaticInputDriverFactory(StaticData* data)
+	{
+		mData = data;
+	}
+
+	InputDriverFactory* Get(StaticData* data)
+	{
+		if (data->mDone)
+			return 0;
+
+		if (data->mFactory)
+			return data->mFactory;
+
+		data->mFactory = new InputDriverFactory;
+		return data->mFactory;
+	}
+
+	~StaticInputDriverFactory()
+	{
+		if (!mData)
+			return;
+
+		mData->mDone = true;
+		if (mData->mFactory)
+			delete mData->mFactory;
+	}
+
+private:
+	StaticData* mData;
+};
+
+static StaticInputDriverFactory::StaticData aData;
+static StaticInputDriverFactory inputDriverFactory(&aData);
+
+}
+
+InputDriverFactory* InputDriverFactory::GetInputDriverFactory ()
+{
+	return inputDriverFactory.Get(&aData);
 }
 
 /* This is a hack that preventing gcc from striping drivers out of
