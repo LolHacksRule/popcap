@@ -21,16 +21,58 @@ VideoDriverFactory::~VideoDriverFactory ()
 {
 }
 
-VideoDriverFactory*  VideoDriverFactory::GetVideoDriverFactory ()
-{
-	static VideoDriverFactory  * theVideoDriverFactory;
+namespace Sexy {
 
-	if (!theVideoDriverFactory)
-		theVideoDriverFactory = new VideoDriverFactory ();
-	return theVideoDriverFactory;
+class StaticVideoDriverFactory
+{
+public:
+	struct StaticData {
+		VideoDriverFactory* mFactory;
+		bool mDone;
+	};
+
+	StaticVideoDriverFactory(StaticData* data)
+	{
+		mData = data;
+	}
+
+	VideoDriverFactory* Get(StaticData* data)
+	{
+		if (data->mDone)
+			return 0;
+
+		if (data->mFactory)
+			return data->mFactory;
+
+		data->mFactory = new VideoDriverFactory;
+		return data->mFactory;
+	}
+
+	~StaticVideoDriverFactory()
+	{
+		if (!mData)
+			return;
+
+		mData->mDone = true;
+		if (mData->mFactory)
+			delete mData->mFactory;
+	}
+
+private:
+	StaticData* mData;
+};
+
+static StaticVideoDriverFactory::StaticData aData;
+static StaticVideoDriverFactory videoDriverFactory(&aData);
+
 }
 
-/* This is a hack that preventing gcc from striping drivers out of
+VideoDriverFactory* VideoDriverFactory::GetVideoDriverFactory ()
+{
+	return videoDriverFactory.Get(&aData);
+}
+
+/* This is a hack that preventing linker from striping drivers out of
  * binary.
  */
 extern VideoDriver* GetAGLVideoDriver();
@@ -44,10 +86,10 @@ extern VideoDriver* GetAndroidVideoDriver();
 typedef VideoDriver* (* VideoDriverGetter)();
 VideoDriverGetter VideoDriverGetters []= {
 #ifdef SEXY_AGL_DRIVER
-	GetAGLVideoDriver,
+       GetAGLVideoDriver,
 #endif
 #ifdef SEXY_EAGL_DRIVER
-	GetEAGLVideoDriver,
+       GetEAGLVideoDriver,
 #endif
 #ifdef SEXY_GLX_DRIVER
 	GetGLXVideoDriver,
@@ -61,9 +103,11 @@ VideoDriverGetter VideoDriverGetters []= {
 #ifdef SEXY_CEGLES_DRIVER
 	GetCEGLESVideoDriver,
 #endif
+
 #ifdef SEXY_XGLES_DRIVER
-	GetXGLESVideoDriver,
+       GetXGLESVideoDriver,
 #endif
+
 #ifdef SEXY_ANDROIDGLES_DRIVER
 	GetAndroidVideoDriver,
 #endif

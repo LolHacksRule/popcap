@@ -28,6 +28,8 @@ class VideoDriverFactory: public DriverFactory
 	void		     Load();
 
  private:
+	friend class StaticVideoDriverFactory;
+
 	VideoDriverFactory ();
 	~VideoDriverFactory ();
 };
@@ -41,7 +43,8 @@ class VideoDriverRegistor
 		VideoDriverFactory* factory;
 
 		factory = VideoDriverFactory::GetVideoDriverFactory ();
-		factory->AddDriver (mDriver);
+		if (factory)
+			factory->AddDriver (mDriver);
 	}
 
 	~VideoDriverRegistor()
@@ -49,7 +52,8 @@ class VideoDriverRegistor
 		VideoDriverFactory* factory;
 
 		factory = VideoDriverFactory::GetVideoDriverFactory ();
-		factory->RemoveDriver (mDriver);
+		if (factory)
+			factory->RemoveDriver (mDriver);
 	}
 
  private:
