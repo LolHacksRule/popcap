@@ -3,8 +3,9 @@
 using namespace Sexy;
 
 Driver::Driver (const std::string theName,
-			  int		    thePriority)
-    : mName (theName), mPriority (thePriority)
+		int		    thePriority)
+    : mName (theName), mPriority (thePriority),
+      mDisabled (false)
 {
 }
 
@@ -12,29 +13,47 @@ Driver::~Driver ()
 {
 }
 
+void Driver::Disable (bool disable)
+{
+	mDisabled = disable;
+}
+
+bool Driver::IsDisabled ()
+{
+	return mDisabled;
+}
+
 DriverFactory::DriverFactory ()
-    : mDrivers ()
+	: mDrivers (), mValid(true)
 {
 }
 
 DriverFactory::~DriverFactory ()
 {
+	mValid = false;
 }
 
 void DriverFactory::AddDriver (Driver * theDriver)
 {
+	if (!mValid)
+		return;
+
 	mDrivers.insert (theDriver);
 }
 
 void DriverFactory::RemoveDriver (Driver * theDriver)
 {
-	Drivers::iterator anItr = mDrivers.find (theDriver);
-	if (anItr != mDrivers.end ())
-		mDrivers.erase (anItr);
+	if (!mValid)
+		return;
+
+	mDrivers.erase (theDriver);
 }
 
 Driver* DriverFactory::Find (const std::string name)
 {
+	if (!mValid)
+		return 0;
+
 	if (name == "auto") {
 		if (!mDrivers.size ())
 			return 0;
@@ -52,13 +71,13 @@ Driver* DriverFactory::Find (const std::string name)
 
 Driver* DriverFactory::FindNext (Driver * theDriver)
 {
-	if (!theDriver)
-		return Find();
+       if (!theDriver)
+               return Find();
 
-	Drivers::iterator it = mDrivers.find(theDriver);
-	if (it == mDrivers.end () || ++it == mDrivers.end ())
-		return 0;
-	return *it;
+       Drivers::iterator it = mDrivers.find(theDriver);
+       if (it == mDrivers.end () || ++it == mDrivers.end ())
+               return 0;
+       return *it;
 }
 
 const DriverFactory::Drivers* DriverFactory::GetDrivers()

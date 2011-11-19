@@ -3,17 +3,25 @@
 
 #include "Common.h"
 #include "NativeDisplay.h"
+#include "SexyAppBase.h"
+
+#include <string>
+#include <set>
 
 namespace Sexy {
 	class Driver
 	{
-	public:
+	 public:
 		std::string mName;
 		int	    mPriority;
+		bool        mDisabled;
 
 		Driver (const std::string theName,
 			int	       thePriority = 0);
 		virtual ~Driver ();
+
+		void Disable(bool disable = true);
+		bool IsDisabled();
 
 		bool operator< (const Driver& other) const
 		{
@@ -21,8 +29,7 @@ namespace Sexy {
 		}
 	};
 
-	struct DriverCompare
-	{
+	struct DriverCompare {
 		bool operator() (Driver* const & lhs, Driver* const & rhs) const
 		{
 			return *lhs < *rhs;
@@ -31,22 +38,23 @@ namespace Sexy {
 
 	class DriverFactory
 	{
-	public:
+	 public:
 		typedef std::multiset<Driver*, DriverCompare> Drivers;
 
 		void		       AddDriver (Driver * theDriver);
 		void		       RemoveDriver (Driver * theDriver);
 
 		Driver*		       Find (const std::string name = "auto");
-		Driver*		       FindNext (Driver * theDriver);
+		Driver*                FindNext (Driver * theDriver);
 
-	public:
+	 public:
 		const Drivers*         GetDrivers();
 
-	private:
+	 private:
 		Drivers		       mDrivers;
+		bool                   mValid;
 
-	public:
+	 public:
 		DriverFactory ();
 		~DriverFactory ();
 	};
