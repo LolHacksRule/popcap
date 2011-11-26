@@ -2,6 +2,7 @@
 #include "DefaultLogListener.h"
 #include "Common.h"
 #include "SimpleUdpLogListener.h"
+#include "TcpLogListener.h"
 
 #if defined(ANDROID) || defined(__ANDROID__)
 #include "AndroidLogListener.h"
@@ -44,6 +45,11 @@ void LogManager::setupDefaultListener()
 	    mDefaultTarget.substr(0, 6) == "udp://")
 	{
 		mDefaultListener = new SimpleUdpLogListener(mDefaultTarget);
+	}
+	else if (mDefaultTarget == "tcp" ||
+	    mDefaultTarget.substr(0, 6) == "tcp://")
+	{
+		mDefaultListener = new TcpLogListener(mDefaultTarget);
 	}
 	else
 	{
