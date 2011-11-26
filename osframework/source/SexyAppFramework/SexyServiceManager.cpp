@@ -142,8 +142,8 @@ void ServiceManager::processQueryPacket(char*			buf,
 		ptr = writel(ptr, mCookie);
 		ptr = writel(ptr, 0);
 
-		printf("ServiceManager: Sending a query reply packet(max: %d: size: %d) to %s\n",
-		       (int)count, (int)sizeof(outbuf), addr.c_str());
+		//printf("ServiceManager: Sending a query reply packet(max: %d: size: %d) to %s\n",
+		//       (int)count, (int)sizeof(outbuf), addr.c_str());
 
 		mSock->sendTo(outbuf, sizeof(outbuf), addr, port);
 		return;
@@ -195,8 +195,8 @@ void ServiceManager::processQueryPacket(char*			buf,
 
 		assert(size < sizeof(outbuf));
 
-		printf("ServiceManager: Sending a query reply packet(max: %d: index:%d size: %d) to %s\n",
-		       (int)count, i, (int)size, addr.c_str());
+		//printf("ServiceManager: Sending a query reply packet(max: %d: index:%d size: %d) to %s\n",
+		//       (int)count, i, (int)size, addr.c_str());
 
 		mSock->sendTo(outbuf, size, addr, port);
 
@@ -236,8 +236,8 @@ void ServiceManager::processQueryInfoPacket(char*		buf,
 	// payload size
 	writel(outbuf + 8, size - 12);
 
-	printf("ServiceManager: Sending a query info reply packet(size: %d) to %s\n",
-	       (int)size, addr.c_str());
+	//printf("ServiceManager: Sending a query info reply packet(size: %d) to %s\n",
+	//       (int)size, addr.c_str());
 
 	mSock->sendTo(outbuf, size, addr, port);
 }
@@ -252,7 +252,7 @@ void ServiceManager::processPacket(char*		buf,
 
 	std::string tag(&buf[0], &buf[4]);
 
-	printf ("ServiceManager: Received a packet(%s) from %s.\n", tag.c_str(), addr.c_str());
+	// printf ("ServiceManager: Received a packet(%s) from %s.\n", tag.c_str(), addr.c_str());
 
 	if (tag == "ECHO")
 		processEchoPacket(buf, buflen, addr, port);
