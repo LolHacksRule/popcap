@@ -9,7 +9,7 @@ namespace Sexy {
 const char* logLevelName(LogLevel level)
 {
 	const char* names[] = {
-		"debug", "info", "error"
+		"debug", "info", "warn", "error"
 	};
 	if (level >= LOG_DEBUG && level < LOG_LEVEL_MAX)
 		return names[level];
@@ -32,6 +32,19 @@ void logf(LogLevel lvl, const std::string& tag, const char* fmt, ...)
 	std::string s = vformat(fmt, argList);
 	va_end(argList);
 
+	mgr.log(lvl, tag, s);
+}
+
+void logf(LogLevel lvl, const char* fmt, ...)
+{
+	LogManager& mgr = LogManager::getInstance();
+
+	va_list argList;
+	va_start(argList, fmt);
+	std::string s = vformat(fmt, argList);
+	va_end(argList);
+
+	std::string tag;
 	mgr.log(lvl, tag, s);
 }
 
@@ -92,6 +105,32 @@ void logfi(const char *fmt, ...)
 	std::string tag;
 
 	log(LOG_INFO, tag, s);
+}
+
+void logw(const std::string& tag, const std::string& s)
+{
+	log(LOG_WARN, tag, s);
+}
+
+void logtfw(const std::string& tag, const char *fmt, ...)
+{
+	va_list argList;
+	va_start(argList, fmt);
+	std::string s = vformat(fmt, argList);
+	va_end(argList);
+
+	log(LOG_WARN, tag, s);
+}
+
+void logfw(const char *fmt, ...)
+{
+	va_list argList;
+	va_start(argList, fmt);
+	std::string s = vformat(fmt, argList);
+	va_end(argList);
+
+	std::string tag;
+	log(LOG_WARN, tag, s);
 }
 
 void loge(const std::string& tag, const std::string& s)
