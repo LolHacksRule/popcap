@@ -7,9 +7,15 @@ using namespace std;
 
 namespace Sexy {
 
-/**
- *   Base class representing basic communication endpoint
- */
+	/**
+	 *   Base class representing basic communication endpoint
+	 */
+	enum SocketError {
+		SOCK_OK,
+		SOCK_WOULD_BLOCK,
+		SOCK_IN_PROGRESS
+	};
+
 	class Socket {
 	 public:
 		/**
@@ -22,6 +28,12 @@ namespace Sexy {
 		 * @return true if the socket is in error state
 		 */
 		bool hasError();
+
+		/**
+		 * Get the socket descriptor
+		 * @return the socket descriptor
+		 */
+		int getSocket();
 
 		/**
 		 *   Get the local address
@@ -51,6 +63,18 @@ namespace Sexy {
 		 */
 		bool setLocalAddressAndPort(const string &localAddress,
 					    unsigned short localPort = 0);
+
+		/**
+		 * Set SO_REUSEADDR bit
+		 *
+		 * @param reuse enable/disable the address reuse
+		 */
+		bool setAddressReuse(bool reuse);
+
+		/**
+		 *
+		 */
+		bool setBlockingMode(bool block);
 
 		/**
 		 *   If WinSock, unload the WinSock DLLs; otherwise do nothing.  We ignore

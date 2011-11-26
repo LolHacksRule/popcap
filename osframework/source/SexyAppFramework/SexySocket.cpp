@@ -17,19 +17,20 @@ typedef char raw_type;       // Type used for raw data on this platform
 #include <arpa/inet.h>       // For inet_addr()
 #include <unistd.h>          // For close()
 #include <netinet/in.h>      // For sockaddr_in
-typedef void raw_type;       // Type used for raw data on this platform
+#include <fcntl.h>
+#include <errno.h>           // For errno
 
-#include <errno.h>             // For errno
+typedef void raw_type;       // Type used for raw data on this platform
 #endif
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <signal.h>
 
 using namespace std;
 
-#ifdef WIN32
 static bool initialized = false;
-#endif
 
 using namespace Sexy;
 
@@ -40,33 +41,39 @@ static bool fillAddr(const string &address, unsigned short port,
 	memset(&addr, 0, sizeof(addr));  // Zero out address structure
 	addr.sin_family = AF_INET;       // Internet address
 
-	hostent *host;  // Resolve name
-	host = gethostbyname(address.c_str());
-	if (!host)
-		return false;
-	addr.sin_addr.s_addr = *((unsigned long *) host->h_addr_list[0]);
+	if (!address.empty())
+	{
+		hostent *host;  // Resolve name
+		host = gethostbyname(address.c_str());
+		if (!host)
+			return false;
+		addr.sin_addr.s_addr = *((unsigned long *) host->h_addr_list[0]);
+	}
 	addr.sin_port = htons(port);     // Assign port in network byte order
+	return true;
 }
 
 // Socket Code
 
 Socket::Socket(int type, int protocol)
 {
-#ifdef WIN32
 	if (!initialized)
 	{
+#ifdef WIN32
 		WORD wVersionRequested;
 		WSADATA wsaData;
 
 		wVersionRequested = MAKEWORD(2, 0);              // Request WinSock v2.0
 		WSAStartup(wVersionRequested, &wsaData);
+#else
+		signal(SIGPIPE, SIG_IGN);
+#endif
 		initialized = true;
 	}
-#endif
 
 	// Make a new socket
 	mSock = socket(PF_INET, type, protocol);
-	mHasError = mSock >=0;
+	mHasError = mSock < 0;
 }
 
 Socket::Socket(int sockDesc)
@@ -86,6 +93,11 @@ Socket::~Socket() {
 bool Socket::hasError()
 {
 	return mHasError;
+}
+
+int Socket::getSocket()
+{
+	return mSock;
 }
 
 string Socket::getLocalAddress()
@@ -133,6 +145,35 @@ bool Socket::setLocalAddressAndPort(const string &localAddress,
 	if (bind(mSock, (sockaddr *) &localAddr, sizeof(sockaddr_in)) < 0)
 		return false;
 
+	return true;
+}
+
+bool Socket::setAddressReuse(bool reuse)
+{
+	unsigned long op = reuse ? 1 : 0;
+
+	if (setsockopt (mSock, SOL_SOCKET, SO_REUSEADDR, (raw_type *)&op,
+			sizeof(unsigned long)) == -1)
+		return false;
+	return true;
+}
+
+bool Socket::setBlockingMode(bool block)
+{
+#ifdef WIN32
+	unsigned long op = block ? 1 : 0;
+	ioctlsocket (mSock, FIONBIO, &op);
+#else
+	int flags;
+
+	flags = fcntl(mSock, F_GETFL);
+	if (block)
+		flags &=  ~O_NONBLOCK;
+	else
+		flags |=  O_NONBLOCK;
+	if (fcntl(mSock, F_SETFL, flags) < 0)
+		return false;
+#endif
 	return true;
 }
 
@@ -184,7 +225,10 @@ bool CommunicatingSocket::connect(const string &foreignAddress,
 
 bool CommunicatingSocket::send(const void *buffer, int bufferLen)
 {
-	if (::send(mSock, (raw_type *) buffer, bufferLen, 0) < 0)
+	int ret;
+
+	ret = ::send(mSock, (raw_type *) buffer, bufferLen, 0);
+	if (ret < 0)
 		return false;
 	return true;
 }
@@ -239,6 +283,7 @@ TCPSocket::TCPSocket(int newConnSD) : CommunicatingSocket(newConnSD)
 TCPServerSocket::TCPServerSocket(unsigned short localPort, int queueLen)
 	: Socket(SOCK_STREAM, IPPROTO_TCP)
 {
+	setAddressReuse(true);
 	setLocalPort(localPort);
 	setListen(queueLen);
 }
@@ -247,6 +292,7 @@ TCPServerSocket::TCPServerSocket(const string &localAddress,
 				 unsigned short localPort, int queueLen)
 	: Socket(SOCK_STREAM, IPPROTO_TCP)
 {
+	setAddressReuse(true);
 	setLocalAddressAndPort(localAddress, localPort);
 	setListen(queueLen);
 }
