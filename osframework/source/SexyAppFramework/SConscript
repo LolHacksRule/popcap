@@ -35,7 +35,7 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp",
         'SexyLang.cpp', 'Find.cpp', 'TextLayout.cpp', 'SexyString.cpp',
         'AndroidLogListener.cpp', 'DefaultLogListener.cpp', 'SexyLog.cpp',
         'SexyLogListener.cpp', 'SexyLogManager.cpp', 'SelectableWidget.cpp',
-        'SexySocket.cpp', 'SimpleUdpLogListener.cpp']
+        'SexySocket.cpp', 'SimpleUdpLogListener.cpp', 'SexyServiceManager.cpp']
 
 ### uniconv
 srcs += map(lambda f:os.path.join ('uniconv', f),
@@ -313,7 +313,7 @@ headers = ['FlashWidget.h', 'Font.h', 'ImageFont.h', 'SexyVector.h',
            'NativeFont.h', 'SexyThread.h', 'XMLWriter.h',
            'SexyI18n.h', 'SexyLang.h', 'SexyTimer.h', 'Find.h',
            'TextLayout.h', 'SexyString.h', 'SelectableWidget.h',
-           'SexySocket.h'
+           'SexySocket.h', 'SexyServiceManager.h'
 ]
 
 sexyapp_sdk = env.Install (header_dir, headers)
