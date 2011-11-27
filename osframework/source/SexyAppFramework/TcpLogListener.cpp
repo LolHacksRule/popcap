@@ -1,5 +1,6 @@
 #include "TcpLogListener.h"
 #include "SexyLogManager.h"
+#include "SexyTimer.h"
 #include "Common.h"
 
 #if defined(WIN32) || defined(_WIN32)

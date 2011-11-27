@@ -36,7 +36,7 @@ srcs = ["Buffer.cpp", "ButtonWidget.cpp", "Checkbox.cpp",
         'AndroidLogListener.cpp', 'DefaultLogListener.cpp', 'SexyLog.cpp',
         'SexyLogListener.cpp', 'SexyLogManager.cpp', 'SelectableWidget.cpp',
         'SexySocket.cpp', 'SimpleUdpLogListener.cpp', 'TcpLogListener.cpp',
-        'SexyServiceManager.cpp']
+        'MultiplexLogListener.cpp', 'SexyServiceManager.cpp']
 
 ### uniconv
 srcs += map(lambda f:os.path.join ('uniconv', f),
