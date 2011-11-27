@@ -61,6 +61,7 @@ namespace Sexy {
 
 	 private:
 		UDPSocket* mSock;
+		UDPSocket* mUniSock;
 		bool       mValid;
 		bool       mInitialized;
 		bool       mDone;

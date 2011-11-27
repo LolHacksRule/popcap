@@ -1,4 +1,5 @@
 #include "SexyServiceManager.h"
+#include "SexyLog.h"
 #include "Common.h"
 
 #if defined(WIN32) || defined(_WIN32)
@@ -12,6 +13,8 @@
 
 #include <errno.h>
 #include <assert.h>
+
+#define LOG_TAG "srvmgr"
 
 using namespace Sexy;
 
@@ -57,6 +60,7 @@ static inline char* reads(char *buf, unsigned short& s)
 ServiceManager::ServiceManager()
 {
 	mSock = 0;
+	mUniSock = 0;
 	mValid = true;
 	mInitialized = false;
 	mDone = true;
@@ -82,6 +86,9 @@ void ServiceManager::release()
 	mInitialized = false;
 	delete mSock;
 	mSock = 0;
+
+	delete mUniSock;
+	mUniSock = 0;
 }
 
 ServiceManager& ServiceManager::getInstance()
@@ -115,7 +122,7 @@ void ServiceManager::processEchoPacket(char*			buf,
 
 	ptr = writel(ptr, 4);
 	ptr = writel(ptr, mCookie);
-	mSock->sendTo(outbuf, sizeof(outbuf), addr, port);
+	mUniSock->sendTo(outbuf, sizeof(outbuf), addr, port);
 }
 
 void ServiceManager::processQueryPacket(char*			buf,
@@ -142,10 +149,11 @@ void ServiceManager::processQueryPacket(char*			buf,
 		ptr = writel(ptr, mCookie);
 		ptr = writel(ptr, 0);
 
-		//printf("ServiceManager: Sending a query reply packet(max: %d: size: %d) to %s\n",
-		//       (int)count, (int)sizeof(outbuf), addr.c_str());
+		logtfd(LOG_TAG,
+		       "Sending a query reply packet(max: %d: size: %d) to %s\n",
+		       (int)count, (int)sizeof(outbuf), addr.c_str());
 
-		mSock->sendTo(outbuf, sizeof(outbuf), addr, port);
+		mUniSock->sendTo(outbuf, sizeof(outbuf), addr, port);
 		return;
 	}
 
@@ -195,10 +203,11 @@ void ServiceManager::processQueryPacket(char*			buf,
 
 		assert(size < sizeof(outbuf));
 
-		//printf("ServiceManager: Sending a query reply packet(max: %d: index:%d size: %d) to %s\n",
-		//       (int)count, i, (int)size, addr.c_str());
+		logtfd(LOG_TAG,
+		       "Sending a query reply packet(max: %d: index:%d size: %d) to %s\n",
+		       (int)count, i, (int)size, addr.c_str());
 
-		mSock->sendTo(outbuf, size, addr, port);
+		mUniSock->sendTo(outbuf, size, addr, port);
 
 		i++;
 		it++;
@@ -236,10 +245,11 @@ void ServiceManager::processQueryInfoPacket(char*		buf,
 	// payload size
 	writel(outbuf + 8, size - 12);
 
-	//printf("ServiceManager: Sending a query info reply packet(size: %d) to %s\n",
-	//       (int)size, addr.c_str());
+	logtfd(LOG_TAG,
+	       "Sending a query info reply packet(size: %d) to %s\n",
+	       (int)size, addr.c_str());
 
-	mSock->sendTo(outbuf, size, addr, port);
+	mUniSock->sendTo(outbuf, size, addr, port);
 }
 
 void ServiceManager::processPacket(char*		buf,
@@ -252,7 +262,9 @@ void ServiceManager::processPacket(char*		buf,
 
 	std::string tag(&buf[0], &buf[4]);
 
-	// printf ("ServiceManager: Received a packet(%s) from %s.\n", tag.c_str(), addr.c_str());
+	logtfd (LOG_TAG,
+		"Received a packet with tag %s from %s:%u.\n",
+		tag.c_str(), addr.c_str(), port);
 
 	if (tag == "ECHO")
 		processEchoPacket(buf, buflen, addr, port);
@@ -264,41 +276,55 @@ void ServiceManager::processPacket(char*		buf,
 
 void ServiceManager::server()
 {
-	while (!mDone && mSock)
-	{
-		int sock = mSock->getSocket();
+	if (!mUniSock || !mSock)
+		return;
 
+	Sleep(100);
+	logtfi (LOG_TAG, "listened on multicast port: %d", mSock->getLocalPort());
+	logtfi (LOG_TAG, "listened on unicast port: %d", mUniSock->getLocalPort());
+
+	UDPSocket* socks[2] = { mSock, mUniSock };
+	int sock = mSock->getSocket();
+	int unisock = mUniSock->getSocket();
+	int maxsock = unisock > sock ? unisock : sock;
+	while (!mDone)
+	{
 		fd_set rfds;
 		fd_set wfds;
 		fd_set efds;
 
 		FD_ZERO(&rfds);
 		FD_SET(sock, &rfds);
+		FD_SET(unisock, &rfds);
 		FD_ZERO(&efds);
 		FD_SET(sock, &efds);
+		FD_SET(unisock, &efds);
 		FD_ZERO(&wfds);
 
 		struct timeval tv;
 		tv.tv_sec = 0;
 		tv.tv_usec = 100000;
 
-		int ret = select(sock + 1, &rfds, &wfds, &efds, &tv);
+		int ret = select(maxsock + 1, &rfds, &wfds, &efds, &tv);
 		if (ret < 0 && errno == EINTR)
 			continue;
 		if (ret < 0)
 			break;
 
-		if (!FD_ISSET(sock, &rfds))
-			continue;
+		for (int i = 0; i < 2; i++)
+		{
+			if (!FD_ISSET(socks[i]->getSocket(), &rfds))
+				continue;
 
-		char buf[512];
-		std::string addr;
-		unsigned short port;
+			char buf[512];
+			std::string addr;
+			unsigned short port;
 
-		ret = mSock->recvFrom(buf, 512, addr, port);
-		if (ret <= 0)
-			continue;
-		processPacket(buf, ret, addr, port);
+			ret = socks[i]->recvFrom(buf, 512, addr, port);
+			if (ret <= 0)
+				continue;
+			processPacket(buf, ret, addr, port);
+		}
 	}
 }
 
@@ -308,9 +334,10 @@ bool ServiceManager::initialize()
 		return true;
 
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 20; i++)
 	{
 		mSock = new UDPSocket();
+		mSock->setAddressReuse(true);
 		if (!mSock->hasError() &&
 		    mSock->setLocalAddressAndPort("", 11053 + i))
 			break;
@@ -321,6 +348,17 @@ bool ServiceManager::initialize()
 	if (!mSock)
 		return false;
 	mSock->joinGroup("224.0.0.251");
+
+	mUniSock = new UDPSocket();
+	if (mUniSock->hasError() ||
+	    !mUniSock->setLocalAddressAndPort("", 0))
+	{
+		delete mUniSock;
+		delete mSock;
+		mUniSock = 0;
+		mSock = 0;
+		return false;
+	}
 
 	mDone = false;
 	mThread = Thread::Create(serverProc, this);
