@@ -201,12 +201,12 @@ class ServiceProvider(object):
         self.timestamp = timestamp
 
     def isExpired(self, timestamp):
-        if timestamp - self.timestamp > 5000:
+        if abs(timestamp - self.timestamp) > 5000:
             return True
         return False
 
     def update(self, current):
-        if current - self.updateTS > 10000:
+        if abs(current - self.updateTS) > 10000:
             self.sm.sendQuery(self.addr)
             self.sm.sendQueryInfo(self.addr)
             self.updateTS = current
@@ -391,7 +391,7 @@ class ServiceManager(object):
         if not self.sock:
             return
         current = currentTimeMillis()
-        if current - self.timestamp > 2000:
+        if abs(current - self.timestamp) > 2000:
             self.broadcastEcho()
             self.timestamp = current
         self.processPackets()
@@ -598,7 +598,9 @@ class Application(Frame):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
+            self.sock.settimeout(3)
             self.sock.connect((host, port))
+            self.sock.settimeout(None)
         except:
             traceback.print_exc()
             self.sock.close()
