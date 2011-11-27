@@ -27,6 +27,7 @@
 #include "SexyI18n.h"
 #include "SexyUtf8.h"
 #include "SexyLogManager.h"
+#include "SexyServiceManager.h"
 
 #include <iostream>
 #include <fstream>
@@ -3172,6 +3173,7 @@ void SexyAppBase::Init()
 	LogManager& logMgr = LogManager::getInstance();
 	if (logMgr.getDefaultTag() == "default")
 		logMgr.setDefaultTag(StringToLower(mProdName));
+       ServiceManager::getInstance().setName(mProdName);
 
 	if (mShutdown)
 		return;
