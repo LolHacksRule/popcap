@@ -1,6 +1,5 @@
 #include "TcpLogListener.h"
 #include "SexyLogManager.h"
-#include "SexyTimer.h"
 #include "Common.h"
 
 #if defined(WIN32) || defined(_WIN32)
@@ -28,6 +27,7 @@ TcpLogListener::TcpLogListener(const std::string& target) :
 	mMaxLogRecordSize = GetEnvIntOption("SEXY_TCP_LOG_BUFFER_SIZE", 1024 * 1024);
 	mLogRecordSeq = 0;
 	mLogRecordSize = 0;
+	mDone = true;
 
 	std::string s = target;
 
@@ -44,27 +44,41 @@ TcpLogListener::TcpLogListener(const std::string& target) :
 	}
 
 	mDone = true;
-	mSock = new TCPServerSocket(mHost, atoi(mPort.c_str()));
-	if (mSock->hasError())
+	for (;;)
 	{
-		// printf("TcpLogListener: Listening on %s:%s\n", mHost.c_str(), mPort.c_str());
+		mSock = new TCPServerSocket();
+		if (!mSock->hasError() &&
+		    mSock->setLocalAddressAndPort(mHost, atoi(mPort.c_str())) &&
+		    mSock->setListen(5))
+		{
+			mPort = StrFormat("%d", mSock->getLocalPort());
+
+		        //printf("TcpLogListener: Listening on %s:%s\n",
+			//mHost.c_str(), mPort.c_str());
+			break;
+		}
 		delete mSock;
 		mSock = 0;
-	}
-	else
-	{
-		mServiceInfo.mName = "sexytcplog";
-		mServiceInfo.mDesc = "The log service for SexyAppFramework";
-		mServiceInfo.mType = "tcp";
-		mServiceInfo.mAddr = mSock->getLocalAddress();
-		mServiceInfo.mPort = mPort;
 
-		ServiceManager& mgr = ServiceManager::getInstance();
-		mgr.registerService(mServiceInfo);
-
-		mDone = false;
-		mThread = Thread::Create(serverProc, this);
+		if (mPort == "0")
+			break;
+		else
+			mPort = "0";
 	}
+	if (!mSock)
+		return;
+
+	mServiceInfo.mName = "sexytcplog";
+	mServiceInfo.mDesc = "The log service for SexyAppFramework";
+	mServiceInfo.mType = "tcp";
+	mServiceInfo.mAddr = mSock->getLocalAddress();
+	mServiceInfo.mPort = mPort;
+
+	ServiceManager& mgr = ServiceManager::getInstance();
+	mgr.registerService(mServiceInfo);
+
+	mDone = false;
+	mThread = Thread::Create(serverProc, this);
 }
 
 TcpLogListener::~TcpLogListener()
