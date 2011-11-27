@@ -6,15 +6,33 @@
 
 namespace Sexy {
 
+static const char* LogNames[] = {
+	"debug", "info", "warn", "error"
+};
 const char* logLevelName(LogLevel level)
 {
-	const char* names[] = {
-		"debug", "info", "warn", "error"
-	};
 	if (level >= LOG_DEBUG && level < LOG_LEVEL_MAX)
-		return names[level];
+		return LogNames[level];
 
 	return "unknown";
+}
+
+bool logLevelFromName(const char* name, LogLevel& level)
+{
+	if (!name || !*name)
+		return false;
+
+	std::string s = name;
+	inlineLower(s);
+	for (size_t i = 0; i < sizeof(LogNames) / sizeof(LogNames[0]); i++)
+	{
+		if (s == LogNames[i])
+		{
+			level = LogLevel(i);
+			return true;
+		}
+	}
+	return false;
 }
 
 void log(LogLevel lvl, const std::string& tag, const std::string& s)

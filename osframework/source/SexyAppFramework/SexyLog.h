@@ -14,6 +14,8 @@ namespace Sexy {
 	};
 
 	const char* logLevelName(LogLevel level);
+	bool logLevelFromName(const char* name, LogLevel& level);
+
 	void logf(LogLevel lvl, const std::string& tag, const char* fmt, ...);
 	void logf(LogLevel lvl, const char* fmt, ...);
 	void log(LogLevel lvl, const std::string& tag, const std::string& s);
