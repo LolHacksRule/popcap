@@ -143,7 +143,10 @@ bool Socket::setLocalAddressAndPort(const string &localAddress,
 	fillAddr(localAddress, localPort, localAddr);
 
 	if (bind(mSock, (sockaddr *) &localAddr, sizeof(sockaddr_in)) < 0)
+	{
+		printf("Bind error: %s\n", strerror(errno));
 		return false;
+	}
 
 	return true;
 }
@@ -279,6 +282,12 @@ TCPSocket::TCPSocket(int newConnSD) : CommunicatingSocket(newConnSD)
 }
 
 // TCPServerSocket Code
+
+TCPServerSocket::TCPServerSocket(int queueLen)
+	: Socket(SOCK_STREAM, IPPROTO_TCP)
+{
+	setAddressReuse(true);
+}
 
 TCPServerSocket::TCPServerSocket(unsigned short localPort, int queueLen)
 	: Socket(SOCK_STREAM, IPPROTO_TCP)

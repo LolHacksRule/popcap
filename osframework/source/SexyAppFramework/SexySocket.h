@@ -185,6 +185,13 @@ namespace Sexy {
 	class TCPServerSocket : public Socket {
 	 public:
 		/**
+		 *   Construct a TCP socket for use with a server.
+		 *   @param queueLen maximum queue length for outstanding
+		 *                   connection requests (default 5)
+		 */
+		TCPServerSocket(int queueLen = 5);
+
+		/**
 		 *   Construct a TCP socket for use with a server, accepting connections
 		 *   on the specified port on any interface
 		 *   @param localPort local port of server socket, a value of zero will
@@ -211,7 +218,12 @@ namespace Sexy {
 		 */
 		TCPSocket *accept();
 
-	 private:
+
+		/**
+		 * Listen for connections for the socket
+		 * @param queueLen maximum queue length for outstanding
+		 * @return true on success
+		 */
 		bool setListen(int queueLen);
 	};
 
