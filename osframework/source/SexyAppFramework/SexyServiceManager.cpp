@@ -308,13 +308,18 @@ bool ServiceManager::initialize()
 		return true;
 
 
-	mSock = new UDPSocket("", 11053);
-	if (mSock->hasError())
+	for (int i = 0; i < 10; i++)
 	{
+		mSock = new UDPSocket();
+		if (!mSock->hasError() &&
+		    mSock->setLocalAddressAndPort("", 11053 + i))
+			break;
+
 		delete mSock;
 		mSock = 0;
-		return false;
 	}
+	if (!mSock)
+		return false;
 	mSock->joinGroup("224.0.0.251");
 
 	mDone = false;
