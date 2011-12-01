@@ -115,7 +115,17 @@ enum KeyCode
 	KEYCODE_GAMEPAD_START	= 0x13b,
 	KEYCODE_GAMEPAD_MODE	= 0x13c,
 	KEYCODE_GAMEPAD_THUMBL	= 0x13d,
-	KEYCODE_GAMEPAD_THUMBR	= 0x13e
+	KEYCODE_GAMEPAD_THUMBR	= 0x13e,
+
+        // Generated from axis moved events
+        KEYCODE_GAMEPAD_LEFT       = 0x230,
+        KEYCODE_GAMEPAD_UP         = 0x231,
+        KEYCODE_GAMEPAD_RIGHT      = 0x232,
+        KEYCODE_GAMEPAD_DOWN       = 0x233,
+        KEYCODE_GAMEPAD_DPAD_LEFT  = 0x234,
+        KEYCODE_GAMEPAD_DPAD_UP    = 0x235,
+        KEYCODE_GAMEPAD_DPAD_RIGHT = 0x236,
+        KEYCODE_GAMEPAD_DPAD_DOWN  = 0x237
 };
 
 KeyCode	GetKeyCodeFromName(const std::string& theKeyName);
