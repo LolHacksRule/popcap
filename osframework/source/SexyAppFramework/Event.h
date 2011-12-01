@@ -40,6 +40,8 @@ enum EventType {
 #define EVENT_FLAGS_KEY_CHAR   (1U << 4)
 #define EVENT_FLAGS_AXIS_RANGE (1U << 5)
 #define EVENT_FLAGS_TIMESTAMP  (1U << 6)
+#define EVENT_FLAGS_REPEAT     (1U << 7)
+#define EVENT_FLAGS_FAKED      (1U << 8)
 #define EVENT_FLAGS_INCOMPLETE (1U << 31)
 
 struct MouseEvent {
