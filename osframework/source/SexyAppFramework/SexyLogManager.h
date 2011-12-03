@@ -16,11 +16,13 @@ namespace Sexy {
 		static LogManager& getInstance();
 		static void release();
 
+		void close();
 		void silent();
 		void setListener(LogListener* listener);
 		void log(LogLevel lvl, const std::string& tag, const std::string& s);
 		void setVerboseLevel(LogLevel lvl);
 		LogLevel getVerboseLevel();
+		LogLevel getVerboseLevel(const std::string& tag);
 		std::string getDefaultTag();
 		void setDefaultTag(const std::string& tag);
 		std::string getName();
@@ -32,6 +34,7 @@ namespace Sexy {
 		void setupDefaultListener();
 		LogListener* createListener(const std::string& target);
 		void resetListener();
+		void resetToPlatformListener();
 
 	 private:
 		CritSect mCritSect;
@@ -43,6 +46,9 @@ namespace Sexy {
 		LogFormat mDefaultFormat;
 		std::string mDefaultTarget;
 		std::string mName;
+
+		typedef std::map<std::string, LogLevel> TagLevelMap;
+		TagLevelMap mTagLevelMap;
 
 		static LogManager msLogManager;
 	};
