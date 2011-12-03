@@ -55,10 +55,6 @@ TcpLogListener::TcpLogListener(const std::string& target) :
 		    mSock->setListen(5))
 		{
 			mPort = StrFormat("%d", mSock->getLocalPort());
-
-		        logtfi(LOG_TAG,
-			       "Listening on %s:%d\n",
-			       mHost.c_str(), mSock->getLocalPort());
 			break;
 		}
 		delete mSock;
@@ -142,7 +138,7 @@ bool TcpLogListener::sendRecord(TcpLogRecord* record, TcpLogClient& client)
 	assert (client.mSock != 0);
 
 	// 4b tag 'LGBD'
-	// 4b package len
+	// 4b payload len
 	// 4b pid
 	// 4b timestamp
 	// 2b log level
@@ -157,7 +153,7 @@ bool TcpLogListener::sendRecord(TcpLogRecord* record, TcpLogClient& client)
 	ptr[3] = 'D';
 	ptr += 4;
 
-	ptr = writel(ptr, sizeof(header) + record->tag.length() + record->msg.length());
+	ptr = writel(ptr, sizeof(header) - 8 + record->tag.length() + record->msg.length());
 	ptr = writel(ptr, record->pid);
 	ptr = writel(ptr, record->timestamp);
 	ptr = writes(ptr, record->lvl);
@@ -174,6 +170,9 @@ bool TcpLogListener::sendRecord(TcpLogRecord* record, TcpLogClient& client)
 
 void TcpLogListener::server()
 {
+	logtfi(LOG_TAG, "Listening on %s:%d\n",
+	       mHost.c_str(), mSock->getLocalPort());
+
 	TcpLogRecord record;
 
 	while (!mDone && mSock)
