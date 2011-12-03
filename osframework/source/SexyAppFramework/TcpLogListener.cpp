@@ -22,6 +22,8 @@
 
 using namespace Sexy;
 
+#define LOG_TAG "log"
+
 TcpLogListener::TcpLogListener(const std::string& target) :
 	mHost(""), mPort("11035")
 {
@@ -54,8 +56,9 @@ TcpLogListener::TcpLogListener(const std::string& target) :
 		{
 			mPort = StrFormat("%d", mSock->getLocalPort());
 
-		        //printf("TcpLogListener: Listening on %s:%s\n",
-			//mHost.c_str(), mPort.c_str());
+		        logtfi(LOG_TAG,
+			       "Listening on %s:%d\n",
+			       mHost.c_str(), mSock->getLocalPort());
 			break;
 		}
 		delete mSock;
@@ -171,6 +174,8 @@ bool TcpLogListener::sendRecord(TcpLogRecord* record, TcpLogClient& client)
 
 void TcpLogListener::server()
 {
+	TcpLogRecord record;
+
 	while (!mDone && mSock)
 	{
 		int sock = mSock->getSocket();
@@ -220,19 +225,19 @@ void TcpLogListener::server()
 			if (clientSock)
 			{
 				addClient(clientSock);
-				// printf("TcpLogListener: new client: %d\n", clientSock->getSocket());
+				logtfd(LOG_TAG, "New client: %d.\n",
+				       clientSock->getSocket());
 			}
 		}
 
-		TcpLogRecord* record = 0;
 		for (it = mClientMap.begin(); it != mClientMap.end();)
 		{
 			TcpLogClient& client = it->second;
 
 			if (ret && FD_ISSET(it->first, &efds))
 			{
-				// printf("TcpLogListener: removing client: %d\n",
-				//        client.mSock->getSocket());
+				logtfd(LOG_TAG, "Removing client: %d\n",
+				       client.mSock->getSocket());
 				client.close();
 				mClientMap.erase(it++);
 			}
@@ -244,27 +249,32 @@ void TcpLogListener::server()
 
 			if (!client.mWouldBlock || (ret && FD_ISSET(it->first, &wfds)))
 			{
-				AutoCrit anAutoCrit(mCritSect);
-
-				TcpLogRecordMap::iterator logIt;
-				logIt = mLogRecords.upper_bound(client.mSeq);
-				if (logIt == mLogRecords.end())
+				int64 seq;
 				{
-					++it;
-					continue;
+					AutoCrit anAutoCrit(mCritSect);
+
+					TcpLogRecordMap::iterator logIt;
+					logIt = mLogRecords.upper_bound(client.mSeq);
+					if (logIt == mLogRecords.end())
+					{
+						++it;
+						continue;
+					}
+
+					seq = logIt->first;
+					record = logIt->second;
 				}
 
-				record = &logIt->second;
-				if (!sendRecord(record, client))
+				if (!sendRecord(&record, client))
 				{
-					// printf("TcpLogListener: removing client: %d\n",
-					//        client.mSock->getSocket());
+					logtfd(LOG_TAG, "Removing client: %d.\n",
+					       client.mSock->getSocket());
 					client.close();
 					mClientMap.erase(it++);
 					continue;
 				}
 
-				client.mSeq = logIt->first;
+				client.mSeq = seq;
 			}
 
 			++it;
