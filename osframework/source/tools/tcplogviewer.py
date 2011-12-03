@@ -13,6 +13,29 @@ import traceback
 from Tkinter import *
 import os
 
+LOG_CUSTOM  = -1000
+LOG_VERBOSE = -1
+LOG_DEBUG   = 0
+LOG_INFO    = 1
+LOG_WARN    = 2
+LOG_ERROR   = 3
+
+LogLevelMap = {
+    "VERBOSE" : LOG_VERBOSE,
+    'DEBUG' : LOG_DEBUG,
+    'INFO'  : LOG_INFO,
+    'WARN'  : LOG_WARN,
+    'ERROR' : LOG_ERROR
+}
+
+LogLevelNameMap = {
+    LOG_VERBOSE : "VERBOSE",
+    LOG_DEBUG : 'DEBUG',
+    LOG_INFO :'INFO'  ,
+    LOG_WARN : 'WARN',
+    LOG_ERROR : 'ERROR'
+}
+
 class NothingToReadException(Exception):
     pass
 
@@ -51,10 +74,10 @@ def currentTimeMillis():
 
 
 class ServiceInfo(object):
-    def __init__(self, name, desc, type, address, port):
+    def __init__(self, name, desc, _type, address, port):
         self.name = name
         self.desc = desc
-        self.type = type
+        self.type = _type
         self.address = address
         self.port = port
         self.cookie = 0
@@ -62,7 +85,7 @@ class ServiceInfo(object):
         self.maxService = 0
 
     def __eq__(self, rhs):
-        return self.name == rhs.name and self.desc == rhs.name and \
+        return self.name == rhs.name and self.desc == rhs.desc and \
                self.type == rhs.type and self.address == rhs.address and \
                self.port == rhs.port
 
@@ -71,7 +94,7 @@ class ServiceInfo(object):
             raise TypeError("ServiceInfo cannot be compared to %s"% str(type(other)))
         return cmp(self.index, rhs.index)
 
-    def __hash__(sefl):
+    def __hash__(self):
         hc = hash(self.name)
         hc ^= hash(self.desc)
         hc ^= hash(self.type)
@@ -106,13 +129,19 @@ class ServiceProvider(object):
         return self.services
 
     def servicesChanged(self):
-        old_services = self.services
+        oldServices = self.services
+        pendingServices = self.pendingServices
         self.services = {}
         for si in self.pendingServices:
             si.provider = self
             self.services[si.name] = si
         self.pendingServices = []
-        self.sm.servicesChanged(self, old_services)
+        if oldServices.values() != pendingServices:
+            self.sm.servicesChanged(self, oldServices)
+
+    def clearServices(self):
+        self.pendingServices = []
+        self.servicesChanged()
 
     def parseDict(self, msg, start, end = None):
         if end is None:
@@ -224,6 +253,7 @@ class ServiceManager(object):
     def start(self):
         self.close()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_TTL, 255)
         self.sock.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_LOOP, 1)
         try:
@@ -300,11 +330,11 @@ class ServiceManager(object):
         ## print
 
     def send(self, packet, addr = None):
-        #print 'Sending a packet'
         self.pkseq += 1
         if addr is None:
             addr = (self.addr, self.port)
-        self.sock.sendto(packet, 0, addr)
+        print 'Sending a packet with tag', packet[0:4], ' to', addr
+        print self.sock.sendto(packet, 0, addr)
 
     def broadcastEcho(self):
         # 4b tag 'ECHO'
@@ -313,9 +343,11 @@ class ServiceManager(object):
         pk = 'ECHO'
         pk += struct.pack('>I', self.pkseq)
         pk += struct.pack('>I', 0)
-        for i in range(10):
-            addr = (self.addr, self.port + i)
-            self.send(pk, addr)
+        addr = (self.addr, self.port)
+        self.send(pk, addr)
+
+        addr = ('255.255.255.255', self.port)
+        self.send(pk, addr)
 
     def sendQueryInfo(self, addr):
         #print 'Sending a query info packet to', addr
@@ -369,7 +401,7 @@ class ServiceManager(object):
 
         tag = msg[0:4]
         (seqno,) = struct.unpack('>I', msg[4:8])
-        #print tag, seqno, addr, len(msg)
+        print 'Received a packet with', tag, seqno, addr, len(msg)
         if tag == 'ECRP':
             self.processEchoReplyPacket(msg, tag, seqno, addr)
         elif tag == 'QRRP':
@@ -406,6 +438,9 @@ class ServiceManager(object):
         providers = []
         for addr in expired:
             providers.append(self.providers.pop(addr))
+
+        for provider in providers:
+            provider.clearServices()
 
         if providers:
             self.providersRemoved(providers)
@@ -502,16 +537,28 @@ class ButtonCallback(object):
     def __call__(self):
         return self.callback(*self.args)
 
+class LogRecord(object):
+    def __init__(self):
+        self.prefix = ''
+        self.tag = 'default'
+        self.pid = 0
+        self.timestamp = 0
+        self.lvl = 0
+        self.msg = ''
+
 class Application(Frame):
     def __init__(self, master = None):
         Frame.__init__(self, master)
         self.lastSockAddr = ()
+        self.logs = []
         self.sock = None
-        self.listen = False
+        self.connected = False
+        self.level = LOG_INFO
+        self.customLevel = '*:info'
+        self.customLevelMap = {'*' : LOG_INFO }
         self.after_id = -1
         self.pack(fill = BOTH, expand = 1)
         self.createWidgets()
-        #self.createSocket()
         self.serviceManager = ServiceManager()
         self.serviceManager.start()
         self.after(100, self.updateService)
@@ -544,37 +591,72 @@ class Application(Frame):
         entry.grid(column = 3, row = 0)
         self.port_entry = entry
 
-        menuBtn = Button(frame, text = 'Select a server',
-                         command = self.selectServer)
+        menuBtn = Menubutton(frame, text = 'Select a server')
+        #command = self.selectServer)
         menuBtn.grid(column = 4, row = 0)
         self.menuBtn = menuBtn
 
-        menu = Menu(self.master, tearoff = 0)
+        menu = Menu(menuBtn, tearoff = 0)
         self.serverMenu = menu
+        self.menuBtn['menu'] = menu
 
-        buttons = [
-            ['Start/Stop', 'Clear', 'Save to...'],
-        ]
-
-        frame = LabelFrame(self, text = 'Controll:')
+        frame = LabelFrame(self, text = 'Control:')
         frame.pack(side = TOP, padx = 4, pady = 4, fill = X)
 
-        self.buttons = {}
-        i = 0
-        for row in buttons:
-            j = 0
-            for btn in row:
-                if btn:
-                    button = Button(frame, text = btn,
-                                    command = ButtonCallback(self.buttonPressed, btn),
-                                    width = 8)
-                    self.buttons[btn] = button
-                else:
-                    button = Button(frame, text = "    ", width = 8)
-                    button.config(state = DISABLED)
-                button.grid(column = j, row = i)
-                j += 1
-            i += 1
+        btn = Button(frame, text = 'Start', width = 8,
+                     command = ButtonCallback(self.buttonPressed, 'Start'))
+        btn.grid(column = 0, row = 0)
+        self.startBtn = btn
+
+        btn = Button(frame, text = 'Clear', width = 8,
+                     command = ButtonCallback(self.buttonPressed, 'Clear'))
+        btn.grid(column = 1, row = 0)
+        self.clearBtn = btn
+
+        btn = Button(frame, text = 'Save to...', width = 8,
+                     command = ButtonCallback(self.buttonPressed, 'Save'))
+        btn.grid(column = 2, row = 0)
+        self.saveBtn = btn
+
+        frame = LabelFrame(self, text = 'Verbose Level:')
+        frame.pack(side = TOP, padx = 4, pady = 4, fill = X)
+
+        label = Label(frame, text = 'Current:')
+        #label.grid(column = 0, row = 0)
+        label.pack(side = LEFT, padx = 4, pady = 4)
+
+        menuBtn = Menubutton(frame, text = 'INFO', width = 10)
+        #command = self.selectServer)
+        #menuBtn.grid(column = 1, row = 0)
+        menuBtn.config(foreground = 'blue')
+        menuBtn.pack(side = LEFT, padx = 4, pady = 4)
+        self.levelBtn = menuBtn
+
+        menu = Menu(menuBtn, tearoff = 0)
+        for name in ['VERBOSE', 'DEBUG', 'INFO', "WARN", 'ERROR', 'Custom...']:
+            if name in LogLevelMap:
+                level = LogLevelMap[name]
+            else:
+                level = LOG_CUSTOM
+            menu.add_command(label = name,
+                             command =
+                             ButtonCallback(self.levelSelect, level));
+        self.levelMenu = menu
+        self.levelBtn['menu'] = menu
+
+        label = Label(frame, text = 'Custom:')
+        label.pack(side = LEFT, padx = 4, pady = 4)
+
+        entry = Entry(frame)
+        entry.config(state = DISABLED)
+        entry.pack(side = LEFT, padx = 4, pady = 4, fill = X, expand = 1)
+        self.level_entry = entry
+
+        btn = Button(frame, text = 'Apply', width = 8,
+                     command = self.applyLevel)
+        btn.config(state = DISABLED)
+        btn.pack(side = RIGHT, padx = 4, pady = 4)
+        self.applyBtn = btn
 
         frame = LabelFrame(self, text = "Log:")
         frame.pack(side = BOTTOM, padx = 4, pady = 4, fill = BOTH, expand = 1)
@@ -589,6 +671,7 @@ class Application(Frame):
         txt.config(yscrollcommand = scrollbar.set)
         self.txtScrollbar = scrollbar
         self.logText.yview(END)
+        self.logFrame = frame
 
     def createSocket(self):
         host, port = self.getAddress()
@@ -605,13 +688,16 @@ class Application(Frame):
             traceback.print_exc()
             self.sock.close()
             self.sock = None
-            self.listen = False
-            self.appendLog('Failed to onnect to %s:%d\n' % (str(host), port))
+            self.connected = False
+            self.appendViewerLog('Failed to connect to %s:%d\n' % (str(host), port))
             self.after_id = -1
+            self.startBtn.config(text = 'Start')
             return
 
         self.after_id = self.after(10, self.updateLog)
-        self.appendLog('Connected to %s:%d\n' % (str(host), port))
+        self.appendViewerLog('Connected to %s:%d\n' % (str(host), port))
+        self.startBtn.config(text = 'Stop')
+        self.logFrame.config(text = 'Log(%s:%d):' % (host, port))
 
     def updateService(self):
         try:
@@ -637,15 +723,8 @@ class Application(Frame):
             self.logText.yview(END)
 
     def getLevelName(self, level):
-        level_map = {
-            0 : 'DEBUG',
-            1 : 'INFO',
-            2 : 'WARN',
-            3 : 'ERROR'
-        }
-
-        if level in level_map:
-            return level_map[level]
+        if level in LogLevelNameMap:
+            return LogLevelNameMap[level]
         return 'UNKNOWN'
 
     def read(self, sock, pklen):
@@ -657,24 +736,50 @@ class Application(Frame):
             payload += ret
         return payload
 
+    def appendLogRecord(self, prefix, pid, timestamp, lvl, tag, msg):
+        log = LogRecord()
+        log.prefix = prefix
+        log.pid = pid
+        log.timestamp = timestamp
+        log.lvl = lvl
+        log.tag = tag
+        log.msg = msg
+        log.text = '%s: %d %d.%03d %s %s: %s\n' % \
+                   (log.prefix, log.pid, log.timestamp / 1000,
+                    log.timestamp % 1000, self.getLevelName(log.lvl),
+                    log.tag, log.msg)
+        self.logs.append(log)
+
+        if self.isLogVerbose(log.lvl, log.tag):
+            self.appendLog(log.text)
+
+    def appendViewerLog(self, msg):
+        pid = os.getpid()
+        timestamp = 0
+        level = 1
+        tag = 'default'
+        self.appendLogRecord('viewer', pid, timestamp, level, tag, msg)
+
     def readLogPacket(self, sock, payload):
-        pid, timestamp, level, taglen, bodylen = struct.unpack(">IIHHI", payload[0:16])
+        pid, timestamp, level, taglen, bodylen = \
+             struct.unpack(">IIhHI", payload[0:16])
         start = 4 + 4 + 2 + 2 + 4
         tag = payload[start:start + taglen]
         msg = payload[start + taglen:]
         levelName = self.getLevelName(level)
         peer = sock.getpeername()
-        self.appendLog('%s:%s: %d %d.%03d %s %s: %s\n' % \
-                       (peer[0], peer[1], pid, timestamp / 1000, timestamp % 1000,
-                        levelName, tag, msg))
+        self.appendLogRecord("%s:%s" % (peer[0], peer[1]),
+                             pid, timestamp, level, tag, msg)
 
     def readPacket(self, sock):
         import struct
         pktag = self.read(sock, 4)
         pklenstr = self.read(sock, 4)
         pklen = struct.unpack('>I', pklenstr)[0]
-        assert (pklen > 8)
-        payload = self.read(sock, pklen - 8)
+        if pklen:
+            payload = self.read(sock, pklen)
+        else:
+            payload = ''
         if pktag == 'LGBD':
             self.readLogPacket(sock, payload)
 
@@ -682,8 +787,10 @@ class Application(Frame):
         if self.sock:
             self.sock.close()
             self.sock = None
-        self.listen = False
-        self.appendLog('Connection closed\n')
+        self.connected = False
+        self.startBtn.config(text = 'Start')
+        self.appendViewerLog('Connection closed\n')
+        self.logFrame.config(text = 'Log:')
 
     def updateLog(self):
         count = 0
@@ -702,7 +809,7 @@ class Application(Frame):
                     self.closeLog()
 
 
-        if self.listen:
+        if self.connected:
             self.after_id = self.after(10, self.updateLog)
         else:
             self.after_id = -1
@@ -753,13 +860,13 @@ class Application(Frame):
     def buttonPressed(self, btn):
         if btn == 'Clear':
             self.clearLog()
-        elif btn == 'Start/Stop':
+        elif btn == 'Start':
             self.startLog()
         else:
             self.saveLog()
 
     def startLog(self):
-        self.listen = not self.listen
+        self.connected = not self.connected
         if self.sock:
             try:
                 self.sock.shutdown(2)
@@ -770,14 +877,16 @@ class Application(Frame):
             except Exception, e:
                 pass
             self.sock = None
-        if self.listen:
+        if self.connected:
             self.createSocket()
         else:
             self.after_cancel(self.after_id)
             self.after_id = -1
-            self.appendLog("Stopped\n")
+            self.closeLog()
 
-    def clearLog(self):
+    def clearLog(self, clearRecord = True):
+        if clearRecord:
+            self.logs = []
         self.logText.config(state = NORMAL)
         self.logText.delete(1.0, END)
         self.logText.config(state = DISABLED)
@@ -793,13 +902,14 @@ class Application(Frame):
 
     def syncServerMenu(self):
         if not self.logServers:
-            self.serverMenu.unpost()
+            #self.serverMenu.unpost()
             self.serverMenu.delete(0, END)
+            self.serverMenu.add_command(label = 'No log server found')
             self.menuBtn.config(state = DISABLED)
         else:
             self.menuBtn.config(state = NORMAL)
             self.serverMenu.delete(0, END)
-            self.serverMenu.add_command(label = 'Cancel')
+            #self.serverMenu.add_command(label = 'Cancel')
             for srv in self.logServers:
                 name = srv.provider.name or 'Unknown'
                 addr = srv.provider.addr[0]
@@ -809,7 +919,7 @@ class Application(Frame):
                                             command =
                                             ButtonCallback(self.menuSelectServer, srv));
 
-    def menuSelectServer(self, srv):
+    def menuSelectServer(self, srv = None):
         if not srv:
             return
 
@@ -821,10 +931,103 @@ class Application(Frame):
         self.port_entry.insert(0, port)
 
     def selectServer(self):
-        self.serverMenu.unpost()
-        self.syncServerMenu()
         self.serverMenu.post(self.menuBtn.winfo_rootx(),
                              self.menuBtn.winfo_rooty())
+
+    def isLogVerbose(self, lvl, tag = 'default'):
+        if self.level == LOG_CUSTOM:
+            verbose = LOG_INFO
+            if self.customLevelMap:
+                if '*' in self.customLevelMap:
+                    verbose = self.customLevelMap['*']
+                if tag in self.customLevelMap:
+                    verbose = self.customLevelMap[tag]
+        else:
+            verbose = self.level
+        return lvl >= verbose
+
+    def filterLog(self):
+        self.clearLog(False)
+        for log in self.logs:
+            if self.isLogVerbose(log.lvl, log.tag):
+                self.appendLog(log.text)
+
+    def levelSelect(self, level = LOG_INFO):
+        if self.level == level:
+            return
+        self.level = level
+        if self.level == LOG_CUSTOM:
+            self.levelBtn.config(text = 'Custom')
+            self.applyBtn.config(state = NORMAL)
+            self.level_entry.config(state = NORMAL)
+            self.level_entry.delete(0, END)
+            self.level_entry.insert(END, self.customLevel)
+        else:
+            print 'verbose level:', LogLevelNameMap[level]
+            self.levelBtn.config(text = LogLevelNameMap[level])
+            #self.level_entry.config(state = NORMAL)
+            #self.level_entry.delete(0, END)
+            #self.level_entry.insert(END, LogLevelNameMap[level])
+            self.level_entry.config(state = DISABLED)
+            self.applyBtn.config(state = DISABLED)
+
+        self.filterLog()
+
+    def parseCustomLevel(self, s):
+        s = s.strip()
+        if not s:
+            raise Exception, 'Empty custom level string'
+
+        namemap = {
+            'verbose' : LOG_VERBOSE,
+            'v'     : LOG_VERBOSE,
+            '-1'    : LOG_VERBOSE,
+            'debug' : LOG_DEBUG,
+            'd'     : LOG_DEBUG,
+            '0'     : LOG_DEBUG,
+            'info'  : LOG_INFO,
+            'i'     : LOG_INFO,
+            '1'     : LOG_INFO,
+            'warn'  : LOG_WARN,
+            'w'     : LOG_WARN,
+            '2'     : LOG_WARN,
+            'error' : LOG_ERROR,
+            'e'     : LOG_ERROR,
+            '3'     : LOG_ERROR
+        }
+        result = {}
+        if ':' not in s:
+            s = s.lower()
+            if s not in namemap:
+                raise Exception, 'Bad level name'
+            result['*'] = namemap[s]
+        else:
+            tags = s.split(' ')
+            for tag in tags:
+                kv = tag.split(':')
+                if len(kv) != 2 or kv[1] not in namemap:
+                    raise Exception, 'Malformed custom level string'
+                result[kv[0]] = namemap[kv[1]]
+        return result
+
+    def applyLevel(self):
+        import tkMessageBox
+        current = self.level_entry.get()
+        try:
+            result = self.parseCustomLevel(current)
+        except:
+            traceback.print_exc()
+            tkMessageBox.showerror('Error',
+                                   'Bad or empty custom level string.\n\n'
+                                   'Example: \"*:info performance:debug opengl:debug egl:debug\".')
+            return
+
+        if result == self.customLevelMap:
+            return
+
+        self.customLevel = current
+        self.customLevelMap = result
+        self.filterLog()
 
 app = Application()
 app.master.title("Log viewer for SexyFramework")
