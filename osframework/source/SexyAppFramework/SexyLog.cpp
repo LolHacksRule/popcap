@@ -7,11 +7,11 @@
 namespace Sexy {
 
 static const char* LogNames[] = {
-	"noise", "debug", "info", "warn", "error"
+	"verbose", "debug", "info", "warn", "error"
 };
 const char* logLevelName(LogLevel level)
 {
-	if (level >= LOG_NOISE && level < LOG_LEVEL_MAX)
+	if (level >= LOG_VERBOSE && level < LOG_LEVEL_MAX)
 		return LogNames[level];
 
 	return "unknown";
@@ -63,6 +63,7 @@ void logf(LogLevel lvl, const char* fmt, ...)
 	va_end(argList);
 
 	std::string tag;
+
 	mgr.log(lvl, tag, s);
 }
 
@@ -72,22 +73,22 @@ void log(LogLevel lvl, const std::string& s)
 	log(lvl, tag, s);
 }
 
-void logn(const std::string& tag, const std::string& s)
+void logv(const std::string& tag, const std::string& s)
 {
-	log(LOG_NOISE, tag, s);
+	log(LOG_VERBOSE, tag, s);
 }
 
-void logtfn(const std::string& tag, const char *fmt, ...)
+void logtfv(const std::string& tag, const char *fmt, ...)
 {
 	va_list argList;
 	va_start(argList, fmt);
 	std::string s = vformat(fmt, argList);
 	va_end(argList);
 
-	log(LOG_NOISE, tag, s);
+	log(LOG_VERBOSE, tag, s);
 }
 
-void logfn(const char *fmt, ...)
+void logfv(const char *fmt, ...)
 {
 	va_list argList;
 	va_start(argList, fmt);
@@ -95,7 +96,7 @@ void logfn(const char *fmt, ...)
 	va_end(argList);
 
 	std::string tag;
-	log(LOG_NOISE, tag, s);
+	log(LOG_VERBOSE, tag, s);
 }
 
 void logd(const std::string& tag, const std::string& s)
@@ -163,7 +164,7 @@ void logtfw(const std::string& tag, const char *fmt, ...)
 	std::string s = vformat(fmt, argList);
 	va_end(argList);
 
-	log(LOG_WARN, tag, s);
+	log(LOG_ERROR, tag, s);
 }
 
 void logfw(const char *fmt, ...)
@@ -179,7 +180,7 @@ void logfw(const char *fmt, ...)
 
 void loge(const std::string& tag, const std::string& s)
 {
-	log(LOG_ERROR, tag, s);
+	log(LOG_WARN, tag, s);
 }
 
 void logtfe(const std::string& tag, const char *fmt, ...)

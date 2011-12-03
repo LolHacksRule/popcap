@@ -6,8 +6,8 @@
 namespace Sexy {
 
 	enum LogLevel {
-		LOG_NOISE = -1,
-		LOG_DEBUG,
+		LOG_VERBOSE = -1,
+		LOG_DEBUG = 0,
 		LOG_INFO,
 		LOG_WARN,
 		LOG_ERROR,
@@ -22,9 +22,9 @@ namespace Sexy {
 	void log(LogLevel lvl, const std::string& tag, const std::string& s);
 	void log(LogLevel lvl, const std::string& s);
 
-	void logn(const std::string& tag, const std::string& s);
-	void logtfn(const std::string& tag, const char* fmt, ...);
-	void logfn(const char* fmt, ...);
+	void logv(const std::string& tag, const std::string& s);
+	void logtfv(const std::string& tag, const char* fmt, ...);
+	void logfv(const char* fmt, ...);
 
 	void logd(const std::string& tag, const std::string& s);
 	void logtfd(const std::string& tag, const char* fmt, ...);
