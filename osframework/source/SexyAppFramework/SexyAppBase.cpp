@@ -3171,8 +3171,8 @@ void SexyAppBase::SetCmdline(int argc, char **argv)
 void SexyAppBase::Init()
 {
 	LogManager& logMgr = LogManager::getInstance();
-	if (logMgr.getDefaultTag() == "default")
-		logMgr.setDefaultTag(StringToLower(mProdName));
+	if (logMgr.getName() == "default")
+		logMgr.setName(StringToLower(mProdName));
        ServiceManager::getInstance().setName(mProdName);
 
 	if (mShutdown)
