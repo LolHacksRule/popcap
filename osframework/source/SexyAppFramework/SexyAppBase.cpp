@@ -1762,6 +1762,7 @@ void SexyAppBase::InitVideoDriver()
 		DoExit (1);
 	}
 	DBG_ASSERT (aVideoDriver != NULL);
+	logfi("Using video driver: %s\n", aVideoDriver->mName.c_str());
 	mDDInterface = aVideoDriver->Create(this);
 	if (!mDDInterface)
 	{
@@ -3149,6 +3150,7 @@ void SexyAppBase::InitSoundManager()
 			mSoundManager = aSoundDriver->Create (this);
 			if (mSoundManager)
 			{
+				logfi("Using sound driver: %s\n", aSoundDriver->mName.c_str());
 				mMusicInterface = aSoundDriver->CreateMusicInterface (this);
 				break;
 			}
