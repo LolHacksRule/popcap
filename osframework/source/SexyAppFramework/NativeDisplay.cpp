@@ -51,6 +51,11 @@ NativeDisplay::~NativeDisplay()
 {
 }
 
+RenderSystem* NativeDisplay::GetRenderSystem()
+{
+	return 0;
+}
+
 bool NativeDisplay::Is3DAccelerated()
 {
     return false;

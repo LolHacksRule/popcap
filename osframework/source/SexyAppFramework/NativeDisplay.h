@@ -19,6 +19,8 @@ class SexyAppBase;
 class Graphics;
 class MemoryImage;
 class Widget;
+class RenderSystem;
+
 struct InputInfo;
 
 class DelayedWork
@@ -90,6 +92,7 @@ class NativeDisplay
 	virtual bool                               CanReinit();
 	virtual bool                               Reinit();
 
+	virtual RenderSystem*                      GetRenderSystem();
 	virtual bool				   Is3DAccelerated();
 	virtual bool				   Is3DAccelerationSupported();
 	virtual bool				   Is3DAccelerationRecommended();
